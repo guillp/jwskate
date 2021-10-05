@@ -105,7 +105,7 @@ def json_encode(
     default_encoder: Callable[[Any], Any] = _default_json_encode,
 ) -> str:
     """
-    Encodes an object to JSON. By default, this produces a compact output (no extra whitespaces), and datetimes are
+    Encodes a dict to a JSON string. By default, this produces a compact output (no extra whitespaces), and datetimes are
     converted to epoch-style integers. Any unhandled value is stringified using `str()`. You can override this with the
     parameters `compact` and `default_encoder`.
     :param obj: the data to JSON-encode.
@@ -118,6 +118,41 @@ def json_encode(
     return json.dumps(obj, separators=separators, default=default_encoder)
 
 
+def json_decode(s):
+    """
+    Decodes a string representation of a JSON into a dict.
+    """
+    return json.loads(s)
+
+
 def b64u_encode_json(j: Dict[str, Any], encoder=json_encode) -> str:
     encoded_json = encoder(j)
     return b64u_encode(encoded_json)
+
+
+def b64u_decode_json(b64: Union[bytes, str], decoder=json_decode) -> Dict[str, Any]:
+    encoded_json = b64u_decode(b64)
+    return json_decode(encoded_json)
+
+
+def int_to_b64u(i: int, length: Optional[int] = None) -> str:
+    """
+    Encodes an integer to the base64url encoding of the octet string representation of that integer, as defined in
+    Section 2.3.5 of SEC1 [SEC1].
+    :param i: the integer to encode
+    :param length: the length of the encoding (left padding the integer if necessary)
+    :return: the encoded representation
+    """
+    if length is None:
+        length = (i.bit_length() + 7) // 8
+    data = i.to_bytes(length, "big", signed=False)
+    return b64u_encode(data)
+
+
+def b64u_to_int(b: str) -> int:
+    """
+    Decodes a base64url encoding of the octet string representation of an integer.
+    :param b: the encoded integer
+    :return: the decoded integer
+    """
+    return int.from_bytes(b64u_decode(b), "big", signed=False)

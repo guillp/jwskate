@@ -152,11 +152,14 @@ class SignedJwt(Jwt):
     def get_claim(self, key: str) -> Any:
         return self.claims.get(key)
 
-    def __getattr__(self, item: str) -> Any:
+    def __getitem__(self, item: str) -> Any:
         value = self.get_claim(item)
         if value is None:
             raise AttributeError(item)
         return value
+
+    def __getattr__(self, item: str) -> Any:
+        return self.__getitem__(item)
 
     def __str__(self) -> str:
         return self.value.decode()

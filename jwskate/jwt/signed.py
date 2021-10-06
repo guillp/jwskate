@@ -24,7 +24,7 @@ class SignedJwt(Jwt):
     Represents a Signed Json Web Token (JWT), as defined in RFC7519.
     """
 
-    def __init__(self, value: Union[bytes, str]):
+    def __init__(self, value: Union[bytes, str]) -> None:
         super().__init__(value)
 
         if self.value.count(b".") != 2:

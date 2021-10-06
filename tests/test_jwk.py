@@ -16,7 +16,7 @@ RSA_PRIVATE_JWK = {
 }
 
 
-def test_jwk():
+def test_private_rsa_jwk():
     jwk = Jwk(RSA_PRIVATE_JWK)
     assert jwk.is_private
     assert jwk.kty == "RSA"
@@ -49,6 +49,20 @@ def test_jwk():
 
     assert public_jwk.thumbprint() == jwk.thumbprint()
     assert public_jwk.verify(b"Hello World!", signature, alg="RS256")
+
+
+def test_public_rsa_jwk():
+    public_jwk = {
+        key: val for key, val in RSA_PRIVATE_JWK.items() if key in ("kty", "n", "e")
+    }
+    jwk = Jwk(public_jwk)
+    assert jwk.is_private is False
+    assert jwk.kty == "RSA"
+    assert type(jwk) == RSAJwk
+    assert jwk.n == RSA_PRIVATE_JWK["n"]
+    assert jwk.e == RSA_PRIVATE_JWK["e"]
+
+    assert jwk.thumbprint() == "Qfq9DOLKNRyptzTJBhCFlzccbA0ac7Ag9GVFL11GAfM"
 
 
 def test_invalid_jwk():

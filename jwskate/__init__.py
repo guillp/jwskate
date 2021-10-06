@@ -8,7 +8,16 @@ __author__ = """Guillaume Pujol"""
 __email__ = "guill.p.linux@gmail.com"
 __version__ = "0.1.0"
 
-from .jwe import *
-from .jwk import *
-from .jws import *
-from .jwt import *
+from .jwe import JweCompact
+from .jwk import (
+    ECJwk,
+    InvalidJwk,
+    Jwk,
+    JwkSet,
+    OKPJwk,
+    PrivateKeyRequired,
+    RSAJwk,
+    SymetricJwk,
+)
+from .jws import JwsCompact
+from .jwt import EncryptedJwt, Jwt, JwtSigner, SignedJwt

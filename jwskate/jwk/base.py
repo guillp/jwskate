@@ -14,6 +14,9 @@ from typing import (
     Union,
 )
 
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ec, rsa
+
 from ..utils import b64u_decode, b64u_encode
 from .exceptions import InvalidJwk
 
@@ -43,12 +46,15 @@ class Jwk(_BaseJwk):
     PARAMS: Dict[str, Tuple[str, bool, bool, str]]
     """A dict of parameters. Key is parameter name, value is a tuple (description, is_private, is_required, kind)"""
 
+    SIGNATURE_ALGORITHMS: Dict[str, Any]
+
     def __init_subclass__(cls) -> None:
         """
         Automatically add subclasses to the registry.
         This allows __new__ to pick the appropriate subclass when creating a Jwk
         """
-        Jwk.subclasses[cls.kty] = cls
+        if hasattr(cls, "kty"):
+            Jwk.subclasses[cls.kty] = cls
 
     def __new__(cls, jwk: Dict[str, Any]):  # type: ignore
         """
@@ -65,6 +71,7 @@ class Jwk(_BaseJwk):
             kty: Optional[str] = jwk.get("kty")
             if kty is None:
                 raise ValueError("A Json Web Key must have a Key Type (kty)")
+
             subclass = Jwk.subclasses.get(kty)
             if subclass is None:
                 raise ValueError("Unsupported Key Type", kty)
@@ -93,6 +100,80 @@ class Jwk(_BaseJwk):
         """
         return self.data.get(item)
 
+    def thumbprint(self, hashalg: str = "SHA256") -> str:
+        """Returns the key thumbprint as specified by RFC 7638.
+
+        :param hashalg: A hash function (defaults to SHA256)
+        """
+
+        digest = hashlib.new(hashalg)
+
+        t = {"kty": self.get("kty")}
+        for name, (description, private, required, kind) in self.PARAMS.items():
+            if required and not private:
+                t[name] = self.get(name)
+
+        intermediary = json.dumps(t, separators=(",", ":"), sort_keys=True)
+        digest.update(intermediary.encode("utf8"))
+        return b64u_encode(digest.digest())
+
+    def _validate(self) -> None:
+        """
+        Internal method used to validate a Jwk. It checks that all required parameters are present and well-formed.
+        If the key is private, it sets the `is_private` flag to `True`.
+        """
+        jwk_is_private = False
+        for name, (description, is_private, is_required, kind) in self.PARAMS.items():
+
+            value = getattr(self, name)
+
+            if is_private and value is not None:
+                jwk_is_private = True
+
+            if not is_private and is_required and value is None:
+                raise InvalidJwk(
+                    f"Missing required public param {description} ({name})"
+                )
+
+            if kind == "b64u":
+                try:
+                    b64u_decode(value)
+                except ValueError:
+                    InvalidJwk(
+                        f"Parameter {description} ({name}) must be a Base64URL-encoded value"
+                    )
+            elif kind == "unsupported":
+                if value is not None:
+                    raise InvalidJwk(f"Unsupported JWK param '{name}'")
+            elif kind == "name":
+                pass
+            else:
+                assert False, f"Unsupported param '{name}' type '{kind}'"
+
+        # if at least one of the supplied parameter was private, then all required private parameters must be provided
+        if jwk_is_private:
+            for name, (
+                description,
+                is_private,
+                is_required,
+                kind,
+            ) in self.PARAMS.items():
+                value = self.data.get(name)
+                if is_private and is_required and value is None:
+                    raise InvalidJwk(
+                        f"Missing required private param {description} ({name})"
+                    )
+
+        self.is_private = jwk_is_private
+
+    @property
+    def supported_signing_algorithms(self) -> List[str]:
+        """
+        Returns a list of signing algs that are compatible for use with this Jwk.
+        :return: a list of signing algs
+        """
+        return list(self.SIGNATURE_ALGORITHMS.keys())
+
     def public_jwk(self) -> "Jwk":
         """
         Returns the public Jwk associated with this private Jwk.
@@ -116,67 +197,6 @@ class Jwk(_BaseJwk):
                 **params,
             )
         )
-
-    def thumbprint(self, hashalg: str = "SHA256") -> str:
-        """Returns the key thumbprint as specified by RFC 7638.
-
-        :param hashalg: A hash function (defaults to SHA256)
-        """
-
-        digest = hashlib.new(hashalg)
-
-        t = {"kty": self.get("kty")}
-        for name, (description, private, required, kind) in self.PARAMS.items():
-            if required and not private:
-                t[name] = self.get(name)
-
-        intermediary = json.dumps(t, separators=(",", ":"), sort_keys=True)
-        digest.update(intermediary.encode("utf8"))
-        return b64u_encode(digest.digest())
-
-    def _validate(self) -> None:
-        """
-        Internal method used to validate a Jwk. It checks that all required parameters are present and well-formed.
-        If the key is private, it sets the `is_private` flag to `True`.
-        """
-        is_private = False
-        for name, (description, private, required, kind) in self.PARAMS.items():
-
-            value = getattr(self, name)
-
-            if private and value is not None:
-                is_private = True
-
-            if not private and required and value is None:
-                raise InvalidJwk(
-                    f"Missing required public param {description} ({name})"
-                )
-
-            if kind == "b64u":
-                try:
-                    b64u_decode(value)
-                except ValueError:
-                    InvalidJwk(
-                        f"Parameter {description} ({name}) must be a Base64URL-encoded value"
-                    )
-            elif kind == "unsupported":
-                if value is not None:
-                    raise InvalidJwk(f"Unsupported JWK param {name}")
-            elif kind == "name":
-                pass
-            else:
-                assert False, f"Unsupported param {name} type {kind}"
-
-        # if at least one of the supplied parameter was private, then all required private parameters must be provided
-        if is_private:
-            for name, (description, private, required, kind) in self.PARAMS.items():
-                value = self.data.get(name)
-                if private and required and value is None:
-                    raise InvalidJwk(
-                        f"Missing required private param {description} ({name})"
-                    )
-
-        self.is_private = is_private
 
     def sign(self, data: bytes, alg: Optional[str]) -> bytes:
         """
@@ -241,10 +261,47 @@ class Jwk(_BaseJwk):
         """
         raise NotImplementedError  # pragma: no cover
 
-    @property
-    def supported_signing_algorithms(self) -> List[str]:
+    def encrypt_key(self, key: bytes, alg: Optional[str] = None) -> bytes:
         """
-        Returns a list of signing algs that are compatible for use with this Jwk.
-        :return: a list of signing algs
+        Encrypts a key using a Key Management Algorithm alg.
         """
-        raise NotImplementedError  # pragma: no cover
+        raise NotImplementedError
+
+    def decrypt_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
+        """
+        Decrypts a key using a Key Management Algorithm alg.
+        """
+        raise NotImplementedError
+
+    CRYPTOGRAPHY_KEY_TYPES = {
+        rsa.RSAPrivateKey: "RSA",
+        ec.EllipticCurvePrivateKey: "EC",
+    }
+
+    @classmethod
+    def from_cryptography_private_key(cls, private_key: Any) -> "Jwk":
+        """
+        Initializes a Jwk from a private key from the `cryptography` library
+        """
+        raise NotImplementedError
+
+    def to_cryptography_public_key(self) -> Any:
+        """
+        Returns a private key from the `cryptography` library that matches this Jwk
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def from_pem_private_key(
+        cls, data: bytes, password: Optional[bytes] = None
+    ) -> "Jwk":
+        cryptography_key = serialization.load_pem_private_key(data, password)
+        kty = cls.CRYPTOGRAPHY_KEY_TYPES.get(type(cryptography_key))
+        if kty is None:
+            raise ValueError(
+                f"Unsupported Key type for this key (cryptography type: {type(cryptography_key)}"
+            )
+        jwk_class = cls.subclasses.get(kty)
+        if jwk_class is None:
+            raise ValueError(f"Unimplemented Jwk class for this Key Type: {kty}")
+        return jwk_class.from_cryptography_private_key(cryptography_key)

@@ -48,6 +48,7 @@ mkdocs-autorefs = "0.1.1"
 pre-commit = "^2.12.0"
 toml = "^0.10.2"
 types-cryptography = "^3.3.5"
+mypy = "^0.910"
 
 
 
@@ -72,3 +73,8 @@ exclude = '''
   | dist
 )/
 '''
+
+[mypy]
+strict = true
+implicit-reexport = true
+show-error-codes = true

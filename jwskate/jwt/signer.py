@@ -5,6 +5,7 @@ from typing import Any, Dict, Iterable, Optional, Union
 from jwskate import Jwk
 
 from .base import Jwt
+from .signed import SignedJwt
 
 
 class JwtSigner:
@@ -30,7 +31,7 @@ class JwtSigner:
         extra_headers: Optional[Dict[str, Any]] = None,
         lifetime: Optional[int] = None,
         leeway: Optional[int] = None,
-    ) -> Jwt:
+    ) -> SignedJwt:
         now = datetime.now().timestamp()
         lifetime = lifetime or self.default_lifetime
         exp = now + lifetime

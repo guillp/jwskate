@@ -1,7 +1,7 @@
 import secrets
 from typing import Iterable, List, Optional, Tuple, Union
 
-from cryptography.hazmat.primitives import hashes, hmac
+from cryptography.hazmat.primitives import hashes, hmac, keywrap
 from cryptography.hazmat.primitives.ciphers import aead
 
 from ..utils import b64u_decode, b64u_encode
@@ -24,6 +24,28 @@ class SymetricJwk(Jwk):
         "HS256": (hmac.HMAC, hashes.SHA256(), 256),
         "HS384": (hmac.HMAC, hashes.SHA384(), 384),
         "HS512": (hmac.HMAC, hashes.SHA512(), 512),
+    }
+
+    KEY_MANAGEMENT_ALGORITHMS = {
+        # name: ("Description", wrap_method, unwrap_method, key_size)
+        "A128KW": (
+            "AES Key Wrap with default initial value using 128-bit key",
+            keywrap.aes_key_wrap,
+            keywrap.aes_key_unwrap,
+            128,
+        ),
+        "A192KW": (
+            "AES Key Wrap with default initial value using 192-bit key",
+            keywrap.aes_key_wrap,
+            keywrap.aes_key_unwrap,
+            192,
+        ),
+        "A256KW": (
+            "AES Key Wrap with default initial value using 256-bit key",
+            keywrap.aes_key_wrap,
+            keywrap.aes_key_unwrap,
+            256,
+        ),
     }
 
     ENCRYPTION_ALGORITHMS = {
@@ -186,6 +208,46 @@ class SymetricJwk(Jwk):
 
         alg_key = alg_class(self.key)
         cyphertext_with_tag = cyphertext + tag
-        plaintext = alg_key.decrypt(iv, cyphertext_with_tag, aad)
+        plaintext: bytes = alg_key.decrypt(iv, cyphertext_with_tag, aad)
 
+        return plaintext
+
+    def encrypt_key(self, key: bytes, alg: Optional[str] = None) -> bytes:
+        alg = self.alg or alg
+        if alg is None:
+            raise ValueError("An encryption alg is required")
+
+        (
+            description,
+            wrap_method,
+            unwrap_method,
+            key_size,
+        ) = self.KEY_MANAGEMENT_ALGORITHMS[alg]
+
+        if self.key_size != key_size:
+            raise ValueError(
+                f"This key size of {self.key_size} doesn't match the expected keysize for {description} of {key_size} bits"
+            )
+
+        cypherkey = wrap_method(self.key, key)
+        return cypherkey
+
+    def decrypt_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
+        alg = self.alg or alg
+        if alg is None:
+            raise ValueError("An encryption alg is required")
+
+        (
+            description,
+            wrap_method,
+            unwrap_method,
+            key_size,
+        ) = self.KEY_MANAGEMENT_ALGORITHMS[alg]
+
+        if self.key_size != key_size:
+            raise ValueError(
+                f"This key size of {self.key_size} doesn't match the expected keysize for {description} of {key_size} bits"
+            )
+
+        plaintext = unwrap_method(self.key, cypherkey)
         return plaintext

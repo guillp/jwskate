@@ -100,7 +100,7 @@ def _default_json_encode(data: Any) -> Any:
 
 
 def json_encode(
-    obj: Dict[str, Any],
+    obj: Any,
     compact: bool = True,
     default_encoder: Callable[[Any], Any] = _default_json_encode,
 ) -> str:
@@ -118,21 +118,29 @@ def json_encode(
     return json.dumps(obj, separators=separators, default=default_encoder)
 
 
-def json_decode(s):
+def json_decode(s: Union[bytes, str]) -> Dict[str, Any]:
     """
     Decodes a string representation of a JSON into a dict.
     """
-    return json.loads(s)
+    obj = json.loads(s)
+    if not isinstance(obj, dict):
+        raise ValueError("This is not a JSON object")
+    return obj
 
 
-def b64u_encode_json(j: Dict[str, Any], encoder=json_encode) -> str:
+def b64u_encode_json(
+    j: Dict[str, Any], encoder: Callable[[Dict[str, Any]], str] = json_encode
+) -> str:
     encoded_json = encoder(j)
     return b64u_encode(encoded_json)
 
 
-def b64u_decode_json(b64: Union[bytes, str], decoder=json_decode) -> Dict[str, Any]:
+def b64u_decode_json(
+    b64: Union[bytes, str],
+    decoder: Callable[[Union[str, bytes]], Dict[str, Any]] = json_decode,
+) -> Dict[str, Any]:
     encoded_json = b64u_decode(b64)
-    return json_decode(encoded_json)
+    return decoder(encoded_json)
 
 
 def int_to_b64u(i: int, length: Optional[int] = None) -> str:

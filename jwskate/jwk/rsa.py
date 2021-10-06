@@ -1,6 +1,7 @@
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, Optional, Tuple, Union
 
 import cryptography
+from cryptography import exceptions
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
@@ -69,6 +70,97 @@ class RSAJwk(Jwk):
         ),
     }
 
+    def to_cryptography_public_key(self) -> rsa.RSAPublicKey:
+        return rsa.RSAPublicNumbers(e=self.exponent, n=self.modulus).public_key()
+
+    def to_cryptography_private_key(self) -> rsa.RSAPrivateKey:
+        if not self.is_private:
+            raise PrivateKeyRequired()
+
+        return rsa.RSAPrivateNumbers(
+            self.first_prime_factor,
+            self.second_prime_factor,
+            self.private_exponent,
+            self.first_factor_crt_exponent,
+            self.second_factor_crt_exponent,
+            self.first_crt_coefficient,
+            rsa.RSAPublicNumbers(self.exponent, self.modulus),
+        ).private_key()
+
+    @classmethod
+    def public(cls, n: int, e: int, **params: str) -> "RSAJwk":
+        """
+        Initialize a Public RsaJwk from a modulus and an exponent.
+        :param n: the modulus
+        :param e: the exponent
+        :param params: additional parameters for the return RSAJwk
+        :return: a RsaJwk
+        """
+        return cls(dict(kty="RSA", n=int_to_b64u(n), e=int_to_b64u(e), **params))
+
+    @classmethod
+    def private(
+        cls,
+        n: int,
+        e: int,
+        d: int,
+        p: Optional[int] = None,
+        q: Optional[int] = None,
+        dp: Optional[int] = None,
+        dq: Optional[int] = None,
+        qi: Optional[int] = None,
+        **params: str,
+    ) -> "RSAJwk":
+        """
+        Initializes a Private RsaJwk from its required parameters.
+        :param n: the modulus
+        :param e: the exponent
+        :param d: the private exponent
+        :param p: the first prime factor
+        :param q: the second prime factor
+        :param dp: the first factor CRT exponent
+        :param dq: the second factor CRT exponent
+        :param qi: the first CRT coefficient
+        :param params: additional parameters for the return RSAJwk
+        :return:
+        """
+        return cls(
+            dict(
+                kty="RSA",
+                n=int_to_b64u(n),
+                e=int_to_b64u(e),
+                d=int_to_b64u(d),
+                p=int_to_b64u(p) if p is not None else None,
+                q=int_to_b64u(q) if q is not None else None,
+                dp=int_to_b64u(dp) if dp is not None else None,
+                dq=int_to_b64u(dq) if dq is not None else None,
+                qi=int_to_b64u(qi) if qi is not None else None,
+                **params,
+            )
+        )
+
+    @classmethod
+    def generate(cls, key_size: int = 4096, **params: str) -> "RSAJwk":
+        """
+        Generates a new random Private RSAJwk.
+        :param key_size: the key size to use for the generated key.
+        :param params: additional parameters for the generated RSAJwk
+        :return: a generated RSAJwk
+        """
+        private_key = rsa.generate_private_key(65537, key_size=key_size)
+        pn = private_key.private_numbers()
+        return cls.private(
+            n=pn.public_numbers.n,
+            e=pn.public_numbers.e,
+            d=pn.d,
+            p=pn.p,
+            q=pn.q,
+            dp=pn.dmp1,
+            dq=pn.dmq1,
+            qi=pn.iqmp,
+            **params,
+        )
+
     @property
     def modulus(self) -> int:
         """
@@ -111,93 +203,27 @@ class RSAJwk(Jwk):
 
     @property
     def first_factor_crt_exponent(self) -> int:
+        """
+        Returns the first factor CRT exponent from this Jwk.
+        :return: the first factor CRT coefficient (from parameter `dp`)
+        """
         return b64u_to_int(self.dp)
 
     @property
     def second_factor_crt_exponent(self) -> int:
+        """
+        Returns the second factor CRT exponent from this Jwk.
+        :return: the second factor CRT coefficient (from parameter `dq`)
+        """
         return b64u_to_int(self.dq)
 
     @property
     def first_crt_coefficient(self) -> int:
         """
         Returns the first CRT coefficient from this Jwk
-        :return: he first CRT coefficient (from parameter `qi`)
+        :return: the first CRT coefficient (from parameter `qi`)
         """
         return b64u_to_int(self.qi)
-
-    @classmethod
-    def public(cls, n: int, e: int, **params: str) -> "RSAJwk":
-        """
-        Initialize a Public RsaJwk from a modulus and an exponent.
-        :param n: the modulus
-        :param e: the exponent
-        :param params: additional parameters for the return RSAJwk
-        :return: a RsaJwk
-        """
-        return cls(dict(kty="RSA", n=int_to_b64u(n), e=int_to_b64u(e), **params))
-
-    @classmethod
-    def private(
-        cls,
-        n: int,
-        e: int,
-        d: int,
-        p: int,
-        q: int,
-        dp: int,
-        dq: int,
-        qi: int,
-        **params: str,
-    ) -> "RSAJwk":
-        """
-        Initializes a Private RsaJwk from its required parameters.
-        :param n: the modulus
-        :param e: the exponent
-        :param d: the private exponent
-        :param p: the first prime factor
-        :param q: the second prime factor
-        :param dp: the first factor CRT exponent
-        :param dq: the second factor CRT exponent
-        :param qi: the first CRT coefficient
-        :param params: additional parameters for the return RSAJwk
-        :return:
-        """
-        return cls(
-            dict(
-                kty="RSA",
-                n=int_to_b64u(n),
-                e=int_to_b64u(e),
-                d=int_to_b64u(d),
-                p=int_to_b64u(p),
-                q=int_to_b64u(q),
-                dp=int_to_b64u(dp),
-                dq=int_to_b64u(dq),
-                qi=int_to_b64u(qi),
-                **params,
-            )
-        )
-
-    @classmethod
-    def generate(cls, key_size: int = 4096, **params: str) -> "RSAJwk":
-        """
-        Generates a new random Private RSAJwk.
-        :param key_size: the key size to use for the generated key.
-        :param params: additional parameters for the generated RSAJwk
-        :return: a generated RSAJwk
-        """
-        private_key = rsa.generate_private_key(65537, key_size=key_size)
-        pn = private_key.private_numbers()
-        return cls.private(
-            n=pn.public_numbers.n,
-            e=pn.public_numbers.e,
-            d=pn.d,
-            p=pn.p,
-            q=pn.q,
-            dp=pn.dmp1,
-            dq=pn.dmq1,
-            qi=pn.iqmp,
-            **params,
-        )
 
     def sign(self, data: bytes, alg: Optional[str] = "RS256") -> bytes:
         alg = self.alg or alg
@@ -207,21 +233,15 @@ class RSAJwk(Jwk):
         if not self.is_private:
             raise PrivateKeyRequired("A private key is required for signing")
 
-        key = rsa.RSAPrivateNumbers(
-            self.first_prime_factor,
-            self.second_prime_factor,
-            self.private_exponent,
-            self.first_factor_crt_exponent,
-            self.second_factor_crt_exponent,
-            self.first_crt_coefficient,
-            rsa.RSAPublicNumbers(self.exponent, self.modulus),
-        ).private_key()
+        key = self.to_cryptography_private_key()
+
         try:
             description, padding, hashing = self.SIGNATURE_ALGORITHMS[alg]
         except KeyError:
             raise ValueError("Unsupported signing alg", alg)
 
-        return key.sign(data, padding, hashing)
+        signature: bytes = key.sign(data, padding, hashing)
+        return signature
 
     def verify(
         self,
@@ -255,16 +275,12 @@ class RSAJwk(Jwk):
                     hashing,
                 )
                 return True
-            except cryptography.exceptions.InvalidSignature:
+            except exceptions.InvalidSignature:
                 continue
 
         return False
 
-    @property
-    def supported_signing_algorithms(self) -> List[str]:
-        return list(self.SIGNATURE_ALGORITHMS.keys())
-
-    def encrypt_cek(self, cek: bytes, alg: Optional[str] = None) -> bytes:
+    def encrypt_key(self, plaintext_key: bytes, alg: Optional[str] = None) -> bytes:
         alg = self.alg or alg
         if alg is None:
             raise ValueError("an encryption alg is required")
@@ -272,11 +288,11 @@ class RSAJwk(Jwk):
 
         public_key = rsa.RSAPublicNumbers(e=self.exponent, n=self.modulus).public_key()
 
-        cyphertext = public_key.encrypt(cek, padding_alg)
+        cyphertext = public_key.encrypt(plaintext_key, padding_alg)
 
         return cyphertext
 
-    def decrypt_cek(self, enc_cek, alg: Optional[str] = None) -> bytes:
+    def decrypt_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
         alg = self.alg or alg
         if alg is None:
             raise ValueError("an encryption alg is required")
@@ -292,6 +308,25 @@ class RSAJwk(Jwk):
             rsa.RSAPublicNumbers(self.exponent, self.modulus),
         ).private_key()
 
-        plaintext = key.decrypt(enc_cek, padding_alg)
+        plaintext = key.decrypt(cypherkey, padding_alg)
 
         return plaintext
+
+    def encrypt(
+        self,
+        plaintext: bytes,
+        aad: Optional[bytes] = None,
+        alg: Optional[str] = None,
+        iv: Optional[bytes] = None,
+    ) -> Tuple[bytes, bytes, bytes]:
+        raise NotImplementedError
+
+    def decrypt(
+        self,
+        cyphertext: bytes,
+        tag: bytes,
+        iv: bytes,
+        aad: Optional[bytes] = None,
+        alg: Optional[str] = None,
+    ) -> bytes:
+        raise NotImplementedError

@@ -76,10 +76,10 @@ class JweCompact:
         """
         return self.headers.get(name)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value.decode()
 
-    def __bytes__(self):
+    def __bytes__(self) -> bytes:
         return self.value
 
     @classmethod
@@ -90,7 +90,7 @@ class JweCompact:
         iv: bytes,
         cyphertext: bytes,
         tag: bytes,
-    ):
+    ) -> "JweCompact":
         return cls(
             ".".join(
                 (
@@ -110,10 +110,10 @@ class JweCompact:
         jwk: Union[Jwk, Dict[str, Any]],
         alg: Optional[str] = None,
         enc: Optional[str] = None,
-        extra_headers: Dict[str, Any] = None,
-        cek: bytes = None,
-        iv: bytes = None,
-    ):
+        extra_headers: Optional[Dict[str, Any]] = None,
+        cek: Optional[bytes] = None,
+        iv: Optional[bytes] = None,
+    ) -> "JweCompact":
         if not isinstance(jwk, Jwk):
             jwk = Jwk(jwk)
 
@@ -131,7 +131,7 @@ class JweCompact:
         else:
             cek_jwk = SymetricJwk.from_bytes(cek, alg=enc)
 
-        enc_cek = jwk.encrypt_cek(cek_jwk.key, alg)
+        enc_cek = jwk.encrypt_key(cek_jwk.key, alg)
 
         aad = b64u_encode_json(headers).encode()
 
@@ -160,7 +160,7 @@ class JweCompact:
         alg = jwk.alg or alg
         enc = jwk.enc or enc
 
-        raw_cek = jwk.decrypt_cek(self.content_encryption_key, alg)
+        raw_cek = jwk.decrypt_key(self.content_encryption_key, alg)
         cek = SymetricJwk.from_bytes(raw_cek)
 
         plaintext = cek.decrypt(

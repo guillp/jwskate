@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
@@ -56,6 +56,35 @@ class OKPJwk(Jwk):
         )
         return cls.private(crv=crv, x=x, d=d, **params)
 
-    @property
-    def supported_signing_algorithms(self) -> List[str]:
-        return list(self.SIGNATURE_ALGORITHMS.keys())
+    def sign(self, data: bytes, alg: Optional[str]) -> bytes:
+        raise NotImplementedError
+
+    def verify(
+        self, data: bytes, signature: bytes, alg: Union[str, Iterable[str], None]
+    ) -> bool:
+        raise NotImplementedError
+
+    def decrypt(
+        self,
+        cyphertext: bytes,
+        tag: bytes,
+        iv: bytes,
+        aad: Optional[bytes] = None,
+        alg: Optional[str] = None,
+    ) -> bytes:
+        raise NotImplementedError
+
+    def encrypt(
+        self,
+        plaintext: bytes,
+        aad: Optional[bytes] = None,
+        alg: Optional[str] = None,
+        iv: Optional[bytes] = None,
+    ) -> Tuple[bytes, bytes, bytes]:
+        raise NotImplementedError
+
+    def encrypt_key(self, key: bytes, alg: Optional[str] = None) -> bytes:
+        raise NotImplementedError
+
+    def decrypt_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
+        raise NotImplementedError

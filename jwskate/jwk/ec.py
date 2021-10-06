@@ -1,6 +1,7 @@
-from typing import Iterable, List, Optional, Union, cast
+from typing import Iterable, List, Optional, Tuple, Union, cast
 
 import cryptography
+from cryptography import exceptions
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
 
@@ -37,6 +38,14 @@ class ECJwk(Jwk):
         "ES256": ("ECDSA using P-256 and SHA-256", hashes.SHA256()),
         "ES384": ("ECDSA using P-384 and SHA-384", hashes.SHA384()),
         "ES512": ("ECDSA using P-521 and SHA-512", hashes.SHA512()),
+    }
+
+    KEY_MANAGEMENT_ALGORITHMS = {
+        # name: ("description", alg)
+        "ECDH-ES": (
+            "Elliptic Curve Diffie-Hellman Ephemeral Static key agreement using Concat KDF",
+        ),
+        "ECDH-ES+A128KW": ('ECDH-ES using Concat KDF and CEK wrapped with "A128KW"',),
     }
 
     @classmethod
@@ -132,7 +141,7 @@ class ECJwk(Jwk):
                     ec.ECDSA(hashing),
                 )
                 return True
-            except cryptography.exceptions.InvalidSignature:
+            except exceptions.InvalidSignature:
                 continue
 
         return False
@@ -167,6 +176,27 @@ class ECJwk(Jwk):
         """
         return b64u_to_int(self.d)
 
-    @property
-    def supported_signing_algorithms(self) -> List[str]:
-        return list(self.SIGNATURE_ALGORITHMS.keys())
+    def decrypt(
+        self,
+        cyphertext: bytes,
+        tag: bytes,
+        iv: bytes,
+        aad: Optional[bytes] = None,
+        alg: Optional[str] = None,
+    ) -> bytes:
+        raise NotImplementedError
+
+    def encrypt(
+        self,
+        plaintext: bytes,
+        aad: Optional[bytes] = None,
+        alg: Optional[str] = None,
+        iv: Optional[bytes] = None,
+    ) -> Tuple[bytes, bytes, bytes]:
+        raise NotImplementedError
+
+    def encrypt_key(self, key: bytes, alg: Optional[str] = None) -> bytes:
+        raise NotImplementedError
+
+    def decrypt_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
+        raise NotImplementedError

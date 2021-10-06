@@ -112,7 +112,7 @@ class Jwt:
         cls,
         claims: Dict[str, Any],
         extra_headers: Optional[Dict[str, Any]] = None,
-    ):
+    ) -> "SignedJwt":
         """
         Generates a JWT that is not signed and not encrypted (with alg=none)
         """

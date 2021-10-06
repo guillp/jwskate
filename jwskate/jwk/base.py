@@ -20,13 +20,8 @@ from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from ..utils import b64u_decode, b64u_encode
 from .exceptions import InvalidJwk
 
-if TYPE_CHECKING:  # pragma: no cover
-    _BaseJwk = UserDict[str, Any]
-else:
-    _BaseJwk = UserDict
 
-
-class Jwk(_BaseJwk):
+class Jwk(Dict[str, Any]):
     """
     Represents a Json Web Key (JWK), as specified in RFC7517.
     A JWK is a JSON object that represents a cryptographic key.  The members of the object
@@ -86,11 +81,11 @@ class Jwk(_BaseJwk):
         :param params: a dict with the parsed Jwk parameters.
         :param kid: a Key Id to use if no `kid` parameters is present in `params`.
         """
-        self.data = dict(params)
+        super().__init__(params)
         self.is_private = False
         self._validate()
         if self.kid is None:
-            self.data["kid"] = kid or self.thumbprint()
+            self["kid"] = kid or self.thumbprint()
 
     def __getattr__(self, item: str) -> Any:
         """
@@ -98,7 +93,7 @@ class Jwk(_BaseJwk):
         :param item:
         :return:
         """
-        return self.data.get(item)
+        return self.get(item)
 
     def thumbprint(self, hashalg: str = "SHA256") -> str:
         """Returns the key thumbprint as specified by RFC 7638.
@@ -125,7 +120,7 @@ class Jwk(_BaseJwk):
         jwk_is_private = False
         for name, (description, is_private, is_required, kind) in self.PARAMS.items():
 
-            value = getattr(self, name)
+            value = self.get(name)
 
             if is_private and value is not None:
                 jwk_is_private = True
@@ -135,11 +130,17 @@ class Jwk(_BaseJwk):
                     f"Missing required public param {description} ({name})"
                 )
 
-            if kind == "b64u":
+            if value is None:
+                pass
+            elif kind == "b64u":
+                if not isinstance(value, str):
+                    raise InvalidJwk(
+                        f"Parameter {description} ({name}) must be a string with a Base64URL-encoded value"
+                    )
                 try:
                     b64u_decode(value)
                 except ValueError:
-                    InvalidJwk(
+                    raise InvalidJwk(
                         f"Parameter {description} ({name}) must be a Base64URL-encoded value"
                     )
             elif kind == "unsupported":
@@ -158,7 +159,7 @@ class Jwk(_BaseJwk):
                 is_required,
                 kind,
             ) in self.PARAMS.items():
-                value = self.data.get(name)
+                value = self.get(name)
                 if is_private and is_required and value is None:
                     raise InvalidJwk(
                         f"Missing required private param {description} ({name})"
@@ -183,7 +184,7 @@ class Jwk(_BaseJwk):
             return self
 
         params = {
-            name: self.data.get(name)
+            name: self.get(name)
             for name, (description, private, required, kind) in self.PARAMS.items()
             if not private
         }
@@ -305,3 +306,18 @@ class Jwk(_BaseJwk):
         if jwk_class is None:
             raise ValueError(f"Unimplemented Jwk class for this Key Type: {kty}")
         return jwk_class.from_cryptography_private_key(cryptography_key)
+
+    @classmethod
+    def generate(self, **kwargs: Any) -> "Jwk":
+        """
+        Generates a Private Key. This method is implemented by subclasses for specific Key Types
+        and returns an instance of that specific subclass.
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def generate_for_kty(cls, kty: str, **kwargs: Any) -> "Jwk":
+        jwk_class = cls.subclasses.get(kty)
+        if jwk_class is None:
+            raise ValueError("Unsupported Key Type:", kty)
+        return jwk_class.generate(**kwargs)

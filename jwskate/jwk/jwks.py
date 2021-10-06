@@ -1,9 +1,9 @@
 from typing import Any, Dict, Iterable, List, Optional, Union
 
-from .base import Jwk, _BaseJwk
+from .base import Jwk
 
 
-class JwkSet(_BaseJwk):
+class JwkSet(Dict[str, Any]):
     """
     A set of JWK keys, with methods for easy management of keys.
     A JwkSet is a dict subclass, so you can do anything with a JwkSet that you can do with a dict.
@@ -45,7 +45,7 @@ class JwkSet(_BaseJwk):
         Returns the list of keys from this JwkSet, as `Jwk` instances
         :return: a list of `Jwk`
         """
-        return self.data.get("keys", [])
+        return self.get("keys", [])
 
     def get_jwk_by_kid(self, kid: str) -> Optional[Jwk]:
         """

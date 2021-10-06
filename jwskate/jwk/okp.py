@@ -41,7 +41,7 @@ class OKPJwk(Jwk):
         return cls(dict(crv=crv, x=b64u_encode(x), d=b64u_encode(d), **params))
 
     @classmethod
-    def generate(cls, crv: str, **params: str) -> "OKPJwk":
+    def generate(cls, crv: str = "Ed25519", **params: str) -> "OKPJwk":
         generator = cls.CURVES.get(crv)
         if generator is None:
             raise ValueError("Unsupported Curve", crv)

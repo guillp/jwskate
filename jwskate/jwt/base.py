@@ -5,7 +5,7 @@ from jwskate.jwk import Jwk
 from ..utils import b64u_encode, b64u_encode_json
 
 if TYPE_CHECKING:
-    from jwskate import SignedJwt, EncryptedJwt
+    from jwskate import EncryptedJwt, SignedJwt
 
 
 class InvalidJwt(ValueError):

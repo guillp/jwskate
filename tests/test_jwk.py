@@ -1,6 +1,7 @@
 import base64
 
 import pytest
+
 from jwskate import ECJwk, InvalidJwk, Jwk, JwkSet, OKPJwk, RSAJwk, SymetricJwk
 
 RSA_PRIVATE_JWK = {

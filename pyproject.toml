@@ -24,17 +24,17 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.6.1,<4.0"
+python = ">=3.6.2,<4.0"
 cryptography = "^35.0.0"
 
 [tool.poetry.dev-dependencies]
 
-black  =  "20.8b1"
-isort  =  "5.6.4"
-flake8  = "3.8.4"
+black  =  "21.9b0"
+isort  =  "^5.6.4"
+flake8  = "^3.8.4"
 flake8-docstrings = "^1.6.0"
-pytest  = "6.1.2"
-pytest-cov  = "2.10.1"
+pytest  = "^6.1.2"
+pytest-cov  = "^2.10.1"
 tox  = "^3.20.1"
 virtualenv  = "^20.2.2"
 pip  = "^20.3.1"
@@ -44,7 +44,7 @@ mkdocs-material  = "^6.1.7"
 mkdocstrings  = "^0.13.6"
 mkdocs-material-extensions  = "^1.0.1"
 twine  = "^3.3.0"
-mkdocs-autorefs = "0.1.1"
+mkdocs-autorefs = "^0.1.1"
 pre-commit = "^2.12.0"
 toml = "^0.10.2"
 types-cryptography = "^3.3.5"
@@ -77,4 +77,10 @@ exclude = '''
 [mypy]
 strict = true
 implicit-reexport = true
-show-error-codes = true
+pretty = true
+show_error_context = true
+show_column_numbers = true
+show_error_codes = true
+warn_unused_configs = true
+warn_unused_ignores = true
+warn_redundant_casts = true

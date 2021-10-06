@@ -311,22 +311,3 @@ class RSAJwk(Jwk):
         plaintext = key.decrypt(cypherkey, padding_alg)
 
         return plaintext
-
-    def encrypt(
-        self,
-        plaintext: bytes,
-        aad: Optional[bytes] = None,
-        alg: Optional[str] = None,
-        iv: Optional[bytes] = None,
-    ) -> Tuple[bytes, bytes, bytes]:
-        raise NotImplementedError
-
-    def decrypt(
-        self,
-        cyphertext: bytes,
-        tag: bytes,
-        iv: bytes,
-        aad: Optional[bytes] = None,
-        alg: Optional[str] = None,
-    ) -> bytes:
-        raise NotImplementedError

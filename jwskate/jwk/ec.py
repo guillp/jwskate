@@ -175,28 +175,3 @@ class ECJwk(Jwk):
         :return: the ECC private key (from parameter `d`)
         """
         return b64u_to_int(self.d)
-
-    def decrypt(
-        self,
-        cyphertext: bytes,
-        tag: bytes,
-        iv: bytes,
-        aad: Optional[bytes] = None,
-        alg: Optional[str] = None,
-    ) -> bytes:
-        raise NotImplementedError
-
-    def encrypt(
-        self,
-        plaintext: bytes,
-        aad: Optional[bytes] = None,
-        alg: Optional[str] = None,
-        iv: Optional[bytes] = None,
-    ) -> Tuple[bytes, bytes, bytes]:
-        raise NotImplementedError
-
-    def encrypt_key(self, key: bytes, alg: Optional[str] = None) -> bytes:
-        raise NotImplementedError
-
-    def decrypt_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
-        raise NotImplementedError

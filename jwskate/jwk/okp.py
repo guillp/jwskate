@@ -55,36 +55,3 @@ class OKPJwk(Jwk):
             serialization.Encoding.Raw, serialization.PublicFormat.Raw
         )
         return cls.private(crv=crv, x=x, d=d, **params)
-
-    def sign(self, data: bytes, alg: Optional[str]) -> bytes:
-        raise NotImplementedError
-
-    def verify(
-        self, data: bytes, signature: bytes, alg: Union[str, Iterable[str], None]
-    ) -> bool:
-        raise NotImplementedError
-
-    def decrypt(
-        self,
-        cyphertext: bytes,
-        tag: bytes,
-        iv: bytes,
-        aad: Optional[bytes] = None,
-        alg: Optional[str] = None,
-    ) -> bytes:
-        raise NotImplementedError
-
-    def encrypt(
-        self,
-        plaintext: bytes,
-        aad: Optional[bytes] = None,
-        alg: Optional[str] = None,
-        iv: Optional[bytes] = None,
-    ) -> Tuple[bytes, bytes, bytes]:
-        raise NotImplementedError
-
-    def encrypt_key(self, key: bytes, alg: Optional[str] = None) -> bytes:
-        raise NotImplementedError
-
-    def decrypt_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
-        raise NotImplementedError

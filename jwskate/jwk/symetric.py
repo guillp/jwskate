@@ -8,7 +8,7 @@ from ..utils import b64u_decode, b64u_encode
 from .base import Jwk
 
 
-class SymetricJwk(Jwk):
+class SymmetricJwk(Jwk):
     """
     Implement Symetric keys, with `"kty": "oct"`.
     """
@@ -59,29 +59,29 @@ class SymetricJwk(Jwk):
     }
 
     @classmethod
-    def from_bytes(cls, k: Union[bytes, str], **params: str) -> "SymetricJwk":
+    def from_bytes(cls, k: Union[bytes, str], **params: str) -> "SymmetricJwk":
         """
-        Initializes a SymetricJwk from a raw secret key.
+        Initializes a SymmetricJwk from a raw secret key.
         The provided secret key is encoded and used as the `k` parameter for the returned SymetricKey.
         :param k: the key to use
         :param params: additional parameters for the returned Jwk
-        :return: a SymetricJwk
+        :return: a SymmetricJwk
         """
         return cls(dict(key="oct", k=b64u_encode(k), **params))
 
     @classmethod
-    def generate(cls, size: int = 128, **params: str) -> "SymetricJwk":
+    def generate(cls, size: int = 128, **params: str) -> "SymmetricJwk":
         """
-        Generates a random SymetricJwk, with a given key size.
+        Generates a random SymmetricJwk, with a given key size.
         :param size: the size of the generated key, in bytes.
         :param params: additional parameters for the returned Jwk
-        :return: a SymetricJwk with a random key
+        :return: a SymmetricJwk with a random key
         """
         key = secrets.token_bytes(size)
         return cls.from_bytes(key, **params)
 
     @classmethod
-    def generate_for_alg(cls, alg: str, **params: str) -> "SymetricJwk":
+    def generate_for_alg(cls, alg: str, **params: str) -> "SymmetricJwk":
         if alg in cls.SIGNATURE_ALGORITHMS:
             _, _, min_key_size = cls.SIGNATURE_ALGORITHMS[alg]
             return cls.generate(min_key_size, alg=alg, **params)
@@ -93,7 +93,7 @@ class SymetricJwk(Jwk):
     @property
     def key(self) -> bytes:
         """
-        Returns the raw symetric key.
+        Returns the raw symmetric key.
         :return: the key from the `k` parameter, base64u-decoded.
         """
         return b64u_decode(self.k)

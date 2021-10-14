@@ -1,19 +1,9 @@
 # see https://github.com/python/typing/issues/60#issuecomment-869757075
 import hashlib
 import json
-from collections import UserDict
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union
 
+from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
@@ -199,7 +189,7 @@ class Jwk(Dict[str, Any]):
             )
         )
 
-    def sign(self, data: bytes, alg: Optional[str]) -> bytes:
+    def sign(self, data: bytes, alg: Optional[str]) -> BinaPy:
         """
         Signs a data using this Jwk, and returns the signature.
         This is implemented by subclasses.
@@ -228,7 +218,7 @@ class Jwk(Dict[str, Any]):
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
         iv: Optional[bytes] = None,
-    ) -> Tuple[bytes, bytes, bytes]:
+    ) -> Tuple[BinaPy, BinaPy, BinaPy]:
         """
         Encrypts a plaintext, with an optional Additional Authenticated Data (AAD) using this JWK, and returns
         the Encrypted Data, the Authentication Tag and the used Initialization Vector.
@@ -249,7 +239,7 @@ class Jwk(Dict[str, Any]):
         iv: bytes,
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
-    ) -> bytes:
+    ) -> BinaPy:
         """
         Decrypts an encrypted data using this Jwk, and returns the encrypted result.
         This is implemented by subclasses.
@@ -262,13 +252,13 @@ class Jwk(Dict[str, Any]):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def encrypt_key(self, key: bytes, alg: Optional[str] = None) -> bytes:
+    def encrypt_key(self, key: bytes, alg: Optional[str] = None) -> BinaPy:
         """
         Encrypts a key using a Key Management Algorithm alg.
         """
         raise NotImplementedError
 
-    def decrypt_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
+    def decrypt_key(self, cypherkey: bytes, alg: Optional[str] = None) -> BinaPy:
         """
         Decrypts a key using a Key Management Algorithm alg.
         """

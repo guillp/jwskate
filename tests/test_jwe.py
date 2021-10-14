@@ -1,45 +1,15 @@
+import pytest
+
 from jwskate import JweCompact, Jwk
+from jwskate.jwe.compact import InvalidJwe
 
 
 def test_jwe():
     plaintext = b"The true sign of intelligence is not knowledge but imagination."
     alg = "RSA-OAEP"
     enc = "A256GCM"
-    cek = bytes(
-        [
-            177,
-            161,
-            244,
-            128,
-            84,
-            143,
-            225,
-            115,
-            63,
-            180,
-            3,
-            255,
-            107,
-            154,
-            212,
-            246,
-            138,
-            7,
-            110,
-            91,
-            112,
-            46,
-            34,
-            105,
-            47,
-            130,
-            203,
-            46,
-            122,
-            234,
-            64,
-            252,
-        ]
+    cek = bytes.fromhex(
+        "b1a1f480548fe1733fb403ff6b9ad4f68a076e5b702e22692f82cb2e7aea40fc"
     )
     jwk = Jwk(
         {
@@ -74,15 +44,15 @@ def test_jwe():
             "eL4HrtZkUuKvnPrMnsUUFlfUdybVzxyjz9JF_XyaY14ardLSjf4L_FNY",
         }
     )
-    iv = bytes([227, 197, 117, 252, 2, 219, 233, 68, 180, 225, 77, 219])
+    iv = bytes.fromhex("e3c575fc02dbe944b4e14ddb")
 
     jwe = JweCompact.encrypt(plaintext, jwk, alg=alg, enc=enc, cek=cek, iv=iv)
 
-    assert jwe.initialization_vector == bytes(
-        [227, 197, 117, 252, 2, 219, 233, 68, 180, 225, 77, 219]
-    )
+    assert jwe.initialization_vector == bytes.fromhex("e3c575fc02dbe944b4e14ddb")
 
     assert jwe.decrypt(jwk, alg=alg, enc=enc) == plaintext
+
+    assert jwe.get_header("foo") is None
 
 
 def test_jwe_decrypt():
@@ -139,3 +109,40 @@ def test_jwe_decrypt():
     enc = "A256GCM"
 
     assert JweCompact(jwe).decrypt(jwk, alg=alg, enc=enc) == plaintext
+
+    assert str(JweCompact(jwe)) == jwe
+    assert bytes(JweCompact(jwe)) == jwe.encode()
+
+
+def test_invalid_jwe():
+    with pytest.raises(InvalidJwe):
+        JweCompact("foo")
+    with pytest.raises(InvalidJwe):
+        JweCompact("foo!.foo!.foo!.foo!")
+    with pytest.raises(InvalidJwe):
+        JweCompact("eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ.foo!.foo!.foo!")
+    with pytest.raises(InvalidJwe):
+        JweCompact(
+            "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ."
+            "OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGe"
+            "ipsEdY3mx_etLbbWSrFr05kLzcSr4qKAq7YN7e9jwQRb23nfa6c9d-StnImGyFDb"
+            "Sv04uVuxIp5Zms1gNxKKK2Da14B8S4rzVRltdYwam_lDp5XnZAYpQdb76FdIKLaV"
+            "mqgfwX7XWRxv2322i-vDxRfqNzo_tETKzpVLzfiwQyeyPGLBIO56YJ7eObdv0je8"
+            "1860ppamavo35UgoRdbYaBcoh9QcfylQr66oc6vFWXRcZ_ZT2LawVCWTIy3brGPi"
+            "6UklfCpIMfIjf7iGdXKHzg."
+            "foo!.foo!"
+        )
+    with pytest.raises(InvalidJwe):
+        JweCompact(
+            "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ."
+            "OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGe"
+            "ipsEdY3mx_etLbbWSrFr05kLzcSr4qKAq7YN7e9jwQRb23nfa6c9d-StnImGyFDb"
+            "Sv04uVuxIp5Zms1gNxKKK2Da14B8S4rzVRltdYwam_lDp5XnZAYpQdb76FdIKLaV"
+            "mqgfwX7XWRxv2322i-vDxRfqNzo_tETKzpVLzfiwQyeyPGLBIO56YJ7eObdv0je8"
+            "1860ppamavo35UgoRdbYaBcoh9QcfylQr66oc6vFWXRcZ_ZT2LawVCWTIy3brGPi"
+            "6UklfCpIMfIjf7iGdXKHzg."
+            "48V1_ALb6US04U3b."
+            "5eym8TW_c8SuK0ltJ3rpYIzOeDQz7TALvtu6UG9oMo4vpzs9tX_EFShS8iB7j6ji"
+            "SdiwkIr3ajwQzaBtQD_A."
+            ".foo!"
+        )

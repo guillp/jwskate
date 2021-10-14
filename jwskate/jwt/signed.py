@@ -101,45 +101,33 @@ class SignedJwt(Jwt):
 
     @property
     def issuer(self) -> Optional[str]:
-        try:
-            iss = self.iss
-            if isinstance(iss, str):
-                return iss
-            raise AttributeError("iss has an unexpected type", type(iss))
-        except AttributeError:
-            return None
+        iss = self.iss
+        if iss is None or isinstance(iss, str):
+            return iss
+        raise AttributeError("iss has an unexpected type", type(iss))
 
     @property
     def audience(self) -> Optional[List[str]]:
-        try:
-            aud = self.aud
-            if isinstance(aud, str):
-                return [aud]
-            elif isinstance(aud, list):
-                return aud
-            raise AttributeError("aud has an unexpected type", type(aud))
-        except AttributeError:
-            return None
+        aud = self.aud
+        if aud is None or isinstance(aud, list):
+            return aud
+        if isinstance(aud, str):
+            return [aud]
+        raise AttributeError("aud has an unexpected type", type(aud))
 
     @property
     def subject(self) -> Optional[str]:
-        try:
-            sub = self.sub
-            if isinstance(sub, str):
-                return sub
-            raise AttributeError("sub has an unexpected type", type(sub))
-        except AttributeError:
-            return None
+        sub = self.sub
+        if sub is None or isinstance(sub, str):
+            return sub
+        raise AttributeError("sub has an unexpected type", type(sub))
 
     @property
     def jwt_token_id(self) -> Optional[str]:
-        try:
-            jti = self.jti
-            if isinstance(jti, str):
-                return jti
-            raise AttributeError("jti has an unexpected type", type(jti))
-        except AttributeError:
-            return None
+        jti = self.jti
+        if jti is None or isinstance(jti, str):
+            return jti
+        raise AttributeError("jti has an unexpected type", type(jti))
 
     @property
     def alg(self) -> str:
@@ -155,11 +143,11 @@ class SignedJwt(Jwt):
     def __getitem__(self, item: str) -> Any:
         value = self.get_claim(item)
         if value is None:
-            raise AttributeError(item)
+            raise KeyError(item)
         return value
 
     def __getattr__(self, item: str) -> Any:
-        return self.__getitem__(item)
+        return self.get_claim(item)
 
     def __str__(self) -> str:
         return self.value.decode()
@@ -170,12 +158,13 @@ class SignedJwt(Jwt):
     def validate(
         self,
         jwk: Union[Jwk, Dict[str, Any]],
+        alg: Optional[str] = None,
         issuer: Optional[str] = None,
         audience: Union[None, str, List[str]] = None,
         check_exp: bool = True,
         **kwargs: Any,
     ) -> None:
-        if not self.verify_signature(jwk):
+        if not self.verify_signature(jwk, alg):
             raise InvalidSignature("Signature is not valid.")
 
         if issuer is not None:

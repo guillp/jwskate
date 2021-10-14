@@ -110,6 +110,9 @@ print(jwt)
 * 100% code coverage
 * Relies on [cryptography](https://cryptography.io)
 
+## TODO
+* Implement key loading and dumping to/from PEM or X509
+
 ## Credits
 
 All cryptographic operations are handled by [cryptography](https://cryptography.io).

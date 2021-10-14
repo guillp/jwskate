@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional, Union
 
 from jwskate.jwk.base import Jwk
-from jwskate.jwk.symetric import SymetricJwk
+from jwskate.jwk.symetric import SymmetricJwk
 from jwskate.utils import b64u_decode, b64u_decode_json, b64u_encode, b64u_encode_json
 
 
@@ -127,9 +127,9 @@ class JweCompact:
         headers = dict(extra_headers or {}, alg=alg, enc=enc)
 
         if cek is None:
-            cek_jwk = SymetricJwk.generate_for_alg(enc)
+            cek_jwk = SymmetricJwk.generate_for_alg(enc)
         else:
-            cek_jwk = SymetricJwk.from_bytes(cek, alg=enc)
+            cek_jwk = SymmetricJwk.from_bytes(cek, alg=enc)
 
         enc_cek = jwk.encrypt_key(cek_jwk.key, alg)
 
@@ -161,7 +161,7 @@ class JweCompact:
         enc = jwk.enc or enc
 
         raw_cek = jwk.decrypt_key(self.content_encryption_key, alg)
-        cek = SymetricJwk.from_bytes(raw_cek)
+        cek = SymmetricJwk.from_bytes(raw_cek)
 
         plaintext = cek.decrypt(
             cyphertext=self.cyphertext,

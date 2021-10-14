@@ -17,7 +17,7 @@ from .jwk import (
     OKPJwk,
     PrivateKeyRequired,
     RSAJwk,
-    SymetricJwk,
+    SymmetricJwk,
 )
 from .jws import JwsCompact
-from .jwt import EncryptedJwt, Jwt, JwtSigner, SignedJwt
+from .jwt import EncryptedJwt, InvalidJwt, InvalidSignature, Jwt, JwtSigner, SignedJwt

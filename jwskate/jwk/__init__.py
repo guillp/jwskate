@@ -4,4 +4,4 @@ from .exceptions import InvalidJwk, PrivateKeyRequired
 from .jwks import JwkSet
 from .okp import OKPJwk
 from .rsa import RSAJwk
-from .symetric import SymetricJwk
+from .symetric import SymmetricJwk

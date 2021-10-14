@@ -24,7 +24,7 @@ class JwkSet(Dict[str, Any]):
         :param jwks: a dict, containing the JwkSet, parsed as a JSON object.
         :param keys: a list of Jwk, that will be added to this JwkSet
         """
-        if jwks is not None and keys is not None:
+        if jwks is None and keys is None:
             keys = []
 
         if jwks is not None:
@@ -47,7 +47,7 @@ class JwkSet(Dict[str, Any]):
         """
         return self.get("keys", [])
 
-    def get_jwk_by_kid(self, kid: str) -> Optional[Jwk]:
+    def get_jwk_by_kid(self, kid: str) -> Jwk:
         """
         Returns a Jwk from this JwkSet, based on its kid.
         :param kid:
@@ -56,7 +56,7 @@ class JwkSet(Dict[str, Any]):
         jwk = next(filter(lambda jwk: jwk.get("kid") == kid, self.jwks), None)
         if isinstance(jwk, Jwk):
             return jwk
-        return None
+        raise KeyError(kid)
 
     def __len__(self) -> int:
         """
@@ -100,9 +100,11 @@ class JwkSet(Dict[str, Any]):
         Removes a Jwk from this JwkSet, based on a `kid`.
         :param kid: the `kid` from the key to be removed.
         """
-        jwk = self.get_jwk_by_kid(kid)
-        if jwk is not None:
+        try:
+            jwk = self.get_jwk_by_kid(kid)
             self.jwks.remove(jwk)
+        except KeyError:
+            pass
 
     def verify(
         self,
@@ -127,8 +129,7 @@ class JwkSet(Dict[str, Any]):
         # if a kid is provided, try only the key matching `kid`
         if kid is not None:
             jwk = self.get_jwk_by_kid(kid)
-            if jwk is not None:
-                return jwk.verify(data, signature, alg)
+            return jwk.verify(data, signature, alg)
 
         # if one or several alg are provided, try only the keys that are compatible with one of the provided alg(s)
         algs = [alg] if isinstance(alg, str) else alg

@@ -251,13 +251,12 @@ class RSAJwk(Jwk):
     ) -> bool:
         if isinstance(alg, str):
             algs = [alg]
-        elif alg is None:
+        elif alg is None and self.alg is not None:
             algs = [self.alg]
-        else:
+        elif alg is not None:
             algs = list(alg)
-
-        if not algs:
-            raise ValueError("a signing alg is required")
+        else:
+            raise ValueError("a least one possible signing alg is required")
 
         public_key = rsa.RSAPublicNumbers(self.exponent, self.modulus).public_key()
 
@@ -265,7 +264,7 @@ class RSAJwk(Jwk):
             try:
                 description, padding, hashing = self.SIGNATURE_ALGORITHMS[alg]
             except KeyError:
-                raise ValueError("Unsupported signing alg", alg)
+                continue
 
             try:
                 public_key.verify(

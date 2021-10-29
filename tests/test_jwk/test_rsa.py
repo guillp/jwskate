@@ -4,7 +4,7 @@ from jwskate import Jwk, RSAJwk
 
 
 @pytest.fixture(scope="session")
-def rsa_private_jwk():
+def rsa_private_jwk() -> Jwk:
     d = {
         "kty": "RSA",
         "n": "oRHn4oGv23ylRL3RSsL4p_e6Ywinnj2N2tT5OLe5pEZTg-LFBhjFxcJaB-p1dh6XX47EtSfa-JHffU0o5ZRK2ySyNDtlrFAkOpAHH6U83ayE2QPYGzrFrrvHDa8wIMUWymzxpPwGgKBwZZqtTT6d-iy4Ux3AWV-bUv6Z7WijHnOy7aVzZ4dFERLVf2FaaYXDET7GO4v-oQ5ss_guYdmewN039jxkjz_KrA-0Fyhalf9hL8IHfpdpSlHosrmjORG5y9LkYK0J6zxSBF5ZvLIBK33BTzPPiCMwKLyAcV6qdcAcvV4kthKO0iUKBK4eE8D0N8HcSPvA9F_PpLS_k5F2lw",
@@ -34,28 +34,28 @@ def rsa_private_jwk():
     return jwk
 
 
-@pytest.fixture(scope="module")
-def rsa_public_jwk(rsa_private_jwk):
+@pytest.fixture(scope="session")
+def rsa_public_jwk(rsa_private_jwk: Jwk) -> Jwk:
     public_jwk = rsa_private_jwk.public_jwk()
 
     assert not public_jwk.is_private
 
     assert public_jwk.n == rsa_private_jwk.n
     assert public_jwk.e == rsa_private_jwk.e
-    assert public_jwk.d is None
-    assert public_jwk.p is None
-    assert public_jwk.q is None
-    assert public_jwk.dp is None
-    assert public_jwk.dq is None
-    assert public_jwk.qi is None
+    assert public_jwk.get("d") is None
+    assert public_jwk.get("p") is None
+    assert public_jwk.get("q") is None
+    assert public_jwk.get("dp") is None
+    assert public_jwk.get("dq") is None
+    assert public_jwk.get("qi") is None
 
     assert public_jwk.thumbprint() == rsa_private_jwk.thumbprint()
 
     return public_jwk
 
 
-def test_rsa_jwk_sign(rsa_private_jwk, rsa_public_jwk):
-    signature = rsa_private_jwk.sign(b"Hello World!")
+def test_rsa_jwk_sign(rsa_private_jwk: Jwk, rsa_public_jwk: Jwk) -> None:
+    signature = rsa_private_jwk.sign(b"Hello World!", alg="RS256")
     assert (
         signature.hex()
         == "2eb2d1f5ef9a55403b7d09cca52955feea3ced6b948d311819ec976e4f40cb3cdf9718de38ecc53f"
@@ -71,7 +71,7 @@ def test_rsa_jwk_sign(rsa_private_jwk, rsa_public_jwk):
     assert rsa_public_jwk.verify(b"Hello World!", signature, alg="RS256")
 
 
-def test_public_rsa_jwk(rsa_private_jwk):
+def test_public_rsa_jwk(rsa_private_jwk: Jwk) -> None:
     public_jwk = {
         key: val for key, val in rsa_private_jwk.items() if key in ("kty", "n", "e")
     }
@@ -85,7 +85,7 @@ def test_public_rsa_jwk(rsa_private_jwk):
     assert jwk.thumbprint() == rsa_private_jwk.thumbprint()
 
 
-def test_jwk_rsa_generate():
+def test_jwk_rsa_generate() -> None:
     jwk = RSAJwk.generate(kid="myrsakey")
     assert jwk.kty == "RSA"
     assert jwk.kid == "myrsakey"

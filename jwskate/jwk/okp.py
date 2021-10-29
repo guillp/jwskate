@@ -55,3 +55,8 @@ class OKPJwk(Jwk):
             serialization.Encoding.Raw, serialization.PublicFormat.Raw
         )
         return cls.private(crv=crv, x=x, d=d, **params)
+
+    def to_cryptography_key(self) -> Any:
+        if self.is_private:
+            if self.curve == "Ed25519":
+                return ed25519.Ed25519PrivateKey

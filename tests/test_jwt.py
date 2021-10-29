@@ -5,7 +5,7 @@ import pytest
 from jwskate import InvalidJwt, InvalidSignature, Jwk, Jwt, JwtSigner, SignedJwt
 
 
-def test_jwt():
+def test_jwt() -> None:
     jwt = Jwt(
         "eyJhbGciOiJSUzI1NiIsImtpZCI6Im15X2tleSJ9.eyJhY3IiOiIyIiwiYW1yIjpbInB3ZCIsIm90cCJdLCJhdWQiOiJjbGllbnRfaWQiLCJhdXRoX3RpbWUiOjE2MjkyMDQ1NjAsImV4cCI6MTYyOTIwNDYyMCwiaWF0IjoxNjI5MjA0NTYwLCJpc3MiOiJodHRwczovL215YXMubG9jYWwiLCJub25jZSI6Im5vbmNlIiwic3ViIjoiMTIzNDU2In0.wUfjMyjlOSdvbFGFP8O8wGcNBK7akeyOUBMvYcNZclFUtokOyxhLUPxmo1THo1DV1BHUVd6AWfeKUnyTxl_8-G3E_a9u5wJfDyfghPDhCmfkYARvqQnnV_3aIbfTfUBC4f0bHr08d_q0fED88RLu77wESIPCVqQYy2bk4FLucc63yGBvaCskqzthZ85DbBJYWLlR8qBUk_NA8bWATYEtjwTrxoZe-uA-vB6NwUv1h8DKRsDF-9HSVHeWXXAeoG9UW7zgxoY3KbDIVzemvGzs2R9OgDBRRafBBVeAkDV6CdbdMNJDmHzcjase5jX6LE-3YCy7c7AMM1uWRCnK3f-azA"
     )
@@ -26,7 +26,8 @@ def test_jwt():
     assert jwt.is_expired()
     assert jwt.sub == "123456"
     assert jwt.subject == "123456"
-    assert jwt.audience == ["client_id"]
+    assert jwt.audience == "client_id"
+    assert jwt.audiences == ["client_id"]
     assert jwt.nonce == "nonce"
     assert jwt.amr == ["pwd", "otp"]
     assert jwt.exp == 1629204620
@@ -57,23 +58,24 @@ def test_jwt():
         jwt.validate(Jwk.generate_for_kty("RSA"), alg="RS256")
 
 
-def test_unprotected():
+def test_unprotected() -> None:
     jwt = Jwt.unprotected({"foo": "bar"})
     assert jwt == "eyJhbGciOiJub25lIn0.eyJmb28iOiJiYXIifQ."
 
 
-def test_jwt_signer(issuer, private_jwk):
+def test_jwt_signer(issuer: str, private_jwk: Jwk) -> None:
     signer = JwtSigner(issuer, private_jwk)
     now = datetime.now()
     jwt = signer.sign(subject="some_id", audience="some_audience")
     assert isinstance(jwt, Jwt)
     assert jwt.subject == "some_id"
-    assert jwt.audience == ["some_audience"]
+    assert jwt.audience == "some_audience"
     assert pytest.approx(jwt.iat, now)
+    assert jwt.expires_at is not None
     assert jwt.expires_at > now
 
 
-def test_invalid_signed_jwt():
+def test_invalid_signed_jwt() -> None:
     with pytest.raises(InvalidJwt):
         SignedJwt("garbage")
     with pytest.raises(InvalidJwt):
@@ -86,7 +88,7 @@ def test_invalid_signed_jwt():
         )
 
 
-def test_empty_jwt(private_jwk):
+def test_empty_jwt(private_jwk: Jwk) -> None:
     jwt = Jwt.sign({}, private_jwk)
     assert jwt.is_expired() is None
     assert jwt.expires_at is None
@@ -97,7 +99,9 @@ def test_empty_jwt(private_jwk):
     assert jwt.jwt_token_id is None
     assert jwt.kid == private_jwk.kid
     assert jwt.alg == private_jwk.alg
-    assert jwt.foo is None
+
+    with pytest.raises(AttributeError):
+        jwt.foo
 
     with pytest.raises(KeyError):
         jwt["foo"]

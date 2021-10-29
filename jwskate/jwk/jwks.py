@@ -1,6 +1,7 @@
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 from .base import Jwk
+from .exceptions import UnsupportedAlg
 
 
 class JwkSet(Dict[str, Any]):
@@ -84,11 +85,11 @@ class JwkSet(Dict[str, Any]):
         if "keys" not in self:
             self["keys"] = []
 
-        kid = jwk.get("kid") or kid
+        kid = jwk.get("kid", kid)
         if not kid:
             kid = jwk.thumbprint()
         jwk["kid"] = kid
-        use = jwk.use or use
+        use = jwk.get("use", use)
         if use:
             jwk["use"] = use
         self.jwks.append(jwk)
@@ -110,7 +111,8 @@ class JwkSet(Dict[str, Any]):
         self,
         data: bytes,
         signature: bytes,
-        alg: Union[str, Iterable[str]],
+        alg: Optional[str] = None,
+        algs: Optional[Iterable[str]] = None,
         kid: Optional[str] = None,
     ) -> bool:
         """
@@ -129,24 +131,36 @@ class JwkSet(Dict[str, Any]):
         # if a kid is provided, try only the key matching `kid`
         if kid is not None:
             jwk = self.get_jwk_by_kid(kid)
-            return jwk.verify(data, signature, alg)
+            return jwk.verify(data, signature, alg=alg, algs=algs)
 
         # if one or several alg are provided, try only the keys that are compatible with one of the provided alg(s)
-        algs = [alg] if isinstance(alg, str) else alg
+        if alg:
+            for jwk in self.jwks:
+                if jwk.get("alg") == alg:
+                    if jwk.verify(data, signature, alg=alg):
+                        return True
+
         if algs:
-            for jwk in (jwk for jwk in self.jwks if jwk.alg in algs):
+            for jwk in self.jwks:
+                alg = jwk.get("alg")
+                if alg is not None and alg in algs:
+                    if jwk.verify(data, signature, algs=algs):
+                        return True
+
+        # if no kid and no alg are provided, try first the keys flagged for signature verification (`"use": "verify"`)
+        for jwk in self.jwks:
+            if jwk.get("use") == "verify":
                 if jwk.verify(data, signature, alg):
                     return True
 
-        # if no kid and no alg are provided, try first the keys flagged for signature verification (`"use": "verify"`)
-        for jwk in (jwk for jwk in self.jwks if jwk.use == "verify"):
-            if jwk.verify(data, signature, alg):
-                return True
-
         # then with the keys that have no defined `use`
-        for jwk in (jwk for jwk in self.jwks if jwk.use is None):
-            if jwk.verify(data, signature, alg):
-                return True
+        for jwk in self.jwks:
+            if jwk.get("use") is None:
+                try:
+                    if jwk.verify(data, signature, alg):
+                        return True
+                except UnsupportedAlg:
+                    continue
 
         # no key matches, so consider the signature invalid
         return False

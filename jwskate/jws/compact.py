@@ -1,5 +1,7 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Iterable, Optional, Union
 
+from jwskate.jose import BaseJose
+from jwskate.jwk.alg import get_alg
 from jwskate.jwk.base import Jwk
 from jwskate.utils import b64u_decode, b64u_decode_json, b64u_encode, b64u_encode_json
 
@@ -8,7 +10,7 @@ class InvalidJws(ValueError):
     """Raised when an invalid Jws is parsed"""
 
 
-class JwsCompact:
+class JwsCompact(BaseJose):
     """
     Represents a a Json Web Signature (JWS), using compact serialization, as defined in RFC7515.
     """
@@ -18,15 +20,14 @@ class JwsCompact:
         Initializes a Jws, from its compact representation.
         :param value: the Jws value
         """
-        if not isinstance(value, bytes):
-            value = value.encode("ascii")
+        super().__init__(value)
 
-        if value.count(b".") != 2:
+        if self.value.count(b".") != 2:
             raise InvalidJws(
                 "A JWS must contain a header, a payload and a signature, separated by dots"
             )
 
-        header, payload, signature = value.split(b".")
+        header, payload, signature = self.value.split(b".")
         try:
             self.headers = b64u_decode_json(header)
         except ValueError:
@@ -48,16 +49,6 @@ class JwsCompact:
                 "Invalid JWS signature: it must be a Base64URL-encoded binary data (bytes)"
             )
 
-        self.value = value
-
-    def get_header(self, name: str) -> Any:
-        """
-        Gets an header from this Jws
-        :param name: the header name
-        :return: the header value
-        """
-        return self.headers.get(name)
-
     @classmethod
     def sign(
         cls,
@@ -74,17 +65,13 @@ class JwsCompact:
         :param extra_headers: additional headers to add to the Jws Headers
         :return: a JwsCompact
         """
-        if not isinstance(jwk, Jwk):
-            jwk = Jwk(jwk)
+        jwk = Jwk(jwk)
 
         if not jwk.is_private:
             raise ValueError("Signing requires a private JWK")
 
-        alg = alg or jwk.get("alg")
+        alg = get_alg(jwk.alg, alg, jwk.supported_signing_algorithms)
         kid = jwk.get("kid")
-
-        if alg is None:
-            raise ValueError("a signing alg is required")
 
         headers = dict(extra_headers or {}, alg=alg)
         if kid:
@@ -109,20 +96,6 @@ class JwsCompact:
 
         return cls(b".".join((signed_part, b64u_encode(signature).encode())))
 
-    def __str__(self) -> str:
-        """
-        Returns the `str` representation of this JwsCompact
-        :return: a `str`
-        """
-        return self.value.decode()
-
-    def __bytes__(self) -> bytes:
-        """
-        Returns the `bytes` representation of this JwsCompact
-        :return:
-        """
-        return self.value
-
     @property
     def signed_part(self) -> bytes:
         """
@@ -131,13 +104,17 @@ class JwsCompact:
         """
         return b".".join(self.value.split(b".", 2)[:2])
 
-    def verify_signature(self, jwk: Union[Jwk, Dict[str, Any]], alg: str) -> bool:
+    def verify_signature(
+        self,
+        jwk: Union[Jwk, Dict[str, Any]],
+        alg: Optional[str] = None,
+        algs: Optional[Iterable[str]] = None,
+    ) -> bool:
         """
         Verify the signature from this JwsCompact using a Jwk
         :param jwk: the Jwk to use to validate this signature
         :param alg: the alg to use
         :return: `True` if the signature matches, `False` otherwise
         """
-        if not isinstance(jwk, Jwk):
-            jwk = Jwk(jwk)
-        return jwk.verify(self.signed_part, self.signature, alg)
+        jwk = Jwk(jwk)
+        return jwk.verify(self.signed_part, self.signature, alg, algs)

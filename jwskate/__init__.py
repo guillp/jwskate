@@ -8,7 +8,7 @@ __author__ = """Guillaume Pujol"""
 __email__ = "guill.p.linux@gmail.com"
 __version__ = "0.1.0"
 
-from .jwe import JweCompact
+from .jwe import InvalidJwe, JweCompact
 from .jwk import (
     ECJwk,
     InvalidJwk,

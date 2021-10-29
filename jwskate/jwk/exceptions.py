@@ -4,3 +4,7 @@ class InvalidJwk(ValueError):
 
 class PrivateKeyRequired(AttributeError):
     pass
+
+
+class UnsupportedAlg(ValueError):
+    pass

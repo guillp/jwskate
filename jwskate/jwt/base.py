@@ -1,7 +1,10 @@
+"""This modules contains the `Jwt` base class."""
+
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from jwskate.jwk import Jwk
 
+from ..jose import BaseJose
 from ..utils import b64u_encode, b64u_encode_json
 
 if TYPE_CHECKING:
@@ -9,16 +12,17 @@ if TYPE_CHECKING:
 
 
 class InvalidJwt(ValueError):
-    """Raised when an invalid Jwt is parsed"""
+    """Raised when an invalid Jwt is parsed."""
 
 
-class Jwt:
-    """Represents a Json Web Token"""
+class Jwt(BaseJose):
+    """Represents a Json Web Token."""
 
     def __new__(cls, value: Union[bytes, str]):  # type: ignore
         """
-        Allows parsing both Signed and Encrypted Jwts. Returns the appropriate subclass.
-        :param value:
+        Allow parsing both Signed and Encrypted Jwts. Returns the appropriate subclass.
+
+        :param value: the token value
         """
         if not isinstance(value, bytes):
             value = value.encode("ascii")
@@ -34,39 +38,6 @@ class Jwt:
                 return super().__new__(EncryptedJwt)
         return super().__new__(cls)
 
-    def __init__(self, value: Union[bytes, str]):
-        """
-        Initializes an Jwt from its string representation.
-        :param value: the string or bytes representation of this Jwt
-        """
-        if not isinstance(value, bytes):
-            value = value.encode("ascii")
-
-        self.value = value
-        self.headers: Dict[str, Any]
-
-    def __eq__(self, other: Any) -> bool:
-        """
-        Checks that a Jwt is equals to another. Works with other instances of Jwt, or with string or bytes.
-        :param other: the other token to compare with
-        :return: True if the other token has the same representation, False otherwise
-        """
-        if isinstance(other, Jwt):
-            return self.value == other.value
-        if isinstance(other, str):
-            return self.value.decode() == other
-        if isinstance(other, bytes):
-            return self.value == other
-        return super().__eq__(other)
-
-    def get_header(self, name: str) -> Any:
-        """
-        Returns an header from this Jwt
-        :param name: the header name
-        :return: the header value
-        """
-        return self.headers.get(name)
-
     @classmethod
     def sign(
         cls,
@@ -76,17 +47,17 @@ class Jwt:
         extra_headers: Optional[Dict[str, Any]] = None,
     ) -> "SignedJwt":
         """
-        Signs a JSON payload with a Jwk and returns the resulting SignedJwt
+        Sign a JSON payload with a `Jwk` and returns the resulting `SignedJwt`.
+
         :param claims: the payload to sign
         :param jwk: the Jwk to use for signing
         :param alg: the alg to use for signing
         :param extra_headers: additional headers to include in the Jwt
-        :return: a SignedJwt
+        :return: a `SignedJwt`
         """
         from .signed import SignedJwt
 
-        if not isinstance(jwk, Jwk):
-            jwk = Jwk(jwk)
+        jwk = Jwk(jwk)
 
         if not jwk.is_private:
             raise ValueError("Signing requires a private JWK")
@@ -114,7 +85,10 @@ class Jwt:
         extra_headers: Optional[Dict[str, Any]] = None,
     ) -> "SignedJwt":
         """
-        Generates a JWT that is not signed and not encrypted (with alg=none)
+        Generate a JWT that is not signed and not encrypted (with alg=none).
+
+        :param claims: the claims to set in the token.
+        :param extra_headers: additional headers to insert in the token.
         """
         from .signed import SignedJwt
 
@@ -137,7 +111,8 @@ class Jwt:
         enc: Optional[str],
     ) -> "EncryptedJwt":
         """
-        Sign then encrypts a payload with a Jwk and returns the resulting EncryptedJwt
+        Sign then encrypt a payload with a `Jwk` and returns the resulting `EncryptedJwt`.
+
         :param claims: the payload to encrypt
         :param sign_jwk: the Jwk to use for signature
         :param sign_alg: the alg to use for signature
@@ -149,9 +124,3 @@ class Jwt:
         from .encrypted import EncryptedJwt
 
         raise NotImplementedError
-
-    def __bytes__(self) -> bytes:
-        return self.value
-
-    def __repr__(self) -> str:
-        return self.value.decode()

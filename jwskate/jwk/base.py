@@ -1,9 +1,11 @@
-# see https://github.com/python/typing/issues/60#issuecomment-869757075
+from __future__ import annotations
+
 import hashlib
 import json
+import warnings
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union
 
-from binapy import BinaPy
+from binapy import BinaPy  # type: ignore[import]
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
@@ -32,6 +34,8 @@ class Jwk(Dict[str, Any]):
     """A dict of parameters. Key is parameter name, value is a tuple (description, is_private, is_required, kind)"""
 
     SIGNATURE_ALGORITHMS: Dict[str, Any]
+    KEY_MANAGEMENT_ALGORITHMS: Dict[str, Any]
+    ENCRYPTION_ALGORITHMS: Dict[str, Any]
 
     def __init_subclass__(cls) -> None:
         """
@@ -41,18 +45,16 @@ class Jwk(Dict[str, Any]):
         if hasattr(cls, "kty"):
             Jwk.subclasses[cls.kty] = cls
 
-    def __new__(cls, jwk: Dict[str, Any]):  # type: ignore
+    def __new__(cls, jwk: Union[Jwk, Dict[str, Any]]):  # type: ignore
         """
         Overrided `__new__` to allow Jwk to accept a `dict` with the parsed Jwk content
         and return the appropriate subclass based on its `kty`.
-        :param jwk:
+        :param jwk: a dict containing JWK parameters, or another Jwk instance.
         """
         if cls == Jwk:
-            if jwk.get("keys"):  # if this is a JwkSet
-                from .jwks import JwkSet
+            if isinstance(jwk, Jwk):
+                return jwk
 
-                jwks = JwkSet(jwk)
-                return jwks
             kty: Optional[str] = jwk.get("kty")
             if kty is None:
                 raise ValueError("A Json Web Key must have a Key Type (kty)")
@@ -71,10 +73,10 @@ class Jwk(Dict[str, Any]):
         :param params: a dict with the parsed Jwk parameters.
         :param kid: a Key Id to use if no `kid` parameters is present in `params`.
         """
-        super().__init__(params)
+        super().__init__({key: val for key, val in params.items() if val is not None})
         self.is_private = False
         self._validate()
-        if self.kid is None:
+        if self.get("kid") is None:
             self["kid"] = kid or self.thumbprint()
 
     def __getattr__(self, item: str) -> Any:
@@ -83,7 +85,10 @@ class Jwk(Dict[str, Any]):
         :param item:
         :return:
         """
-        return self.get(item)
+        value = self.get(item)
+        if value is None:
+            raise AttributeError(item)
+        return value
 
     def thumbprint(self, hashalg: str = "SHA256") -> str:
         """Returns the key thumbprint as specified by RFC 7638.
@@ -101,6 +106,20 @@ class Jwk(Dict[str, Any]):
         intermediary = json.dumps(t, separators=(",", ":"), sort_keys=True)
         digest.update(intermediary.encode("utf8"))
         return b64u_encode(digest.digest())
+
+    @property
+    def alg(self) -> Optional[str]:
+        alg = self.get("alg")
+        if alg is not None and not isinstance(alg, str):
+            raise TypeError(f"Invalid alg type {type(str)}", alg)
+        return alg
+
+    @property
+    def enc(self) -> Optional[str]:
+        enc = self.get("enc")
+        if enc is not None and not isinstance(enc, str):
+            raise TypeError(f"Invalid enc type {type(str)}", enc)
+        return enc
 
     def _validate(self) -> None:
         """
@@ -155,15 +174,36 @@ class Jwk(Dict[str, Any]):
                         f"Missing required private param {description} ({name})"
                     )
 
+        # if key is used for signing, it must be private
+        for op in self.get("key_ops", []):
+            if op in ("sign", "decrypt", "unwrapKey") and not jwk_is_private:
+                raise InvalidJwk(f"Key Operation is '{op}' but the key is public")
+
         self.is_private = jwk_is_private
 
     @property
     def supported_signing_algorithms(self) -> List[str]:
         """
-        Returns a list of signing algs that are compatible for use with this Jwk.
+        Return a list of signing algs that are compatible for use with this Jwk.
         :return: a list of signing algs
         """
         return list(self.SIGNATURE_ALGORITHMS.keys())
+
+    @property
+    def supported_key_management_algorithms(self) -> List[str]:
+        """
+        Return a list of key management algs that are compatible for use with this Jwk.
+        :return: a list of key management algs
+        """
+        return list(self.KEY_MANAGEMENT_ALGORITHMS.keys())
+
+    @property
+    def supported_encryption_algorithms(self) -> List[str]:
+        """
+        Return a list of encryption algs that are compatible for use with this Jwk.
+        :return: a list of encryption algs
+        """
+        return list(self.ENCRYPTION_ALGORITHMS.keys())
 
     def public_jwk(self) -> "Jwk":
         """
@@ -178,13 +218,26 @@ class Jwk(Dict[str, Any]):
             for name, (description, private, required, kind) in self.PARAMS.items()
             if not private
         }
+
+        key_ops = self.get("key_ops")
+        if key_ops:
+            if "sign" in key_ops:
+                key_ops.remove("sign")
+                key_ops.append("verify")
+            if "decrypt" in key_ops:
+                key_ops.remove("decrypt")
+                key_ops.append("encrypt")
+            if "unwrapKey" in key_ops:
+                key_ops.remove("unwrapKey")
+                key_ops.append("wrapKey")
+
         return Jwk(
             dict(
                 kty=self.kty,
-                kid=self.kid,
-                alg=self.alg,
-                use=self.use,
-                key_ops=self.key_ops,
+                kid=self.get("kid"),
+                alg=self.get("alg"),
+                use=self.get("use"),
+                key_ops=key_ops,
                 **params,
             )
         )
@@ -200,7 +253,11 @@ class Jwk(Dict[str, Any]):
         raise NotImplementedError  # pragma: no cover
 
     def verify(
-        self, data: bytes, signature: bytes, alg: Union[str, Iterable[str], None]
+        self,
+        data: bytes,
+        signature: bytes,
+        alg: Optional[str] = None,
+        algs: Optional[Iterable[str]] = None,
     ) -> bool:
         """
         Verifies a signature using this Jwk, and returns `True` if valid.
@@ -252,42 +309,42 @@ class Jwk(Dict[str, Any]):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def encrypt_key(self, key: bytes, alg: Optional[str] = None) -> BinaPy:
+    def wrap_key(self, key: bytes, alg: Optional[str] = None) -> BinaPy:
         """
-        Encrypts a key using a Key Management Algorithm alg.
-        """
-        raise NotImplementedError
-
-    def decrypt_key(self, cypherkey: bytes, alg: Optional[str] = None) -> BinaPy:
-        """
-        Decrypts a key using a Key Management Algorithm alg.
+        Wraps a key using a Key Management Algorithm alg.
         """
         raise NotImplementedError
 
-    CRYPTOGRAPHY_KEY_TYPES = {
+    def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> BinaPy:
+        """
+        Unwraps a key using a Key Management Algorithm alg.
+        """
+        raise NotImplementedError
+
+    CRYPTOGRAPHY_PRIVATE_KEY_TYPES = {
         rsa.RSAPrivateKey: "RSA",
         ec.EllipticCurvePrivateKey: "EC",
     }
 
     @classmethod
-    def from_cryptography_private_key(cls, private_key: Any) -> "Jwk":
+    def from_cryptography_key(cls, key: Any) -> Jwk:
         """
-        Initializes a Jwk from a private key from the `cryptography` library
+        Initializes a Jwk from a key from the `cryptography` library.
+
+        `key` can be private or public.
         """
         raise NotImplementedError
 
-    def to_cryptography_public_key(self) -> Any:
+    def to_cryptography_key(self) -> Any:
         """
-        Returns a private key from the `cryptography` library that matches this Jwk
+        Returns a key from the `cryptography` library that matches this Jwk
         """
         raise NotImplementedError
 
     @classmethod
-    def from_pem_private_key(
-        cls, data: bytes, password: Optional[bytes] = None
-    ) -> "Jwk":
+    def from_pem_private_key(cls, data: bytes, password: Optional[bytes] = None) -> Jwk:
         cryptography_key = serialization.load_pem_private_key(data, password)
-        kty = cls.CRYPTOGRAPHY_KEY_TYPES.get(type(cryptography_key))
+        kty = cls.CRYPTOGRAPHY_PRIVATE_KEY_TYPES.get(type(cryptography_key))
         if kty is None:
             raise ValueError(
                 f"Unsupported Key type for this key (cryptography type: {type(cryptography_key)}"
@@ -295,7 +352,10 @@ class Jwk(Dict[str, Any]):
         jwk_class = cls.subclasses.get(kty)
         if jwk_class is None:
             raise ValueError(f"Unimplemented Jwk class for this Key Type: {kty}")
-        return jwk_class.from_cryptography_private_key(cryptography_key)
+        return jwk_class.from_cryptography_key(cryptography_key)
+
+    def to_pem_private_key(cls, password: Optional[bytes] = None) -> str:
+        raise NotImplementedError
 
     @classmethod
     def generate(self, **kwargs: Any) -> "Jwk":

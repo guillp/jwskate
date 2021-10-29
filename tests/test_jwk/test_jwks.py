@@ -3,7 +3,7 @@ import pytest
 from jwskate import Jwk, JwkSet
 
 
-def test_jwks():
+def test_jwks() -> None:
     keys = [Jwk.generate_for_kty("RSA"), Jwk.generate_for_kty("RSA")]
     jwks = JwkSet(keys=keys)
     assert jwks.jwks == keys
@@ -24,7 +24,7 @@ def test_jwks():
     assert not jwks.verify(data, signature, "ES256")
 
 
-def test_empty_jwks():
+def test_empty_jwks() -> None:
     jwks = JwkSet()
     assert len(jwks) == 0
 

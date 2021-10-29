@@ -1,7 +1,6 @@
 import base64
 import json
-from datetime import datetime, timedelta
-from functools import wraps
+from datetime import datetime
 from typing import Any, Callable, Dict, Optional, Union
 
 
@@ -143,6 +142,13 @@ def b64u_decode_json(
     return decoder(encoded_json)
 
 
+def int_to_bytes(i: int, length: Optional[int] = None) -> bytes:
+    if length is None:
+        length = (i.bit_length() + 7) // 8
+    data = i.to_bytes(length, "big", signed=False)
+    return data
+
+
 def int_to_b64u(i: int, length: Optional[int] = None) -> str:
     """
     Encodes an integer to the base64url encoding of the octet string representation of that integer, as defined in
@@ -151,9 +157,7 @@ def int_to_b64u(i: int, length: Optional[int] = None) -> str:
     :param length: the length of the encoding (left padding the integer if necessary)
     :return: the encoded representation
     """
-    if length is None:
-        length = (i.bit_length() + 7) // 8
-    data = i.to_bytes(length, "big", signed=False)
+    data = int_to_bytes(i, length)
     return b64u_encode(data)
 
 

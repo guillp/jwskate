@@ -1,3 +1,5 @@
+"""This module contains the `JwtSigner` class."""
+
 import uuid
 from datetime import datetime
 from typing import Any, Dict, Iterable, Optional, Union
@@ -10,11 +12,11 @@ from .signed import SignedJwt
 
 class JwtSigner:
     """
-    An helper class to easily sign JWTs containing the standardised claims `ìat`, `exp`, `nbf`, `iss`, `sub`, `aud`, and `jti`,
-    along with your own custom claims.
+    An helper class to easily sign JWTs with standardised claims `ìat`, `exp`, `nbf`, `iss`, `sub`, `aud`, and `jti`.
+
     The issuer, signing keys, signing alg and default lifetime are defined at initialization time, so you only have
     to define the subject, audience and custom claims when calling `JwtSigner.sign()`.
-    This can be used as an alternative to `Jwt.sign()`.
+    This can be used as an alternative to `Jwt.sign()` when a single issuer issues multiple tokens.
     """
 
     def __init__(
@@ -26,6 +28,8 @@ class JwtSigner:
         default_leeway: Optional[int] = None,
     ):
         """
+        Initialize a `JwtSigner`.
+
         :param issuer: the issuer string to use as `ìss` claim for signed tokens.
         :param jwk: the private Jwk to use to sign tokens.
         :param alg: the signing alg to use to sign tokens.
@@ -50,15 +54,18 @@ class JwtSigner:
         leeway: Optional[int] = None,
     ) -> SignedJwt:
         """
-        Signs a Jwt.
+        Sign a Jwt.
+
+        Claim 'issuer' will have the value defined at initialization time. Claim `iat`, `nbf` and `exp` will reflect
+        the current time when the token is signed. `exp` includes `lifetime` seconds in the future, and `nbf`
+        includes `leeway` seconds in the past.
+
         :param subject: the subject to include in claim `sub`.
         :param audience: the audience identifier(s) to include in claim `aud`.
         :param extra_claims: additional claims to include in the signed token.
         :param extra_headers: additional headers to include in the header part.
-        :param lifetime: lifetime, in seconds, to use for the `exp` claim. If None, use the default_lifetime defined at
-        initialization time.
-        :param leeway: leeway, in seconds, to use for the `nbf` claim. If None, use the default_leeway defined at
-        initialization time.
+        :param lifetime: lifetime, in seconds, to use for the `exp` claim. If None, use the default_lifetime defined at initialization time.
+        :param leeway: leeway, in seconds, to use for the `nbf` claim. If None, use the default_leeway defined at initialization time.
         """
         now = int(datetime.now().timestamp())
         lifetime = lifetime or self.default_lifetime
@@ -85,7 +92,8 @@ class JwtSigner:
 
     def generate_jti(self) -> str:
         """
-        A generator for Jwt Token Ids (jti) claims. Default uses UUID4.
-        Can be overridden in subclasses.
+        Generate Jwt Token Ids (jti) values.
+
+        Default uses UUID4. Can be overridden in subclasses.
         """
         return str(uuid.uuid4())

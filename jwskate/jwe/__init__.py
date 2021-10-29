@@ -1,1 +1,1 @@
-from .compact import JweCompact
+from .compact import InvalidJwe, JweCompact

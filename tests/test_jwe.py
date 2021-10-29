@@ -1,10 +1,9 @@
 import pytest
 
-from jwskate import JweCompact, Jwk
-from jwskate.jwe.compact import InvalidJwe
+from jwskate import InvalidJwe, JweCompact, Jwk
 
 
-def test_jwe():
+def test_jwe() -> None:
     plaintext = b"The true sign of intelligence is not knowledge but imagination."
     alg = "RSA-OAEP"
     enc = "A256GCM"
@@ -55,7 +54,7 @@ def test_jwe():
     assert jwe.get_header("foo") is None
 
 
-def test_jwe_decrypt():
+def test_jwe_decrypt() -> None:
     jwe = (
         "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ."
         "OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGe"
@@ -114,7 +113,7 @@ def test_jwe_decrypt():
     assert bytes(JweCompact(jwe)) == jwe.encode()
 
 
-def test_invalid_jwe():
+def test_invalid_jwe() -> None:
     with pytest.raises(InvalidJwe):
         JweCompact("foo")
     with pytest.raises(InvalidJwe):

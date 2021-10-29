@@ -1,7 +1,7 @@
 from jwskate import ECJwk
 
 
-def test_jwk_ec_generate():
+def test_jwk_ec_generate() -> None:
     jwk = ECJwk.generate(kid="myeckey")
     assert jwk.kty == "EC"
     assert jwk.kid == "myeckey"

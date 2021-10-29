@@ -1,5 +1,7 @@
 from typing import Any, Dict, Optional, Union
 
+from jwskate.jose import BaseJose
+from jwskate.jwk.alg import get_alg
 from jwskate.jwk.base import Jwk
 from jwskate.jwk.symetric import SymmetricJwk
 from jwskate.utils import b64u_decode, b64u_decode_json, b64u_encode, b64u_encode_json
@@ -9,7 +11,7 @@ class InvalidJwe(ValueError):
     """Raised when an invalid Jwe is parsed"""
 
 
-class JweCompact:
+class JweCompact(BaseJose):
     """
     Represents a Json Web Encryption object, as defined in RFC7516
     """
@@ -19,17 +21,14 @@ class JweCompact:
         Initializes a Jwe based on its compact representation.
         :param value: the compact representation for this Jwe
         """
-        if not isinstance(value, bytes):
-            value = value.encode("ascii")
+        super().__init__(value)
 
-        value = b"".join(value.split())
-
-        if value.count(b".") != 4:
+        if self.value.count(b".") != 4:
             raise InvalidJwe(
                 "A JWE must contain a header, an encrypted key, an IV, a cyphertext and an authentication tag, separated by dots"
             )
 
-        header, key, iv, cyphertext, auth_tag = value.split(b".")
+        header, key, iv, cyphertext, auth_tag = self.value.split(b".")
         try:
             self.headers = b64u_decode_json(header)
             self.additional_authenticated_data = header
@@ -66,22 +65,6 @@ class JweCompact:
                 "Invalid JWE authentication tag: it must be a Base64URL-encoded binary data (bytes)"
             )
 
-        self.value = value
-
-    def get_header(self, name: str) -> Any:
-        """
-        Returns an header from this Jwe
-        :param name: the header name
-        :return: the header value
-        """
-        return self.headers.get(name)
-
-    def __str__(self) -> str:
-        return self.value.decode()
-
-    def __bytes__(self) -> bytes:
-        return self.value
-
     @classmethod
     def from_parts(
         cls,
@@ -114,15 +97,10 @@ class JweCompact:
         cek: Optional[bytes] = None,
         iv: Optional[bytes] = None,
     ) -> "JweCompact":
-        if not isinstance(jwk, Jwk):
-            jwk = Jwk(jwk)
+        jwk = Jwk(jwk)
 
-        alg = jwk.alg or alg
-        if alg is None:
-            raise ValueError("A Key Management Alg is required (in parameter 'alg')")
-        enc = jwk.enc or enc
-        if enc is None:
-            raise ValueError("An Encryption Alg is required (in parameter 'enc')")
+        alg = get_alg(jwk.alg, alg, jwk.supported_key_management_algorithms)
+        enc = get_alg(jwk.enc, enc, jwk.supported_encryption_algorithms)
 
         headers = dict(extra_headers or {}, alg=alg, enc=enc)
 
@@ -131,7 +109,7 @@ class JweCompact:
         else:
             cek_jwk = SymmetricJwk.from_bytes(cek, alg=enc)
 
-        enc_cek = jwk.encrypt_key(cek_jwk.key, alg)
+        enc_cek = jwk.wrap_key(cek_jwk.key, alg)
 
         aad = b64u_encode_json(headers).encode()
 
@@ -154,13 +132,12 @@ class JweCompact:
         :param enc: the Content Encryption Algorithm to use to decrypt this Jwe
         :return: the decrypted payload
         """
-        if not isinstance(jwk, Jwk):
-            jwk = Jwk(jwk)
+        jwk = Jwk(jwk)
 
-        alg = jwk.alg or alg
-        enc = jwk.enc or enc
+        alg = get_alg(jwk.alg, alg, jwk.supported_key_management_algorithms)
+        enc = get_alg(jwk.enc, enc, jwk.supported_encryption_algorithms)
 
-        raw_cek = jwk.decrypt_key(self.content_encryption_key, alg)
+        raw_cek = jwk.unwrap_key(self.content_encryption_key, alg)
         cek = SymmetricJwk.from_bytes(raw_cek)
 
         plaintext = cek.decrypt(

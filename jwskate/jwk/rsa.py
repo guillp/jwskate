@@ -1,11 +1,13 @@
-from typing import Iterable, Optional, Tuple, Union
+from __future__ import annotations
 
-import cryptography
+from typing import Any, Iterable, Optional, Union
+
 from cryptography import exceptions
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
 from ..utils import b64u_to_int, int_to_b64u
+from .alg import get_alg, get_algs
 from .base import Jwk
 from .exceptions import PrivateKeyRequired
 
@@ -70,25 +72,48 @@ class RSAJwk(Jwk):
         ),
     }
 
-    def to_cryptography_public_key(self) -> rsa.RSAPublicKey:
-        return rsa.RSAPublicNumbers(e=self.exponent, n=self.modulus).public_key()
-
-    def to_cryptography_private_key(self) -> rsa.RSAPrivateKey:
-        if not self.is_private:
-            raise PrivateKeyRequired()
-
-        return rsa.RSAPrivateNumbers(
-            self.first_prime_factor,
-            self.second_prime_factor,
-            self.private_exponent,
-            self.first_factor_crt_exponent,
-            self.second_factor_crt_exponent,
-            self.first_crt_coefficient,
-            rsa.RSAPublicNumbers(self.exponent, self.modulus),
-        ).private_key()
+    ENCRYPTION_ALGORITHMS = {"A256GCM": None}
 
     @classmethod
-    def public(cls, n: int, e: int, **params: str) -> "RSAJwk":
+    def from_cryptography_key(cls, key: Any) -> RSAJwk:
+        if isinstance(key, rsa.RSAPrivateKey):
+            priv = key.private_numbers()  # type: ignore[attr-defined]
+            pub = key.public_key().public_numbers()
+            return cls.private(
+                n=pub.n,
+                e=pub.e,
+                d=priv.d,
+                p=priv.p,
+                q=priv.q,
+                dp=priv.dmp1,
+                dq=priv.dmq1,
+                qi=priv.iqmp,
+            )
+        elif isinstance(key, rsa.RSAPublicKey):
+            pub = key.public_numbers()
+            return cls.public(
+                n=pub.n,
+                e=pub.e,
+            )
+        else:
+            raise TypeError("A RSAPrivateKey or a RSAPublicKey is required.")
+
+    def to_cryptography_key(self) -> Union[rsa.RSAPrivateKey, rsa.RSAPublicKey]:
+        if self.is_private:
+            return rsa.RSAPrivateNumbers(
+                self.first_prime_factor,
+                self.second_prime_factor,
+                self.private_exponent,
+                self.first_factor_crt_exponent,
+                self.second_factor_crt_exponent,
+                self.first_crt_coefficient,
+                rsa.RSAPublicNumbers(self.exponent, self.modulus),
+            ).private_key()
+        else:
+            return rsa.RSAPublicNumbers(e=self.exponent, n=self.modulus).public_key()
+
+    @classmethod
+    def public(cls, n: int, e: int, **params: str) -> RSAJwk:
         """
         Initialize a Public RsaJwk from a modulus and an exponent.
         :param n: the modulus
@@ -110,7 +135,7 @@ class RSAJwk(Jwk):
         dq: Optional[int] = None,
         qi: Optional[int] = None,
         **params: str,
-    ) -> "RSAJwk":
+    ) -> RSAJwk:
         """
         Initializes a Private RsaJwk from its required parameters.
         :param n: the modulus
@@ -140,7 +165,7 @@ class RSAJwk(Jwk):
         )
 
     @classmethod
-    def generate(cls, key_size: int = 4096, **params: str) -> "RSAJwk":
+    def generate(cls, key_size: int = 4096, **params: str) -> RSAJwk:
         """
         Generates a new random Private RSAJwk.
         :param key_size: the key size to use for the generated key.
@@ -225,15 +250,14 @@ class RSAJwk(Jwk):
         """
         return b64u_to_int(self.qi)
 
-    def sign(self, data: bytes, alg: Optional[str] = "RS256") -> bytes:
-        alg = self.alg or alg
+    def sign(self, data: bytes, alg: Optional[str] = None) -> bytes:
+        alg = self.get("alg", alg)
         if alg is None:
             raise ValueError("a signing alg is required")
 
-        if not self.is_private:
+        key = self.to_cryptography_key()
+        if not isinstance(key, rsa.RSAPrivateKey):
             raise PrivateKeyRequired("A private key is required for signing")
-
-        key = self.to_cryptography_private_key()
 
         try:
             description, padding, hashing = self.SIGNATURE_ALGORITHMS[alg]
@@ -247,20 +271,12 @@ class RSAJwk(Jwk):
         self,
         data: bytes,
         signature: bytes,
-        alg: Union[str, Iterable[str], None] = "RS256",
+        alg: Optional[str] = None,
+        algs: Optional[Iterable[str]] = None,
     ) -> bool:
-        if isinstance(alg, str):
-            algs = [alg]
-        elif alg is None and self.alg is not None:
-            algs = [self.alg]
-        elif alg is not None:
-            algs = list(alg)
-        else:
-            raise ValueError("a least one possible signing alg is required")
-
         public_key = rsa.RSAPublicNumbers(self.exponent, self.modulus).public_key()
 
-        for alg in algs:
+        for alg in get_algs(self.alg, alg, algs, self.supported_signing_algorithms):
             try:
                 description, padding, hashing = self.SIGNATURE_ALGORITHMS[alg]
             except KeyError:
@@ -279,10 +295,8 @@ class RSAJwk(Jwk):
 
         return False
 
-    def encrypt_key(self, plaintext_key: bytes, alg: Optional[str] = None) -> bytes:
-        alg = self.alg or alg
-        if alg is None:
-            raise ValueError("an encryption alg is required")
+    def wrap_key(self, plaintext_key: bytes, alg: Optional[str] = None) -> bytes:
+        alg = get_alg(self.alg, alg, self.supported_key_management_algorithms)
         description, padding_alg = self.KEY_MANAGEMENT_ALGORITHMS[alg]
 
         public_key = rsa.RSAPublicNumbers(e=self.exponent, n=self.modulus).public_key()
@@ -291,10 +305,8 @@ class RSAJwk(Jwk):
 
         return cyphertext
 
-    def decrypt_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
-        alg = self.alg or alg
-        if alg is None:
-            raise ValueError("an encryption alg is required")
+    def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
+        alg = get_alg(self.alg, alg, self.supported_key_management_algorithms)
         description, padding_alg = self.KEY_MANAGEMENT_ALGORITHMS[alg]
 
         key = rsa.RSAPrivateNumbers(

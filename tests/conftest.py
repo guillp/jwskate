@@ -1,20 +1,25 @@
+"""Common fixtures for all tests."""
+
 import pytest
 
 from jwskate import Jwk
 
 
-@pytest.fixture(params=["https://test.com"])
-def issuer(request):
-    return request.param
+@pytest.fixture()
+def issuer() -> str:
+    """Return a valid issuer."""
+    return "https://test.com"
 
 
 @pytest.fixture()
-def kid():
+def kid() -> str:
+    """Return a valid 'kid' (Key ID)."""
     return "JWK-ABCD"
 
 
 @pytest.fixture()
-def private_jwk(kid):
+def private_jwk(kid: str) -> Jwk:
+    """Return a private Jwk, usable for signing or decryption."""
     return Jwk(
         {
             "kty": "RSA",

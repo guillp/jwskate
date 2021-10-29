@@ -1,9 +1,20 @@
 import pytest
 
-from jwskate import InvalidJwk, Jwk, JwkSet
+from jwskate import InvalidJwk, Jwk
 
 
-def test_invalid_jwk():
+def test_jwk_copy() -> None:
+    jwk1 = Jwk.generate_for_kty("RSA")
+
+    jwk2 = Jwk(jwk1)
+    assert jwk1 is jwk2
+
+    jwk3 = jwk1.copy()
+    assert jwk1 == jwk3
+    assert jwk1 is not jwk3
+
+
+def test_invalid_jwk() -> None:
     with pytest.raises(ValueError):
         Jwk({"kty": 1.5})
 

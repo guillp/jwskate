@@ -1,11 +1,12 @@
-from typing import Iterable, List, Optional, Tuple, Union, cast
+from __future__ import annotations
 
-import cryptography
+from typing import Any, Iterable, List, Optional, Union
+
 from cryptography import exceptions
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import asymmetric, hashes
 
-from ..utils import b64u_to_int, int_to_b64u
+from ..utils import b64u_to_int, int_to_b64u, int_to_bytes
+from .alg import get_alg, get_algs
 from .base import Jwk
 from .exceptions import PrivateKeyRequired
 
@@ -25,12 +26,16 @@ class ECJwk(Jwk):
         "d": ("ECC Private Key", True, True, "b64u"),
     }
 
-    CURVES = {
+    CRYPTOGRAPHY_CURVES = {
         # name: curve
-        "P-256": ec.SECP256R1(),
-        "P-384": ec.SECP384R1(),
-        "P-521": ec.SECP521R1(),
-        "secp256k1": ec.SECP256K1(),
+        "P-256": asymmetric.ec.SECP256R1(),
+        "P-384": asymmetric.ec.SECP384R1(),
+        "P-521": asymmetric.ec.SECP521R1(),
+        "secp256k1": asymmetric.ec.SECP256K1(),
+    }
+
+    JWA_CURVE_NAMES = {
+        curve.name: jwa_name for jwa_name, curve in CRYPTOGRAPHY_CURVES.items()
     }
 
     SIGNATURE_ALGORITHMS = {
@@ -48,22 +53,37 @@ class ECJwk(Jwk):
         "ECDH-ES+A128KW": ('ECDH-ES using Concat KDF and CEK wrapped with "A128KW"',),
     }
 
+    COORDINATE_SIZES = {
+        "P-256": 32,
+        "P-384": 48,
+        "P-521": 66,
+    }
+
     @classmethod
-    def public(cls, crv: str, x: str, y: str, **params: str) -> "ECJwk":
+    def public(cls, crv: str, x: int, y: int, **params: str) -> "ECJwk":
         """
-        Initializes a public ECJwk from its public paramters.
+        Initialize a public ECJwk from its public parameters.
         :param crv: the curve to use
         :param x: the x coordinate
         :param y: the y coordinate
         :param params: additional parameters for the returned ECJwk
         :return: an ECJwk initialized with the supplied parameters
         """
-        return cls(dict(key="EC", crv=crv, x=x, y=y, **params))
+        coord_size = cls.COORDINATE_SIZES[crv]
+        return cls(
+            dict(
+                key="EC",
+                crv=crv,
+                x=int_to_b64u(x, coord_size),
+                y=int_to_b64u(y, coord_size),
+                **params,
+            )
+        )
 
     @classmethod
-    def private(cls, crv: str, x: str, y: str, d: str, **params: str) -> "ECJwk":
+    def private(cls, crv: str, x: int, y: int, d: int, **params: str) -> "ECJwk":
         """
-        Initializes a private ECJwk from its private parameters.
+        Initialize a private ECJwk from its private parameters.
         :param crv: the curve to use
         :param x: the x coordinate
         :param y: the y coordinate
@@ -71,7 +91,77 @@ class ECJwk(Jwk):
         :param params: additional parameters for the returned ECJwk
         :return: an ECJWk initialized with the supplied parameters
         """
-        return cls(dict(key="EC", crv=crv, x=x, y=y, d=d, **params))
+        coord_size = cls.COORDINATE_SIZES[crv]
+        return cls(
+            dict(
+                key="EC",
+                crv=crv,
+                x=int_to_b64u(x, coord_size),
+                y=int_to_b64u(y, coord_size),
+                d=int_to_b64u(d, coord_size),
+                **params,
+            )
+        )
+
+    @property
+    def cryptography_curve(self) -> asymmetric.ec.EllipticCurve:
+        """
+        Return the `cryptography` curve for this key.
+        :return: a subclass of EllipticCurve
+        """
+        return self.CRYPTOGRAPHY_CURVES[self.curve]
+
+    @property
+    def coordinate_size(self) -> int:
+        """
+        Return the coordinate size, in bytes, fitting for this key curve.
+        :return: 32, 48, or 66
+        """
+        return self.COORDINATE_SIZES[self.curve]
+
+    @classmethod
+    def from_cryptography_key(cls, key: Any) -> ECJwk:
+        if isinstance(key, asymmetric.ec.EllipticCurvePrivateKey):
+            priv = key.private_numbers()  # type: ignore[attr-defined]
+            pub = key.public_key().public_numbers()
+            curve_name = cls.JWA_CURVE_NAMES[pub.curve.name]
+            return cls.private(
+                crv=curve_name,
+                x=pub.x,
+                y=pub.y,
+                d=priv.private_value,
+            )
+        elif isinstance(key, asymmetric.ec.EllipticCurvePublicKey):
+            pub = key.public_numbers()
+            curve_name = cls.JWA_CURVE_NAMES[pub.curve.name]
+            return cls.public(
+                crv=curve_name,
+                x=pub.x,
+                y=pub.y,
+            )
+        else:
+            raise TypeError(
+                "A EllipticCurvePrivateKey or a EllipticCurvePublicKey is required."
+            )
+
+    def to_cryptography_key(
+        self,
+    ) -> Union[
+        asymmetric.ec.EllipticCurvePrivateKey, asymmetric.ec.EllipticCurvePublicKey
+    ]:
+        if self.is_private:
+            return asymmetric.ec.EllipticCurvePrivateNumbers(
+                private_value=self.ecc_private_key,
+                public_numbers=asymmetric.ec.EllipticCurvePublicNumbers(
+                    x=self.x_coordinate,
+                    y=self.y_coordinate,
+                    curve=self.cryptography_curve,
+                ),
+            ).private_key()
+        else:
+            return asymmetric.ec.EllipticCurvePublicNumbers(
+                x=self.x_coordinate, y=self.y_coordinate, curve=self.cryptography_curve
+            ).public_key()
 
     @classmethod
     def generate(cls, crv: str = "P-256", **params: str) -> "ECJwk":
@@ -81,30 +171,29 @@ class ECJwk(Jwk):
         :param params: additional parameters for the returned ECJwk
         :return: a generated ECJwk
         """
-        curve = cls.CURVES.get(crv)
+        curve = cls.CRYPTOGRAPHY_CURVES.get(crv)
         if curve is None:
             raise ValueError("Unsupported curve", crv)
-        key = ec.generate_private_key(curve)
+        key = asymmetric.ec.generate_private_key(curve)
         pn = key.private_numbers()  # type: ignore
-        # TODO: check why mypy complains that "EllipticCurvePrivateKey" has no attribute "private_numbers" while it does
-        key_size = pn.public_numbers.curve.key_size
-        x = int_to_b64u(pn.public_numbers.x, key_size)
-        y = int_to_b64u(pn.public_numbers.y, key_size)
-        d = int_to_b64u(pn.private_value, key_size)
-        return cls.private(crv=crv, x=x, y=y, d=d, **params)
+        return cls.private(
+            crv=crv,
+            x=pn.public_numbers.x,
+            y=pn.public_numbers.y,
+            d=pn.private_value,
+            **params,
+        )
 
-    def sign(self, data: bytes, alg: Optional[str] = "ES256") -> bytes:
-        alg = self.alg or alg
-        if alg is None:
-            raise ValueError("a signing alg is required")
+    def sign(self, data: bytes, alg: Optional[str] = None) -> bytes:
+        alg = get_alg(self.alg, alg, self.supported_signing_algorithms)
 
         if not self.is_private:
             raise PrivateKeyRequired("A private key is required for signing")
 
-        key = ec.EllipticCurvePrivateNumbers(
+        key = asymmetric.ec.EllipticCurvePrivateNumbers(
             self.ecc_private_key,
-            ec.EllipticCurvePublicNumbers(
-                self.x_coordinate, self.y_coordinate, self.CURVES[self.curve]
+            asymmetric.ec.EllipticCurvePublicNumbers(
+                self.x_coordinate, self.y_coordinate, self.cryptography_curve
             ),
         ).private_key()
         try:
@@ -112,23 +201,35 @@ class ECJwk(Jwk):
         except KeyError:
             raise ValueError("Unsupported signing alg", alg)
 
-        return key.sign(data, ec.ECDSA(hashing))
+        dss_sig = key.sign(data, asymmetric.ec.ECDSA(hashing))
+        r, s = asymmetric.utils.decode_dss_signature(dss_sig)
+        return int_to_bytes(r, self.coordinate_size) + int_to_bytes(
+            s, self.coordinate_size
+        )
 
     def verify(
-        self, data: bytes, signature: bytes, alg: Union[str, Iterable[str], None]
+        self,
+        data: bytes,
+        signature: bytes,
+        alg: Optional[str] = None,
+        algs: Optional[Iterable[str]] = None,
     ) -> bool:
-        if isinstance(alg, str):
-            algs = [alg]
-        elif alg is None:
-            algs = [self.alg]
-        else:
-            algs = list(alg)
+        public_key = self.public_jwk().to_cryptography_key()
 
-        public_key = ec.EllipticCurvePublicNumbers(
-            self.x_coordinate, self.y_coordinate, self.CURVES[self.curve]
-        ).public_key()
+        if len(signature) != self.coordinate_size * 2:
+            raise ValueError(
+                f"Invalid signature length {len(signature)} bytes, expected {self.coordinate_size * 2} bytes"
+            )
 
-        for alg in algs:
+        r_bytes, s_bytes = (
+            signature[: self.coordinate_size],
+            signature[self.coordinate_size :],
+        )
+        r = int.from_bytes(r_bytes, "big", signed=False)
+        s = int.from_bytes(s_bytes, "big", signed=False)
+        dss_signature = asymmetric.utils.encode_dss_signature(r, s)
+
+        for alg in get_algs(self.alg, alg, algs, self.supported_signing_algorithms):
             try:
                 description, hashing = self.SIGNATURE_ALGORITHMS[alg]
             except KeyError:
@@ -136,9 +237,9 @@ class ECJwk(Jwk):
 
             try:
                 public_key.verify(
-                    signature,
+                    dss_signature,
                     data,
-                    ec.ECDSA(hashing),
+                    asymmetric.ec.ECDSA(hashing),
                 )
                 return True
             except exceptions.InvalidSignature:
@@ -148,9 +249,9 @@ class ECJwk(Jwk):
 
     @property
     def curve(self) -> str:
-        if self.crv not in self.CURVES:
+        if not isinstance(self.crv, str) or self.crv not in self.CRYPTOGRAPHY_CURVES:
             raise AttributeError("unsupported crv", self.crv)
-        return cast(str, self.crv)
+        return self.crv
 
     @property
     def x_coordinate(self) -> int:
@@ -175,3 +276,11 @@ class ECJwk(Jwk):
         :return: the ECC private key (from parameter `d`)
         """
         return b64u_to_int(self.d)
+
+    @property
+    def supported_signing_algorithms(self) -> List[str]:
+        """
+        Returns a list of signing algs that are compatible for use with this Jwk.
+        :return: a list of signing algs
+        """
+        return {"P-256": ["ES256"], "P-384": ["ES384"], "P-521": ["ES512"]}[self.curve]

@@ -5,6 +5,7 @@ from cryptography.hazmat.primitives import hashes, hmac, keywrap
 from cryptography.hazmat.primitives.ciphers import aead
 
 from ..utils import b64u_decode, b64u_encode
+from .alg import get_alg, get_algs
 from .base import Jwk
 
 
@@ -58,6 +59,9 @@ class SymmetricJwk(Jwk):
         "A256GCM": ("AES GCM using 256-bit key", aead.AESGCM, 256, 96, 16),
     }
 
+    def public_jwk(self) -> "Jwk":
+        raise ValueError("Symmetric keys don't have a public key")
+
     @classmethod
     def from_bytes(cls, k: Union[bytes, str], **params: str) -> "SymmetricJwk":
         """
@@ -102,10 +106,9 @@ class SymmetricJwk(Jwk):
     def key_size(self) -> int:
         return len(self.key) * 8
 
-    def sign(self, data: bytes, alg: Optional[str] = "HS256") -> bytes:
-        alg = self.alg or alg
-        if alg is None:
-            raise ValueError("a signing alg is required")
+    def sign(self, data: bytes, alg: Optional[str] = None) -> bytes:
+        alg = get_alg(self.alg, alg, self.supported_signing_algorithms)
+
         try:
             mac, hashalg, min_key_size = self.SIGNATURE_ALGORITHMS[alg]
         except KeyError:
@@ -117,19 +120,13 @@ class SymmetricJwk(Jwk):
         return signature
 
     def verify(
-        self, data: bytes, signature: bytes, alg: Union[str, Iterable[str], None] = None
+        self,
+        data: bytes,
+        signature: bytes,
+        alg: Optional[str] = None,
+        algs: Optional[Iterable[str]] = None,
     ) -> bool:
-        if isinstance(alg, str):
-            algs = [alg]
-        elif alg is None:
-            algs = [self.alg]
-        else:
-            algs = list(alg)
-
-        if not algs:
-            raise ValueError("a signing alg is required")
-
-        for alg in algs:
+        for alg in get_algs(self.alg, alg, algs, self.supported_signing_algorithms):
             try:
                 mac, hashalg, min_key_size = self.SIGNATURE_ALGORITHMS[alg]
             except KeyError:
@@ -143,10 +140,6 @@ class SymmetricJwk(Jwk):
 
         return False
 
-    @property
-    def supported_signing_algorithms(self) -> List[str]:
-        return list(self.SIGNATURE_ALGORITHMS.keys())
-
     def encrypt(
         self,
         plaintext: bytes,
@@ -154,9 +147,7 @@ class SymmetricJwk(Jwk):
         alg: Optional[str] = None,
         iv: Optional[bytes] = None,
     ) -> Tuple[bytes, bytes, bytes]:
-        alg = self.alg or alg
-        if alg is None:
-            raise ValueError("An encryption alg is required")
+        alg = get_alg(self.alg, alg, self.supported_encryption_algorithms)
 
         (
             description,
@@ -189,9 +180,7 @@ class SymmetricJwk(Jwk):
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
     ) -> bytes:
-        alg = self.alg or alg
-        if alg is None:
-            raise ValueError("An encryption alg is required")
+        alg = get_alg(self.alg, alg, self.supported_encryption_algorithms)
 
         (
             description,
@@ -212,10 +201,8 @@ class SymmetricJwk(Jwk):
 
         return plaintext
 
-    def encrypt_key(self, key: bytes, alg: Optional[str] = None) -> bytes:
-        alg = self.alg or alg
-        if alg is None:
-            raise ValueError("An encryption alg is required")
+    def wrap_key(self, key: bytes, alg: Optional[str] = None) -> bytes:
+        alg = get_alg(self.alg, alg, self.supported_key_management_algorithms)
 
         (
             description,
@@ -232,10 +219,8 @@ class SymmetricJwk(Jwk):
         cypherkey = wrap_method(self.key, key)
         return cypherkey
 
-    def decrypt_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
-        alg = self.alg or alg
-        if alg is None:
-            raise ValueError("An encryption alg is required")
+    def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
+        alg = get_alg(self.alg, alg, self.supported_key_management_algorithms)
 
         (
             description,

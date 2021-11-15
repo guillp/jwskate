@@ -1,9 +1,9 @@
-from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Tuple
 
+from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
 
-from ..utils import b64u_encode
 from .base import Jwk
 
 
@@ -38,7 +38,14 @@ class OKPJwk(Jwk):
 
     @classmethod
     def private(cls, crv: str, x: bytes, d: bytes, **params: str) -> "OKPJwk":
-        return cls(dict(crv=crv, x=b64u_encode(x), d=b64u_encode(d), **params))
+        return cls(
+            dict(
+                crv=crv,
+                x=BinaPy(x).encode_to("b64u").decode(),
+                d=BinaPy(d).encode_to("b64u").decode(),
+                **params
+            )
+        )
 
     @classmethod
     def generate(cls, crv: str = "Ed25519", **params: str) -> "OKPJwk":

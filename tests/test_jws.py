@@ -1,4 +1,7 @@
+from typing import Any, Dict
+
 import pytest
+from binapy import BinaPy
 
 from jwskate import ECJwk, Jwk, JwsCompact, RSAJwk, SymmetricJwk
 
@@ -201,7 +204,7 @@ def signature_jwk(
     if signature_alg in symmetric_signature_jwk.supported_signing_algorithms:
         return symmetric_signature_jwk
 
-    pytest.skip("Unsupported signature alg: {signature_alg}")
+    pytest.skip(f"No key supports this signature alg: {signature_alg}")
 
 
 @pytest.fixture()
@@ -266,10 +269,11 @@ def jwcrypto_signed_jws(
 
     jwk = jwcrypto.jwk.JWK(**signature_jwk)
     jws = jwcrypto.jws.JWS(signature_payload)
-    from jwskate.utils import json_encode
 
     jws.add_signature(
-        jwk, alg=signature_alg, protected=json_encode({"alg": signature_alg})
+        jwk,
+        alg=signature_alg,
+        protected=BinaPy.serialize_to("json", {"alg": signature_alg}).decode(),
     )
     token: str = jws.serialize(True)
     return token

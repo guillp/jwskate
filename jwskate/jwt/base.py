@@ -2,10 +2,11 @@
 
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
+from binapy import BinaPy
+
 from jwskate.jwk import Jwk
 
-from ..jose import BaseJose
-from ..utils import b64u_encode, b64u_encode_json
+from ..token import BaseToken
 
 if TYPE_CHECKING:
     from jwskate import EncryptedJwt, SignedJwt
@@ -15,7 +16,7 @@ class InvalidJwt(ValueError):
     """Raised when an invalid Jwt is parsed."""
 
 
-class Jwt(BaseJose):
+class Jwt(BaseToken):
     """Represents a Json Web Token."""
 
     def __new__(cls, value: Union[bytes, str]):  # type: ignore
@@ -72,11 +73,11 @@ class Jwt(BaseJose):
         if kid:
             headers["kid"] = kid
 
-        headers_part = b64u_encode_json(headers)
-        claims_part = b64u_encode_json(claims)
-        signed_value = ".".join((headers_part, claims_part))
-        signature = b64u_encode(jwk.sign(signed_value.encode(), alg=alg))
-        return SignedJwt(".".join((signed_value, signature)))
+        headers_part = BinaPy.serialize_to("json", headers).encode_to("b64u")
+        claims_part = BinaPy.serialize_to("json", claims).encode_to("b64u")
+        signed_value = b".".join((headers_part, claims_part))
+        signature = jwk.sign(signed_value, alg=alg).encode_to("b64u")
+        return SignedJwt(b".".join((signed_value, signature)))
 
     @classmethod
     def unprotected(
@@ -94,11 +95,11 @@ class Jwt(BaseJose):
 
         headers = dict(extra_headers or {}, alg="none")
 
-        headers_part = b64u_encode_json(headers)
-        claims_part = b64u_encode_json(claims)
-        signed_value = ".".join((headers_part, claims_part))
-        signature = ""
-        return SignedJwt(".".join((signed_value, signature)))
+        headers_part = BinaPy.serialize_to("json", headers).encode_to("b64u")
+        claims_part = BinaPy.serialize_to("json", claims).encode_to("b64u")
+        signed_value = b".".join((headers_part, claims_part))
+        signature = b""
+        return SignedJwt(b".".join((signed_value, signature)))
 
     @classmethod
     def sign_and_encrypt(
@@ -121,6 +122,5 @@ class Jwt(BaseJose):
         :param enc: the alg to use for payload encryption
         :return: an EncryptedJwt
         """
-        from .encrypted import EncryptedJwt
 
         raise NotImplementedError

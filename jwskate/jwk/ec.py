@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Iterable, List, Optional, Union
 
+from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import asymmetric, hashes
 
-from ..utils import b64u_to_int, int_to_b64u, int_to_bytes
 from .alg import get_alg, get_algs
 from .base import Jwk
 from .exceptions import PrivateKeyRequired
@@ -74,8 +74,8 @@ class ECJwk(Jwk):
             dict(
                 key="EC",
                 crv=crv,
-                x=int_to_b64u(x, coord_size),
-                y=int_to_b64u(y, coord_size),
+                x=BinaPy.from_int(x, coord_size).encode_to("b64u"),
+                y=BinaPy.from_int(y, coord_size).encode_to("b64u"),
                 **params,
             )
         )
@@ -96,9 +96,9 @@ class ECJwk(Jwk):
             dict(
                 key="EC",
                 crv=crv,
-                x=int_to_b64u(x, coord_size),
-                y=int_to_b64u(y, coord_size),
-                d=int_to_b64u(d, coord_size),
+                x=BinaPy.from_int(x, coord_size).encode_to("b64u").decode(),
+                y=BinaPy.from_int(y, coord_size).encode_to("b64u").decode(),
+                d=BinaPy.from_int(d, coord_size).encode_to("b64u").decode(),
                 **params,
             )
         )
@@ -184,7 +184,7 @@ class ECJwk(Jwk):
             **params,
         )
 
-    def sign(self, data: bytes, alg: Optional[str] = None) -> bytes:
+    def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
         alg = get_alg(self.alg, alg, self.supported_signing_algorithms)
 
         if not self.is_private:
@@ -203,7 +203,7 @@ class ECJwk(Jwk):
 
         dss_sig = key.sign(data, asymmetric.ec.ECDSA(hashing))
         r, s = asymmetric.utils.decode_dss_signature(dss_sig)
-        return int_to_bytes(r, self.coordinate_size) + int_to_bytes(
+        return BinaPy.from_int(r, self.coordinate_size) + BinaPy.from_int(
             s, self.coordinate_size
         )
 
@@ -259,7 +259,7 @@ class ECJwk(Jwk):
         Returns the x coordinate from this ECJwk
         :return: the x coordinate (from parameter `x`)
         """
-        return b64u_to_int(self.x)
+        return BinaPy(self.x).decode_from("b64u").to_int()
 
     @property
     def y_coordinate(self) -> int:
@@ -267,7 +267,7 @@ class ECJwk(Jwk):
         Returns the y coordinate from this ECJwk
         :return: the y coordinate (from parameter `y`)
         """
-        return b64u_to_int(self.y)
+        return BinaPy(self.y).decode_from("b64u").to_int()
 
     @property
     def ecc_private_key(self) -> int:
@@ -275,7 +275,7 @@ class ECJwk(Jwk):
         Returns the ECC private key from this ECJwk
         :return: the ECC private key (from parameter `d`)
         """
-        return b64u_to_int(self.d)
+        return BinaPy(self.d).decode_from("b64u").to_int()
 
     @property
     def supported_signing_algorithms(self) -> List[str]:

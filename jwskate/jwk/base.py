@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import json
-import warnings
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union
 
-from binapy import BinaPy  # type: ignore[import]
+from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
-from ..utils import b64u_decode, b64u_encode
 from .exceptions import InvalidJwk
 
 
@@ -105,7 +103,7 @@ class Jwk(Dict[str, Any]):
 
         intermediary = json.dumps(t, separators=(",", ":"), sort_keys=True)
         digest.update(intermediary.encode("utf8"))
-        return b64u_encode(digest.digest())
+        return BinaPy(digest.digest()).encode_to("b64u").decode()
 
     @property
     def alg(self) -> Optional[str]:
@@ -146,9 +144,7 @@ class Jwk(Dict[str, Any]):
                     raise InvalidJwk(
                         f"Parameter {description} ({name}) must be a string with a Base64URL-encoded value"
                     )
-                try:
-                    b64u_decode(value)
-                except ValueError:
+                if not BinaPy(value).check("b64u"):
                     raise InvalidJwk(
                         f"Parameter {description} ({name}) must be a Base64URL-encoded value"
                     )

@@ -1,16 +1,17 @@
 from typing import Any, Dict, Iterable, Optional, Union
 
-from jwskate.jose import BaseJose
+from binapy import BinaPy
+
 from jwskate.jwk.alg import get_alg
 from jwskate.jwk.base import Jwk
-from jwskate.utils import b64u_decode, b64u_decode_json, b64u_encode, b64u_encode_json
+from jwskate.token import BaseToken
 
 
 class InvalidJws(ValueError):
     """Raised when an invalid Jws is parsed"""
 
 
-class JwsCompact(BaseJose):
+class JwsCompact(BaseToken):
     """
     Represents a a Json Web Signature (JWS), using compact serialization, as defined in RFC7515.
     """
@@ -29,21 +30,21 @@ class JwsCompact(BaseJose):
 
         header, payload, signature = self.value.split(b".")
         try:
-            self.headers = b64u_decode_json(header)
+            self.headers = BinaPy(header).decode_from("b64u").parse_from("json")
         except ValueError:
             raise InvalidJws(
                 "Invalid JWS header: it must be a Base64URL-encoded JSON object"
             )
 
         try:
-            self.payload = b64u_decode(payload)
+            self.payload = BinaPy(payload).decode_from("b64u")
         except ValueError:
             raise InvalidJws(
                 "Invalid JWS payload: it must be a Base64URL-encoded binary data (bytes)"
             )
 
         try:
-            self.signature = b64u_decode(signature)
+            self.signature = BinaPy(signature).decode_from("b64u")
         except ValueError:
             raise InvalidJws(
                 "Invalid JWS signature: it must be a Base64URL-encoded binary data (bytes)"
@@ -78,14 +79,19 @@ class JwsCompact(BaseJose):
             headers["kid"] = kid
 
         signed_part = cls.assemble_signed_part(headers, payload)
-        signature = jwk.sign(signed_part.encode(), alg=alg)
+        signature = jwk.sign(signed_part, alg=alg)
         return cls.from_parts(signed_part, signature)
 
     @classmethod
     def assemble_signed_part(
         cls, headers: Dict[str, Any], payload: Union[bytes, str]
-    ) -> str:
-        return ".".join((b64u_encode_json(headers), b64u_encode(payload)))
+    ) -> bytes:
+        return b".".join(
+            (
+                BinaPy.serialize_to("json", headers).encode_to("b64u"),
+                BinaPy(payload).encode_to("b64u"),
+            )
+        )
 
     @classmethod
     def from_parts(
@@ -94,7 +100,7 @@ class JwsCompact(BaseJose):
         if not isinstance(signed_part, bytes):
             signed_part = signed_part.encode("ascii")
 
-        return cls(b".".join((signed_part, b64u_encode(signature).encode())))
+        return cls(b".".join((signed_part, BinaPy(signature).encode_to("b64u"))))
 
     @property
     def signed_part(self) -> bytes:

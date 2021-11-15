@@ -1,7 +1,7 @@
 from typing import Any, Dict, Union
 
 
-class BaseJose:
+class BaseToken:
     def __init__(self, value: Union[bytes, str], max_size: int = 16 * 1024):
         """
         Initialize an Jwt from its string representation.
@@ -30,7 +30,7 @@ class BaseJose:
         :param other: the other token to compare with
         :return: True if the other token has the same representation, False otherwise
         """
-        if isinstance(other, BaseJose):
+        if isinstance(other, BaseToken):
             return self.value == other.value
         if isinstance(other, str):
             return self.value.decode() == other

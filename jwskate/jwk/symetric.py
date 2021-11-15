@@ -1,10 +1,10 @@
 import secrets
 from typing import Iterable, List, Optional, Tuple, Union
 
+from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes, hmac, keywrap
 from cryptography.hazmat.primitives.ciphers import aead
 
-from ..utils import b64u_decode, b64u_encode
 from .alg import get_alg, get_algs
 from .base import Jwk
 
@@ -71,7 +71,7 @@ class SymmetricJwk(Jwk):
         :param params: additional parameters for the returned Jwk
         :return: a SymmetricJwk
         """
-        return cls(dict(key="oct", k=b64u_encode(k), **params))
+        return cls(dict(key="oct", k=BinaPy(k).encode_to("b64u").decode(), **params))
 
     @classmethod
     def generate(cls, size: int = 128, **params: str) -> "SymmetricJwk":
@@ -100,13 +100,13 @@ class SymmetricJwk(Jwk):
         Returns the raw symmetric key.
         :return: the key from the `k` parameter, base64u-decoded.
         """
-        return b64u_decode(self.k)
+        return BinaPy(self.k).decode_from("b64u")
 
     @property
     def key_size(self) -> int:
         return len(self.key) * 8
 
-    def sign(self, data: bytes, alg: Optional[str] = None) -> bytes:
+    def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
         alg = get_alg(self.alg, alg, self.supported_signing_algorithms)
 
         try:
@@ -117,7 +117,7 @@ class SymmetricJwk(Jwk):
         m = mac(self.key, hashalg)
         m.update(data)
         signature = m.finalize()
-        return signature
+        return BinaPy(signature)
 
     def verify(
         self,
@@ -146,7 +146,7 @@ class SymmetricJwk(Jwk):
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
         iv: Optional[bytes] = None,
-    ) -> Tuple[bytes, bytes, bytes]:
+    ) -> Tuple[BinaPy, BinaPy, BinaPy]:
         alg = get_alg(self.alg, alg, self.supported_encryption_algorithms)
 
         (
@@ -170,7 +170,7 @@ class SymmetricJwk(Jwk):
         cyphertext = cyphertext_with_tag[:-tag_size]
         tag = cyphertext_with_tag[-tag_size:]
 
-        return cyphertext, tag, iv
+        return BinaPy(cyphertext), BinaPy(tag), BinaPy(iv)
 
     def decrypt(
         self,
@@ -179,7 +179,7 @@ class SymmetricJwk(Jwk):
         iv: bytes,
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
-    ) -> bytes:
+    ) -> BinaPy:
         alg = get_alg(self.alg, alg, self.supported_encryption_algorithms)
 
         (
@@ -199,9 +199,9 @@ class SymmetricJwk(Jwk):
         cyphertext_with_tag = cyphertext + tag
         plaintext: bytes = alg_key.decrypt(iv, cyphertext_with_tag, aad)
 
-        return plaintext
+        return BinaPy(plaintext)
 
-    def wrap_key(self, key: bytes, alg: Optional[str] = None) -> bytes:
+    def wrap_key(self, key: bytes, alg: Optional[str] = None) -> BinaPy:
         alg = get_alg(self.alg, alg, self.supported_key_management_algorithms)
 
         (
@@ -217,9 +217,9 @@ class SymmetricJwk(Jwk):
             )
 
         cypherkey = wrap_method(self.key, key)
-        return cypherkey
+        return BinaPy(cypherkey)
 
-    def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
+    def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> BinaPy:
         alg = get_alg(self.alg, alg, self.supported_key_management_algorithms)
 
         (
@@ -235,4 +235,4 @@ class SymmetricJwk(Jwk):
             )
 
         plaintext = unwrap_method(self.key, cypherkey)
-        return plaintext
+        return BinaPy(plaintext)

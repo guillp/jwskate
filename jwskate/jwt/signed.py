@@ -3,8 +3,9 @@
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Union
 
+from binapy import BinaPy
+
 from jwskate import Jwk
-from jwskate.utils import b64u_decode, b64u_decode_json
 
 from .base import InvalidJwt, Jwt
 
@@ -46,21 +47,21 @@ class SignedJwt(Jwt):
 
         header, payload, signature = self.value.split(b".")
         try:
-            self.headers = b64u_decode_json(header)
+            self.headers = BinaPy(header).decode_from("b64u").parse_from("json")
         except ValueError:
             raise InvalidJwt(
                 "Invalid JWT header: it must be a Base64URL-encoded JSON object"
             )
 
         try:
-            self.claims = b64u_decode_json(payload)
+            self.claims = BinaPy(payload).decode_from("b64u").parse_from("json")
         except ValueError:
             raise InvalidJwt(
                 "Invalid JWT payload: it must be a Base64URL-encoded JSON object"
             )
 
         try:
-            self.signature = b64u_decode(signature)
+            self.signature = BinaPy(signature).decode_from("b64u")
         except ValueError:
             raise InvalidJwt(
                 "Invalid JWT signature: it must be a Base64URL-encoded binary data (bytes)"

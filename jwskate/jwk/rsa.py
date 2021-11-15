@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Optional, Union
 
+from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
-from ..utils import b64u_to_int, int_to_b64u
 from .alg import get_alg, get_algs
 from .base import Jwk
 from .exceptions import PrivateKeyRequired
@@ -121,7 +121,14 @@ class RSAJwk(Jwk):
         :param params: additional parameters for the return RSAJwk
         :return: a RsaJwk
         """
-        return cls(dict(kty="RSA", n=int_to_b64u(n), e=int_to_b64u(e), **params))
+        return cls(
+            dict(
+                kty="RSA",
+                n=BinaPy.from_int(n).encode_to("b64u").decode(),
+                e=BinaPy.from_int(e).encode_to("b64u").decode(),
+                **params,
+            )
+        )
 
     @classmethod
     def private(
@@ -152,14 +159,24 @@ class RSAJwk(Jwk):
         return cls(
             dict(
                 kty="RSA",
-                n=int_to_b64u(n),
-                e=int_to_b64u(e),
-                d=int_to_b64u(d),
-                p=int_to_b64u(p) if p is not None else None,
-                q=int_to_b64u(q) if q is not None else None,
-                dp=int_to_b64u(dp) if dp is not None else None,
-                dq=int_to_b64u(dq) if dq is not None else None,
-                qi=int_to_b64u(qi) if qi is not None else None,
+                n=BinaPy.from_int(n).encode_to("b64u").decode(),
+                e=BinaPy.from_int(e).encode_to("b64u").decode(),
+                d=BinaPy.from_int(d).encode_to("b64u").decode(),
+                p=BinaPy.from_int(p).encode_to("b64u").decode()
+                if p is not None
+                else None,
+                q=BinaPy.from_int(q).encode_to("b64u").decode()
+                if q is not None
+                else None,
+                dp=BinaPy.from_int(dp).encode_to("b64u").decode()
+                if dp is not None
+                else None,
+                dq=BinaPy.from_int(dq).encode_to("b64u").decode()
+                if dq is not None
+                else None,
+                qi=BinaPy.from_int(qi).encode_to("b64u").decode()
+                if qi is not None
+                else None,
                 **params,
             )
         )
@@ -192,7 +209,7 @@ class RSAJwk(Jwk):
         Returns the modulus from this Jwk.
         :return: the key modulus (from parameter `n`)
         """
-        return b64u_to_int(self.n)
+        return BinaPy(self.n).decode_from("b64u").to_int()
 
     @property
     def exponent(self) -> int:
@@ -200,7 +217,7 @@ class RSAJwk(Jwk):
         Returns the exponent from this Jwk.
         :return: the key exponent (from parameter `e`)
         """
-        return b64u_to_int(self.e)
+        return BinaPy(self.e).decode_from("b64u").to_int()
 
     @property
     def private_exponent(self) -> int:
@@ -208,7 +225,7 @@ class RSAJwk(Jwk):
         Returns the private exponent from this Jwk.
         :return: the key private exponent (from parameter `d`)
         """
-        return b64u_to_int(self.d)
+        return BinaPy(self.d).decode_from("b64u").to_int()
 
     @property
     def first_prime_factor(self) -> int:
@@ -216,7 +233,7 @@ class RSAJwk(Jwk):
         Returns the first prime factor from this Jwk.
         :return: the first prime factor (from parameter `p`)
         """
-        return b64u_to_int(self.p)
+        return BinaPy(self.p).decode_from("b64u").to_int()
 
     @property
     def second_prime_factor(self) -> int:
@@ -224,7 +241,7 @@ class RSAJwk(Jwk):
         Returns the second prime factor from this Jwk.
         :return: the second prime factor (from parameter `q`)
         """
-        return b64u_to_int(self.q)
+        return BinaPy(self.q).decode_from("b64u").to_int()
 
     @property
     def first_factor_crt_exponent(self) -> int:
@@ -232,7 +249,7 @@ class RSAJwk(Jwk):
         Returns the first factor CRT exponent from this Jwk.
         :return: the first factor CRT coefficient (from parameter `dp`)
         """
-        return b64u_to_int(self.dp)
+        return BinaPy(self.dp).decode_from("b64u").to_int()
 
     @property
     def second_factor_crt_exponent(self) -> int:
@@ -240,7 +257,7 @@ class RSAJwk(Jwk):
         Returns the second factor CRT exponent from this Jwk.
         :return: the second factor CRT coefficient (from parameter `dq`)
         """
-        return b64u_to_int(self.dq)
+        return BinaPy(self.dq).decode_from("b64u").to_int()
 
     @property
     def first_crt_coefficient(self) -> int:
@@ -248,9 +265,9 @@ class RSAJwk(Jwk):
         Returns the first CRT coefficient from this Jwk
         :return: the first CRT coefficient (from parameter `qi`)
         """
-        return b64u_to_int(self.qi)
+        return BinaPy(self.qi).decode_from("b64u").to_int()
 
-    def sign(self, data: bytes, alg: Optional[str] = None) -> bytes:
+    def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
         alg = self.get("alg", alg)
         if alg is None:
             raise ValueError("a signing alg is required")
@@ -264,7 +281,7 @@ class RSAJwk(Jwk):
         except KeyError:
             raise ValueError("Unsupported signing alg", alg)
 
-        signature: bytes = key.sign(data, padding, hashing)
+        signature = BinaPy(key.sign(data, padding, hashing))
         return signature
 
     def verify(
@@ -295,7 +312,7 @@ class RSAJwk(Jwk):
 
         return False
 
-    def wrap_key(self, plaintext_key: bytes, alg: Optional[str] = None) -> bytes:
+    def wrap_key(self, plaintext_key: bytes, alg: Optional[str] = None) -> BinaPy:
         alg = get_alg(self.alg, alg, self.supported_key_management_algorithms)
         description, padding_alg = self.KEY_MANAGEMENT_ALGORITHMS[alg]
 
@@ -303,9 +320,9 @@ class RSAJwk(Jwk):
 
         cyphertext = public_key.encrypt(plaintext_key, padding_alg)
 
-        return cyphertext
+        return BinaPy(cyphertext)
 
-    def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> bytes:
+    def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> BinaPy:
         alg = get_alg(self.alg, alg, self.supported_key_management_algorithms)
         description, padding_alg = self.KEY_MANAGEMENT_ALGORITHMS[alg]
 
@@ -321,4 +338,4 @@ class RSAJwk(Jwk):
 
         plaintext = key.decrypt(cypherkey, padding_alg)
 
-        return plaintext
+        return BinaPy(plaintext)

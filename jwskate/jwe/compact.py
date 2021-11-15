@@ -1,17 +1,18 @@
 from typing import Any, Dict, Optional, Union
 
-from jwskate.jose import BaseJose
+from binapy import BinaPy
+
 from jwskate.jwk.alg import get_alg
 from jwskate.jwk.base import Jwk
 from jwskate.jwk.symetric import SymmetricJwk
-from jwskate.utils import b64u_decode, b64u_decode_json, b64u_encode, b64u_encode_json
+from jwskate.token import BaseToken
 
 
 class InvalidJwe(ValueError):
     """Raised when an invalid Jwe is parsed"""
 
 
-class JweCompact(BaseJose):
+class JweCompact(BaseToken):
     """
     Represents a Json Web Encryption object, as defined in RFC7516
     """
@@ -30,7 +31,7 @@ class JweCompact(BaseJose):
 
         header, key, iv, cyphertext, auth_tag = self.value.split(b".")
         try:
-            self.headers = b64u_decode_json(header)
+            self.headers = BinaPy(header).decode_from("b64u").parse_from("json")
             self.additional_authenticated_data = header
         except ValueError:
             raise InvalidJwe(
@@ -38,28 +39,28 @@ class JweCompact(BaseJose):
             )
 
         try:
-            self.content_encryption_key = b64u_decode(key)
+            self.content_encryption_key = BinaPy(key).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
                 "Invalid JWE cek: it must be a Base64URL-encoded binary data (bytes)"
             )
 
         try:
-            self.initialization_vector = b64u_decode(iv)
+            self.initialization_vector = BinaPy(iv).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
                 "Invalid JWE iv: it must be a Base64URL-encoded binary data (bytes)"
             )
 
         try:
-            self.cyphertext = b64u_decode(cyphertext)
+            self.cyphertext = BinaPy(cyphertext).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
                 "Invalid JWE cyphertext: it must be a Base64URL-encoded binary data (bytes)"
             )
 
         try:
-            self.authentication_tag = b64u_decode(auth_tag)
+            self.authentication_tag = BinaPy(auth_tag).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
                 "Invalid JWE authentication tag: it must be a Base64URL-encoded binary data (bytes)"
@@ -75,13 +76,13 @@ class JweCompact(BaseJose):
         tag: bytes,
     ) -> "JweCompact":
         return cls(
-            ".".join(
+            b".".join(
                 (
-                    b64u_encode_json(headers),
-                    b64u_encode(cek),
-                    b64u_encode(iv),
-                    b64u_encode(cyphertext),
-                    b64u_encode(tag),
+                    BinaPy.serialize_to("json", headers).encode_to("b64u"),
+                    BinaPy(cek).encode_to("b64u"),
+                    BinaPy(iv).encode_to("b64u"),
+                    BinaPy(cyphertext).encode_to("b64u"),
+                    BinaPy(tag).encode_to("b64u"),
                 )
             )
         )
@@ -111,7 +112,7 @@ class JweCompact(BaseJose):
 
         enc_cek = jwk.wrap_key(cek_jwk.key, alg)
 
-        aad = b64u_encode_json(headers).encode()
+        aad = BinaPy.serialize_to("json", headers).encode_to("b64u")
 
         cyphertext, tag, iv = cek_jwk.encrypt(
             plaintext=plaintext, aad=aad, iv=iv, alg=enc

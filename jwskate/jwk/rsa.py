@@ -37,7 +37,6 @@ class RSAJwk(Jwk):
     kty = "RSA"
 
     PARAMS = {
-        # name: ("Description", is_private, is_required, "kind"),
         "n": JwkParameter("Modulus", False, True, "b64u"),
         "e": JwkParameter("Exponent", False, True, "b64u"),
         "d": JwkParameter("Private Exponent", True, True, "b64u"),
@@ -71,10 +70,36 @@ class RSAJwk(Jwk):
             padding_alg=padding.PKCS1v15(),
             min_key_size=2048,
         ),
+        "PS256": RSASignatureAlg(
+            name="PS256",
+            description="RSASSA-PSS using SHA-256 and MGF1 with SHA-256",
+            hashing_alg=hashes.SHA256(),
+            padding_alg=padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()), salt_length=256 // 8
+            ),
+            min_key_size=2048,
+        ),
+        "PS384": RSASignatureAlg(
+            name="PS384",
+            description="RSASSA-PSS using SHA-384 and MGF1 with SHA-384",
+            hashing_alg=hashes.SHA384(),
+            padding_alg=padding.PSS(
+                mgf=padding.MGF1(hashes.SHA384()), salt_length=384 // 8
+            ),
+            min_key_size=2048,
+        ),
+        "PS512": RSASignatureAlg(
+            name="PS512",
+            description="RSASSA-PSS using SHA-512 and MGF1 with SHA-512",
+            hashing_alg=hashes.SHA512(),
+            padding_alg=padding.PSS(
+                mgf=padding.MGF1(hashes.SHA512()), salt_length=512 // 8
+            ),
+            min_key_size=2048,
+        ),
     }
 
     KEY_MANAGEMENT_ALGORITHMS: Mapping[str, RSAKeyManagementAlg] = {
-        # name: ("description", alg)
         "RSA1_5": RSAKeyManagementAlg(
             name="RSA1_5",
             description="RSAES-PKCS1-v1_5",

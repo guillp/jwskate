@@ -1,5 +1,3 @@
-from typing import Any, Dict
-
 import pytest
 from binapy import BinaPy
 
@@ -15,7 +13,7 @@ def test_jws_compact(private_jwk: Jwk) -> None:
     assert jws.verify_signature(private_jwk, alg="RS256")
 
 
-EC_PRIVATE_KEY = {
+EC_P521_PRIVATE_KEY = {
     "kty": "EC",
     "kid": "bilbo.baggins@hobbiton.example",
     "use": "sig",
@@ -78,10 +76,10 @@ SYMMETRIC_SIGNATURE_KEY = {
 }
 
 
-@pytest.fixture
-def ec_private_jwk() -> Jwk:
+@pytest.fixture(scope="session")
+def ec_p521_private_jwk() -> Jwk:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-3.2]"""
-    jwk = Jwk(EC_PRIVATE_KEY)
+    jwk = Jwk(EC_P521_PRIVATE_KEY)
     assert isinstance(jwk, ECJwk)
     assert jwk.is_private
     assert jwk.kty == "EC"
@@ -103,7 +101,17 @@ def ec_private_jwk() -> Jwk:
     return jwk
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def ec_p256_private_jwk() -> Jwk:
+    return ECJwk.generate("P-256")
+
+
+@pytest.fixture(scope="session")
+def ec_p384_private_jwk() -> Jwk:
+    return Jwk.generate_for_kty("EC", crv="P-384")
+
+
+@pytest.fixture(scope="session")
 def rsa_private_jwk() -> Jwk:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-3.4]"""
     jwk = Jwk(RSA_PRIVATE_KEY)
@@ -144,7 +152,7 @@ def rsa_private_jwk() -> Jwk:
     return jwk
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def symmetric_signature_jwk() -> Jwk:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-3.5]"""
     jwk = Jwk(SYMMETRIC_SIGNATURE_KEY)
@@ -183,6 +191,9 @@ def signature_payload() -> bytes:
         "HS256",
         "HS384",
         "HS512",
+        "PS256",
+        "PS384",
+        "PS512",
     ]
 )
 def signature_alg(request: pytest.FixtureRequest) -> str:
@@ -190,17 +201,22 @@ def signature_alg(request: pytest.FixtureRequest) -> str:
 
 
 @pytest.fixture()
-@pytest.mark.parametrize("alg", [])
 def signature_jwk(
     signature_alg: str,
     rsa_private_jwk: Jwk,
-    ec_private_jwk: Jwk,
+    ec_p256_private_jwk: Jwk,
+    ec_p384_private_jwk: Jwk,
+    ec_p521_private_jwk: Jwk,
     symmetric_signature_jwk: Jwk,
 ) -> Jwk:
     if signature_alg in rsa_private_jwk.supported_signing_algorithms():
         return rsa_private_jwk
-    if signature_alg in ec_private_jwk.supported_signing_algorithms():
-        return ec_private_jwk
+    if signature_alg in ec_p521_private_jwk.supported_signing_algorithms():
+        return ec_p521_private_jwk
+    if signature_alg in ec_p384_private_jwk.supported_signing_algorithms():
+        return ec_p384_private_jwk
+    if signature_alg in ec_p256_private_jwk.supported_signing_algorithms():
+        return ec_p256_private_jwk
     if signature_alg in symmetric_signature_jwk.supported_signing_algorithms():
         return symmetric_signature_jwk
 

@@ -1,10 +1,17 @@
-from typing import Any, Callable, Dict, Tuple
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Mapping, Tuple
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
 
-from .base import Jwk
+from .alg import SignatureAlg
+from .base import Jwk, JwkParameter
+
+
+@dataclass
+class OKPSignatureAlg(SignatureAlg):
+    pass
 
 
 class OKPJwk(Jwk):
@@ -15,12 +22,12 @@ class OKPJwk(Jwk):
     kty = "OKP"
 
     PARAMS = {
-        "crv": ("Curve", False, True, "name"),
-        "x": ("Public Key", False, True, "b64u"),
-        "d": ("Private Key", True, False, "b64u"),
+        "crv": JwkParameter("Curve", False, True, "name"),
+        "x": JwkParameter("Public Key", False, True, "b64u"),
+        "d": JwkParameter("Private Key", True, False, "b64u"),
     }
 
-    CURVES: Dict[str, Callable[[], Any]] = {
+    CURVES: Mapping[str, Callable[[], Any]] = {
         # curve: generator
         "Ed25519": ed25519.Ed25519PrivateKey.generate,
         "Ed448": ed448.Ed448PrivateKey.generate,
@@ -28,7 +35,7 @@ class OKPJwk(Jwk):
         "X448": x448.X448PrivateKey.generate,
     }
 
-    SIGNATURE_ALGORITHMS: Dict[str, Tuple[str, hashes.HashAlgorithm]] = {
+    SIGNATURE_ALGORITHMS: Mapping[str, OKPSignatureAlg] = {
         # name : (description, hash_alg)
     }
 

@@ -71,15 +71,15 @@ class JwsCompact(BaseToken):
         if not jwk.is_private:
             raise ValueError("Signing requires a private JWK")
 
-        alg = get_alg(jwk.alg, alg, jwk.supported_signing_algorithms)
+        sigalg = get_alg(jwk.alg, alg, jwk.SIGNATURE_ALGORITHMS)
         kid = jwk.get("kid")
 
-        headers = dict(extra_headers or {}, alg=alg)
+        headers = dict(extra_headers or {}, alg=sigalg.name)
         if kid:
             headers["kid"] = kid
 
         signed_part = cls.assemble_signed_part(headers, payload)
-        signature = jwk.sign(signed_part, alg=alg)
+        signature = jwk.sign(signed_part, alg=sigalg.name)
         return cls.from_parts(signed_part, signature)
 
     @classmethod

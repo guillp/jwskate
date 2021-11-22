@@ -197,11 +197,11 @@ def signature_jwk(
     ec_private_jwk: Jwk,
     symmetric_signature_jwk: Jwk,
 ) -> Jwk:
-    if signature_alg in rsa_private_jwk.supported_signing_algorithms:
+    if signature_alg in rsa_private_jwk.supported_signing_algorithms():
         return rsa_private_jwk
-    if signature_alg in ec_private_jwk.supported_signing_algorithms:
+    if signature_alg in ec_private_jwk.supported_signing_algorithms():
         return ec_private_jwk
-    if signature_alg in symmetric_signature_jwk.supported_signing_algorithms:
+    if signature_alg in symmetric_signature_jwk.supported_signing_algorithms():
         return symmetric_signature_jwk
 
     pytest.skip(f"No key supports this signature alg: {signature_alg}")

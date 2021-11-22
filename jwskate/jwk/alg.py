@@ -1,12 +1,45 @@
 import warnings
-from typing import Iterable, List, Optional
+from dataclasses import dataclass
+from typing import Iterable, List, Mapping, Optional, Type, TypeVar
 
-from jwskate.jwk.exceptions import UnsupportedAlg
+from cryptography.hazmat.primitives import hashes, hmac
+
+from .exceptions import UnsupportedAlg
+
+
+@dataclass
+class Alg:
+    name: str
+    description: str
+
+
+@dataclass
+class SignatureAlg(Alg):
+    hashing_alg: hashes.HashAlgorithm
+
+
+@dataclass
+class SymetricSignatureAlg(SignatureAlg):
+    mac: Type[hmac.HMAC]
+    min_key_size: int
+
+
+@dataclass
+class KeyManagementAlg(Alg):
+    pass
+
+
+@dataclass
+class EncryptionAlg(Alg):
+    pass
+
+
+T = TypeVar("T")
 
 
 def get_alg(
-    jwk_alg: Optional[str], alg: Optional[str], supported_algs: List[str]
-) -> str:
+    jwk_alg: Optional[str], alg: Optional[str], supported_algs: Mapping[str, T]
+) -> T:
     """
     Given an alg parameter from a JWK, and/or a user-specified alg, return the alg to use.
 
@@ -29,12 +62,12 @@ def get_alg(
     elif alg is not None:
         choosen_alg = alg
 
-    if choosen_alg not in supported_algs:
+    try:
+        return supported_algs[choosen_alg]
+    except KeyError:
         raise ValueError(
             f"Alg {choosen_alg} is not supported. Supported algs: {supported_algs}."
         )
-    if choosen_alg:
-        return choosen_alg
 
     raise ValueError(
         "This key doesn't have an 'alg' parameter, you need to provide the signing alg for each operation."
@@ -45,8 +78,8 @@ def get_algs(
     jwk_alg: Optional[str],
     alg: Optional[str],
     algs: Optional[Iterable[str]],
-    supported_algs: List[str],
-) -> List[str]:
+    supported_algs: Mapping[str, T],
+) -> List[T]:
     """
     Given an alg parameter from a JWK, and/or a user-specified alg, and/or a user specified list of useable algs,
     return a list of algorithms.
@@ -80,7 +113,7 @@ def get_algs(
 
     if possible_algs:
         possible_supported_algs = [
-            alg for alg in possible_algs if alg in supported_algs
+            supported_algs[alg] for alg in possible_algs if alg in supported_algs
         ]
         if possible_supported_algs:
             return possible_supported_algs

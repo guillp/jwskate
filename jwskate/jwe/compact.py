@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional, Union
 
 from binapy import BinaPy
 
-from jwskate.jwk.alg import get_alg
+from jwskate.jwk.alg import KeyManagementAlg, get_alg
 from jwskate.jwk.base import Jwk
 from jwskate.jwk.symetric import SymmetricJwk
 from jwskate.token import BaseToken
@@ -92,26 +92,24 @@ class JweCompact(BaseToken):
         cls,
         plaintext: bytes,
         jwk: Union[Jwk, Dict[str, Any]],
+        enc: str,
         alg: Optional[str] = None,
-        enc: Optional[str] = None,
         extra_headers: Optional[Dict[str, Any]] = None,
         cek: Optional[bytes] = None,
         iv: Optional[bytes] = None,
     ) -> "JweCompact":
         jwk = Jwk(jwk)
 
-        alg = get_alg(jwk.alg, alg, jwk.supported_key_management_algorithms)
-        enc = get_alg(jwk.enc, enc, jwk.supported_encryption_algorithms)
-
-        headers = dict(extra_headers or {}, alg=alg, enc=enc)
+        keyalg = get_alg(jwk.alg, alg, jwk.KEY_MANAGEMENT_ALGORITHMS)
 
         if cek is None:
             cek_jwk = SymmetricJwk.generate_for_alg(enc)
         else:
             cek_jwk = SymmetricJwk.from_bytes(cek, alg=enc)
 
-        enc_cek = jwk.wrap_key(cek_jwk.key, alg)
+        enc_cek = jwk.wrap_key(cek_jwk.key, keyalg.name)
 
+        headers = dict(extra_headers or {}, alg=alg, enc=enc)
         aad = BinaPy.serialize_to("json", headers).encode_to("b64u")
 
         cyphertext, tag, iv = cek_jwk.encrypt(
@@ -123,8 +121,8 @@ class JweCompact(BaseToken):
     def decrypt(
         self,
         jwk: Union[Jwk, Dict[str, Any]],
+        enc: str,
         alg: Optional[str] = None,
-        enc: Optional[str] = None,
     ) -> bytes:
         """
         Decrypts this Jwe using a Jwk
@@ -135,10 +133,9 @@ class JweCompact(BaseToken):
         """
         jwk = Jwk(jwk)
 
-        alg = get_alg(jwk.alg, alg, jwk.supported_key_management_algorithms)
-        enc = get_alg(jwk.enc, enc, jwk.supported_encryption_algorithms)
+        keyalg = get_alg(jwk.alg, alg, jwk.KEY_MANAGEMENT_ALGORITHMS)
 
-        raw_cek = jwk.unwrap_key(self.content_encryption_key, alg)
+        raw_cek = jwk.unwrap_key(self.content_encryption_key, keyalg.name)
         cek = SymmetricJwk.from_bytes(raw_cek)
 
         plaintext = cek.decrypt(

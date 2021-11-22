@@ -1,15 +1,32 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, Optional, Union
+from dataclasses import dataclass
+from typing import Any, Iterable, Mapping, Optional, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
-from .alg import get_alg, get_algs
-from .base import Jwk
+from .alg import EncryptionAlg, KeyManagementAlg, SignatureAlg, get_alg, get_algs
+from .base import Jwk, JwkParameter
 from .exceptions import PrivateKeyRequired
+
+
+@dataclass
+class RSASignatureAlg(SignatureAlg):
+    padding_alg: padding.AsymmetricPadding
+    min_key_size: Optional[int]
+
+
+@dataclass
+class RSAKeyManagementAlg(KeyManagementAlg):
+    padding_alg: padding.AsymmetricPadding
+
+
+@dataclass
+class RSAEncryptionAlg(EncryptionAlg):
+    pass
 
 
 class RSAJwk(Jwk):
@@ -21,50 +38,61 @@ class RSAJwk(Jwk):
 
     PARAMS = {
         # name: ("Description", is_private, is_required, "kind"),
-        "n": ("Modulus", False, True, "b64u"),
-        "e": ("Exponent", False, True, "b64u"),
-        "d": ("Private Exponent", True, True, "b64u"),
-        "p": ("First Prime Factor", True, False, "b64u"),
-        "q": ("Second Prime Factor", True, False, "b64u"),
-        "dp": ("First Factor CRT Exponent", True, False, "b64u"),
-        "dq": ("Second Factor CRT Exponent", True, False, "b64u"),
-        "qi": ("First CRT Coefficient", True, False, "b64u"),
-        "oth": ("Other Primes Info", True, False, "unsupported"),
+        "n": JwkParameter("Modulus", False, True, "b64u"),
+        "e": JwkParameter("Exponent", False, True, "b64u"),
+        "d": JwkParameter("Private Exponent", True, True, "b64u"),
+        "p": JwkParameter("First Prime Factor", True, False, "b64u"),
+        "q": JwkParameter("Second Prime Factor", True, False, "b64u"),
+        "dp": JwkParameter("First Factor CRT Exponent", True, False, "b64u"),
+        "dq": JwkParameter("Second Factor CRT Exponent", True, False, "b64u"),
+        "qi": JwkParameter("First CRT Coefficient", True, False, "b64u"),
+        "oth": JwkParameter("Other Primes Info", True, False, "unsupported"),
     }
 
-    SIGNATURE_ALGORITHMS = {
-        # name : (description, padding_alg, hash_alg)
-        "RS256": (
-            "RSASSA-PKCS1-v1_5 using SHA-256",
-            padding.PKCS1v15(),
-            hashes.SHA256(),
+    SIGNATURE_ALGORITHMS: Mapping[str, RSASignatureAlg] = {
+        "RS256": RSASignatureAlg(
+            name="RS256",
+            description="RSASSA-PKCS1-v1_5 using SHA-256",
+            hashing_alg=hashes.SHA256(),
+            padding_alg=padding.PKCS1v15(),
+            min_key_size=2048,
         ),
-        "RS384": (
-            "RSASSA-PKCS1-v1_5 using SHA-384",
-            padding.PKCS1v15(),
-            hashes.SHA384(),
+        "RS384": RSASignatureAlg(
+            name="RS384",
+            description="RSASSA-PKCS1-v1_5 using SHA-384",
+            hashing_alg=hashes.SHA384(),
+            padding_alg=padding.PKCS1v15(),
+            min_key_size=2048,
         ),
-        "RS512": (
-            "RSASSA-PKCS1-v1_5 using SHA-256",
-            padding.PKCS1v15(),
-            hashes.SHA512(),
+        "RS512": RSASignatureAlg(
+            name="RS512",
+            description="RSASSA-PKCS1-v1_5 using SHA-256",
+            hashing_alg=hashes.SHA512(),
+            padding_alg=padding.PKCS1v15(),
+            min_key_size=2048,
         ),
     }
 
-    KEY_MANAGEMENT_ALGORITHMS = {
+    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, RSAKeyManagementAlg] = {
         # name: ("description", alg)
-        "RSA1_5": ("RSAES-PKCS1-v1_5", padding.PKCS1v15()),
-        "RSA-OAEP": (
-            "RSAES OAEP using default parameters",
-            padding.OAEP(
+        "RSA1_5": RSAKeyManagementAlg(
+            name="RSA1_5",
+            description="RSAES-PKCS1-v1_5",
+            padding_alg=padding.PKCS1v15(),
+        ),
+        "RSA-OAEP": RSAKeyManagementAlg(
+            name="RSA-OAEP",
+            description="RSAES OAEP using default parameters",
+            padding_alg=padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA1()),
                 algorithm=hashes.SHA1(),
                 label=None,
             ),
         ),
-        "RSA-OAEP-256": (
-            "RSAES OAEP using SHA-256 and MGF1 with with SHA-256",
-            padding.OAEP(
+        "RSA-OAEP-256": RSAKeyManagementAlg(
+            name="RSA-OAEP-256",
+            description="RSAES OAEP using SHA-256 and MGF1 with with SHA-256",
+            padding_alg=padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
                 algorithm=hashes.SHA256(),
                 label=None,
@@ -72,7 +100,7 @@ class RSAJwk(Jwk):
         ),
     }
 
-    ENCRYPTION_ALGORITHMS = {"A256GCM": None}
+    ENCRYPTION_ALGORITHMS: Mapping[str, RSAEncryptionAlg] = {}
 
     @classmethod
     def from_cryptography_key(cls, key: Any) -> RSAJwk:
@@ -268,20 +296,13 @@ class RSAJwk(Jwk):
         return BinaPy(self.qi).decode_from("b64u").to_int()
 
     def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
-        alg = self.get("alg", alg)
-        if alg is None:
-            raise ValueError("a signing alg is required")
+        sigalg = get_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
 
         key = self.to_cryptography_key()
         if not isinstance(key, rsa.RSAPrivateKey):
             raise PrivateKeyRequired("A private key is required for signing")
 
-        try:
-            description, padding, hashing = self.SIGNATURE_ALGORITHMS[alg]
-        except KeyError:
-            raise ValueError("Unsupported signing alg", alg)
-
-        signature = BinaPy(key.sign(data, padding, hashing))
+        signature = BinaPy(key.sign(data, sigalg.padding_alg, sigalg.hashing_alg))
         return signature
 
     def verify(
@@ -293,18 +314,13 @@ class RSAJwk(Jwk):
     ) -> bool:
         public_key = rsa.RSAPublicNumbers(self.exponent, self.modulus).public_key()
 
-        for alg in get_algs(self.alg, alg, algs, self.supported_signing_algorithms):
-            try:
-                description, padding, hashing = self.SIGNATURE_ALGORITHMS[alg]
-            except KeyError:
-                continue
-
+        for sigalg in get_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
             try:
                 public_key.verify(
                     signature,
                     data,
-                    padding,
-                    hashing,
+                    sigalg.padding_alg,
+                    sigalg.hashing_alg,
                 )
                 return True
             except exceptions.InvalidSignature:
@@ -313,18 +329,16 @@ class RSAJwk(Jwk):
         return False
 
     def wrap_key(self, plaintext_key: bytes, alg: Optional[str] = None) -> BinaPy:
-        alg = get_alg(self.alg, alg, self.supported_key_management_algorithms)
-        description, padding_alg = self.KEY_MANAGEMENT_ALGORITHMS[alg]
+        keyalg = get_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
 
         public_key = rsa.RSAPublicNumbers(e=self.exponent, n=self.modulus).public_key()
 
-        cyphertext = public_key.encrypt(plaintext_key, padding_alg)
+        cyphertext = public_key.encrypt(plaintext_key, keyalg.padding_alg)
 
         return BinaPy(cyphertext)
 
     def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> BinaPy:
-        alg = get_alg(self.alg, alg, self.supported_key_management_algorithms)
-        description, padding_alg = self.KEY_MANAGEMENT_ALGORITHMS[alg]
+        keyalg = get_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
 
         key = rsa.RSAPrivateNumbers(
             self.first_prime_factor,
@@ -336,6 +350,6 @@ class RSAJwk(Jwk):
             rsa.RSAPublicNumbers(self.exponent, self.modulus),
         ).private_key()
 
-        plaintext = key.decrypt(cypherkey, padding_alg)
+        plaintext = key.decrypt(cypherkey, keyalg.padding_alg)
 
         return BinaPy(plaintext)

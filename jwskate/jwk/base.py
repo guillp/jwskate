@@ -2,13 +2,40 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union
+from dataclasses import dataclass
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
+from .alg import Alg, EncryptionAlg, KeyManagementAlg, SignatureAlg
 from .exceptions import InvalidJwk
+
+
+@dataclass
+class JwkParameter:
+    description: str
+    is_private: bool
+    is_required: bool
+    kind: str
+
+
+S = TypeVar("S", bound="SignatureAlg")
+K = TypeVar("K", bound="KeyManagementAlg")
+E = TypeVar("E", bound="EncryptionAlg")
 
 
 class Jwk(Dict[str, Any]):
@@ -25,15 +52,15 @@ class Jwk(Dict[str, Any]):
     kty: str
     """The Key Type associated with this JWK."""
 
-    subclasses: Dict[str, Type["Jwk"]] = {}
+    subclasses: Dict[str, Type[Jwk]] = {}
     """A dict of subclasses implementing each specific Key Type"""
 
-    PARAMS: Dict[str, Tuple[str, bool, bool, str]]
+    PARAMS: Mapping[str, JwkParameter]
     """A dict of parameters. Key is parameter name, value is a tuple (description, is_private, is_required, kind)"""
 
-    SIGNATURE_ALGORITHMS: Dict[str, Any]
-    KEY_MANAGEMENT_ALGORITHMS: Dict[str, Any]
-    ENCRYPTION_ALGORITHMS: Dict[str, Any]
+    SIGNATURE_ALGORITHMS: Mapping[str, SignatureAlg]
+    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, KeyManagementAlg]
+    ENCRYPTION_ALGORITHMS: Mapping[str, EncryptionAlg]
 
     def __init_subclass__(cls) -> None:
         """
@@ -97,8 +124,8 @@ class Jwk(Dict[str, Any]):
         digest = hashlib.new(hashalg)
 
         t = {"kty": self.get("kty")}
-        for name, (description, private, required, kind) in self.PARAMS.items():
-            if required and not private:
+        for name, param in self.PARAMS.items():
+            if param.is_required and not param.is_private:
                 t[name] = self.get(name)
 
         intermediary = json.dumps(t, separators=(",", ":"), sort_keys=True)
@@ -112,62 +139,50 @@ class Jwk(Dict[str, Any]):
             raise TypeError(f"Invalid alg type {type(str)}", alg)
         return alg
 
-    @property
-    def enc(self) -> Optional[str]:
-        enc = self.get("enc")
-        if enc is not None and not isinstance(enc, str):
-            raise TypeError(f"Invalid enc type {type(str)}", enc)
-        return enc
-
     def _validate(self) -> None:
         """
         Internal method used to validate a Jwk. It checks that all required parameters are present and well-formed.
         If the key is private, it sets the `is_private` flag to `True`.
         """
         jwk_is_private = False
-        for name, (description, is_private, is_required, kind) in self.PARAMS.items():
+        for name, param in self.PARAMS.items():
 
             value = self.get(name)
 
-            if is_private and value is not None:
+            if param.is_private and value is not None:
                 jwk_is_private = True
 
-            if not is_private and is_required and value is None:
+            if not param.is_private and param.is_required and value is None:
                 raise InvalidJwk(
-                    f"Missing required public param {description} ({name})"
+                    f"Missing required public param {param.description} ({name})"
                 )
 
             if value is None:
                 pass
-            elif kind == "b64u":
+            elif param.kind == "b64u":
                 if not isinstance(value, str):
                     raise InvalidJwk(
-                        f"Parameter {description} ({name}) must be a string with a Base64URL-encoded value"
+                        f"Parameter {param.description} ({name}) must be a string with a Base64URL-encoded value"
                     )
                 if not BinaPy(value).check("b64u"):
                     raise InvalidJwk(
-                        f"Parameter {description} ({name}) must be a Base64URL-encoded value"
+                        f"Parameter {param.description} ({name}) must be a Base64URL-encoded value"
                     )
-            elif kind == "unsupported":
+            elif param.kind == "unsupported":
                 if value is not None:
                     raise InvalidJwk(f"Unsupported JWK param '{name}'")
-            elif kind == "name":
+            elif param.kind == "name":
                 pass
             else:
-                assert False, f"Unsupported param '{name}' type '{kind}'"
+                assert False, f"Unsupported param '{name}' type '{param.kind}'"
 
         # if at least one of the supplied parameter was private, then all required private parameters must be provided
         if jwk_is_private:
-            for name, (
-                description,
-                is_private,
-                is_required,
-                kind,
-            ) in self.PARAMS.items():
+            for name, param in self.PARAMS.items():
                 value = self.get(name)
-                if is_private and is_required and value is None:
+                if param.is_private and param.is_required and value is None:
                     raise InvalidJwk(
-                        f"Missing required private param {description} ({name})"
+                        f"Missing required private param {param.description} ({name})"
                     )
 
         # if key is used for signing, it must be private
@@ -177,33 +192,30 @@ class Jwk(Dict[str, Any]):
 
         self.is_private = jwk_is_private
 
-    @property
     def supported_signing_algorithms(self) -> List[str]:
         """
-        Return a list of signing algs that are compatible for use with this Jwk.
-        :return: a list of signing algs
+        Return a dict of signing algs that are compatible for use with this Jwk.
+        :return: a dict of signing algs
         """
-        return list(self.SIGNATURE_ALGORITHMS.keys())
+        return list(self.SIGNATURE_ALGORITHMS)
 
-    @property
     def supported_key_management_algorithms(self) -> List[str]:
         """
-        Return a list of key management algs that are compatible for use with this Jwk.
-        :return: a list of key management algs
+        Return a dict of key management algs that are compatible for use with this Jwk.
+        :return: a dict of key management algs
         """
-        return list(self.KEY_MANAGEMENT_ALGORITHMS.keys())
+        return list(self.KEY_MANAGEMENT_ALGORITHMS)
 
-    @property
     def supported_encryption_algorithms(self) -> List[str]:
         """
-        Return a list of encryption algs that are compatible for use with this Jwk.
-        :return: a list of encryption algs
+        Return a dict of encryption algs that are compatible for use with this Jwk.
+        :return: a dict of encryption algs
         """
-        return list(self.ENCRYPTION_ALGORITHMS.keys())
+        return list(self.ENCRYPTION_ALGORITHMS)
 
-    def public_jwk(self) -> "Jwk":
+    def public_jwk(self) -> Jwk:
         """
-        Returns the public Jwk associated with this private Jwk.
+        Return the public Jwk associated with this private Jwk.
         :return: a Jwk containing only the public parameters.
         """
         if not self.is_private:
@@ -211,8 +223,8 @@ class Jwk(Dict[str, Any]):
 
         params = {
             name: self.get(name)
-            for name, (description, private, required, kind) in self.PARAMS.items()
-            if not private
+            for name, param in self.PARAMS.items()
+            if not param.is_private
         }
 
         key_ops = self.get("key_ops")
@@ -354,7 +366,7 @@ class Jwk(Dict[str, Any]):
         raise NotImplementedError
 
     @classmethod
-    def generate(self, **kwargs: Any) -> "Jwk":
+    def generate(self, **kwargs: Any) -> Jwk:
         """
         Generates a Private Key. This method is implemented by subclasses for specific Key Types
         and returns an instance of that specific subclass.
@@ -362,7 +374,7 @@ class Jwk(Dict[str, Any]):
         raise NotImplementedError
 
     @classmethod
-    def generate_for_kty(cls, kty: str, **kwargs: Any) -> "Jwk":
+    def generate_for_kty(cls, kty: str, **kwargs: Any) -> Jwk:
         jwk_class = cls.subclasses.get(kty)
         if jwk_class is None:
             raise ValueError("Unsupported Key Type:", kty)

@@ -174,7 +174,7 @@ class ECJwk(Jwk):
         coord_size = cls.CURVES[crv].coordinate_size
         return cls(
             dict(
-                key="EC",
+                kty="EC",
                 crv=crv,
                 x=BinaPy.from_int(x, coord_size).encode_to("b64u").decode(),
                 y=BinaPy.from_int(y, coord_size).encode_to("b64u").decode(),

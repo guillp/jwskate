@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional, Union
 
 from binapy import BinaPy
 
-from jwskate.jwk.alg import KeyManagementAlg, get_alg
+from jwskate.jwk.alg import select_alg
 from jwskate.jwk.base import Jwk
 from jwskate.jwk.symetric import SymmetricJwk
 from jwskate.token import BaseToken
@@ -100,14 +100,18 @@ class JweCompact(BaseToken):
     ) -> "JweCompact":
         jwk = Jwk(jwk)
 
-        keyalg = get_alg(jwk.alg, alg, jwk.KEY_MANAGEMENT_ALGORITHMS)
+        keyalg = select_alg(jwk.alg, alg, jwk.KEY_MANAGEMENT_ALGORITHMS)
 
-        if cek is None:
-            cek_jwk = SymmetricJwk.generate_for_alg(enc)
+        if keyalg.name == "dir":
+            enc_cek = b""
+            cek_jwk = jwk
         else:
-            cek_jwk = SymmetricJwk.from_bytes(cek, alg=enc)
+            if cek is None:
+                cek_jwk = SymmetricJwk.generate_for_alg(enc)
+            else:
+                cek_jwk = SymmetricJwk.from_bytes(cek, alg=enc)
 
-        enc_cek = jwk.wrap_key(cek_jwk.key, keyalg.name)
+            enc_cek = jwk.wrap_key(cek_jwk.key, keyalg.name)
 
         headers = dict(extra_headers or {}, alg=alg, enc=enc)
         aad = BinaPy.serialize_to("json", headers).encode_to("b64u")
@@ -118,22 +122,31 @@ class JweCompact(BaseToken):
 
         return cls.from_parts(headers, enc_cek, iv, cyphertext, tag)
 
+    @property
+    def alg(self) -> str:
+        alg = self.get_header("alg")
+        if alg is None or not isinstance(alg, str):
+            raise KeyError("This JWE doesn't have a valid 'alg' header")
+        return alg
+
+    @property
+    def enc(self) -> str:
+        enc = self.get_header("enc")
+        if enc is None or not isinstance(enc, str):
+            raise KeyError("This JWE doesn't have a valid 'enc' header")
+        return enc
+
     def decrypt(
         self,
         jwk: Union[Jwk, Dict[str, Any]],
-        enc: str,
-        alg: Optional[str] = None,
     ) -> bytes:
         """
         Decrypts this Jwe using a Jwk
         :param jwk: the Jwk to use to decrypt this Jwe
-        :param alg: the Key Management Algorithm to use to decrypt this Jwe
-        :param enc: the Content Encryption Algorithm to use to decrypt this Jwe
         :return: the decrypted payload
         """
         jwk = Jwk(jwk)
-
-        keyalg = get_alg(jwk.alg, alg, jwk.KEY_MANAGEMENT_ALGORITHMS)
+        keyalg = select_alg(self.alg, None, jwk.KEY_MANAGEMENT_ALGORITHMS)
 
         raw_cek = jwk.unwrap_key(self.content_encryption_key, keyalg.name)
         cek = SymmetricJwk.from_bytes(raw_cek)
@@ -143,6 +156,6 @@ class JweCompact(BaseToken):
             iv=self.initialization_vector,
             tag=self.authentication_tag,
             aad=self.additional_authenticated_data,
-            alg=enc,
+            alg=self.enc,
         )
         return plaintext

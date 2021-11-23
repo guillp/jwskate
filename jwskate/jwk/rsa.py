@@ -8,7 +8,7 @@ from cryptography import exceptions
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
-from .alg import EncryptionAlg, KeyManagementAlg, SignatureAlg, get_alg, get_algs
+from .alg import EncryptionAlg, KeyManagementAlg, SignatureAlg, select_alg, select_algs
 from .base import Jwk, JwkParameter
 from .exceptions import PrivateKeyRequired
 
@@ -321,7 +321,7 @@ class RSAJwk(Jwk):
         return BinaPy(self.qi).decode_from("b64u").to_int()
 
     def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
-        sigalg = get_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
+        sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
 
         key = self.to_cryptography_key()
         if not isinstance(key, rsa.RSAPrivateKey):
@@ -339,7 +339,7 @@ class RSAJwk(Jwk):
     ) -> bool:
         public_key = rsa.RSAPublicNumbers(self.exponent, self.modulus).public_key()
 
-        for sigalg in get_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
+        for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
             try:
                 public_key.verify(
                     signature,
@@ -354,7 +354,7 @@ class RSAJwk(Jwk):
         return False
 
     def wrap_key(self, plaintext_key: bytes, alg: Optional[str] = None) -> BinaPy:
-        keyalg = get_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
+        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
 
         public_key = rsa.RSAPublicNumbers(e=self.exponent, n=self.modulus).public_key()
 
@@ -363,7 +363,7 @@ class RSAJwk(Jwk):
         return BinaPy(cyphertext)
 
     def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> BinaPy:
-        keyalg = get_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
+        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
 
         key = rsa.RSAPrivateNumbers(
             self.first_prime_factor,

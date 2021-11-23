@@ -2,7 +2,7 @@ from typing import Any, Dict, Iterable, Optional, Union
 
 from binapy import BinaPy
 
-from jwskate.jwk.alg import get_alg
+from jwskate.jwk.alg import select_alg
 from jwskate.jwk.base import Jwk
 from jwskate.token import BaseToken
 
@@ -71,7 +71,7 @@ class JwsCompact(BaseToken):
         if not jwk.is_private:
             raise ValueError("Signing requires a private JWK")
 
-        sigalg = get_alg(jwk.alg, alg, jwk.SIGNATURE_ALGORITHMS)
+        sigalg = select_alg(jwk.alg, alg, jwk.SIGNATURE_ALGORITHMS)
         kid = jwk.get("kid")
 
         headers = dict(extra_headers or {}, alg=sigalg.name)

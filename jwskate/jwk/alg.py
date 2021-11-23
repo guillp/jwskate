@@ -37,7 +37,7 @@ class EncryptionAlg(Alg):
 T = TypeVar("T")
 
 
-def get_alg(
+def select_alg(
     jwk_alg: Optional[str], alg: Optional[str], supported_algs: Mapping[str, T]
 ) -> T:
     """
@@ -74,7 +74,7 @@ def get_alg(
     )
 
 
-def get_algs(
+def select_algs(
     jwk_alg: Optional[str],
     alg: Optional[str],
     algs: Optional[Iterable[str]],
@@ -88,6 +88,7 @@ def get_algs(
     :param jwk_alg: the alg from the JWK, if any
     :param alg: a user specified alg to use
     :param algs: a user specified list of algs to use
+    :param supported_algs: a mapping of alg names to alg description
     :return: a list of possible algs to check
     """
     if alg and algs:

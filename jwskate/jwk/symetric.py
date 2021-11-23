@@ -1,6 +1,6 @@
 import secrets
 from dataclasses import dataclass
-from typing import Callable, Iterable, Optional, Tuple, Union
+from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes, hmac, keywrap
@@ -10,8 +10,8 @@ from .alg import (
     EncryptionAlg,
     KeyManagementAlg,
     SymetricSignatureAlg,
-    get_alg,
-    get_algs,
+    select_alg,
+    select_algs,
 )
 from .base import Jwk, JwkParameter
 
@@ -20,7 +20,7 @@ from .base import Jwk, JwkParameter
 class SymmetricKeyManagementAlg(KeyManagementAlg):
     wrap_method: Callable[[bytes, bytes], bytes]
     unwrap_method: Callable[[bytes, bytes], bytes]
-    key_size: int
+    key_size: Optional[int] = None
 
 
 @dataclass
@@ -39,12 +39,10 @@ class SymmetricJwk(Jwk):
     kty = "oct"
 
     PARAMS = {
-        # name: ("Description", is_private, is_required, "kind"),
         "k": JwkParameter("Key Value", True, True, "b64u"),
     }
 
     SIGNATURE_ALGORITHMS = {
-        # name: (MAC, alg, min_key_size)
         "HS256": SymetricSignatureAlg(
             name="HS256",
             description="HMAC using SHA-256",
@@ -90,36 +88,41 @@ class SymmetricJwk(Jwk):
             unwrap_method=keywrap.aes_key_unwrap,
             key_size=256,
         ),
+        "dir": SymmetricKeyManagementAlg(
+            name="dir",
+            description="Direct use of a shared symmetric key as the CEK",
+            wrap_method=lambda self, key: self,
+            unwrap_method=lambda self, key: self,
+        ),
     }
 
     ENCRYPTION_ALGORITHMS = {
-        # name: (description, enc, key_size, iv_size, tag_size),
-        "A128CBC-HS256": SymmetricEncryptionAlg(
-            name="",
-            description="AES_128_CBC_HMAC_SHA_256",
-            enc_class=aead.AESCCM,
-            key_size=128,
-            iv_size=96,
-            tag_size=16,
-        ),
-        "A192CBC-HS384": SymmetricEncryptionAlg(
-            name="",
-            description="AES_192_CBC_HMAC_SHA_384",
-            enc_class=aead.AESCCM,
-            key_size=192,
-            iv_size=96,
-            tag_size=24,
-        ),
-        "A256CBC-HS512": SymmetricEncryptionAlg(
-            name="",
-            description="AES_128_CBC_HMAC_SHA_256",
-            enc_class=aead.AESCCM,
-            key_size=256,
-            iv_size=96,
-            tag_size=32,
-        ),
+        # "A128CBC-HS256": SymmetricEncryptionAlg(
+        #     name="A128CBC-HS256",
+        #     description="AES_128_CBC_HMAC_SHA_256",
+        #     enc_class=aead.AESCCM,
+        #     key_size=128,
+        #     iv_size=13,
+        #     tag_size=16,
+        # ),
+        # "A192CBC-HS384": SymmetricEncryptionAlg(
+        #     name="A192CBC-HS384",
+        #     description="AES_192_CBC_HMAC_SHA_384",
+        #     enc_class=aead.AESCCM,
+        #     key_size=192,
+        #     iv_size=13,
+        #     tag_size=24,
+        # ),
+        # "A256CBC-HS512": SymmetricEncryptionAlg(
+        #     name="A256CBC-HS512",
+        #     description="AES_256_CBC_HMAC_SHA_512",
+        #     enc_class=aead.AESCCM,
+        #     key_size=256,
+        #     iv_size=13,
+        #     tag_size=32,
+        # ),
         "A128GCM": SymmetricEncryptionAlg(
-            name="",
+            name="A128GCM",
             description="AES GCM using 128-bit key",
             enc_class=aead.AESGCM,
             key_size=128,
@@ -127,7 +130,7 @@ class SymmetricJwk(Jwk):
             tag_size=16,
         ),
         "A192GCM": SymmetricEncryptionAlg(
-            name="",
+            name="A192GCM",
             description="AES GCM using 192-bit key",
             enc_class=aead.AESGCM,
             key_size=192,
@@ -135,7 +138,7 @@ class SymmetricJwk(Jwk):
             tag_size=16,
         ),
         "A256GCM": SymmetricEncryptionAlg(
-            name="",
+            name="A256GCM",
             description="AES GCM using 256-bit key",
             enc_class=aead.AESGCM,
             key_size=256,
@@ -156,7 +159,7 @@ class SymmetricJwk(Jwk):
         :param params: additional parameters for the returned Jwk
         :return: a SymmetricJwk
         """
-        return cls(dict(key="oct", k=BinaPy(k).encode_to("b64u").decode(), **params))
+        return cls(dict(kty="oct", k=BinaPy(k).encode_to("b64u").decode(), **params))
 
     @classmethod
     def generate(cls, size: int = 128, **params: str) -> "SymmetricJwk":
@@ -192,7 +195,7 @@ class SymmetricJwk(Jwk):
         return len(self.key) * 8
 
     def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
-        sigalg = get_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
+        sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
 
         m = sigalg.mac(self.key, sigalg.hashing_alg)
         m.update(data)
@@ -206,7 +209,7 @@ class SymmetricJwk(Jwk):
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
-        for sigalg in get_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
+        for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
 
             m = sigalg.mac(self.key, sigalg.hashing_alg)
             m.update(data)
@@ -223,11 +226,11 @@ class SymmetricJwk(Jwk):
         alg: Optional[str] = None,
         iv: Optional[bytes] = None,
     ) -> Tuple[BinaPy, BinaPy, BinaPy]:
-        encalg = get_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
+        encalg = select_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
 
         if self.key_size != encalg.key_size:
             raise ValueError(
-                f"This key size of {self.key_size} doesn't match the expected keysize for {encalg.description} of {encalg.key_size} bits"
+                f"This key size of {self.key_size} doesn't match the expected keysize for {encalg.name} of {encalg.key_size} bits"
             )
 
         if iv is None:
@@ -248,11 +251,11 @@ class SymmetricJwk(Jwk):
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
     ) -> BinaPy:
-        encalg = get_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
+        encalg = select_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
 
         if self.key_size != encalg.key_size:
             raise ValueError(
-                f"This key size of {self.key_size} doesn't match the expected keysize for {encalg.description} of {encalg.key_size} bits"
+                f"This key size of {self.key_size} doesn't match the expected keysize for {encalg.name} of {encalg.key_size} bits"
             )
 
         alg_key = encalg.enc_class(self.key)
@@ -262,9 +265,9 @@ class SymmetricJwk(Jwk):
         return BinaPy(plaintext)
 
     def wrap_key(self, key: bytes, alg: Optional[str] = None) -> BinaPy:
-        keyalg = get_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
+        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
 
-        if self.key_size != keyalg.key_size:
+        if keyalg.key_size is not None and self.key_size != keyalg.key_size:
             raise ValueError(
                 f"This key size of {self.key_size} doesn't match the expected keysize for {keyalg.description} of {keyalg.key_size} bits"
             )
@@ -273,12 +276,26 @@ class SymmetricJwk(Jwk):
         return BinaPy(cypherkey)
 
     def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> BinaPy:
-        keyalg = get_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
+        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
 
-        if self.key_size != keyalg.key_size:
+        if keyalg.key_size is not None and self.key_size != keyalg.key_size:
             raise ValueError(
                 f"This key size of {self.key_size} doesn't match the expected keysize for {keyalg.description} of {keyalg.key_size} bits"
             )
 
         plaintext = keyalg.unwrap_method(self.key, cypherkey)
         return BinaPy(plaintext)
+
+    def supported_key_management_algorithms(self) -> List[str]:
+        return [
+            alg.name
+            for alg in self.KEY_MANAGEMENT_ALGORITHMS.values()
+            if alg.key_size is None or alg.key_size == self.key_size
+        ]
+
+    def supported_encryption_algorithms(self) -> List[str]:
+        return [
+            alg.name
+            for alg in self.ENCRYPTION_ALGORITHMS.values()
+            if alg.key_size is None or alg.key_size == self.key_size
+        ]

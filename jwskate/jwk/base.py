@@ -3,25 +3,13 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Dict,
-    Generic,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Type, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
-from .alg import Alg, EncryptionAlg, KeyManagementAlg, SignatureAlg
+from .alg import EncryptionAlg, KeyManagementAlg, SignatureAlg
 from .exceptions import InvalidJwk
 
 
@@ -31,11 +19,6 @@ class JwkParameter:
     is_private: bool
     is_required: bool
     kind: str
-
-
-S = TypeVar("S", bound="SignatureAlg")
-K = TypeVar("K", bound="KeyManagementAlg")
-E = TypeVar("E", bound="EncryptionAlg")
 
 
 class Jwk(Dict[str, Any]):

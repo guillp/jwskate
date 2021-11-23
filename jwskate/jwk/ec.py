@@ -7,7 +7,7 @@ from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import asymmetric, hashes
 
-from .alg import EncryptionAlg, KeyManagementAlg, SignatureAlg, get_alg, get_algs
+from .alg import EncryptionAlg, KeyManagementAlg, SignatureAlg, select_alg, select_algs
 from .base import Jwk, JwkParameter
 from .exceptions import PrivateKeyRequired
 
@@ -279,7 +279,7 @@ class ECJwk(Jwk):
         )
 
     def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
-        sigalg = get_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
+        sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
 
         if not self.is_private:
             raise PrivateKeyRequired("A private key is required for signing")
@@ -324,7 +324,7 @@ class ECJwk(Jwk):
         s = int.from_bytes(s_bytes, "big", signed=False)
         dss_signature = asymmetric.utils.encode_dss_signature(r, s)
 
-        for sigalg in get_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
+        for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
             try:
                 public_key.verify(
                     dss_signature,

@@ -31,7 +31,7 @@ binapy = "^0.3.0"
 
 [tool.poetry.dev-dependencies]
 livereload = "^2.6.3"
-black  = "^21.10b0"
+black  = "^21.11b1"
 isort  = "^5.10.1"
 flake8  = "^4.0.1"
 flake8-docstrings = "^1.6.0"
@@ -52,7 +52,7 @@ toml = "^0.10.2"
 requests-mock = "^1.9.3"
 mypy = "^0.910"
 types-requests = "^2.26.0"
-types-cryptography = "^3.3.8"
+types-cryptography = "^3.3.9"
 flake8-rst-docstrings = "^0.2.3"
 jwcrypto = "^1.0"
 pytest-mypy = "^0.8.1"
@@ -90,3 +90,5 @@ show_error_codes = true
 warn_unused_configs = true
 warn_unused_ignores = true
 warn_redundant_casts = true
+
+[tool.pycln]

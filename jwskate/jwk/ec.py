@@ -241,7 +241,8 @@ class ECJwk(Jwk):
     def to_cryptography_key(
         self,
     ) -> Union[
-        asymmetric.ec.EllipticCurvePrivateKey, asymmetric.ec.EllipticCurvePublicKey
+        asymmetric.ec.EllipticCurvePrivateKey,
+        asymmetric.ec.EllipticCurvePublicKey,
     ]:
         if self.is_private:
             return asymmetric.ec.EllipticCurvePrivateNumbers(
@@ -254,7 +255,9 @@ class ECJwk(Jwk):
             ).private_key()
         else:
             return asymmetric.ec.EllipticCurvePublicNumbers(
-                x=self.x_coordinate, y=self.y_coordinate, curve=self.cryptography_curve
+                x=self.x_coordinate,
+                y=self.y_coordinate,
+                curve=self.cryptography_curve,
             ).public_key()
 
     @classmethod

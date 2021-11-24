@@ -33,9 +33,6 @@ class ECCurve:
     cryptography_curve: asymmetric.ec.EllipticCurve
     name: str
     coordinate_size: int
-    signature_algs: List[str]
-    key_management_algs: List[str]
-    encryption_algs: List[str]
 
 
 class UnsupportedCurve(KeyError):
@@ -44,17 +41,22 @@ class UnsupportedCurve(KeyError):
 
 class ECJwk(Jwk):
     """
-    Represents an Elliptic Curve Jwk, with `"kty": "EC"`.
+    Represent an Elliptic Curve Jwk, with `kty=EC`.
     """
 
     kty = "EC"
 
     PARAMS: Mapping[str, JwkParameter] = {
-        # name : ("description", is_private, is_required, "kind"),
-        "crv": JwkParameter("Curve", False, True, "name"),
-        "x": JwkParameter("X Coordinate", False, True, "b64u"),
-        "y": JwkParameter("Y Coordinate", False, True, "b64u"),
-        "d": JwkParameter("ECC Private Key", True, True, "b64u"),
+        "crv": JwkParameter("Curve", is_private=False, is_required=True, kind="name"),
+        "x": JwkParameter(
+            "X Coordinate", is_private=False, is_required=True, kind="b64u"
+        ),
+        "y": JwkParameter(
+            "Y Coordinate", is_private=False, is_required=True, kind="b64u"
+        ),
+        "d": JwkParameter(
+            "ECC Private Key", is_private=True, is_required=True, kind="b64u"
+        ),
     }
 
     CURVES: Mapping[str, ECCurve] = {
@@ -62,33 +64,21 @@ class ECJwk(Jwk):
             cryptography_curve=asymmetric.ec.SECP256R1(),
             name="P-256",
             coordinate_size=32,
-            signature_algs=["ES256"],
-            key_management_algs=[],
-            encryption_algs=[],
         ),
         "P-384": ECCurve(
             cryptography_curve=asymmetric.ec.SECP384R1(),
             name="P-384",
             coordinate_size=48,
-            signature_algs=["ES384"],
-            key_management_algs=[],
-            encryption_algs=[],
         ),
         "P-521": ECCurve(
             cryptography_curve=asymmetric.ec.SECP521R1(),
             name="P-521",
             coordinate_size=66,
-            signature_algs=["ES512"],
-            key_management_algs=[],
-            encryption_algs=[],
         ),
         "secp256k1": ECCurve(
             cryptography_curve=asymmetric.ec.SECP256K1(),
             name="secp256k1",
             coordinate_size=32,
-            signature_algs=["ES256K"],
-            key_management_algs=[],
-            encryption_algs=[],
         ),
     }
 
@@ -119,16 +109,7 @@ class ECJwk(Jwk):
         ),
     }
 
-    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, ECKeyManagementAlg] = {
-        "ECDH-ES": ECKeyManagementAlg(
-            name="ECDH-ES",
-            description="Elliptic Curve Diffie-Hellman Ephemeral Static key agreement using Concat KDF",
-        ),
-        "ECDH-ES+A128KW": ECKeyManagementAlg(
-            name="ECDH-ES+A128KW",
-            description='ECDH-ES using Concat KDF and CEK wrapped with "A128KW"',
-        ),
-    }
+    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, ECKeyManagementAlg] = {}
 
     ENCRYPTION_ALGORITHMS: Mapping[str, ECEncryptionAlg] = {}
 
@@ -371,10 +352,14 @@ class ECJwk(Jwk):
         return BinaPy(self.d).decode_from("b64u").to_int()
 
     def supported_signing_algorithms(self) -> List[str]:
-        return self.CURVES[self.curve].signature_algs
+        return [
+            name
+            for name, alg in self.SIGNATURE_ALGORITHMS.items()
+            if alg.curve == self.curve
+        ]
 
     def supported_key_management_algorithms(self) -> List[str]:
-        return self.CURVES[self.curve].key_management_algs
+        return list(self.KEY_MANAGEMENT_ALGORITHMS)
 
     def supported_encryption_algorithms(self) -> List[str]:
-        return self.CURVES[self.curve].encryption_algs
+        return list(self.ENCRYPTION_ALGORITHMS)

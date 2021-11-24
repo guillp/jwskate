@@ -1,11 +1,13 @@
 import secrets
 from dataclasses import dataclass
-from typing import Callable, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Iterable, List, Optional, Tuple, Type, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes, hmac, keywrap
 from cryptography.hazmat.primitives.ciphers import aead
+from typing_extensions import Protocol
 
+from ..algorithms import Aes128CbcHmacSha256, Aes192CbcHmacSha384, Aes256CbcHmacSha512
 from .alg import (
     EncryptionAlg,
     KeyManagementAlg,
@@ -14,6 +16,17 @@ from .alg import (
     select_algs,
 )
 from .base import Jwk, JwkParameter
+
+
+class EncryptionProtocol(Protocol):
+    def __init__(self, key: bytes) -> None:
+        ...
+
+    def encrypt(self, iv: bytes, plaintext: bytes, aad: Optional[bytes]) -> bytes:
+        ...
+
+    def decrypt(self, iv: bytes, ciphertext: bytes, aad: Optional[bytes]) -> bytes:
+        ...
 
 
 @dataclass
@@ -25,7 +38,7 @@ class SymmetricKeyManagementAlg(KeyManagementAlg):
 
 @dataclass
 class SymmetricEncryptionAlg(EncryptionAlg):
-    enc_class: type
+    enc_class: Type[EncryptionProtocol]
     key_size: int
     iv_size: int
     tag_size: int
@@ -33,13 +46,13 @@ class SymmetricEncryptionAlg(EncryptionAlg):
 
 class SymmetricJwk(Jwk):
     """
-    Implement Symetric keys, with `"kty": "oct"`.
+    Implement Symetric keys, with `kty=oct`.
     """
 
     kty = "oct"
 
     PARAMS = {
-        "k": JwkParameter("Key Value", True, True, "b64u"),
+        "k": JwkParameter("Key Value", is_private=True, is_required=True, kind="b64u"),
     }
 
     SIGNATURE_ALGORITHMS = {
@@ -97,30 +110,30 @@ class SymmetricJwk(Jwk):
     }
 
     ENCRYPTION_ALGORITHMS = {
-        # "A128CBC-HS256": SymmetricEncryptionAlg(
-        #     name="A128CBC-HS256",
-        #     description="AES_128_CBC_HMAC_SHA_256",
-        #     enc_class=aead.AESCCM,
-        #     key_size=128,
-        #     iv_size=13,
-        #     tag_size=16,
-        # ),
-        # "A192CBC-HS384": SymmetricEncryptionAlg(
-        #     name="A192CBC-HS384",
-        #     description="AES_192_CBC_HMAC_SHA_384",
-        #     enc_class=aead.AESCCM,
-        #     key_size=192,
-        #     iv_size=13,
-        #     tag_size=24,
-        # ),
-        # "A256CBC-HS512": SymmetricEncryptionAlg(
-        #     name="A256CBC-HS512",
-        #     description="AES_256_CBC_HMAC_SHA_512",
-        #     enc_class=aead.AESCCM,
-        #     key_size=256,
-        #     iv_size=13,
-        #     tag_size=32,
-        # ),
+        "A128CBC-HS256": SymmetricEncryptionAlg(
+            name="A128CBC-HS256",
+            description="AES_128_CBC_HMAC_SHA_256",
+            enc_class=Aes128CbcHmacSha256,
+            key_size=256,
+            iv_size=16,
+            tag_size=16,
+        ),
+        "A192CBC-HS384": SymmetricEncryptionAlg(
+            name="A192CBC-HS384",
+            description="AES_192_CBC_HMAC_SHA_384",
+            enc_class=Aes192CbcHmacSha384,
+            key_size=384,
+            iv_size=16,
+            tag_size=24,
+        ),
+        "A256CBC-HS512": SymmetricEncryptionAlg(
+            name="A256CBC-HS512",
+            description="AES_256_CBC_HMAC_SHA_512",
+            enc_class=Aes256CbcHmacSha512,
+            key_size=512,
+            iv_size=16,
+            tag_size=32,
+        ),
         "A128GCM": SymmetricEncryptionAlg(
             name="A128GCM",
             description="AES GCM using 128-bit key",
@@ -236,8 +249,8 @@ class SymmetricJwk(Jwk):
         if iv is None:
             iv = secrets.token_bytes(encalg.iv_size)
 
-        alg_key = encalg.enc_class(self.key)
-        cyphertext_with_tag = alg_key.encrypt(iv, plaintext, aad)
+        encryptor = encalg.enc_class(self.key)
+        cyphertext_with_tag = encryptor.encrypt(iv, plaintext, aad)
         cyphertext = cyphertext_with_tag[: -encalg.tag_size]
         tag = cyphertext_with_tag[-encalg.tag_size :]
 
@@ -258,9 +271,9 @@ class SymmetricJwk(Jwk):
                 f"This key size of {self.key_size} doesn't match the expected keysize for {encalg.name} of {encalg.key_size} bits"
             )
 
-        alg_key = encalg.enc_class(self.key)
+        decryptor = encalg.enc_class(self.key)
         cyphertext_with_tag = cyphertext + tag
-        plaintext: bytes = alg_key.decrypt(iv, cyphertext_with_tag, aad)
+        plaintext: bytes = decryptor.decrypt(iv, cyphertext_with_tag, aad)
 
         return BinaPy(plaintext)
 

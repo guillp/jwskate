@@ -31,21 +31,38 @@ class RSAEncryptionAlg(EncryptionAlg):
 
 class RSAJwk(Jwk):
     """
-    Represents a RSA Jwk, with `"kid": "RSA"`.
+    Represent a RSA Jwk, with `kty=RSA`.
     """
 
     kty = "RSA"
 
     PARAMS = {
-        "n": JwkParameter("Modulus", False, True, "b64u"),
-        "e": JwkParameter("Exponent", False, True, "b64u"),
-        "d": JwkParameter("Private Exponent", True, True, "b64u"),
-        "p": JwkParameter("First Prime Factor", True, False, "b64u"),
-        "q": JwkParameter("Second Prime Factor", True, False, "b64u"),
-        "dp": JwkParameter("First Factor CRT Exponent", True, False, "b64u"),
-        "dq": JwkParameter("Second Factor CRT Exponent", True, False, "b64u"),
-        "qi": JwkParameter("First CRT Coefficient", True, False, "b64u"),
-        "oth": JwkParameter("Other Primes Info", True, False, "unsupported"),
+        "n": JwkParameter("Modulus", is_private=False, is_required=True, kind="b64u"),
+        "e": JwkParameter("Exponent", is_private=False, is_required=True, kind="b64u"),
+        "d": JwkParameter(
+            "Private Exponent", is_private=True, is_required=True, kind="b64u"
+        ),
+        "p": JwkParameter(
+            "First Prime Factor", is_private=True, is_required=False, kind="b64u"
+        ),
+        "q": JwkParameter(
+            "Second Prime Factor", is_private=True, is_required=False, kind="b64u"
+        ),
+        "dp": JwkParameter(
+            "First Factor CRT Exponent", is_private=True, is_required=False, kind="b64u"
+        ),
+        "dq": JwkParameter(
+            "Second Factor CRT Exponent",
+            is_private=True,
+            is_required=False,
+            kind="b64u",
+        ),
+        "qi": JwkParameter(
+            "First CRT Coefficient", is_private=True, is_required=False, kind="b64u"
+        ),
+        "oth": JwkParameter(
+            "Other Primes Info", is_private=True, is_required=False, kind="unsupported"
+        ),
     }
 
     SIGNATURE_ALGORITHMS: Mapping[str, RSASignatureAlg] = {
@@ -355,16 +372,13 @@ class RSAJwk(Jwk):
 
     def wrap_key(self, plaintext_key: bytes, alg: Optional[str] = None) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-
         public_key = rsa.RSAPublicNumbers(e=self.exponent, n=self.modulus).public_key()
-
         cyphertext = public_key.encrypt(plaintext_key, keyalg.padding_alg)
 
         return BinaPy(cyphertext)
 
     def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-
         key = rsa.RSAPrivateNumbers(
             self.first_prime_factor,
             self.second_prime_factor,
@@ -374,7 +388,6 @@ class RSAJwk(Jwk):
             self.first_crt_coefficient,
             rsa.RSAPublicNumbers(self.exponent, self.modulus),
         ).private_key()
-
         plaintext = key.decrypt(cypherkey, keyalg.padding_alg)
 
         return BinaPy(plaintext)

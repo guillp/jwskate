@@ -292,6 +292,16 @@ def rsa_private_jwk() -> Jwk:
 
 
 @pytest.fixture(scope="module")
+def symmetric_128_encryption_jwk() -> Jwk:
+    return Jwk.generate_for_kty("oct", size=128)
+
+
+@pytest.fixture(scope="module")
+def symmetric_192_encryption_jwk() -> Jwk:
+    return Jwk.generate_for_kty("oct", size=192)
+
+
+@pytest.fixture(scope="module")
 def symmetric_256_encryption_jwk() -> Jwk:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-3.5]"""
     jwk = Jwk(SYMMETRIC_ENCRYPTION_KEY)
@@ -310,13 +320,13 @@ def symmetric_256_encryption_jwk() -> Jwk:
 
 
 @pytest.fixture(scope="module")
-def symmetric_128_encryption_jwk() -> Jwk:
-    return Jwk.generate_for_kty("oct", size=128)
+def symmetric_384_encryption_jwk() -> Jwk:
+    return Jwk.generate_for_kty("oct", size=384)
 
 
 @pytest.fixture(scope="module")
-def symmetric_192_encryption_jwk() -> Jwk:
-    return Jwk.generate_for_kty("oct", size=192)
+def symmetric_512_encryption_jwk() -> Jwk:
+    return Jwk.generate_for_kty("oct", size=512)
 
 
 @pytest.fixture(scope="module")
@@ -379,15 +389,19 @@ def decryption_jwk(
     ec_p256_private_jwk: Jwk,
     ec_p384_private_jwk: Jwk,
     ec_p521_private_jwk: Jwk,
-    symmetric_256_encryption_jwk: Jwk,
-    symmetric_192_encryption_jwk: Jwk,
     symmetric_128_encryption_jwk: Jwk,
+    symmetric_192_encryption_jwk: Jwk,
+    symmetric_256_encryption_jwk: Jwk,
+    symmetric_384_encryption_jwk: Jwk,
+    symmetric_512_encryption_jwk: Jwk,
 ) -> Jwk:
     if key_management_alg == "dir":
         for key in (
             symmetric_128_encryption_jwk,
             symmetric_192_encryption_jwk,
             symmetric_256_encryption_jwk,
+            symmetric_384_encryption_jwk,
+            symmetric_512_encryption_jwk,
         ):
             if encryption_alg in key.supported_encryption_algorithms():
                 return key
@@ -498,10 +512,7 @@ def jwcrypto_encrypted_jwe(
         algs=jwe_algs_and_rsa1_5,
     )
 
-    try:
-        jwe.add_recipient(jwk)
-    except InvalidJWEOperation as exc:
-        pytest.skip(f"jwcrypto doesn't support this alg: {exc}")
+    jwe.add_recipient(jwk)
     token: str = jwe.serialize(True)
     return token
 
@@ -513,10 +524,10 @@ def test_decrypt_from_jwcrypto(
     encryption_alg: str,
 ) -> None:
     """
-     Check that `jwskate` decrypts tokens encrypted by `jwcrypto`.
-     :param jwcrypto_encrypted_jwe: the JWE to validate
+    Check that `jwskate` decrypts tokens encrypted by `jwcrypto`.
+    :param jwcrypto_encrypted_jwe: the JWE to validate
     :param key_management_alg: the key management alg
-     :param encryption_alg: the encryption alg
+    :param encryption_alg: the encryption alg
     """
     jwe = JweCompact(jwcrypto_encrypted_jwe)
     assert jwe.alg == key_management_alg

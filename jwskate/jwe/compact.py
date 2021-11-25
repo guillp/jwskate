@@ -26,10 +26,10 @@ class JweCompact(BaseToken):
 
         if self.value.count(b".") != 4:
             raise InvalidJwe(
-                "A JWE must contain a header, an encrypted key, an IV, a cyphertext and an authentication tag, separated by dots"
+                "A JWE must contain a header, an encrypted key, an IV, a ciphertext and an authentication tag, separated by dots"
             )
 
-        header, key, iv, cyphertext, auth_tag = self.value.split(b".")
+        header, key, iv, ciphertext, auth_tag = self.value.split(b".")
         try:
             self.headers = BinaPy(header).decode_from("b64u").parse_from("json")
             self.additional_authenticated_data = header
@@ -53,10 +53,10 @@ class JweCompact(BaseToken):
             )
 
         try:
-            self.cyphertext = BinaPy(cyphertext).decode_from("b64u")
+            self.ciphertext = BinaPy(ciphertext).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
-                "Invalid JWE cyphertext: it must be a Base64URL-encoded binary data (bytes)"
+                "Invalid JWE ciphertext: it must be a Base64URL-encoded binary data (bytes)"
             )
 
         try:
@@ -72,7 +72,7 @@ class JweCompact(BaseToken):
         headers: Dict[str, Any],
         cek: bytes,
         iv: bytes,
-        cyphertext: bytes,
+        ciphertext: bytes,
         tag: bytes,
     ) -> "JweCompact":
         return cls(
@@ -81,7 +81,7 @@ class JweCompact(BaseToken):
                     BinaPy.serialize_to("json", headers).encode_to("b64u"),
                     BinaPy(cek).encode_to("b64u"),
                     BinaPy(iv).encode_to("b64u"),
-                    BinaPy(cyphertext).encode_to("b64u"),
+                    BinaPy(ciphertext).encode_to("b64u"),
                     BinaPy(tag).encode_to("b64u"),
                 )
             )
@@ -116,11 +116,11 @@ class JweCompact(BaseToken):
         headers = dict(extra_headers or {}, alg=alg, enc=enc)
         aad = BinaPy.serialize_to("json", headers).encode_to("b64u")
 
-        cyphertext, tag, iv = cek_jwk.encrypt(
+        ciphertext, tag, iv = cek_jwk.encrypt(
             plaintext=plaintext, aad=aad, iv=iv, alg=enc
         )
 
-        return cls.from_parts(headers, enc_cek, iv, cyphertext, tag)
+        return cls.from_parts(headers, enc_cek, iv, ciphertext, tag)
 
     @property
     def alg(self) -> str:
@@ -152,7 +152,7 @@ class JweCompact(BaseToken):
         cek = SymmetricJwk.from_bytes(raw_cek)
 
         plaintext = cek.decrypt(
-            cyphertext=self.cyphertext,
+            ciphertext=self.ciphertext,
             iv=self.initialization_vector,
             tag=self.authentication_tag,
             aad=self.additional_authenticated_data,

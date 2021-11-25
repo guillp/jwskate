@@ -370,24 +370,18 @@ class RSAJwk(Jwk):
 
         return False
 
-    def wrap_key(self, plaintext_key: bytes, alg: Optional[str] = None) -> BinaPy:
+    def wrap_key(self, plainkey: bytes, alg: Optional[str] = None) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        public_key = rsa.RSAPublicNumbers(e=self.exponent, n=self.modulus).public_key()
-        cyphertext = public_key.encrypt(plaintext_key, keyalg.padding_alg)
+        pubkey = self.public_jwk().to_cryptography_key()
+        ciphertext = pubkey.encrypt(plainkey, keyalg.padding_alg)
+        return BinaPy(ciphertext)
 
-        return BinaPy(cyphertext)
-
-    def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> BinaPy:
+    def unwrap_key(self, cipherkey: bytes, alg: Optional[str] = None) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        key = rsa.RSAPrivateNumbers(
-            self.first_prime_factor,
-            self.second_prime_factor,
-            self.private_exponent,
-            self.first_factor_crt_exponent,
-            self.second_factor_crt_exponent,
-            self.first_crt_coefficient,
-            rsa.RSAPublicNumbers(self.exponent, self.modulus),
-        ).private_key()
-        plaintext = key.decrypt(cypherkey, keyalg.padding_alg)
-
+        privkey = self.to_cryptography_key()
+        if not isinstance(privkey, rsa.RSAPrivateKey):
+            raise PrivateKeyRequired(
+                "A private key is required to perform Key Unwrapping."
+            )
+        plaintext = privkey.decrypt(cipherkey, keyalg.padding_alg)
         return BinaPy(plaintext)

@@ -275,14 +275,14 @@ class Jwk(Dict[str, Any]):
         :param alg: the alg to use to encrypt the data
         :param iv: the Initialization Vector that was used to encrypt the data. If `iv` is passed as parameter, this
         will return that same value. Otherwise, an IV is generated.
-        :return: a tuple (cyphertext, authentication_tag, iv)
+        :return: a tuple (ciphertext, authentication_tag, iv)
         """
 
         raise NotImplementedError  # pragma: no cover
 
     def decrypt(
         self,
-        cyphertext: bytes,
+        ciphertext: bytes,
         tag: bytes,
         iv: bytes,
         aad: Optional[bytes] = None,
@@ -291,7 +291,7 @@ class Jwk(Dict[str, Any]):
         """
         Decrypts an encrypted data using this Jwk, and returns the encrypted result.
         This is implemented by subclasses.
-        :param cyphertext: the data to decrypt
+        :param ciphertext: the data to decrypt
         :param iv: the Initialization Vector (IV) that was used for encryption
         :param tag: the Authentication Tag that will be verified while decrypting data
         :param aad: the Additional Authentication Data (AAD) to verify the Tag against
@@ -306,7 +306,7 @@ class Jwk(Dict[str, Any]):
         """
         raise NotImplementedError
 
-    def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> BinaPy:
+    def unwrap_key(self, cipherkey: bytes, alg: Optional[str] = None) -> BinaPy:
         """
         Unwraps a key using a Key Management Algorithm alg.
         """

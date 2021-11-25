@@ -20,7 +20,8 @@ class ECSignatureAlg(SignatureAlg):
 
 @dataclass
 class ECKeyManagementAlg(KeyManagementAlg):
-    pass
+    key_alg: Optional[str]
+    key_size: Optional[int]
 
 
 @dataclass

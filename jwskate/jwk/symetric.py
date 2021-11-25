@@ -250,15 +250,15 @@ class SymmetricJwk(Jwk):
             iv = secrets.token_bytes(encalg.iv_size)
 
         encryptor = encalg.enc_class(self.key)
-        cyphertext_with_tag = encryptor.encrypt(iv, plaintext, aad)
-        cyphertext = cyphertext_with_tag[: -encalg.tag_size]
-        tag = cyphertext_with_tag[-encalg.tag_size :]
+        ciphertext_with_tag = encryptor.encrypt(iv, plaintext, aad)
+        ciphertext = ciphertext_with_tag[: -encalg.tag_size]
+        tag = ciphertext_with_tag[-encalg.tag_size :]
 
-        return BinaPy(cyphertext), BinaPy(tag), BinaPy(iv)
+        return BinaPy(ciphertext), BinaPy(tag), BinaPy(iv)
 
     def decrypt(
         self,
-        cyphertext: bytes,
+        ciphertext: bytes,
         tag: bytes,
         iv: bytes,
         aad: Optional[bytes] = None,
@@ -272,8 +272,8 @@ class SymmetricJwk(Jwk):
             )
 
         decryptor = encalg.enc_class(self.key)
-        cyphertext_with_tag = cyphertext + tag
-        plaintext: bytes = decryptor.decrypt(iv, cyphertext_with_tag, aad)
+        ciphertext_with_tag = ciphertext + tag
+        plaintext: bytes = decryptor.decrypt(iv, ciphertext_with_tag, aad)
 
         return BinaPy(plaintext)
 
@@ -285,10 +285,10 @@ class SymmetricJwk(Jwk):
                 f"This key size of {self.key_size} doesn't match the expected keysize for {keyalg.description} of {keyalg.key_size} bits"
             )
 
-        cypherkey = keyalg.wrap_method(self.key, key)
-        return BinaPy(cypherkey)
+        cipherkey = keyalg.wrap_method(self.key, key)
+        return BinaPy(cipherkey)
 
-    def unwrap_key(self, cypherkey: bytes, alg: Optional[str] = None) -> BinaPy:
+    def unwrap_key(self, cipherkey: bytes, alg: Optional[str] = None) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
 
         if keyalg.key_size is not None and self.key_size != keyalg.key_size:
@@ -296,7 +296,7 @@ class SymmetricJwk(Jwk):
                 f"This key size of {self.key_size} doesn't match the expected keysize for {keyalg.description} of {keyalg.key_size} bits"
             )
 
-        plaintext = keyalg.unwrap_method(self.key, cypherkey)
+        plaintext = keyalg.unwrap_method(self.key, cipherkey)
         return BinaPy(plaintext)
 
     def supported_key_management_algorithms(self) -> List[str]:

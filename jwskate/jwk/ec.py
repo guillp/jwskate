@@ -1,39 +1,29 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, Iterable, List, Mapping, Optional, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
-from cryptography.hazmat.primitives import asymmetric, hashes
+from cryptography.hazmat.primitives import asymmetric, hashes, kdf
 
-from .alg import EncryptionAlg, KeyManagementAlg, SignatureAlg, select_alg, select_algs
+from ..algorithms import (
+    ECDH_ES,
+    ES256,
+    ES256K,
+    ES384,
+    ES512,
+    P256,
+    P384,
+    P521,
+    ECCurve,
+    EncryptionAlg,
+    KeyAgreementAlg,
+    KeyManagementAlg,
+    SignatureAlg,
+    secp256k1,
+)
+from .alg import select_alg, select_algs
 from .base import Jwk, JwkParameter
-from .exceptions import PrivateKeyRequired
-
-
-@dataclass
-class ECSignatureAlg(SignatureAlg):
-    curve: str
-    hashing_alg: hashes.HashAlgorithm
-
-
-@dataclass
-class ECKeyManagementAlg(KeyManagementAlg):
-    key_alg: Optional[str]
-    key_size: Optional[int]
-
-
-@dataclass
-class ECEncryptionAlg(EncryptionAlg):
-    pass
-
-
-@dataclass
-class ECCurve:
-    cryptography_curve: asymmetric.ec.EllipticCurve
-    name: str
-    coordinate_size: int
 
 
 class UnsupportedCurve(KeyError):
@@ -61,58 +51,13 @@ class ECJwk(Jwk):
     }
 
     CURVES: Mapping[str, ECCurve] = {
-        "P-256": ECCurve(
-            cryptography_curve=asymmetric.ec.SECP256R1(),
-            name="P-256",
-            coordinate_size=32,
-        ),
-        "P-384": ECCurve(
-            cryptography_curve=asymmetric.ec.SECP384R1(),
-            name="P-384",
-            coordinate_size=48,
-        ),
-        "P-521": ECCurve(
-            cryptography_curve=asymmetric.ec.SECP521R1(),
-            name="P-521",
-            coordinate_size=66,
-        ),
-        "secp256k1": ECCurve(
-            cryptography_curve=asymmetric.ec.SECP256K1(),
-            name="secp256k1",
-            coordinate_size=32,
-        ),
+        curve.name: curve for curve in [P256, P384, P521, secp256k1]
     }
 
-    SIGNATURE_ALGORITHMS: Mapping[str, ECSignatureAlg] = {
-        "ES256": ECSignatureAlg(
-            name="ES256",
-            description="ECDSA using P-256 and SHA-256",
-            curve="P-256",
-            hashing_alg=hashes.SHA256(),
-        ),
-        "ES384": ECSignatureAlg(
-            name="ES384",
-            description="ECDSA using P-384 and SHA-384",
-            curve="P-384",
-            hashing_alg=hashes.SHA384(),
-        ),
-        "ES512": ECSignatureAlg(
-            name="ES512",
-            description="ECDSA using P-521 and SHA-512",
-            curve="P-521",
-            hashing_alg=hashes.SHA512(),
-        ),
-        "ES256K": ECSignatureAlg(
-            name="ES256k",
-            description="ECDSA using secp256k1 and SHA-256",
-            curve="secp256k1",
-            hashing_alg=hashes.SHA256(),
-        ),
+    SIGNATURE_ALGORITHMS = {
+        sigalg.name: sigalg for sigalg in [ES256, ES384, ES512, ES256K]
     }
-
-    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, ECKeyManagementAlg] = {}
-
-    ENCRYPTION_ALGORITHMS: Mapping[str, ECEncryptionAlg] = {}
+    KEY_MANAGEMENT_ALGORITHMS = {keyalg.name: keyalg for keyalg in [ECDH_ES]}
 
     @classmethod
     def get_curve(cls, crv: str) -> ECCurve:
@@ -171,7 +116,7 @@ class ECJwk(Jwk):
         Return the `cryptography` curve for this key.
         :return: a subclass of EllipticCurve
         """
-        return self.CURVES[self.curve].cryptography_curve
+        return self.curve.cryptography_curve
 
     @property
     def coordinate_size(self) -> int:
@@ -179,7 +124,7 @@ class ECJwk(Jwk):
         Return the coordinate size, in bytes, fitting for this key curve.
         :return: 32, 48, or 66
         """
-        return self.CURVES[self.curve].coordinate_size
+        return self.curve.coordinate_size
 
     @classmethod
     def from_cryptography_key(cls, key: Any) -> ECJwk:
@@ -263,70 +208,11 @@ class ECJwk(Jwk):
             **params,
         )
 
-    def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
-        sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
-
-        if not self.is_private:
-            raise PrivateKeyRequired("A private key is required for signing")
-
-        if self.curve != sigalg.curve:
-            raise UnsupportedCurve(
-                f"Signing alg {sigalg.name} requires a curve {sigalg.curve}, which mismatch this Jwk curve {self.curve}"
-            )
-
-        key = asymmetric.ec.EllipticCurvePrivateNumbers(
-            self.ecc_private_key,
-            asymmetric.ec.EllipticCurvePublicNumbers(
-                self.x_coordinate, self.y_coordinate, self.cryptography_curve
-            ),
-        ).private_key()
-
-        dss_sig = key.sign(data, asymmetric.ec.ECDSA(sigalg.hashing_alg))
-        r, s = asymmetric.utils.decode_dss_signature(dss_sig)
-        return BinaPy.from_int(r, self.coordinate_size) + BinaPy.from_int(
-            s, self.coordinate_size
-        )
-
-    def verify(
-        self,
-        data: bytes,
-        signature: bytes,
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
-    ) -> bool:
-        public_key = self.public_jwk().to_cryptography_key()
-
-        if len(signature) != self.coordinate_size * 2:
-            raise ValueError(
-                f"Invalid signature length {len(signature)} bytes, expected {self.coordinate_size * 2} bytes"
-            )
-
-        r_bytes, s_bytes = (
-            signature[: self.coordinate_size],
-            signature[self.coordinate_size :],
-        )
-        r = int.from_bytes(r_bytes, "big", signed=False)
-        s = int.from_bytes(s_bytes, "big", signed=False)
-        dss_signature = asymmetric.utils.encode_dss_signature(r, s)
-
-        for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
-            try:
-                public_key.verify(
-                    dss_signature,
-                    data,
-                    asymmetric.ec.ECDSA(sigalg.hashing_alg),
-                )
-                return True
-            except exceptions.InvalidSignature:
-                continue
-
-        return False
-
     @property
-    def curve(self) -> str:
+    def curve(self) -> ECCurve:
         if not isinstance(self.crv, str) or self.crv not in self.CURVES:
             raise AttributeError("unsupported crv", self.crv)
-        return self.crv
+        return self.CURVES[self.crv]
 
     @property
     def x_coordinate(self) -> int:
@@ -364,3 +250,43 @@ class ECJwk(Jwk):
 
     def supported_encryption_algorithms(self) -> List[str]:
         return list(self.ENCRYPTION_ALGORITHMS)
+
+    def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
+        sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
+        wrapper = sigalg(self.to_cryptography_key())
+        return BinaPy(wrapper.sign(data))
+
+    def verify(
+        self,
+        data: bytes,
+        signature: bytes,
+        alg: Optional[str] = None,
+        algs: Optional[Iterable[str]] = None,
+    ) -> bool:
+        public_key = self.public_jwk().to_cryptography_key()
+
+        if len(signature) != self.coordinate_size * 2:
+            raise ValueError(
+                f"Invalid signature length {len(signature)} bytes, expected {self.coordinate_size * 2} bytes"
+            )
+
+        r_bytes, s_bytes = (
+            signature[: self.coordinate_size],
+            signature[self.coordinate_size :],
+        )
+        r = int.from_bytes(r_bytes, "big", signed=False)
+        s = int.from_bytes(s_bytes, "big", signed=False)
+        dss_signature = asymmetric.utils.encode_dss_signature(r, s)
+
+        for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
+            try:
+                public_key.verify(
+                    dss_signature,
+                    data,
+                    asymmetric.ec.ECDSA(sigalg.hashing_alg),
+                )
+                return True
+            except exceptions.InvalidSignature:
+                continue
+
+        return False

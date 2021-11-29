@@ -2,8 +2,10 @@ from typing import Any, Dict, Optional, Union
 
 from binapy import BinaPy
 
+from jwskate.algorithms import DirectKeyManagementAlg, KeyAgreementAlg, KeyWrappingAlg
 from jwskate.jwk.alg import select_alg
 from jwskate.jwk.base import Jwk
+from jwskate.jwk.exceptions import PrivateKeyRequired
 from jwskate.jwk.symetric import SymmetricJwk
 from jwskate.token import BaseToken
 
@@ -29,7 +31,7 @@ class JweCompact(BaseToken):
                 "A JWE must contain a header, an encrypted key, an IV, a ciphertext and an authentication tag, separated by dots"
             )
 
-        header, key, iv, ciphertext, auth_tag = self.value.split(b".")
+        header, cek, iv, ciphertext, auth_tag = self.value.split(b".")
         try:
             self.headers = BinaPy(header).decode_from("b64u").parse_from("json")
             self.additional_authenticated_data = header
@@ -39,7 +41,7 @@ class JweCompact(BaseToken):
             )
 
         try:
-            self.content_encryption_key = BinaPy(key).decode_from("b64u")
+            self.content_encryption_key = BinaPy(cek).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
                 "Invalid JWE cek: it must be a Base64URL-encoded binary data (bytes)"
@@ -87,41 +89,6 @@ class JweCompact(BaseToken):
             )
         )
 
-    @classmethod
-    def encrypt(
-        cls,
-        plaintext: bytes,
-        jwk: Union[Jwk, Dict[str, Any]],
-        enc: str,
-        alg: Optional[str] = None,
-        extra_headers: Optional[Dict[str, Any]] = None,
-        cek: Optional[bytes] = None,
-        iv: Optional[bytes] = None,
-    ) -> "JweCompact":
-        jwk = Jwk(jwk)
-
-        keyalg = select_alg(jwk.alg, alg, jwk.KEY_MANAGEMENT_ALGORITHMS)
-
-        if keyalg.name == "dir":
-            enc_cek = b""
-            cek_jwk = jwk
-        else:
-            if cek is None:
-                cek_jwk = SymmetricJwk.generate_for_alg(enc)
-            else:
-                cek_jwk = SymmetricJwk.from_bytes(cek, alg=enc)
-
-            enc_cek = jwk.wrap_key(cek_jwk.key, keyalg.name)
-
-        headers = dict(extra_headers or {}, alg=alg, enc=enc)
-        aad = BinaPy.serialize_to("json", headers).encode_to("b64u")
-
-        ciphertext, tag, iv = cek_jwk.encrypt(
-            plaintext=plaintext, aad=aad, iv=iv, alg=enc
-        )
-
-        return cls.from_parts(headers, enc_cek, iv, ciphertext, tag)
-
     @property
     def alg(self) -> str:
         alg = self.get_header("alg")
@@ -136,6 +103,96 @@ class JweCompact(BaseToken):
             raise KeyError("This JWE doesn't have a valid 'enc' header")
         return enc
 
+    @property
+    def epk(self) -> Jwk:
+        raw_epk = self.headers.get("epk")
+        if raw_epk is None:
+            raise RuntimeError(
+                "CEK unwrapping requires an ephemeral key in header 'epk', which is missing."
+            )
+        jwk_epk = Jwk(raw_epk)
+        if jwk_epk.is_private:
+            raise RuntimeError(
+                "EPK is supposed to be a public key, but this token contains a private key"
+            )
+        return jwk_epk
+
+    @classmethod
+    def encrypt(
+        cls,
+        plaintext: bytes,
+        jwk: Union[Jwk, Dict[str, Any]],
+        enc: str,
+        alg: Optional[str] = None,
+        extra_headers: Optional[Dict[str, Any]] = None,
+        cek: Optional[bytes] = None,
+        iv: Optional[bytes] = None,
+    ) -> "JweCompact":
+        jwk = Jwk(jwk)
+
+        keyalg = select_alg(jwk.alg, alg, jwk.KEY_MANAGEMENT_ALGORITHMS)
+        if isinstance(jwk, SymmetricJwk):
+            key = jwk.to_cryptography_key()
+        else:
+            key = jwk.public_jwk().to_cryptography_key()
+
+        wrapper = keyalg(key)
+        if isinstance(wrapper, DirectKeyManagementAlg):
+            enc_cek = b""
+            cek_jwk = jwk
+        elif isinstance(wrapper, KeyAgreementAlg):
+            extra_headers = extra_headers or {}
+            encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
+            epk = wrapper.generate_ephemeral_key()
+            raw_cek = wrapper.sender_key(epk, extra_headers, encalg)
+            cek_jwk = SymmetricJwk.from_bytes(raw_cek)
+            extra_headers["epk"] = Jwk.from_cryptography_key(epk).public_jwk()
+            enc_cek = b""
+        elif isinstance(wrapper, KeyWrappingAlg):
+            if cek is None:
+                cek_jwk = SymmetricJwk.generate_for_alg(enc)
+            else:
+                cek_jwk = SymmetricJwk.from_bytes(cek, alg=enc)
+
+            enc_cek = wrapper.wrap_key(cek_jwk.key)
+        else:
+            raise RuntimeError(f"Unsupported Key Management method {keyalg}.")
+
+        headers = dict(extra_headers or {}, alg=alg, enc=enc)
+        aad = BinaPy.serialize_to("json", headers).encode_to("b64u")
+
+        ciphertext, tag, iv = cek_jwk.encrypt(
+            plaintext=plaintext, aad=aad, iv=iv, alg=enc
+        )
+
+        return cls.from_parts(headers, enc_cek, iv, ciphertext, tag)
+
+    def unwrap_cek(self, jwk: Union[Jwk, Dict[str, Any]]) -> Jwk:
+        jwk = Jwk(jwk)
+        keyalg = select_alg(self.alg, None, jwk.KEY_MANAGEMENT_ALGORITHMS)
+        if not isinstance(jwk, SymmetricJwk):
+            if not jwk.is_private:
+                raise PrivateKeyRequired()
+
+        key = jwk.to_cryptography_key()
+        wrapper = keyalg(key)
+        if isinstance(wrapper, DirectKeyManagementAlg):
+            wrapper.check_key(key)
+            cek_jwk = jwk
+        elif isinstance(wrapper, KeyAgreementAlg):
+            encalg = select_alg(None, self.enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
+            raw_cek = wrapper.recipient_key(
+                self.epk.to_cryptography_key(), self.headers, encalg
+            )
+            cek_jwk = SymmetricJwk.from_bytes(raw_cek)
+        elif isinstance(wrapper, KeyWrappingAlg):
+            raw_cek = jwk.unwrap_key(self.content_encryption_key, keyalg.name)
+            cek_jwk = SymmetricJwk.from_bytes(raw_cek)
+        else:
+            raise RuntimeError(f"Unsupported Key Management method {type(keyalg)}.")
+
+        return cek_jwk
+
     def decrypt(
         self,
         jwk: Union[Jwk, Dict[str, Any]],
@@ -145,13 +202,9 @@ class JweCompact(BaseToken):
         :param jwk: the Jwk to use to decrypt this Jwe
         :return: the decrypted payload
         """
-        jwk = Jwk(jwk)
-        keyalg = select_alg(self.alg, None, jwk.KEY_MANAGEMENT_ALGORITHMS)
+        cek_jwk = self.unwrap_cek(jwk)
 
-        raw_cek = jwk.unwrap_key(self.content_encryption_key, keyalg.name)
-        cek = SymmetricJwk.from_bytes(raw_cek)
-
-        plaintext = cek.decrypt(
+        plaintext = cek_jwk.decrypt(
             ciphertext=self.ciphertext,
             iv=self.initialization_vector,
             tag=self.authentication_tag,

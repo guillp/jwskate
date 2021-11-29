@@ -1,4 +1,7 @@
-from jwskate.algorithms import Aes128CbcHmacSha256, Aes192CbcHmacSha384
+from binapy import BinaPy
+
+from jwskate import Jwk
+from jwskate.algorithms import ECDH_ES, Aes128CbcHmacSha256, Aes192CbcHmacSha384
 
 
 def test_aes_128_hmac_sha256() -> None:
@@ -145,3 +148,42 @@ def test_aes_192_hmac_sha384() -> None:
     assert cipher.mac_key == mac_key
     ciphertext_with_tag = cipher.encrypt(iv, plaintext, aad)
     assert ciphertext_with_tag == ciphertext + tag
+
+
+def test_ecdhes() -> None:
+    """https://datatracker.ietf.org/doc/html/rfc7518#appendix-C"""
+    alice_ephemeral_key = Jwk(
+        {
+            "kty": "EC",
+            "crv": "P-256",
+            "x": "gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0",
+            "y": "SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps",
+            "d": "0_NxaRPUMQoAJt50Gz8YiTr8gRTwyEaCumd-MToTmIo",
+        }
+    )
+    bob_private_key = Jwk(
+        {
+            "kty": "EC",
+            "crv": "P-256",
+            "x": "weNJy2HscCSM6AEDTDg04biOvhFhyyWvOHQfeF_PxMQ",
+            "y": "e8lnCO-AlStT-NJVX-crhB7QRYhiix03illJOVAOyck",
+            "d": "VEmDZpDXXK8p8N0Cndsxs924q6nS1RXFASRl6BfUqdw",
+        }
+    )
+
+    otherinfo = ECDH_ES.otherinfo("A128GCM", b"Alice", b"Bob", 128)
+    alice_cek = ECDH_ES.derive(
+        alice_ephemeral_key.to_cryptography_key(),
+        bob_private_key.public_jwk().to_cryptography_key(),
+        otherinfo,
+        128,
+    )
+    assert BinaPy(alice_cek).encode_to("b64u") == b"VqqN6vgjbSBcIijNcacQGg"
+
+    bob_cek = ECDH_ES.derive(
+        bob_private_key.to_cryptography_key(),
+        alice_ephemeral_key.public_jwk().to_cryptography_key(),
+        otherinfo,
+        128,
+    )
+    assert BinaPy(bob_cek).encode_to("b64u") == b"VqqN6vgjbSBcIijNcacQGg"

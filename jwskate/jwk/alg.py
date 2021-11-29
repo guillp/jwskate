@@ -1,38 +1,7 @@
 import warnings
-from dataclasses import dataclass
-from typing import Iterable, List, Mapping, Optional, Type, TypeVar
-
-from cryptography.hazmat.primitives import hashes, hmac
+from typing import Iterable, List, Mapping, Optional, TypeVar
 
 from .exceptions import UnsupportedAlg
-
-
-@dataclass
-class Alg:
-    name: str
-    description: str
-
-
-@dataclass
-class SignatureAlg(Alg):
-    hashing_alg: hashes.HashAlgorithm
-
-
-@dataclass
-class SymetricSignatureAlg(SignatureAlg):
-    mac: Type[hmac.HMAC]
-    min_key_size: int
-
-
-@dataclass
-class KeyManagementAlg(Alg):
-    pass
-
-
-@dataclass
-class EncryptionAlg(Alg):
-    pass
-
 
 T = TypeVar("T")
 

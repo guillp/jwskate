@@ -2,6 +2,7 @@ import pytest
 from binapy import BinaPy
 
 from jwskate import ECJwk, Jwk, JwsCompact, RSAJwk, SymmetricJwk
+from jwskate.algorithms import P521
 
 
 def test_jws_compact(private_jwk: Jwk) -> None:
@@ -85,7 +86,7 @@ def ec_p521_private_jwk() -> Jwk:
     assert jwk.kty == "EC"
     assert jwk.kid == "bilbo.baggins@hobbiton.example"
     assert jwk.use == "sig"
-    assert jwk.curve == "P-521"
+    assert jwk.curve == P521
     assert (
         jwk.x_coordinate
         == 1536512509633812701046363966946458604394346818697394258819956002474017850080242973018354677969345705661882653180474980600600249393774872942916765721086083757

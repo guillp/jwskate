@@ -1,14 +1,28 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Optional, Union
+from typing import Any, Iterable, Mapping, Optional, Tuple, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
-from .alg import EncryptionAlg, KeyManagementAlg, SignatureAlg, select_alg, select_algs
+from ..algorithms import (
+    PS256,
+    PS384,
+    PS512,
+    RS256,
+    RS384,
+    RS512,
+    KeyManagementAlg,
+    KeyWrappingAlg,
+    RsaEsOaep,
+    RsaEsOaepSha256,
+    RsaEsPcks1v1_5,
+    SignatureAlg,
+)
+from .alg import select_alg, select_algs
 from .base import Jwk, JwkParameter
 from .exceptions import PrivateKeyRequired
 
@@ -17,16 +31,6 @@ from .exceptions import PrivateKeyRequired
 class RSASignatureAlg(SignatureAlg):
     padding_alg: padding.AsymmetricPadding
     min_key_size: Optional[int]
-
-
-@dataclass
-class RSAKeyManagementAlg(KeyManagementAlg):
-    padding_alg: padding.AsymmetricPadding
-
-
-@dataclass
-class RSAEncryptionAlg(EncryptionAlg):
-    pass
 
 
 class RSAJwk(Jwk):
@@ -65,84 +69,13 @@ class RSAJwk(Jwk):
         ),
     }
 
-    SIGNATURE_ALGORITHMS: Mapping[str, RSASignatureAlg] = {
-        "RS256": RSASignatureAlg(
-            name="RS256",
-            description="RSASSA-PKCS1-v1_5 using SHA-256",
-            hashing_alg=hashes.SHA256(),
-            padding_alg=padding.PKCS1v15(),
-            min_key_size=2048,
-        ),
-        "RS384": RSASignatureAlg(
-            name="RS384",
-            description="RSASSA-PKCS1-v1_5 using SHA-384",
-            hashing_alg=hashes.SHA384(),
-            padding_alg=padding.PKCS1v15(),
-            min_key_size=2048,
-        ),
-        "RS512": RSASignatureAlg(
-            name="RS512",
-            description="RSASSA-PKCS1-v1_5 using SHA-256",
-            hashing_alg=hashes.SHA512(),
-            padding_alg=padding.PKCS1v15(),
-            min_key_size=2048,
-        ),
-        "PS256": RSASignatureAlg(
-            name="PS256",
-            description="RSASSA-PSS using SHA-256 and MGF1 with SHA-256",
-            hashing_alg=hashes.SHA256(),
-            padding_alg=padding.PSS(
-                mgf=padding.MGF1(hashes.SHA256()), salt_length=256 // 8
-            ),
-            min_key_size=2048,
-        ),
-        "PS384": RSASignatureAlg(
-            name="PS384",
-            description="RSASSA-PSS using SHA-384 and MGF1 with SHA-384",
-            hashing_alg=hashes.SHA384(),
-            padding_alg=padding.PSS(
-                mgf=padding.MGF1(hashes.SHA384()), salt_length=384 // 8
-            ),
-            min_key_size=2048,
-        ),
-        "PS512": RSASignatureAlg(
-            name="PS512",
-            description="RSASSA-PSS using SHA-512 and MGF1 with SHA-512",
-            hashing_alg=hashes.SHA512(),
-            padding_alg=padding.PSS(
-                mgf=padding.MGF1(hashes.SHA512()), salt_length=512 // 8
-            ),
-            min_key_size=2048,
-        ),
+    SIGNATURE_ALGORITHMS = {
+        sigalg.name: sigalg for sigalg in [RS256, RS384, RS512, PS256, PS384, PS512]
     }
 
-    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, RSAKeyManagementAlg] = {
-        "RSA1_5": RSAKeyManagementAlg(
-            name="RSA1_5",
-            description="RSAES-PKCS1-v1_5",
-            padding_alg=padding.PKCS1v15(),
-        ),
-        "RSA-OAEP": RSAKeyManagementAlg(
-            name="RSA-OAEP",
-            description="RSAES OAEP using default parameters",
-            padding_alg=padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA1()),
-                algorithm=hashes.SHA1(),
-                label=None,
-            ),
-        ),
-        "RSA-OAEP-256": RSAKeyManagementAlg(
-            name="RSA-OAEP-256",
-            description="RSAES OAEP using SHA-256 and MGF1 with with SHA-256",
-            padding_alg=padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
-                label=None,
-            ),
-        ),
+    KEY_MANAGEMENT_ALGORITHMS = {
+        keyalg.name: keyalg for keyalg in [RsaEsPcks1v1_5, RsaEsOaep, RsaEsOaepSha256]
     }
-
-    ENCRYPTION_ALGORITHMS: Mapping[str, RSAEncryptionAlg] = {}
 
     @classmethod
     def from_cryptography_key(cls, key: Any) -> RSAJwk:
@@ -370,18 +303,21 @@ class RSAJwk(Jwk):
 
         return False
 
-    def wrap_key(self, plainkey: bytes, alg: Optional[str] = None) -> BinaPy:
+    def wrap_key(
+        self, plainkey: bytes, alg: Optional[str] = None
+    ) -> Tuple[BinaPy, Mapping[str, Any]]:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        pubkey = self.public_jwk().to_cryptography_key()
-        ciphertext = pubkey.encrypt(plainkey, keyalg.padding_alg)
-        return BinaPy(ciphertext)
+        wrapper = keyalg(self.public_jwk().to_cryptography_key())
+        ciphertext = wrapper.wrap_key(plainkey)
+        return BinaPy(ciphertext), {}
 
-    def unwrap_key(self, cipherkey: bytes, alg: Optional[str] = None) -> BinaPy:
+    def unwrap_key(
+        self,
+        cipherkey: bytes,
+        alg: Optional[str] = None,
+        headers: Mapping[str, Any] = {},
+    ) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        privkey = self.to_cryptography_key()
-        if not isinstance(privkey, rsa.RSAPrivateKey):
-            raise PrivateKeyRequired(
-                "A private key is required to perform Key Unwrapping."
-            )
-        plaintext = privkey.decrypt(cipherkey, keyalg.padding_alg)
+        wrapper = keyalg(self.to_cryptography_key())
+        plaintext = wrapper.unwrap_key(cipherkey)
         return BinaPy(plaintext)

@@ -9,7 +9,7 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
-from .alg import EncryptionAlg, KeyManagementAlg, SignatureAlg
+from ..algorithms import EncryptionAlg, KeyManagementAlg, SignatureAlg
 from .exceptions import InvalidJwk
 
 
@@ -41,9 +41,9 @@ class Jwk(Dict[str, Any]):
     PARAMS: Mapping[str, JwkParameter]
     """A dict of parameters. Key is parameter name, value is a tuple (description, is_private, is_required, kind)"""
 
-    SIGNATURE_ALGORITHMS: Mapping[str, SignatureAlg]
-    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, KeyManagementAlg]
-    ENCRYPTION_ALGORITHMS: Mapping[str, EncryptionAlg]
+    SIGNATURE_ALGORITHMS: Mapping[str, Type[SignatureAlg]] = {}
+    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, Type[KeyManagementAlg]] = {}
+    ENCRYPTION_ALGORITHMS: Mapping[str, Type[EncryptionAlg]] = {}
 
     def __init_subclass__(cls) -> None:
         """
@@ -300,13 +300,20 @@ class Jwk(Dict[str, Any]):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def wrap_key(self, key: bytes, alg: Optional[str] = None) -> BinaPy:
+    def wrap_key(
+        self, key: bytes, alg: Optional[str] = None
+    ) -> Tuple[BinaPy, Mapping[str, Any]]:
         """
         Wraps a key using a Key Management Algorithm alg.
         """
         raise NotImplementedError
 
-    def unwrap_key(self, cipherkey: bytes, alg: Optional[str] = None) -> BinaPy:
+    def unwrap_key(
+        self,
+        cipherkey: bytes,
+        alg: Optional[str] = None,
+        headers: Mapping[str, Any] = {},
+    ) -> BinaPy:
         """
         Unwraps a key using a Key Management Algorithm alg.
         """
@@ -318,13 +325,27 @@ class Jwk(Dict[str, Any]):
     }
 
     @classmethod
-    def from_cryptography_key(cls, key: Any) -> Jwk:
+    def kty_from_cryptography_key(cls, cryptography_key: Any) -> str:
+        for klass in cryptography_key.__class__.mro():
+            kty = cls.CRYPTOGRAPHY_PRIVATE_KEY_TYPES.get(klass)
+            if kty is not None:
+                return kty
+        raise ValueError(
+            f"Unsupported Key type for this key (cryptography type: {type(cryptography_key)}"
+        )
+
+    @classmethod
+    def from_cryptography_key(cls, cryptography_key: Any) -> Jwk:
         """
         Initializes a Jwk from a key from the `cryptography` library.
 
         `key` can be private or public.
         """
-        raise NotImplementedError
+        kty = cls.kty_from_cryptography_key(cryptography_key)
+        jwk_class = cls.subclasses.get(kty)
+        if jwk_class is None:
+            raise ValueError(f"Unimplemented Jwk class for this Key Type: {kty}")
+        return jwk_class.from_cryptography_key(cryptography_key)
 
     def to_cryptography_key(self) -> Any:
         """
@@ -335,15 +356,7 @@ class Jwk(Dict[str, Any]):
     @classmethod
     def from_pem_private_key(cls, data: bytes, password: Optional[bytes] = None) -> Jwk:
         cryptography_key = serialization.load_pem_private_key(data, password)
-        kty = cls.CRYPTOGRAPHY_PRIVATE_KEY_TYPES.get(type(cryptography_key))
-        if kty is None:
-            raise ValueError(
-                f"Unsupported Key type for this key (cryptography type: {type(cryptography_key)}"
-            )
-        jwk_class = cls.subclasses.get(kty)
-        if jwk_class is None:
-            raise ValueError(f"Unimplemented Jwk class for this Key Type: {kty}")
-        return jwk_class.from_cryptography_key(cryptography_key)
+        return cls.from_cryptography_key(cryptography_key)
 
     def to_pem_private_key(cls, password: Optional[bytes] = None) -> str:
         raise NotImplementedError

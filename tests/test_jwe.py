@@ -1,6 +1,17 @@
+import cryptography.exceptions
 import pytest
 
-from jwskate import ECJwk, InvalidJwe, JweCompact, Jwk, RSAJwk, SymmetricJwk
+from jwskate import (
+    ECJwk,
+    InvalidJwe,
+    InvalidSignature,
+    JweCompact,
+    Jwk,
+    RSAJwk,
+    SymmetricJwk,
+)
+from jwskate.algorithms import P521
+from jwskate.jwk import exceptions
 
 
 def test_jwe() -> None:
@@ -215,7 +226,7 @@ SYMMETRIC_ENCRYPTION_KEY = {
 }
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def ec_p521_private_jwk() -> Jwk:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-3.2]"""
     jwk = Jwk(EC_P521_PRIVATE_KEY)
@@ -224,7 +235,7 @@ def ec_p521_private_jwk() -> Jwk:
     assert jwk.kty == "EC"
     assert jwk.kid == "bilbo.baggins@hobbiton.example"
     assert jwk.use == "enc"
-    assert jwk.curve == "P-521"
+    assert jwk.curve == P521
     assert (
         jwk.x_coordinate
         == 1536512509633812701046363966946458604394346818697394258819956002474017850080242973018354677969345705661882653180474980600600249393774872942916765721086083757
@@ -240,17 +251,17 @@ def ec_p521_private_jwk() -> Jwk:
     return jwk
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def ec_p384_private_jwk() -> Jwk:
     return Jwk.generate_for_kty("EC", crv="P-384")
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def ec_p256_private_jwk() -> Jwk:
     return ECJwk.generate("P-256")
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def rsa_private_jwk() -> Jwk:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-3.4]"""
     jwk = Jwk(RSA_PRIVATE_KEY)
@@ -291,17 +302,17 @@ def rsa_private_jwk() -> Jwk:
     return jwk
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def symmetric_128_encryption_jwk() -> Jwk:
     return Jwk.generate_for_kty("oct", size=128)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def symmetric_192_encryption_jwk() -> Jwk:
     return Jwk.generate_for_kty("oct", size=192)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def symmetric_256_encryption_jwk() -> Jwk:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-3.5]"""
     jwk = Jwk(SYMMETRIC_ENCRYPTION_KEY)
@@ -319,17 +330,17 @@ def symmetric_256_encryption_jwk() -> Jwk:
     return jwk
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def symmetric_384_encryption_jwk() -> Jwk:
     return Jwk.generate_for_kty("oct", size=384)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def symmetric_512_encryption_jwk() -> Jwk:
     return Jwk.generate_for_kty("oct", size=512)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def encryption_plaintext() -> bytes:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-4]"""
     return (
@@ -340,6 +351,7 @@ def encryption_plaintext() -> bytes:
 
 
 @pytest.fixture(
+    scope="session",
     params=[
         "RSA1_5",
         "RSA-OAEP",
@@ -365,6 +377,7 @@ def key_management_alg(request: pytest.FixtureRequest) -> str:
 
 
 @pytest.fixture(
+    scope="session",
     params=[
         "A128CBC-HS256",
         "A192CBC-HS384",
@@ -381,7 +394,7 @@ def encryption_alg(request: pytest.FixtureRequest) -> str:
     pytest.skip(f"Encryption alg {alg} is not supported yet!")
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def decryption_jwk(
     key_management_alg: str,
     encryption_alg: str,
@@ -421,7 +434,7 @@ def decryption_jwk(
     pytest.skip(f"No key supports this Key Management alg: {key_management_alg}")
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def encryption_jwk(decryption_jwk: Jwk) -> Jwk:
     if isinstance(decryption_jwk, SymmetricJwk):
         return decryption_jwk
@@ -429,7 +442,7 @@ def encryption_jwk(decryption_jwk: Jwk) -> Jwk:
     return decryption_jwk.public_jwk()
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def encrypted_jwe(
     encryption_plaintext: bytes,
     encryption_jwk: Jwk,
@@ -448,6 +461,7 @@ def encrypted_jwe(
 
 
 def test_decrypt(
+    encryption_plaintext: bytes,
     encrypted_jwe: JweCompact,
     decryption_jwk: Jwk,
     key_management_alg: str,
@@ -455,7 +469,13 @@ def test_decrypt(
 ) -> None:
     assert encrypted_jwe.alg == key_management_alg
     assert encrypted_jwe.enc == encryption_alg
-    assert encrypted_jwe.decrypt(decryption_jwk)
+    try:
+        assert encrypted_jwe.decrypt(decryption_jwk) == encryption_plaintext
+    except Exception:
+        cek = encrypted_jwe.unwrap_cek(decryption_jwk)
+        assert (
+            False
+        ), f"Decryption by JWSkate failed for {encrypted_jwe}, unwrapped CEK: {cek}"
 
 
 def test_decrypt_by_jwcrypto(
@@ -481,7 +501,10 @@ def test_decrypt_by_jwcrypto(
     jwk = jwcrypto.jwk.JWK(**decryption_jwk)
     jwe = jwcrypto.jwe.JWE(algs=jwe_algs_and_rsa1_5)
     jwe.deserialize(str(encrypted_jwe))
-    jwe.decrypt(jwk)
+    try:
+        jwe.decrypt(jwk)
+    except Exception:
+        assert False, f"Decryption by JWCrypto failed for {encrypted_jwe}"
     assert jwe.plaintext == encryption_plaintext
 
 
@@ -502,7 +525,7 @@ def jwcrypto_encrypted_jwe(
     """
     import jwcrypto.jwe
     import jwcrypto.jwk
-    from jwcrypto.common import InvalidJWEOperation, json_encode
+    from jwcrypto.common import json_encode
 
     jwe_algs_and_rsa1_5 = jwcrypto.jwe.default_allowed_algs + ["RSA1_5"]
     jwk = jwcrypto.jwk.JWK(**encryption_jwk)
@@ -518,6 +541,7 @@ def jwcrypto_encrypted_jwe(
 
 
 def test_decrypt_from_jwcrypto(
+    encryption_plaintext: bytes,
     jwcrypto_encrypted_jwe: str,
     decryption_jwk: Jwk,
     key_management_alg: str,
@@ -532,4 +556,10 @@ def test_decrypt_from_jwcrypto(
     jwe = JweCompact(jwcrypto_encrypted_jwe)
     assert jwe.alg == key_management_alg
     assert jwe.enc == encryption_alg
-    assert jwe.decrypt(decryption_jwk)
+    try:
+        assert jwe.decrypt(decryption_jwk) == encryption_plaintext
+    except Exception:
+        cek = jwe.unwrap_cek(decryption_jwk)
+        assert (
+            False
+        ), f"Decryption by JWSkate failed for {jwcrypto_encrypted_jwe}, CEK={cek}"

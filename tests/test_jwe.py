@@ -10,7 +10,7 @@ from jwskate import (
     RSAJwk,
     SymmetricJwk,
 )
-from jwskate.algorithms import P521
+from jwskate.algorithms import P_521
 from jwskate.jwk import exceptions
 
 
@@ -235,7 +235,7 @@ def ec_p521_private_jwk() -> Jwk:
     assert jwk.kty == "EC"
     assert jwk.kid == "bilbo.baggins@hobbiton.example"
     assert jwk.use == "enc"
-    assert jwk.curve == P521
+    assert jwk.curve == P_521
     assert (
         jwk.x_coordinate
         == 1536512509633812701046363966946458604394346818697394258819956002474017850080242973018354677969345705661882653180474980600600249393774872942916765721086083757

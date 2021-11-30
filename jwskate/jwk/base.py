@@ -309,10 +309,7 @@ class Jwk(Dict[str, Any]):
         raise NotImplementedError
 
     def unwrap_key(
-        self,
-        cipherkey: bytes,
-        alg: Optional[str] = None,
-        headers: Mapping[str, Any] = {},
+        self, cipherkey: bytes, alg: Optional[str] = None, **headers: Any
     ) -> BinaPy:
         """
         Unwraps a key using a Key Management Algorithm alg.

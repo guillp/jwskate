@@ -315,7 +315,7 @@ class RSAJwk(Jwk):
         self,
         cipherkey: bytes,
         alg: Optional[str] = None,
-        headers: Mapping[str, Any] = {},
+        **headers: Any,
     ) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.to_cryptography_key())

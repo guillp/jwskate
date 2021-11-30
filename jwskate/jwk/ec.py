@@ -4,7 +4,7 @@ from typing import Any, Iterable, List, Mapping, Optional, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
-from cryptography.hazmat.primitives import asymmetric, hashes, kdf
+from cryptography.hazmat.primitives import asymmetric
 
 from ..algorithms import (
     ECDH_ES,
@@ -12,18 +12,16 @@ from ..algorithms import (
     ES256K,
     ES384,
     ES512,
-    P256,
-    P384,
-    P521,
+    P_256,
+    P_384,
+    P_521,
     ECCurve,
-    EncryptionAlg,
     KeyAgreementAlg,
-    KeyManagementAlg,
-    SignatureAlg,
     secp256k1,
 )
 from .alg import select_alg, select_algs
 from .base import Jwk, JwkParameter
+from .symetric import SymmetricJwk
 
 
 class UnsupportedCurve(KeyError):
@@ -51,7 +49,7 @@ class ECJwk(Jwk):
     }
 
     CURVES: Mapping[str, ECCurve] = {
-        curve.name: curve for curve in [P256, P384, P521, secp256k1]
+        curve.name: curve for curve in [P_256, P_384, P_521, secp256k1]
     }
 
     SIGNATURE_ALGORITHMS = {
@@ -109,14 +107,6 @@ class ECJwk(Jwk):
                 **params,
             )
         )
-
-    @property
-    def cryptography_curve(self) -> asymmetric.ec.EllipticCurve:
-        """
-        Return the `cryptography` curve for this key.
-        :return: a subclass of EllipticCurve
-        """
-        return self.curve.cryptography_curve
 
     @property
     def coordinate_size(self) -> int:
@@ -177,14 +167,14 @@ class ECJwk(Jwk):
                 public_numbers=asymmetric.ec.EllipticCurvePublicNumbers(
                     x=self.x_coordinate,
                     y=self.y_coordinate,
-                    curve=self.cryptography_curve,
+                    curve=self.curve.cryptography_curve,
                 ),
             ).private_key()
         else:
             return asymmetric.ec.EllipticCurvePublicNumbers(
                 x=self.x_coordinate,
                 y=self.y_coordinate,
-                curve=self.cryptography_curve,
+                curve=self.curve.cryptography_curve,
             ).public_key()
 
     @classmethod
@@ -290,3 +280,27 @@ class ECJwk(Jwk):
                 continue
 
         return False
+
+    def unwrap_key(
+        self, cipherkey: bytes, alg: Optional[str] = None, **headers: Any
+    ) -> BinaPy:
+        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
+        key = self.to_cryptography_key()
+        wrapper = keyalg(key)
+        if isinstance(wrapper, KeyAgreementAlg):
+            epk_raw = headers.get("epk")
+            if epk_raw is None:
+                raise ValueError(
+                    f"Key Agreement {keyalg} requires an ephemeral key in 'epk' header"
+                )
+            epk_jwk = Jwk(epk_raw)
+            enc = headers.get("enc")
+            if enc is None:
+                raise ValueError(
+                    "KeyAgreement requires specifing the 'enc' algorithm to use."
+                )
+            encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
+            cek = wrapper.recipient_key(epk_jwk.to_cryptography_key(), headers, encalg)
+            return cek
+        else:
+            raise RuntimeError(f"Unsupported Key Management method {type(keyalg)}.")

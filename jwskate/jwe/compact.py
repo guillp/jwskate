@@ -5,7 +5,6 @@ from binapy import BinaPy
 from jwskate.algorithms import DirectKeyManagementAlg, KeyAgreementAlg, KeyWrappingAlg
 from jwskate.jwk.alg import select_alg
 from jwskate.jwk.base import Jwk
-from jwskate.jwk.exceptions import PrivateKeyRequired
 from jwskate.jwk.symetric import SymmetricJwk
 from jwskate.token import BaseToken
 
@@ -169,29 +168,8 @@ class JweCompact(BaseToken):
 
     def unwrap_cek(self, jwk: Union[Jwk, Dict[str, Any]]) -> Jwk:
         jwk = Jwk(jwk)
-        keyalg = select_alg(self.alg, None, jwk.KEY_MANAGEMENT_ALGORITHMS)
-        if not isinstance(jwk, SymmetricJwk):
-            if not jwk.is_private:
-                raise PrivateKeyRequired()
-
-        key = jwk.to_cryptography_key()
-        wrapper = keyalg(key)
-        if isinstance(wrapper, DirectKeyManagementAlg):
-            wrapper.check_key(key)
-            cek_jwk = jwk
-        elif isinstance(wrapper, KeyAgreementAlg):
-            encalg = select_alg(None, self.enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
-            raw_cek = wrapper.recipient_key(
-                self.epk.to_cryptography_key(), self.headers, encalg
-            )
-            cek_jwk = SymmetricJwk.from_bytes(raw_cek)
-        elif isinstance(wrapper, KeyWrappingAlg):
-            raw_cek = jwk.unwrap_key(self.content_encryption_key, keyalg.name)
-            cek_jwk = SymmetricJwk.from_bytes(raw_cek)
-        else:
-            raise RuntimeError(f"Unsupported Key Management method {type(keyalg)}.")
-
-        return cek_jwk
+        cek = jwk.unwrap_key(self.content_encryption_key, **self.headers)
+        return SymmetricJwk.from_bytes(cek)
 
     def decrypt(
         self,

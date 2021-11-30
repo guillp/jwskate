@@ -176,15 +176,14 @@ class SymmetricJwk(Jwk):
         return BinaPy(cipherkey), {}
 
     def unwrap_key(
-        self,
-        cipherkey: bytes,
-        alg: Optional[str] = None,
-        headers: Mapping[str, Any] = {},
+        self, cipherkey: bytes, alg: Optional[str] = None, **headers: Any
     ) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.key)
         if isinstance(wrapper, KeyWrappingAlg):
             plaintext = wrapper.unwrap_key(cipherkey)
+        elif isinstance(wrapper, DirectKeyManagementAlg):
+            return BinaPy(self.key)
         else:
             raise RuntimeError(f"Unsupported Key Management Alg {wrapper}")
         return BinaPy(plaintext)

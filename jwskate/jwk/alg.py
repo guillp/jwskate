@@ -37,6 +37,8 @@ def select_alg(
         raise ValueError(
             f"Alg {choosen_alg} is not supported. Supported algs: {supported_algs}."
         )
+    except UnboundLocalError as exc:
+        raise exc
 
     raise ValueError(
         "This key doesn't have an 'alg' parameter, you need to provide the signing alg for each operation."

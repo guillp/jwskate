@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional, Union
 
 from binapy import BinaPy
 
-from jwskate.algorithms import DirectKeyManagementAlg, KeyAgreementAlg, KeyWrappingAlg
+from jwskate.algorithms import DirectKeyUse, KeyAgreementAlg, KeyWrappingAlg
 from jwskate.jwk.alg import select_alg
 from jwskate.jwk.base import Jwk
 from jwskate.jwk.symetric import SymmetricJwk
@@ -136,7 +136,7 @@ class JweCompact(BaseToken):
             key = jwk.public_jwk().to_cryptography_key()
 
         wrapper = keyalg(key)
-        if isinstance(wrapper, DirectKeyManagementAlg):
+        if isinstance(wrapper, DirectKeyUse):
             enc_cek = b""
             cek_jwk = jwk
         elif isinstance(wrapper, KeyAgreementAlg):

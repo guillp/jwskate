@@ -16,7 +16,7 @@ from ..algorithms import (
     Aes128CbcHmacSha256,
     Aes192CbcHmacSha384,
     Aes256CbcHmacSha512,
-    DirectKeyManagementAlg,
+    DirectKeyUse,
     KeyWrappingAlg,
 )
 from .alg import select_alg, select_algs
@@ -37,8 +37,7 @@ class SymmetricJwk(Jwk):
     SIGNATURE_ALGORITHMS = {sigalg.name: sigalg for sigalg in [HS256, HS384, HS512]}
 
     KEY_MANAGEMENT_ALGORITHMS = {
-        keyalg.name: keyalg
-        for keyalg in [A128KW, A192KW, A256KW, DirectKeyManagementAlg]
+        keyalg.name: keyalg for keyalg in [A128KW, A192KW, A256KW, DirectKeyUse]
     }
 
     ENCRYPTION_ALGORITHMS = {
@@ -182,7 +181,7 @@ class SymmetricJwk(Jwk):
         wrapper = keyalg(self.key)
         if isinstance(wrapper, KeyWrappingAlg):
             plaintext = wrapper.unwrap_key(cipherkey)
-        elif isinstance(wrapper, DirectKeyManagementAlg):
+        elif isinstance(wrapper, DirectKeyUse):
             return BinaPy(self.key)
         else:
             raise RuntimeError(f"Unsupported Key Management Alg {wrapper}")

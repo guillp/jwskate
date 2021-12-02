@@ -3,7 +3,7 @@ from typing import Any
 from jwskate.algorithms.base import KeyManagementAlg
 
 
-class DirectKeyManagementAlg(KeyManagementAlg):
+class DirectKeyUse(KeyManagementAlg):
     name = "dir"
     description = "Direct use of a shared symmetric key as the CEK"
 

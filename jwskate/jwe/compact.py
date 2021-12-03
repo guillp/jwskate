@@ -2,7 +2,11 @@ from typing import Any, Dict, Optional, Union
 
 from binapy import BinaPy
 
-from jwskate.algorithms import DirectKeyUse, KeyAgreementAlg, KeyWrappingAlg
+from jwskate.algorithms import (
+    DiffieHellmanAlg,
+    DirectKeyUse,
+    WrappedContentEncryptionKeyAlg,
+)
 from jwskate.jwk.alg import select_alg
 from jwskate.jwk.base import Jwk
 from jwskate.jwk.symetric import SymmetricJwk
@@ -126,34 +130,26 @@ class JweCompact(BaseToken):
         extra_headers: Optional[Dict[str, Any]] = None,
         cek: Optional[bytes] = None,
         iv: Optional[bytes] = None,
+        epk: Optional[Jwk] = None,
     ) -> "JweCompact":
         jwk = Jwk(jwk)
-
         keyalg = select_alg(jwk.alg, alg, jwk.KEY_MANAGEMENT_ALGORITHMS)
-        if isinstance(jwk, SymmetricJwk):
-            key = jwk.to_cryptography_key()
-        else:
-            key = jwk.public_jwk().to_cryptography_key()
+        extra_headers = extra_headers or {}
 
-        wrapper = keyalg(key)
-        if isinstance(wrapper, DirectKeyUse):
-            enc_cek = b""
-            cek_jwk = jwk
-        elif isinstance(wrapper, KeyAgreementAlg):
-            extra_headers = extra_headers or {}
-            encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
-            epk = wrapper.generate_ephemeral_key()
-            raw_cek = wrapper.sender_key(epk, extra_headers, encalg)
-            cek_jwk = SymmetricJwk.from_bytes(raw_cek)
-            extra_headers["epk"] = Jwk.from_cryptography_key(epk).public_jwk()
-            enc_cek = b""
-        elif isinstance(wrapper, KeyWrappingAlg):
+        if issubclass(keyalg, DiffieHellmanAlg):
+            cek_jwk, cek_headers = jwk.sender_key(keyalg.name, enc, extra_headers)
+            extra_headers.update(cek_headers)
+            cek_part = b""
+        elif issubclass(keyalg, WrappedContentEncryptionKeyAlg):
             if cek is None:
                 cek_jwk = SymmetricJwk.generate_for_alg(enc)
             else:
                 cek_jwk = SymmetricJwk.from_bytes(cek, alg=enc)
 
-            enc_cek = wrapper.wrap_key(cek_jwk.key)
+            cek_part = jwk.wrap_key(cek_jwk, alg)
+        elif issubclass(keyalg, DirectKeyUse):
+            cek_part = b""
+            cek_jwk = jwk
         else:
             raise RuntimeError(f"Unsupported Key Management method {keyalg}.")
 
@@ -164,12 +160,21 @@ class JweCompact(BaseToken):
             plaintext=plaintext, aad=aad, iv=iv, alg=enc
         )
 
-        return cls.from_parts(headers, enc_cek, iv, ciphertext, tag)
+        return cls.from_parts(headers, cek_part, iv, ciphertext, tag)
 
     def unwrap_cek(self, jwk: Union[Jwk, Dict[str, Any]]) -> Jwk:
         jwk = Jwk(jwk)
-        cek = jwk.unwrap_key(self.content_encryption_key, **self.headers)
-        return SymmetricJwk.from_bytes(cek)
+        keyalg = select_alg(None, self.alg, jwk.KEY_MANAGEMENT_ALGORITHMS)
+        if issubclass(keyalg, WrappedContentEncryptionKeyAlg):
+            cek = jwk.unwrap_key(self.content_encryption_key, self.alg)
+        elif issubclass(keyalg, DiffieHellmanAlg):
+            cek = jwk.recipient_key(self.alg, self.enc, self.headers)
+        elif issubclass(keyalg, DirectKeyUse):
+            cek = jwk
+        else:
+            raise RuntimeError(f"Unsupported Key Management Algorithm {keyalg}")
+
+        return cek
 
     def decrypt(
         self,

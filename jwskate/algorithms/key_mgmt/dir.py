@@ -1,6 +1,6 @@
 from typing import Any
 
-from jwskate.algorithms.base import KeyManagementAlg
+from jwskate.algorithms import KeyManagementAlg
 
 
 class DirectKeyUse(KeyManagementAlg):

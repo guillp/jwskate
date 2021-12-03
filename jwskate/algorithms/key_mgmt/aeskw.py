@@ -1,10 +1,10 @@
 from binapy import BinaPy
 from cryptography.hazmat.primitives import keywrap
 
-from jwskate.algorithms.base import KeyWrappingAlg
+from ..base import WrappedContentEncryptionKeyAlg
 
 
-class AesKeyWrap(KeyWrappingAlg):
+class AesKeyWrap(WrappedContentEncryptionKeyAlg):
     key_size: int
 
     def __init__(self, key: bytes):

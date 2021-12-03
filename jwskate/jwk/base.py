@@ -10,7 +10,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
 from ..algorithms import EncryptionAlg, KeyManagementAlg, SignatureAlg
-from .exceptions import InvalidJwk
+from .alg import select_alg
+from .exceptions import InvalidJwk, PublicKeyRequired
 
 
 @dataclass
@@ -300,17 +301,13 @@ class Jwk(Dict[str, Any]):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def wrap_key(
-        self, key: bytes, alg: Optional[str] = None
-    ) -> Tuple[BinaPy, Mapping[str, Any]]:
+    def wrap_key(self, key: Jwk, alg: Optional[str] = None) -> BinaPy:
         """
         Wraps a key using a Key Management Algorithm alg.
         """
         raise NotImplementedError
 
-    def unwrap_key(
-        self, cipherkey: bytes, alg: Optional[str] = None, **headers: Any
-    ) -> BinaPy:
+    def unwrap_key(self, cipherkey: bytes, alg: Optional[str] = None) -> Jwk:
         """
         Unwraps a key using a Key Management Algorithm alg.
         """
@@ -320,6 +317,31 @@ class Jwk(Dict[str, Any]):
         rsa.RSAPrivateKey: "RSA",
         ec.EllipticCurvePrivateKey: "EC",
     }
+
+    def sender_key(
+        self, alg: str, enc: str, extra_headers: Mapping[str, Any]
+    ) -> Tuple[Jwk, Mapping[str, Any]]:
+        """
+        For DH-based algs. As a token issuer, derive a EPK and CEK from the recipient public key.
+        :param alg: the Key Management algorithm to use to produce the CEK
+        :param enc: the encryption algorithm to use with the CEK
+        :param extra_headers: addiotional headers that may be used to produce the CEK
+        :return: a tuple (CEK, additional_headers_map)
+        """
+        raise NotImplementedError
+
+    def recipient_key(
+        self, alg: str, enc: str, extra_headers: Mapping[str, Any]
+    ) -> Jwk:
+        """
+        For DH-based algs. As a token recipient, derive the same CEK that was used for encryption, based on the
+        recipient private key and the sender ephemeral public key.
+        :param alg: the Key Management algorithm to use to produce the CEK
+        :param enc: the encryption algorithm to use with the CEK
+        :param extra_headers: addiotional headers that may be used to produce the CEK
+        :return: the CEK
+        """
+        raise NotImplementedError
 
     @classmethod
     def kty_from_cryptography_key(cls, cryptography_key: Any) -> str:

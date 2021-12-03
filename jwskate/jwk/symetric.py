@@ -16,8 +16,9 @@ from ..algorithms import (
     Aes128CbcHmacSha256,
     Aes192CbcHmacSha384,
     Aes256CbcHmacSha512,
+    DiffieHellmanAlg,
     DirectKeyUse,
-    KeyWrappingAlg,
+    WrappedContentEncryptionKeyAlg,
 )
 from .alg import select_alg, select_algs
 from .base import Jwk, JwkParameter
@@ -163,29 +164,52 @@ class SymmetricJwk(Jwk):
 
         return BinaPy(plaintext)
 
-    def wrap_key(
-        self, key: bytes, alg: Optional[str] = None
-    ) -> Tuple[BinaPy, Mapping[str, Any]]:
+    def wrap_key(self, key: Jwk, alg: Optional[str] = None) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.key)
-        if isinstance(wrapper, KeyWrappingAlg):
-            cipherkey = wrapper.wrap_key(key)
+        if isinstance(wrapper, WrappedContentEncryptionKeyAlg):
+            cipherkey = wrapper.wrap_key(key.to_cryptography_key())
         else:
             raise RuntimeError(f"Unsupported Key Management Alg {wrapper}")
-        return BinaPy(cipherkey), {}
+        return BinaPy(cipherkey)
 
-    def unwrap_key(
-        self, cipherkey: bytes, alg: Optional[str] = None, **headers: Any
-    ) -> BinaPy:
+    def unwrap_key(self, cipherkey: bytes, alg: Optional[str] = None) -> Jwk:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.key)
-        if isinstance(wrapper, KeyWrappingAlg):
+        if isinstance(wrapper, WrappedContentEncryptionKeyAlg):
             plaintext = wrapper.unwrap_key(cipherkey)
-        elif isinstance(wrapper, DirectKeyUse):
-            return BinaPy(self.key)
         else:
             raise RuntimeError(f"Unsupported Key Management Alg {wrapper}")
-        return BinaPy(plaintext)
+        return SymmetricJwk.from_bytes(plaintext)
+
+    def sender_key(
+        self, alg: str, enc: str, extra_headers: Mapping[str, Any]
+    ) -> Tuple[Jwk, Mapping[str, Any]]:
+        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
+        wrapper = keyalg(self.key)
+        if isinstance(wrapper, DiffieHellmanAlg):
+            epk = wrapper.generate_ephemeral_key()
+            encalg = select_alg(None, enc, self.ENCRYPTION_ALGORITHMS)
+            cek = wrapper.sender_key(epk, extra_headers, encalg)
+            return SymmetricJwk.from_bytes(cek), {"epk": Jwk(epk).public_jwk()}
+        else:
+            raise RuntimeError(f"Unsupported Key Management Alg {wrapper}")
+
+    def recipient_key(self, alg: str, enc: str, headers: Mapping[str, Any]) -> Jwk:
+        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
+        wrapper = keyalg(self.key)
+        if isinstance(wrapper, DiffieHellmanAlg):
+            epk = headers.get("epk")
+            if epk is None:
+                raise ValueError("Missing epk header")
+            epk_jwk = Jwk(epk)
+            if epk_jwk.is_private:
+                raise ValueError("The EPK present in the header is private.")
+            encalg = select_alg(None, enc, self.ENCRYPTION_ALGORITHMS)
+            cek = wrapper.recipient_key(epk_jwk.to_cryptography_key(), headers, encalg)
+            return SymmetricJwk.from_bytes(cek)
+        else:
+            raise RuntimeError(f"Unsupported Key Management Alg {wrapper}")
 
     def supported_key_management_algorithms(self) -> List[str]:
         return [

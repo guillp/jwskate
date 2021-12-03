@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Optional, Tuple, Union
+from typing import Any, Iterable, Optional, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
@@ -16,15 +16,16 @@ from ..algorithms import (
     RS384,
     RS512,
     KeyManagementAlg,
-    KeyWrappingAlg,
     RsaEsOaep,
     RsaEsOaepSha256,
     RsaEsPcks1v1_5,
     SignatureAlg,
+    WrappedContentEncryptionKeyAlg,
 )
 from .alg import select_alg, select_algs
 from .base import Jwk, JwkParameter
 from .exceptions import PrivateKeyRequired
+from .symetric import SymmetricJwk
 
 
 @dataclass
@@ -303,21 +304,18 @@ class RSAJwk(Jwk):
 
         return False
 
-    def wrap_key(
-        self, plainkey: bytes, alg: Optional[str] = None
-    ) -> Tuple[BinaPy, Mapping[str, Any]]:
+    def wrap_key(self, plainkey: Jwk, alg: Optional[str] = None) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.public_jwk().to_cryptography_key())
-        ciphertext = wrapper.wrap_key(plainkey)
-        return BinaPy(ciphertext), {}
+        ciphertext = wrapper.wrap_key(plainkey.to_cryptography_key())
+        return BinaPy(ciphertext)
 
     def unwrap_key(
         self,
         cipherkey: bytes,
         alg: Optional[str] = None,
-        **headers: Any,
-    ) -> BinaPy:
+    ) -> Jwk:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.to_cryptography_key())
         plaintext = wrapper.unwrap_key(cipherkey)
-        return BinaPy(plaintext)
+        return SymmetricJwk.from_bytes(plaintext)

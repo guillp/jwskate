@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Mapping, Optional, Union
+from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
@@ -15,12 +15,13 @@ from ..algorithms import (
     P_256,
     P_384,
     P_521,
+    DiffieHellmanAlg,
     ECCurve,
-    KeyAgreementAlg,
     secp256k1,
 )
 from .alg import select_alg, select_algs
 from .base import Jwk, JwkParameter
+from .exceptions import PublicKeyRequired
 from .symetric import SymmetricJwk
 
 
@@ -281,26 +282,35 @@ class ECJwk(Jwk):
 
         return False
 
-    def unwrap_key(
-        self, cipherkey: bytes, alg: Optional[str] = None, **headers: Any
-    ) -> BinaPy:
+    def sender_key(
+        self, alg: str, enc: str, extra_headers: Mapping[str, Any]
+    ) -> Tuple[Jwk, Mapping[str, Any]]:
+        if self.is_private:
+            raise PublicKeyRequired()
+        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
+        wrapper = keyalg(self.to_cryptography_key())
+        if isinstance(wrapper, DiffieHellmanAlg):
+            encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
+            epk = wrapper.generate_ephemeral_key()
+            raw_cek = wrapper.sender_key(epk, extra_headers, encalg)
+            cek_jwk = SymmetricJwk.from_bytes(raw_cek)
+            return cek_jwk, {"epk": Jwk.from_cryptography_key(epk).public_jwk()}
+        else:
+            raise RuntimeError(f"Unsupported Key Management method {type(keyalg)}.")
+
+    def recipient_key(self, alg: str, enc: str, headers: Mapping[str, Any]) -> Jwk:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         key = self.to_cryptography_key()
         wrapper = keyalg(key)
-        if isinstance(wrapper, KeyAgreementAlg):
+        if isinstance(wrapper, DiffieHellmanAlg):
             epk_raw = headers.get("epk")
             if epk_raw is None:
                 raise ValueError(
                     f"Key Agreement {keyalg} requires an ephemeral key in 'epk' header"
                 )
             epk_jwk = Jwk(epk_raw)
-            enc = headers.get("enc")
-            if enc is None:
-                raise ValueError(
-                    "KeyAgreement requires specifing the 'enc' algorithm to use."
-                )
             encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
             cek = wrapper.recipient_key(epk_jwk.to_cryptography_key(), headers, encalg)
-            return cek
+            return SymmetricJwk.from_bytes(cek)
         else:
             raise RuntimeError(f"Unsupported Key Management method {type(keyalg)}.")

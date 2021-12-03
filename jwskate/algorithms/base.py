@@ -58,7 +58,10 @@ class KeyManagementAlg(Alg):
     pass
 
 
-class KeyWrappingAlg(KeyManagementAlg):
+class WrappedContentEncryptionKeyAlg(KeyManagementAlg):
+    def generate_cek(self, encalg: EncryptionAlg) -> BinaPy:
+        ...
+
     def wrap_key(self, plainkey: bytes) -> BinaPy:
         ...
 
@@ -70,13 +73,13 @@ Kpriv = TypeVar("Kpriv")
 Kpub = TypeVar("Kpub")
 
 
-class KeyAgreementAlg(KeyManagementAlg, Generic[Kpriv, Kpub]):
+class DiffieHellmanAlg(KeyManagementAlg, Generic[Kpriv, Kpub]):
     def generate_ephemeral_key(self) -> Kpriv:
         ...
 
     def sender_key(
         self,
-        ephemeral_key: Kpriv,
+        ephemeral_private_key: Kpriv,
         headers: Mapping[str, Any],
         encalg: Type[EncryptionAlg],
     ) -> BinaPy:

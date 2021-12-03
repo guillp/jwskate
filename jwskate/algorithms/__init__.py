@@ -1,10 +1,10 @@
 from .base import (
     AESEncryptionAlg,
+    DiffieHellmanAlg,
     EncryptionAlg,
-    KeyAgreementAlg,
     KeyManagementAlg,
-    KeyWrappingAlg,
     SignatureAlg,
+    WrappedContentEncryptionKeyAlg,
 )
 from .ec import P_256, P_384, P_521, ECCurve, secp256k1
 from .encryption import (
@@ -44,9 +44,9 @@ from .signature import (
 __all__ = [
     "AESEncryptionAlg",
     "EncryptionAlg",
-    "KeyAgreementAlg",
+    "DiffieHellmanAlg",
     "KeyManagementAlg",
-    "KeyWrappingAlg",
+    "WrappedContentEncryptionKeyAlg",
     "SignatureAlg",
     "P_256",
     "P_384",

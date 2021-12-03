@@ -4,11 +4,11 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 
-from jwskate.algorithms.base import EncryptionAlg, KeyAgreementAlg
+from jwskate.algorithms.base import DiffieHellmanAlg, EncryptionAlg
 
 
 class ECDH_ES(
-    KeyAgreementAlg[
+    DiffieHellmanAlg[
         asymmetric.ec.EllipticCurvePrivateKey, asymmetric.ec.EllipticCurvePublicKey
     ]
 ):
@@ -22,26 +22,26 @@ class ECDH_ES(
 
     def sender_key(
         self,
-        ephemeral_key: asymmetric.ec.EllipticCurvePrivateKey,
+        ephemeral_private_key: asymmetric.ec.EllipticCurvePrivateKey,
         headers: Mapping[str, Any],
         encalg: Type[EncryptionAlg],
     ) -> BinaPy:
         apu = BinaPy(headers.get("apu", b"")).decode_from("b64u")
         apv = BinaPy(headers.get("apv", b"")).decode_from("b64u")
         otherinfo = self.otherinfo(encalg.name, apu, apv, encalg.key_size)
-        cek = self.derive(ephemeral_key, self.key, otherinfo, encalg.key_size)
+        cek = self.derive(ephemeral_private_key, self.key, otherinfo, encalg.key_size)
         return cek
 
     def recipient_key(
         self,
-        epk: asymmetric.ec.EllipticCurvePublicKey,
+        ephemeral_public_key: asymmetric.ec.EllipticCurvePublicKey,
         headers: Mapping[str, Any],
         encalg: Type[EncryptionAlg],
     ) -> BinaPy:
         apu = BinaPy(headers.get("apu", b"")).decode_from("b64u")
         apv = BinaPy(headers.get("apv", b"")).decode_from("b64u")
         otherinfo = self.otherinfo(encalg.name, apu, apv, encalg.key_size)
-        cek = self.derive(self.key, epk, otherinfo, encalg.key_size)
+        cek = self.derive(self.key, ephemeral_public_key, otherinfo, encalg.key_size)
         return cek
 
     @classmethod
@@ -85,3 +85,7 @@ class ECDH_ES(
             algorithm=hashes.SHA256(), length=keysize // 8, otherinfo=otherinfo
         )
         return BinaPy(ckdf.derive(shared_key))
+
+
+class ECDH_ES_AESKW(ECDH_ES):
+    pass

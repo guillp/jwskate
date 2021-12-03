@@ -4,10 +4,10 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from jwskate.algorithms.base import KeyWrappingAlg
+from ..base import WrappedContentEncryptionKeyAlg
 
 
-class RsaKeyWrap(KeyWrappingAlg):
+class RsaKeyWrap(WrappedContentEncryptionKeyAlg):
     padding: Any
 
     name = "RSA1_5"

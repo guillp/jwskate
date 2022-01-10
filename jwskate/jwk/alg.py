@@ -1,9 +1,11 @@
 import warnings
-from typing import Iterable, List, Mapping, Optional, TypeVar
+from typing import Iterable, List, Mapping, Optional, Type, TypeVar
+
+from jwskate.jwa import Alg
 
 from .exceptions import UnsupportedAlg
 
-T = TypeVar("T")
+T = TypeVar("T", bound=Type[Alg])
 
 
 def select_alg(
@@ -35,7 +37,7 @@ def select_alg(
         return supported_algs[choosen_alg]
     except KeyError:
         raise ValueError(
-            f"Alg {choosen_alg} is not supported. Supported algs: {supported_algs}."
+            f"Alg {choosen_alg} is not supported. Supported algs: {list(supported_algs)}."
         )
     except UnboundLocalError as exc:
         raise exc

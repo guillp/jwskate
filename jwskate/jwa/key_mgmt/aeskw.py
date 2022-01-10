@@ -1,23 +1,10 @@
 from binapy import BinaPy
 from cryptography.hazmat.primitives import keywrap
 
-from ..base import WrappedContentEncryptionKeyAlg
+from ..base import SymmetricKeyWrappingAlg
 
 
-class AesKeyWrap(WrappedContentEncryptionKeyAlg):
-    key_size: int
-
-    def __init__(self, key: bytes):
-        self.check_key(key)
-        self.key = key
-
-    @classmethod
-    def check_key(cls, key: bytes) -> None:
-        if len(key) * 8 != cls.key_size:
-            raise ValueError(
-                f"This key size of {len(key) * 8} bits doesn't match the expected keysize of {cls.key_size} bits"
-            )
-
+class AesKeyWrap(SymmetricKeyWrappingAlg):
     def wrap_key(self, plainkey: bytes) -> BinaPy:
         return BinaPy(keywrap.aes_key_wrap(self.key, plainkey))
 

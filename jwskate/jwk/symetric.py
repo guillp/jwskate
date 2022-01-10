@@ -3,7 +3,7 @@ from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union
 
 from binapy import BinaPy
 
-from ..algorithms import (
+from jwskate.jwa import (
     A128GCM,
     A128KW,
     A192GCM,
@@ -16,10 +16,14 @@ from ..algorithms import (
     Aes128CbcHmacSha256,
     Aes192CbcHmacSha384,
     Aes256CbcHmacSha512,
-    DiffieHellmanAlg,
     DirectKeyUse,
-    WrappedContentEncryptionKeyAlg,
+    EncryptionAlg,
+    KeyDerivationAlg,
+    KeyWrappingAlg,
+    SymmetricAlg,
+    SymmetricKeyWrappingAlg,
 )
+
 from .alg import select_alg, select_algs
 from .base import Jwk, JwkParameter
 
@@ -136,8 +140,8 @@ class SymmetricJwk(Jwk):
         if iv is None:
             iv = secrets.token_bytes(encalg.iv_size)
 
-        encryptor = encalg(self.key)
-        ciphertext_with_tag = encryptor.encrypt(iv, plaintext, aad)
+        wrapper = encalg(self.key)
+        ciphertext_with_tag = wrapper.encrypt(iv, plaintext, aad)
         ciphertext = ciphertext_with_tag[: -encalg.tag_size]
         tag = ciphertext_with_tag[-encalg.tag_size :]
 
@@ -167,7 +171,7 @@ class SymmetricJwk(Jwk):
     def wrap_key(self, key: Jwk, alg: Optional[str] = None) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.key)
-        if isinstance(wrapper, WrappedContentEncryptionKeyAlg):
+        if isinstance(wrapper, KeyWrappingAlg):
             cipherkey = wrapper.wrap_key(key.to_cryptography_key())
         else:
             raise RuntimeError(f"Unsupported Key Management Alg {wrapper}")
@@ -176,29 +180,29 @@ class SymmetricJwk(Jwk):
     def unwrap_key(self, cipherkey: bytes, alg: Optional[str] = None) -> Jwk:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.key)
-        if isinstance(wrapper, WrappedContentEncryptionKeyAlg):
+        if isinstance(wrapper, KeyWrappingAlg):
             plaintext = wrapper.unwrap_key(cipherkey)
         else:
             raise RuntimeError(f"Unsupported Key Management Alg {wrapper}")
         return SymmetricJwk.from_bytes(plaintext)
 
     def sender_key(
-        self, alg: str, enc: str, extra_headers: Mapping[str, Any]
+        self, alg: str, enc: str, **headers: Any
     ) -> Tuple[Jwk, Mapping[str, Any]]:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.key)
-        if isinstance(wrapper, DiffieHellmanAlg):
+        if isinstance(wrapper, KeyDerivationAlg):
             epk = wrapper.generate_ephemeral_key()
             encalg = select_alg(None, enc, self.ENCRYPTION_ALGORITHMS)
-            cek = wrapper.sender_key(epk, extra_headers, encalg)
+            cek = wrapper.sender_key(epk, encalg, **headers)
             return SymmetricJwk.from_bytes(cek), {"epk": Jwk(epk).public_jwk()}
         else:
             raise RuntimeError(f"Unsupported Key Management Alg {wrapper}")
 
-    def recipient_key(self, alg: str, enc: str, headers: Mapping[str, Any]) -> Jwk:
+    def recipient_key(self, alg: str, enc: str, **headers: Any) -> Jwk:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.key)
-        if isinstance(wrapper, DiffieHellmanAlg):
+        if isinstance(wrapper, KeyDerivationAlg):
             epk = headers.get("epk")
             if epk is None:
                 raise ValueError("Missing epk header")
@@ -206,7 +210,9 @@ class SymmetricJwk(Jwk):
             if epk_jwk.is_private:
                 raise ValueError("The EPK present in the header is private.")
             encalg = select_alg(None, enc, self.ENCRYPTION_ALGORITHMS)
-            cek = wrapper.recipient_key(epk_jwk.to_cryptography_key(), headers, encalg)
+            cek = wrapper.recipient_key(
+                epk_jwk.to_cryptography_key(), encalg, **headers
+            )
             return SymmetricJwk.from_bytes(cek)
         else:
             raise RuntimeError(f"Unsupported Key Management Alg {wrapper}")
@@ -215,7 +221,7 @@ class SymmetricJwk(Jwk):
         return [
             alg.name
             for alg in self.KEY_MANAGEMENT_ALGORITHMS.values()
-            if alg.supports_key(self.key)
+            if isinstance(alg, SymmetricAlg) and alg.supports_key(self.key)
         ]
 
     def supported_encryption_algorithms(self) -> List[str]:

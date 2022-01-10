@@ -2,11 +2,7 @@ from typing import Any, Dict, Optional, Union
 
 from binapy import BinaPy
 
-from jwskate.algorithms import (
-    DiffieHellmanAlg,
-    DirectKeyUse,
-    WrappedContentEncryptionKeyAlg,
-)
+from jwskate.jwa import DirectKeyUse, KeyDerivationAlg, KeyWrappingAlg
 from jwskate.jwk.alg import select_alg
 from jwskate.jwk.base import Jwk
 from jwskate.jwk.symetric import SymmetricJwk
@@ -136,11 +132,11 @@ class JweCompact(BaseToken):
         keyalg = select_alg(jwk.alg, alg, jwk.KEY_MANAGEMENT_ALGORITHMS)
         extra_headers = extra_headers or {}
 
-        if issubclass(keyalg, DiffieHellmanAlg):
-            cek_jwk, cek_headers = jwk.sender_key(keyalg.name, enc, extra_headers)
+        if issubclass(keyalg, KeyDerivationAlg):
+            cek_jwk, cek_headers = jwk.sender_key(keyalg.name, enc, **extra_headers)
             extra_headers.update(cek_headers)
             cek_part = b""
-        elif issubclass(keyalg, WrappedContentEncryptionKeyAlg):
+        elif issubclass(keyalg, KeyWrappingAlg):
             if cek is None:
                 cek_jwk = SymmetricJwk.generate_for_alg(enc)
             else:
@@ -165,10 +161,10 @@ class JweCompact(BaseToken):
     def unwrap_cek(self, jwk: Union[Jwk, Dict[str, Any]]) -> Jwk:
         jwk = Jwk(jwk)
         keyalg = select_alg(None, self.alg, jwk.KEY_MANAGEMENT_ALGORITHMS)
-        if issubclass(keyalg, WrappedContentEncryptionKeyAlg):
+        if issubclass(keyalg, KeyWrappingAlg):
             cek = jwk.unwrap_key(self.content_encryption_key, self.alg)
-        elif issubclass(keyalg, DiffieHellmanAlg):
-            cek = jwk.recipient_key(self.alg, self.enc, self.headers)
+        elif issubclass(keyalg, KeyDerivationAlg):
+            cek = jwk.recipient_key(**self.headers)
         elif issubclass(keyalg, DirectKeyUse):
             cek = jwk
         else:

@@ -9,9 +9,16 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
-from ..algorithms import EncryptionAlg, KeyManagementAlg, SignatureAlg
+from jwskate.jwa import (
+    AsymmetricSignatureAlg,
+    EncryptionAlg,
+    KeyManagementAlg,
+    SignatureAlg,
+    SymmetricSignatureAlg,
+)
+
 from .alg import select_alg
-from .exceptions import InvalidJwk, PublicKeyRequired
+from .exceptions import InvalidJwk
 
 
 @dataclass
@@ -319,7 +326,7 @@ class Jwk(Dict[str, Any]):
     }
 
     def sender_key(
-        self, alg: str, enc: str, extra_headers: Mapping[str, Any]
+        self, alg: str, enc: str, **headers: Any
     ) -> Tuple[Jwk, Mapping[str, Any]]:
         """
         For DH-based algs. As a token issuer, derive a EPK and CEK from the recipient public key.
@@ -330,9 +337,7 @@ class Jwk(Dict[str, Any]):
         """
         raise NotImplementedError
 
-    def recipient_key(
-        self, alg: str, enc: str, extra_headers: Mapping[str, Any]
-    ) -> Jwk:
+    def recipient_key(self, alg: str, enc: str, **headers: Any) -> Jwk:
         """
         For DH-based algs. As a token recipient, derive the same CEK that was used for encryption, based on the
         recipient private key and the sender ephemeral public key.

@@ -1,13 +1,37 @@
-from cryptography.hazmat.primitives import hashes
+from binapy import BinaPy
+from cryptography import exceptions
+from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from jwskate.algorithms.base import SignatureAlg
+from ..base import AsymmetricSignatureAlg
 
 
-class RSASigAlg(SignatureAlg):
+class RSASigAlg(
+    AsymmetricSignatureAlg[asymmetric.rsa.RSAPrivateKey, asymmetric.rsa.RSAPublicKey]
+):
     hashing_alg: hashes.HashAlgorithm
     padding_alg: padding.AsymmetricPadding = padding.PKCS1v15()
     min_key_size: int = 2048
+
+    private_key_class = asymmetric.rsa.RSAPrivateKey
+    public_key_class = asymmetric.rsa.RSAPublicKey
+
+    def sign(self, data: bytes) -> BinaPy:
+        with self.private_key_required() as key:
+            return BinaPy(key.sign(data, self.padding_alg, self.hashing_alg))
+
+    def verify(self, data: bytes, signature: bytes) -> bool:
+        with self.public_key_required() as key:
+            try:
+                key.verify(
+                    signature,
+                    data,
+                    self.padding_alg,
+                    self.hashing_alg,
+                )
+                return True
+            except exceptions.InvalidSignature:
+                return False
 
 
 class RS256(RSASigAlg):

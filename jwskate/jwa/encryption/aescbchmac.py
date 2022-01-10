@@ -1,14 +1,14 @@
-from typing import Any, Optional
+from typing import Optional
 
 from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import ciphers, constant_time, hashes, hmac, padding
 from cryptography.hazmat.primitives.ciphers import algorithms, modes
 
-from jwskate.algorithms.base import AESEncryptionAlg
+from ..base import EncryptionAlg
 
 
-class AesCbcHmacSha2(AESEncryptionAlg):
+class AesCbcHmacSha2(EncryptionAlg):
     mac_key_size: int
     aes_key_size: int
     iv_size: int = 16
@@ -16,10 +16,6 @@ class AesCbcHmacSha2(AESEncryptionAlg):
 
     def __init_subclass__(cls) -> None:
         cls.key_size = cls.mac_key_size + cls.aes_key_size
-
-    @classmethod
-    def supports_key(cls, key: Any) -> bool:
-        return isinstance(key, bytes) and len(key) * 8 == cls.key_size
 
     def __init__(self, key: bytes) -> None:
         super().__init__(key)

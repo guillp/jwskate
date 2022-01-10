@@ -4,14 +4,19 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from ..base import WrappedContentEncryptionKeyAlg
+from ..base import AsymmetricKeyWrappingAlg
 
 
-class RsaKeyWrap(WrappedContentEncryptionKeyAlg):
+class RsaKeyWrap(
+    AsymmetricKeyWrappingAlg[asymmetric.rsa.RSAPrivateKey, asymmetric.rsa.RSAPublicKey]
+):
     padding: Any
 
     name = "RSA1_5"
     description = "RSAES-PKCS1-v1_5"
+
+    private_key_class = asymmetric.rsa.RSAPrivateKey
+    public_key_class = asymmetric.rsa.RSAPublicKey
 
     def __init__(
         self, key: Union[asymmetric.rsa.RSAPublicKey, asymmetric.rsa.RSAPrivateKey]

@@ -2,6 +2,7 @@ import cryptography.exceptions
 import pytest
 
 from jwskate import (
+    P_521,
     ECJwk,
     InvalidJwe,
     InvalidSignature,
@@ -10,7 +11,6 @@ from jwskate import (
     RSAJwk,
     SymmetricJwk,
 )
-from jwskate.algorithms import P_521
 from jwskate.jwk import exceptions
 
 

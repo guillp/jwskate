@@ -6,8 +6,7 @@ from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import asymmetric
 
-from ..algorithms import (
-    ECDH_ES,
+from jwskate.jwa import (
     ES256,
     ES256K,
     ES384,
@@ -15,13 +14,14 @@ from ..algorithms import (
     P_256,
     P_384,
     P_521,
-    DiffieHellmanAlg,
     ECCurve,
+    EcdhEs,
+    KeyDerivationAlg,
     secp256k1,
 )
+
 from .alg import select_alg, select_algs
 from .base import Jwk, JwkParameter
-from .exceptions import PublicKeyRequired
 from .symetric import SymmetricJwk
 
 
@@ -56,7 +56,7 @@ class ECJwk(Jwk):
     SIGNATURE_ALGORITHMS = {
         sigalg.name: sigalg for sigalg in [ES256, ES384, ES512, ES256K]
     }
-    KEY_MANAGEMENT_ALGORITHMS = {keyalg.name: keyalg for keyalg in [ECDH_ES]}
+    KEY_MANAGEMENT_ALGORITHMS = {keyalg.name: keyalg for keyalg in [EcdhEs]}
 
     @classmethod
     def get_curve(cls, crv: str) -> ECCurve:
@@ -255,54 +255,31 @@ class ECJwk(Jwk):
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
         public_key = self.public_jwk().to_cryptography_key()
-
-        if len(signature) != self.coordinate_size * 2:
-            raise ValueError(
-                f"Invalid signature length {len(signature)} bytes, expected {self.coordinate_size * 2} bytes"
-            )
-
-        r_bytes, s_bytes = (
-            signature[: self.coordinate_size],
-            signature[self.coordinate_size :],
-        )
-        r = int.from_bytes(r_bytes, "big", signed=False)
-        s = int.from_bytes(s_bytes, "big", signed=False)
-        dss_signature = asymmetric.utils.encode_dss_signature(r, s)
-
         for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
-            try:
-                public_key.verify(
-                    dss_signature,
-                    data,
-                    asymmetric.ec.ECDSA(sigalg.hashing_alg),
-                )
+            if sigalg(public_key).verify(data, signature):
                 return True
-            except exceptions.InvalidSignature:
-                continue
 
         return False
 
     def sender_key(
-        self, alg: str, enc: str, extra_headers: Mapping[str, Any]
+        self, alg: str, enc: str, **extra_headers: Any
     ) -> Tuple[Jwk, Mapping[str, Any]]:
-        if self.is_private:
-            raise PublicKeyRequired()
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.to_cryptography_key())
-        if isinstance(wrapper, DiffieHellmanAlg):
+        if isinstance(wrapper, KeyDerivationAlg):
             encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
             epk = wrapper.generate_ephemeral_key()
-            raw_cek = wrapper.sender_key(epk, extra_headers, encalg)
+            raw_cek = wrapper.sender_key(epk, encalg, **extra_headers)
             cek_jwk = SymmetricJwk.from_bytes(raw_cek)
             return cek_jwk, {"epk": Jwk.from_cryptography_key(epk).public_jwk()}
         else:
             raise RuntimeError(f"Unsupported Key Management method {type(keyalg)}.")
 
-    def recipient_key(self, alg: str, enc: str, headers: Mapping[str, Any]) -> Jwk:
+    def recipient_key(self, alg: str, enc: str, **headers: Any) -> Jwk:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         key = self.to_cryptography_key()
         wrapper = keyalg(key)
-        if isinstance(wrapper, DiffieHellmanAlg):
+        if isinstance(wrapper, KeyDerivationAlg):
             epk_raw = headers.get("epk")
             if epk_raw is None:
                 raise ValueError(
@@ -310,7 +287,9 @@ class ECJwk(Jwk):
                 )
             epk_jwk = Jwk(epk_raw)
             encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
-            cek = wrapper.recipient_key(epk_jwk.to_cryptography_key(), headers, encalg)
+            cek = wrapper.recipient_key(
+                epk_jwk.to_cryptography_key(), encalg, **headers
+            )
             return SymmetricJwk.from_bytes(cek)
         else:
             raise RuntimeError(f"Unsupported Key Management method {type(keyalg)}.")

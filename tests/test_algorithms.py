@@ -1,7 +1,7 @@
 from binapy import BinaPy
 
 from jwskate import Jwk
-from jwskate.algorithms import ECDH_ES, Aes128CbcHmacSha256, Aes192CbcHmacSha384
+from jwskate.jwa import Aes128CbcHmacSha256, Aes192CbcHmacSha384, EcdhEs
 
 
 def test_aes_128_hmac_sha256() -> None:
@@ -171,8 +171,8 @@ def test_ecdhes() -> None:
         }
     )
 
-    otherinfo = ECDH_ES.otherinfo("A128GCM", b"Alice", b"Bob", 128)
-    alice_cek = ECDH_ES.derive(
+    otherinfo = EcdhEs.otherinfo("A128GCM", b"Alice", b"Bob", 128)
+    alice_cek = EcdhEs.derive(
         alice_ephemeral_key.to_cryptography_key(),
         bob_private_key.public_jwk().to_cryptography_key(),
         otherinfo,
@@ -180,7 +180,7 @@ def test_ecdhes() -> None:
     )
     assert BinaPy(alice_cek).encode_to("b64u") == b"VqqN6vgjbSBcIijNcacQGg"
 
-    bob_cek = ECDH_ES.derive(
+    bob_cek = EcdhEs.derive(
         bob_private_key.to_cryptography_key(),
         alice_ephemeral_key.public_jwk().to_cryptography_key(),
         otherinfo,

@@ -1,10 +1,15 @@
 from .base import (
-    AESEncryptionAlg,
-    DiffieHellmanAlg,
+    Alg,
+    AsymmetricAlg,
+    AsymmetricSignatureAlg,
     EncryptionAlg,
+    KeyDerivationAlg,
     KeyManagementAlg,
+    KeyWrappingAlg,
     SignatureAlg,
-    WrappedContentEncryptionKeyAlg,
+    SymmetricAlg,
+    SymmetricKeyWrappingAlg,
+    SymmetricSignatureAlg,
 )
 from .ec import P_256, P_384, P_521, ECCurve, secp256k1
 from .encryption import (
@@ -19,8 +24,8 @@ from .key_mgmt import (
     A128KW,
     A192KW,
     A256KW,
-    ECDH_ES,
     DirectKeyUse,
+    EcdhEs,
     RsaEsOaep,
     RsaEsOaepSha256,
     RsaEsPcks1v1_5,
@@ -42,11 +47,13 @@ from .signature import (
 )
 
 __all__ = [
-    "AESEncryptionAlg",
+    "Alg",
     "EncryptionAlg",
-    "DiffieHellmanAlg",
+    "AsymmetricSignatureAlg",
+    "SymmetricSignatureAlg",
+    "KeyDerivationAlg",
     "KeyManagementAlg",
-    "WrappedContentEncryptionKeyAlg",
+    "KeyWrappingAlg",
     "SignatureAlg",
     "P_256",
     "P_384",
@@ -63,7 +70,7 @@ __all__ = [
     "A192KW",
     "A256KW",
     "DirectKeyUse",
-    "ECDH_ES",
+    "EcdhEs",
     "RsaEsOaep",
     "RsaEsOaepSha256",
     "RsaEsPcks1v1_5",

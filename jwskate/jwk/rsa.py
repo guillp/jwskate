@@ -8,7 +8,7 @@ from cryptography import exceptions
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
-from ..algorithms import (
+from jwskate.jwa import (
     PS256,
     PS384,
     PS512,
@@ -16,15 +16,15 @@ from ..algorithms import (
     RS384,
     RS512,
     KeyManagementAlg,
+    KeyWrappingAlg,
     RsaEsOaep,
     RsaEsOaepSha256,
     RsaEsPcks1v1_5,
     SignatureAlg,
-    WrappedContentEncryptionKeyAlg,
 )
+
 from .alg import select_alg, select_algs
 from .base import Jwk, JwkParameter
-from .exceptions import PrivateKeyRequired
 from .symetric import SymmetricJwk
 
 
@@ -273,12 +273,8 @@ class RSAJwk(Jwk):
 
     def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
         sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
-
-        key = self.to_cryptography_key()
-        if not isinstance(key, rsa.RSAPrivateKey):
-            raise PrivateKeyRequired("A private key is required for signing")
-
-        signature = BinaPy(key.sign(data, sigalg.padding_alg, sigalg.hashing_alg))
+        wrapper = sigalg(self.to_cryptography_key())
+        signature = wrapper.sign(data)
         return signature
 
     def verify(
@@ -288,19 +284,12 @@ class RSAJwk(Jwk):
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
-        public_key = rsa.RSAPublicNumbers(self.exponent, self.modulus).public_key()
+        public_key = self.public_jwk().to_cryptography_key()
 
         for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
-            try:
-                public_key.verify(
-                    signature,
-                    data,
-                    sigalg.padding_alg,
-                    sigalg.hashing_alg,
-                )
+            wrapper = sigalg(public_key)
+            if wrapper.verify(data, signature):
                 return True
-            except exceptions.InvalidSignature:
-                continue
 
         return False
 

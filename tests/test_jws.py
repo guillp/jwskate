@@ -1,8 +1,7 @@
 import pytest
 from binapy import BinaPy
 
-from jwskate import ECJwk, Jwk, JwsCompact, RSAJwk, SymmetricJwk
-from jwskate.algorithms import P_521
+from jwskate import P_521, ECJwk, Jwk, JwsCompact, RSAJwk, SymmetricJwk
 
 
 def test_jws_compact(private_jwk: Jwk) -> None:

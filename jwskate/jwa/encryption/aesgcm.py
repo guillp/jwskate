@@ -3,10 +3,10 @@ from typing import Optional
 from binapy import BinaPy
 from cryptography.hazmat.primitives.ciphers import aead
 
-from jwskate.algorithms.base import AESEncryptionAlg
+from ..base import EncryptionAlg
 
 
-class AESGCM(AESEncryptionAlg):
+class AESGCM(EncryptionAlg):
     def encrypt(self, iv: bytes, plaintext: bytes, aad: Optional[bytes]) -> BinaPy:
         return BinaPy(aead.AESGCM(self.key).encrypt(iv, plaintext, aad))
 

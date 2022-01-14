@@ -1,8 +1,15 @@
-from typing import Any, Dict, Optional, Union
+import warnings
+from typing import Any, Dict, Mapping, Optional, Type, Union
 
 from binapy import BinaPy
 
-from jwskate.jwk.base import Jwk
+from jwskate.jwa import (
+    Pbes2,
+    Pbes2_HS256_A128KW,
+    Pbes2_HS384_A192KW,
+    Pbes2_HS512_A256KW,
+)
+from jwskate.jwk import Jwk, SymmetricJwk
 from jwskate.token import BaseToken
 
 
@@ -99,20 +106,6 @@ class JweCompact(BaseToken):
             raise KeyError("This JWE doesn't have a valid 'enc' header")
         return enc
 
-    @property
-    def epk(self) -> Jwk:
-        raw_epk = self.headers.get("epk")
-        if raw_epk is None:
-            raise RuntimeError(
-                "CEK unwrapping requires an ephemeral key in header 'epk', which is missing."
-            )
-        jwk_epk = Jwk(raw_epk)
-        if jwk_epk.is_private:
-            raise RuntimeError(
-                "EPK is supposed to be a public key, but this token contains a private key"
-            )
-        return jwk_epk
-
     @classmethod
     def encrypt(
         cls,
@@ -140,8 +133,18 @@ class JweCompact(BaseToken):
 
         return cls.from_parts(headers, wrapped_cek, iv, ciphertext, tag)
 
-    def unwrap_cek(self, jwk: Union[Jwk, Dict[str, Any]]) -> Jwk:
-        jwk = Jwk(jwk)
+    PBES2_ALGORITHMS: Mapping[str, Type[Pbes2]] = {
+        alg.name: alg
+        for alg in [Pbes2_HS256_A128KW, Pbes2_HS384_A192KW, Pbes2_HS512_A256KW]
+    }
+
+    def unwrap_cek(
+        self, jwk_or_password: Union[Jwk, Dict[str, Any], bytes, str]
+    ) -> Jwk:
+        if isinstance(jwk_or_password, (bytes, str)):
+            return self.unwrap_cek_with_password(jwk_or_password)
+
+        jwk = Jwk(jwk_or_password)
         cek = jwk.recipient_key(self.wrapped_cek, **self.headers)
         return cek
 
@@ -156,6 +159,81 @@ class JweCompact(BaseToken):
         """
         cek_jwk = self.unwrap_cek(jwk)
 
+        plaintext = cek_jwk.decrypt(
+            ciphertext=self.ciphertext,
+            iv=self.initialization_vector,
+            tag=self.authentication_tag,
+            aad=self.additional_authenticated_data,
+            alg=self.enc,
+        )
+        return plaintext
+
+    @classmethod
+    def encrypt_with_password(
+        cls,
+        plaintext: bytes,
+        password: Union[bytes, str],
+        alg: str,
+        enc: str,
+        salt: Optional[bytes] = None,
+        count: int = 2000,
+        cek: Optional[bytes] = None,
+        iv: Optional[bytes] = None,
+    ) -> "JweCompact":
+        keyalg = cls.PBES2_ALGORITHMS.get(alg)
+        if keyalg is None:
+            raise ValueError(f"Unsupported password-based encryption algorithm '{alg}'")
+
+        if cek is None:
+            cek_jwk = SymmetricJwk.generate_for_alg(enc)
+            cek = cek_jwk.key
+        else:
+            cek_jwk = SymmetricJwk.from_bytes(cek)
+
+        wrapper = keyalg(password)
+        if salt is None:
+            salt = wrapper.generate_salt()
+
+        if count < 1:
+            raise ValueError(
+                "PBES2 iteration count must be a positive integer, with a minimum recommended value of 1000"
+            )
+        if count < 1000:
+            warnings.warn("PBES2 iteration count should be > 1000")
+
+        wrapped_cek = wrapper.wrap_key(cek, salt, count)
+
+        headers = dict(
+            alg=alg, enc=enc, p2s=BinaPy(salt).encode_to("b64u").decode(), p2c=count
+        )
+        aad = BinaPy.serialize_to("json", headers).encode_to("b64u")
+        ciphertext, tag, iv = cek_jwk.encrypt(
+            plaintext=plaintext, aad=aad, alg=enc, iv=iv
+        )
+
+        return cls.from_parts(headers, wrapped_cek, iv, ciphertext, tag)
+
+    def unwrap_cek_with_password(self, password: Union[bytes, str]) -> Jwk:
+        keyalg = self.PBES2_ALGORITHMS.get(self.alg)
+        if keyalg is None:
+            raise ValueError(
+                f"Unsupported password-based encryption algorithm '{self.alg}'"
+            )
+        p2s = self.headers.get("p2s")
+        if p2s is None:
+            raise ValueError("No 'p2s' in headers!")
+        salt = BinaPy(p2s).decode_from("b64u")
+        p2c = self.headers.get("p2c")
+        if p2c is None:
+            raise ValueError("No 'p2c' in headers!")
+        if not isinstance(p2c, int) or p2c < 1:
+            raise ValueError("Invalid value for p2c, must be a positive integer")
+        wrapper = keyalg(password)
+        cek = wrapper.unwrap_key(self.wrapped_cek, salt, p2c)
+        return SymmetricJwk.from_bytes(cek)
+
+    def decrypt_with_password(self, password: Union[bytes, str]) -> bytes:
+        cek_jwk = self.unwrap_cek_with_password(password)
         plaintext = cek_jwk.decrypt(
             ciphertext=self.ciphertext,
             iv=self.initialization_vector,

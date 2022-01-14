@@ -1,3 +1,5 @@
+from typing import Union
+
 import pytest
 
 from jwskate import P_521, ECJwk, InvalidJwe, JweCompact, Jwk, RSAJwk, SymmetricJwk
@@ -215,7 +217,7 @@ SYMMETRIC_ENCRYPTION_KEY = {
 }
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def ec_p521_private_jwk() -> Jwk:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-3.2]"""
     jwk = Jwk(EC_P521_PRIVATE_KEY)
@@ -240,17 +242,17 @@ def ec_p521_private_jwk() -> Jwk:
     return jwk
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def ec_p384_private_jwk() -> Jwk:
     return Jwk.generate_for_kty("EC", crv="P-384")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def ec_p256_private_jwk() -> Jwk:
     return ECJwk.generate("P-256")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def rsa_private_jwk() -> Jwk:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-3.4]"""
     jwk = Jwk(RSA_PRIVATE_KEY)
@@ -291,17 +293,17 @@ def rsa_private_jwk() -> Jwk:
     return jwk
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def symmetric_128_encryption_jwk() -> Jwk:
     return Jwk.generate_for_kty("oct", size=128)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def symmetric_192_encryption_jwk() -> Jwk:
     return Jwk.generate_for_kty("oct", size=192)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def symmetric_256_encryption_jwk() -> Jwk:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-3.5]"""
     jwk = Jwk(SYMMETRIC_ENCRYPTION_KEY)
@@ -319,17 +321,17 @@ def symmetric_256_encryption_jwk() -> Jwk:
     return jwk
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def symmetric_384_encryption_jwk() -> Jwk:
     return Jwk.generate_for_kty("oct", size=384)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def symmetric_512_encryption_jwk() -> Jwk:
     return Jwk.generate_for_kty("oct", size=512)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def encryption_plaintext() -> bytes:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-4]"""
     return (
@@ -340,7 +342,7 @@ def encryption_plaintext() -> bytes:
 
 
 @pytest.fixture(
-    scope="session",
+    scope="module",
     params=[
         "RSA1_5",
         "RSA-OAEP",
@@ -366,7 +368,7 @@ def key_management_alg(request: pytest.FixtureRequest) -> str:
 
 
 @pytest.fixture(
-    scope="session",
+    scope="module",
     params=[
         "A128CBC-HS256",
         "A192CBC-HS384",
@@ -383,7 +385,19 @@ def encryption_alg(request: pytest.FixtureRequest) -> str:
     pytest.skip(f"Encryption alg {alg} is not supported yet!")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(
+    scope="module",
+    params=[
+        b"foo",
+        b"P@ssword1!",
+        'pAvkcJv!$N8HtIuf3W@KaF&2Gv"EAD/BK[_FEoLIuvMS*aG0tm4,.?'.encode(),
+    ],
+)
+def password(request: pytest.FixtureRequest) -> bytes:
+    return request.param  # type: ignore
+
+
+@pytest.fixture(scope="module")
 def decryption_jwk(
     key_management_alg: str,
     encryption_alg: str,
@@ -396,7 +410,8 @@ def decryption_jwk(
     symmetric_256_encryption_jwk: Jwk,
     symmetric_384_encryption_jwk: Jwk,
     symmetric_512_encryption_jwk: Jwk,
-) -> Jwk:
+    password: bytes,
+) -> Union[Jwk, bytes]:
     if key_management_alg == "dir":
         for key in (
             symmetric_128_encryption_jwk,
@@ -407,6 +422,12 @@ def decryption_jwk(
         ):
             if encryption_alg in key.supported_encryption_algorithms():
                 return key
+    elif key_management_alg in (
+        "PBES2-HS256+A128KW",
+        "PBES2-HS384+A192KW",
+        "PBES2-HS512+A256KW",
+    ):
+        return password
     else:
         for key in (
             rsa_private_jwk,
@@ -423,28 +444,40 @@ def decryption_jwk(
     pytest.skip(f"No key supports this Key Management alg: {key_management_alg}")
 
 
-@pytest.fixture(scope="session")
-def encryption_jwk(decryption_jwk: Jwk) -> Jwk:
+@pytest.fixture(scope="module")
+def encryption_jwk(decryption_jwk: Union[Jwk, bytes]) -> Union[Jwk, bytes]:
     if isinstance(decryption_jwk, SymmetricJwk):
+        return decryption_jwk
+    elif isinstance(decryption_jwk, bytes):
         return decryption_jwk
 
     return decryption_jwk.public_jwk()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def encrypted_jwe(
     encryption_plaintext: bytes,
-    encryption_jwk: Jwk,
+    encryption_jwk: Union[Jwk, bytes],
     key_management_alg: str,
     encryption_alg: str,
 ) -> JweCompact:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-4]"""
-    jwe = JweCompact.encrypt(
-        plaintext=encryption_plaintext,
-        jwk=encryption_jwk,
-        alg=key_management_alg,
-        enc=encryption_alg,
-    )
+    if isinstance(encryption_jwk, Jwk):
+        jwe = JweCompact.encrypt(
+            plaintext=encryption_plaintext,
+            jwk=encryption_jwk,
+            alg=key_management_alg,
+            enc=encryption_alg,
+        )
+    elif isinstance(encryption_jwk, bytes):
+        jwe = JweCompact.encrypt_with_password(
+            plaintext=encryption_plaintext,
+            password=encryption_jwk,
+            alg=key_management_alg,
+            enc=encryption_alg,
+        )
+    else:
+        assert False, "Unsupported encryption key type"
     assert isinstance(jwe, JweCompact)
     return jwe
 
@@ -458,13 +491,12 @@ def test_decrypt(
 ) -> None:
     assert encrypted_jwe.alg == key_management_alg
     assert encrypted_jwe.enc == encryption_alg
-    try:
+    if isinstance(decryption_jwk, Jwk):
         assert encrypted_jwe.decrypt(decryption_jwk) == encryption_plaintext
-    except Exception as exc:
-        cek = encrypted_jwe.unwrap_cek(decryption_jwk)
+    else:
         assert (
-            False
-        ), f"Decryption by JWSkate failed for {encrypted_jwe}, unwrapped CEK: {cek}, exception: {exc}"
+            encrypted_jwe.decrypt_with_password(decryption_jwk) == encryption_plaintext
+        )
 
 
 def test_decrypt_by_jwcrypto(
@@ -487,13 +519,15 @@ def test_decrypt_by_jwcrypto(
 
     jwe_algs_and_rsa1_5 = jwcrypto.jwe.default_allowed_algs + ["RSA1_5"]
 
-    jwk = jwcrypto.jwk.JWK(**decryption_jwk)
     jwe = jwcrypto.jwe.JWE(algs=jwe_algs_and_rsa1_5)
     jwe.deserialize(str(encrypted_jwe))
-    try:
+    if isinstance(decryption_jwk, Jwk):
+        jwk = jwcrypto.jwk.JWK(**decryption_jwk)
         jwe.decrypt(jwk)
-    except Exception:
-        assert False, f"Decryption by JWCrypto failed for {encrypted_jwe}"
+    else:
+        password = decryption_jwk
+        jwe.decrypt(password)
+
     assert jwe.plaintext == encryption_plaintext
 
 
@@ -517,14 +551,18 @@ def jwcrypto_encrypted_jwe(
     from jwcrypto.common import json_encode
 
     jwe_algs_and_rsa1_5 = jwcrypto.jwe.default_allowed_algs + ["RSA1_5"]
-    jwk = jwcrypto.jwk.JWK(**encryption_jwk)
     jwe = jwcrypto.jwe.JWE(
         encryption_plaintext,
         protected=json_encode({"alg": key_management_alg, "enc": encryption_alg}),
         algs=jwe_algs_and_rsa1_5,
     )
 
-    jwe.add_recipient(jwk)
+    if isinstance(encryption_jwk, Jwk):
+        jwk = jwcrypto.jwk.JWK(**encryption_jwk)
+        jwe.add_recipient(jwk)
+    else:
+        password = encryption_jwk
+        jwe.add_recipient(password)
     token: str = jwe.serialize(True)
     return token
 
@@ -542,6 +580,7 @@ def test_decrypt_from_jwcrypto(
     :param key_management_alg: the key management alg
     :param encryption_alg: the encryption alg
     """
+
     jwe = JweCompact(jwcrypto_encrypted_jwe)
     assert jwe.alg == key_management_alg
     assert jwe.enc == encryption_alg

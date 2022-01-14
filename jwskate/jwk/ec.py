@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Any, Iterable, List, Mapping, Optional, Union
 
 from binapy import BinaPy
-from cryptography import exceptions
 from cryptography.hazmat.primitives import asymmetric
 
 from jwskate.jwa import (
@@ -16,13 +15,14 @@ from jwskate.jwa import (
     P_521,
     ECCurve,
     EcdhEs,
-    KeyDerivationAlg,
+    EcdhEs_A128KW,
+    EcdhEs_A192KW,
+    EcdhEs_A256KW,
     secp256k1,
 )
 
 from .alg import select_alg, select_algs
 from .base import Jwk, JwkParameter
-from .symetric import SymmetricJwk
 
 
 class UnsupportedCurve(KeyError):
@@ -56,7 +56,10 @@ class ECJwk(Jwk):
     SIGNATURE_ALGORITHMS = {
         sigalg.name: sigalg for sigalg in [ES256, ES384, ES512, ES256K]
     }
-    KEY_MANAGEMENT_ALGORITHMS = {keyalg.name: keyalg for keyalg in [EcdhEs]}
+    KEY_MANAGEMENT_ALGORITHMS = {
+        keyalg.name: keyalg
+        for keyalg in [EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW]
+    }
 
     @classmethod
     def get_curve(cls, crv: str) -> ECCurve:
@@ -260,36 +263,3 @@ class ECJwk(Jwk):
                 return True
 
         return False
-
-    def sender_key(
-        self, alg: str, enc: str, **extra_headers: Any
-    ) -> Tuple[Jwk, Mapping[str, Any]]:
-        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        wrapper = keyalg(self.to_cryptography_key())
-        if isinstance(wrapper, KeyDerivationAlg):
-            encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
-            epk = wrapper.generate_ephemeral_key()
-            raw_cek = wrapper.sender_key(epk, encalg, **extra_headers)
-            cek_jwk = SymmetricJwk.from_bytes(raw_cek)
-            return cek_jwk, {"epk": Jwk.from_cryptography_key(epk).public_jwk()}
-        else:
-            raise RuntimeError(f"Unsupported Key Management method {type(keyalg)}.")
-
-    def recipient_key(self, alg: str, enc: str, **headers: Any) -> Jwk:
-        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        key = self.to_cryptography_key()
-        wrapper = keyalg(key)
-        if isinstance(wrapper, KeyDerivationAlg):
-            epk_raw = headers.get("epk")
-            if epk_raw is None:
-                raise ValueError(
-                    f"Key Agreement {keyalg} requires an ephemeral key in 'epk' header"
-                )
-            epk_jwk = Jwk(epk_raw)
-            encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
-            cek = wrapper.recipient_key(
-                epk_jwk.to_cryptography_key(), encalg, **headers
-            )
-            return SymmetricJwk.from_bytes(cek)
-        else:
-            raise RuntimeError(f"Unsupported Key Management method {type(keyalg)}.")

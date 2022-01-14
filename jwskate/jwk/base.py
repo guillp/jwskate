@@ -9,16 +9,14 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
-from jwskate.jwa import (
-    AsymmetricSignatureAlg,
-    EncryptionAlg,
-    KeyManagementAlg,
-    SignatureAlg,
-    SymmetricSignatureAlg,
-)
+from jwskate.jwa import EncryptionAlg, KeyManagementAlg, SignatureAlg
 
+from .. import DirectKeyUse, EcdhEs
+from ..jwa.key_mgmt.aeskw import AesKeyWrap
+from ..jwa.key_mgmt.ecdh import EcdhEs_AesKw
+from ..jwa.key_mgmt.rsa import RsaKeyWrap
 from .alg import select_alg
-from .exceptions import InvalidJwk
+from .exceptions import InvalidJwk, UnsupportedAlg
 
 
 @dataclass
@@ -308,7 +306,7 @@ class Jwk(Dict[str, Any]):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def wrap_key(self, key: Jwk, alg: Optional[str] = None) -> BinaPy:
+    def wrap_key(self, key: bytes, alg: Optional[str] = None) -> BinaPy:
         """
         Wraps a key using a Key Management Algorithm alg.
         """
@@ -326,27 +324,105 @@ class Jwk(Dict[str, Any]):
     }
 
     def sender_key(
-        self, alg: str, enc: str, **headers: Any
-    ) -> Tuple[Jwk, Mapping[str, Any]]:
+        self,
+        enc: str,
+        alg: Optional[str],
+        cek: Optional[bytes] = None,
+        epk: Optional[Jwk] = None,
+        **headers: Any,
+    ) -> Tuple[Jwk, Mapping[str, Any], BinaPy]:
         """
         For DH-based algs. As a token issuer, derive a EPK and CEK from the recipient public key.
         :param alg: the Key Management algorithm to use to produce the CEK
         :param enc: the encryption algorithm to use with the CEK
-        :param extra_headers: addiotional headers that may be used to produce the CEK
-        :return: a tuple (CEK, additional_headers_map)
+        :param extra_headers: additional headers that may be used to produce the CEK
+        :return: a tuple (CEK, additional_headers_map, wrapped_cek)
         """
-        raise NotImplementedError
+        from jwskate import SymmetricJwk
 
-    def recipient_key(self, alg: str, enc: str, **headers: Any) -> Jwk:
+        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
+        if issubclass(keyalg, RsaKeyWrap):
+            rsa = keyalg(self.public_jwk().to_cryptography_key())
+            if cek:
+                cek_jwk = SymmetricJwk.from_bytes(cek, alg=keyalg.name)
+            else:
+                cek_jwk = SymmetricJwk.generate_for_alg(enc)
+                cek = cek_jwk.key
+            wrapped_cek = rsa.wrap_key(cek)
+            return cek_jwk, {}, wrapped_cek
+        elif issubclass(keyalg, EcdhEs):
+            ecdh: EcdhEs = keyalg(self.public_jwk().to_cryptography_key())
+            epk = epk or Jwk.from_cryptography_key(ecdh.generate_ephemeral_key())
+            encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
+            headers = {"epk": epk.public_jwk()}
+
+            if isinstance(ecdh, EcdhEs_AesKw):
+                if cek:
+                    cek_jwk = SymmetricJwk.from_bytes(cek, alg=keyalg.name)
+                else:
+                    cek_jwk = SymmetricJwk.generate_for_alg(enc)
+                    cek = cek_jwk.key
+                wrapped_cek = ecdh.wrap_key_with_epk(
+                    cek, epk.to_cryptography_key(), alg=alg
+                )
+                return cek_jwk, headers, wrapped_cek
+            else:
+                cek = ecdh.sender_key(epk.to_cryptography_key(), encalg, **headers)
+                return SymmetricJwk.from_bytes(cek), headers, BinaPy(b"")
+        elif issubclass(keyalg, AesKeyWrap):
+            aes = keyalg(self.to_cryptography_key())
+            if cek:
+                cek_jwk = SymmetricJwk.from_bytes(cek, alg=keyalg.name)
+            else:
+                cek_jwk = SymmetricJwk.generate_for_alg(enc)
+                cek = cek_jwk.key
+            wrapped_cek = aes.wrap_key(cek)
+            return cek_jwk, {}, wrapped_cek
+        elif issubclass(keyalg, DirectKeyUse):
+            return self, {}, BinaPy(b"")
+        else:
+            raise UnsupportedAlg(f"Unsupported Key Management Alg {keyalg}")
+
+    def recipient_key(
+        self, wrapped_cek: bytes, alg: str, enc: str, **headers: Any
+    ) -> Jwk:
         """
         For DH-based algs. As a token recipient, derive the same CEK that was used for encryption, based on the
         recipient private key and the sender ephemeral public key.
         :param alg: the Key Management algorithm to use to produce the CEK
         :param enc: the encryption algorithm to use with the CEK
-        :param extra_headers: addiotional headers that may be used to produce the CEK
+        :param extra_headers: additional headers that may be used to produce the CEK
         :return: the CEK
         """
-        raise NotImplementedError
+        from jwskate import SymmetricJwk
+
+        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
+        if issubclass(keyalg, RsaKeyWrap):
+            rsa = keyalg(self.to_cryptography_key())
+            cek = rsa.unwrap_key(wrapped_cek)
+            return SymmetricJwk.from_bytes(cek)
+        elif issubclass(keyalg, EcdhEs):
+            ecdh = keyalg(self.to_cryptography_key())
+            epk = headers.get("epk")
+            if epk:
+                epk_jwk = Jwk(epk)
+                if epk_jwk.is_private:
+                    raise ValueError("The EPK present in the header is private.")
+                epk = epk_jwk.to_cryptography_key()
+            encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
+            if isinstance(ecdh, EcdhEs_AesKw):
+                cek = ecdh.unwrap_key_with_epk(wrapped_cek, epk, alg=alg)
+            else:
+                cek = ecdh.recipient_key(epk, encalg, **headers)
+            return SymmetricJwk.from_bytes(cek)
+        elif issubclass(keyalg, AesKeyWrap):
+            aes = keyalg(self.to_cryptography_key())
+            cek = aes.unwrap_key(wrapped_cek)
+            return SymmetricJwk.from_bytes(cek)
+        elif issubclass(keyalg, DirectKeyUse):
+            return self
+        else:
+            raise UnsupportedAlg(f"Unsupported Key Management Alg {keyalg}")
 
     @classmethod
     def kty_from_cryptography_key(cls, cryptography_key: Any) -> str:

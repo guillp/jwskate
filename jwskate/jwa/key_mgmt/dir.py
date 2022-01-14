@@ -1,6 +1,22 @@
-from ..base import KeyGenerationAlg, SymmetricAlg
+from typing import Any, Type
+
+from binapy import BinaPy
+
+from ..base import KeyManagementAlg, SymmetricAlg
 
 
-class DirectKeyUse(KeyGenerationAlg, SymmetricAlg):
+class DirectKeyUse(KeyManagementAlg, SymmetricAlg):
     name = "dir"
     description = "Direct use of a shared symmetric key as the CEK"
+
+    @classmethod
+    def check_key(cls, key: bytes) -> None:
+        pass
+
+    def sender_key(self, aesalg: Type[SymmetricAlg], **headers: Any) -> BinaPy:
+        aesalg.check_key(self.key)
+        return BinaPy(self.key)
+
+    def recipient_key(self, aesalg: Type[SymmetricAlg], **headers: Any) -> BinaPy:
+        aesalg.check_key(self.key)
+        return BinaPy(self.key)

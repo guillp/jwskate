@@ -4,12 +4,13 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 
-from ..base import AsymmetricAlg, KeyDerivationAlg, KeyWrappingAlg, SymmetricAlg
+from ..base import AsymmetricAlg, KeyManagementAlg, SymmetricAlg
 from .aeskw import A128KW, A192KW, A256KW, AesKeyWrap
 
 
 class EcdhEs(
-    KeyDerivationAlg[
+    KeyManagementAlg,
+    AsymmetricAlg[
         asymmetric.ec.EllipticCurvePrivateKey, asymmetric.ec.EllipticCurvePublicKey
     ],
 ):
@@ -115,12 +116,15 @@ class EcdhEs_AesKw(EcdhEs):
 
 
 class EcdhEs_A128KW(EcdhEs_AesKw):
+    name = "ECDH-ES+A128KW"
     kwalg = A128KW
 
 
 class EcdhEs_A192KW(EcdhEs_AesKw):
+    name = "ECDH-ES+A192KW"
     kwalg = A192KW
 
 
 class EcdhEs_A256KW(EcdhEs_AesKw):
+    name = "ECDH-ES+A256KW"
     kwalg = A256KW

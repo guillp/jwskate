@@ -1,1 +1,1 @@
-from .compact import JwsCompact
+from .compact import InvalidJws, JwsCompact

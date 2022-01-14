@@ -2,10 +2,7 @@ from typing import Any, Dict, Optional, Union
 
 from binapy import BinaPy
 
-from jwskate.jwa import DirectKeyUse, KeyDerivationAlg, KeyWrappingAlg
-from jwskate.jwk.alg import select_alg
 from jwskate.jwk.base import Jwk
-from jwskate.jwk.symetric import SymmetricJwk
 from jwskate.token import BaseToken
 
 
@@ -40,7 +37,7 @@ class JweCompact(BaseToken):
             )
 
         try:
-            self.content_encryption_key = BinaPy(cek).decode_from("b64u")
+            self.wrapped_cek = BinaPy(cek).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
                 "Invalid JWE cek: it must be a Base64URL-encoded binary data (bytes)"
@@ -129,47 +126,23 @@ class JweCompact(BaseToken):
         epk: Optional[Jwk] = None,
     ) -> "JweCompact":
         jwk = Jwk(jwk)
-        keyalg = select_alg(jwk.alg, alg, jwk.KEY_MANAGEMENT_ALGORITHMS)
         extra_headers = extra_headers or {}
+        cek_jwk, cek_headers, wrapped_cek = jwk.sender_key(
+            enc=enc, alg=alg, cek=cek, epk=epk, **extra_headers
+        )
 
-        if issubclass(keyalg, KeyDerivationAlg):
-            cek_jwk, cek_headers = jwk.sender_key(keyalg.name, enc, **extra_headers)
-            extra_headers.update(cek_headers)
-            cek_part = b""
-        elif issubclass(keyalg, KeyWrappingAlg):
-            if cek is None:
-                cek_jwk = SymmetricJwk.generate_for_alg(enc)
-            else:
-                cek_jwk = SymmetricJwk.from_bytes(cek, alg=enc)
-
-            cek_part = jwk.wrap_key(cek_jwk, alg)
-        elif issubclass(keyalg, DirectKeyUse):
-            cek_part = b""
-            cek_jwk = jwk
-        else:
-            raise RuntimeError(f"Unsupported Key Management method {keyalg}.")
-
-        headers = dict(extra_headers or {}, alg=alg, enc=enc)
+        headers = dict(extra_headers, **cek_headers, alg=alg, enc=enc)
         aad = BinaPy.serialize_to("json", headers).encode_to("b64u")
 
         ciphertext, tag, iv = cek_jwk.encrypt(
             plaintext=plaintext, aad=aad, iv=iv, alg=enc
         )
 
-        return cls.from_parts(headers, cek_part, iv, ciphertext, tag)
+        return cls.from_parts(headers, wrapped_cek, iv, ciphertext, tag)
 
     def unwrap_cek(self, jwk: Union[Jwk, Dict[str, Any]]) -> Jwk:
         jwk = Jwk(jwk)
-        keyalg = select_alg(None, self.alg, jwk.KEY_MANAGEMENT_ALGORITHMS)
-        if issubclass(keyalg, KeyWrappingAlg):
-            cek = jwk.unwrap_key(self.content_encryption_key, self.alg)
-        elif issubclass(keyalg, KeyDerivationAlg):
-            cek = jwk.recipient_key(**self.headers)
-        elif issubclass(keyalg, DirectKeyUse):
-            cek = jwk
-        else:
-            raise RuntimeError(f"Unsupported Key Management Algorithm {keyalg}")
-
+        cek = jwk.recipient_key(self.wrapped_cek, **self.headers)
         return cek
 
     def decrypt(

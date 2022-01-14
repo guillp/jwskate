@@ -1,10 +1,10 @@
 from binapy import BinaPy
 from cryptography.hazmat.primitives import keywrap
 
-from ..base import SymmetricKeyWrappingAlg
+from ..base import KeyManagementAlg, SymmetricAlg
 
 
-class AesKeyWrap(SymmetricKeyWrappingAlg):
+class AesKeyWrap(KeyManagementAlg, SymmetricAlg):
     def wrap_key(self, plainkey: bytes) -> BinaPy:
         return BinaPy(keywrap.aes_key_wrap(self.key, plainkey))
 

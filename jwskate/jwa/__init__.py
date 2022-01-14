@@ -3,13 +3,9 @@ from .base import (
     AsymmetricAlg,
     AsymmetricSignatureAlg,
     EncryptionAlg,
-    KeyDerivationAlg,
     KeyManagementAlg,
-    KeyWrappingAlg,
     SignatureAlg,
     SymmetricAlg,
-    SymmetricKeyWrappingAlg,
-    SymmetricSignatureAlg,
 )
 from .ec import P_256, P_384, P_521, ECCurve, secp256k1
 from .encryption import (
@@ -26,10 +22,14 @@ from .key_mgmt import (
     A256KW,
     DirectKeyUse,
     EcdhEs,
+    EcdhEs_A128KW,
+    EcdhEs_A192KW,
+    EcdhEs_A256KW,
     RsaEsOaep,
     RsaEsOaepSha256,
     RsaEsPcks1v1_5,
 )
+from .okp import X448, X25519, Ed448, Ed25519, OKPCurve
 from .signature import (
     ES256,
     ES256K,
@@ -49,11 +49,7 @@ from .signature import (
 __all__ = [
     "Alg",
     "EncryptionAlg",
-    "AsymmetricSignatureAlg",
-    "SymmetricSignatureAlg",
-    "KeyDerivationAlg",
     "KeyManagementAlg",
-    "KeyWrappingAlg",
     "SignatureAlg",
     "P_256",
     "P_384",
@@ -87,4 +83,9 @@ __all__ = [
     "RS256",
     "RS384",
     "RS512",
+    "OKPCurve",
+    "Ed25519",
+    "Ed448",
+    "X448",
+    "X25519",
 ]

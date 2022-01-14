@@ -1,43 +1,10 @@
-from dataclasses import dataclass
-from typing import Any, Callable, Mapping, Protocol
+from typing import Any, Mapping
 
 from binapy import BinaPy
-from cryptography.hazmat.primitives import asymmetric, serialization
-from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
 
-from jwskate.jwa import SignatureAlg
+from jwskate.jwa.okp import X448, X25519, Ed448, Ed25519, OKPCurve
 
 from .base import Jwk, JwkParameter
-
-
-class PublicKeyProtocol(Protocol):
-    def public_bytes(
-        self,
-        encoding: serialization.Encoding,
-        format: serialization.PublicFormat,
-    ) -> bytes:
-        ...
-
-
-class PrivateKeyProtocol(Protocol):
-    def private_bytes(
-        self,
-        encoding: serialization.Encoding,
-        format: serialization.PrivateFormat,
-        encryption_algorithm: serialization.KeySerializationEncryption,
-    ) -> bytes:
-        ...
-
-    def public_key(self) -> PublicKeyProtocol:
-        ...
-
-
-@dataclass
-class OKPCurve:
-    name: str
-    description: str
-    generator: Callable[[], PrivateKeyProtocol]
-    use: str
 
 
 class OKPJwk(Jwk):
@@ -58,30 +25,7 @@ class OKPJwk(Jwk):
     }
 
     CURVES: Mapping[str, OKPCurve] = {
-        "Ed25519": OKPCurve(
-            name="Ed25519",
-            description="Ed25519 signature algorithm key pairs",
-            generator=ed25519.Ed25519PrivateKey.generate,
-            use="sig",
-        ),
-        "Ed448": OKPCurve(
-            name="Ed448",
-            description="Ed448 signature algorithm key pairs",
-            generator=ed448.Ed448PrivateKey.generate,
-            use="sig",
-        ),
-        "X25519": OKPCurve(
-            name="X25519",
-            description="X25519 function key pairs",
-            generator=x25519.X25519PrivateKey.generate,
-            use="enc",
-        ),
-        "X448": OKPCurve(
-            name="X448",
-            description="X448 function key pairs",
-            generator=x448.X448PrivateKey.generate,
-            use="enc",
-        ),
+        curve.name: curve for curve in [Ed25519, Ed448, X448, X25519]
     }
 
     @classmethod
@@ -104,18 +48,8 @@ class OKPJwk(Jwk):
         curve = cls.CURVES.get(crv)
         if curve is None:
             raise ValueError("Unsupported Curve", crv)
-        key = curve.generator()
-        x = key.private_bytes(
-            serialization.Encoding.Raw,
-            serialization.PrivateFormat.Raw,
-            serialization.NoEncryption(),
-        )
-        d = key.public_key().public_bytes(
-            serialization.Encoding.Raw, serialization.PublicFormat.Raw
-        )
+        x, d = curve.generate()
         return cls.private(crv=crv, x=x, d=d, **params)
 
     def to_cryptography_key(self) -> Any:
-        if self.is_private:
-            if self.curve == "Ed25519":
-                return ed25519.Ed25519PrivateKey
+        pass

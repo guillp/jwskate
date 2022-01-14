@@ -4,8 +4,6 @@ from dataclasses import dataclass
 from typing import Any, Iterable, Optional, Union
 
 from binapy import BinaPy
-from cryptography import exceptions
-from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
 from jwskate.jwa import (
@@ -15,8 +13,6 @@ from jwskate.jwa import (
     RS256,
     RS384,
     RS512,
-    KeyManagementAlg,
-    KeyWrappingAlg,
     RsaEsOaep,
     RsaEsOaepSha256,
     RsaEsPcks1v1_5,
@@ -293,10 +289,10 @@ class RSAJwk(Jwk):
 
         return False
 
-    def wrap_key(self, plainkey: Jwk, alg: Optional[str] = None) -> BinaPy:
+    def wrap_key(self, plainkey: bytes, alg: Optional[str] = None) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.public_jwk().to_cryptography_key())
-        ciphertext = wrapper.wrap_key(plainkey.to_cryptography_key())
+        ciphertext = wrapper.wrap_key(plainkey)
         return BinaPy(ciphertext)
 
     def unwrap_key(

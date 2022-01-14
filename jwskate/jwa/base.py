@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import Any, Generic, Iterator, Optional, Type, TypeVar, Union
+from typing import Generic, Iterator, Optional, Type, TypeVar, Union
 
 from binapy import BinaPy
 
@@ -51,6 +51,8 @@ class AsymmetricAlg(Generic[Kpriv, Kpub], Alg):
     private_key_class: Type[Kpriv]
     public_key_class: Type[Kpub]
 
+    use_epk: bool = False
+
     def __init__(self, key: Union[Kpriv, Kpub]):
         self.check_key(key)
         self.key = key
@@ -78,6 +80,9 @@ class AsymmetricAlg(Generic[Kpriv, Kpub], Alg):
         if not isinstance(self.key, self.public_key_class):
             raise PublicKeyRequired()
         yield self.key
+
+    def generate_ephemeral_key(self) -> Kpriv:
+        ...
 
 
 class SignatureAlg(Alg):
@@ -109,39 +114,3 @@ class EncryptionAlg(SymmetricAlg):
 
 class KeyManagementAlg(Alg):
     pass
-
-
-class KeyWrappingAlg(KeyManagementAlg):
-    def wrap_key(self, plainkey: bytes) -> BinaPy:
-        ...
-
-    def unwrap_key(self, cipherkey: bytes) -> BinaPy:
-        ...
-
-
-class SymmetricKeyWrappingAlg(KeyManagementAlg, SymmetricAlg):
-    pass
-
-
-class AsymmetricKeyWrappingAlg(KeyWrappingAlg, AsymmetricAlg[Kpriv, Kpub]):
-    pass
-
-
-class KeyGenerationAlg(KeyManagementAlg):
-    def generate_cek(self) -> BinaPy:
-        ...
-
-
-class KeyDerivationAlg(KeyManagementAlg, AsymmetricAlg[Kpriv, Kpub]):
-    def generate_ephemeral_key(self) -> Kpriv:
-        ...
-
-    def sender_key(
-        self, ephemeral_private_key: Kpriv, aesalg: Type[SymmetricAlg], **headers: Any
-    ) -> BinaPy:
-        ...
-
-    def recipient_key(
-        self, ephemeral_public_key: Kpub, aesalg: Type[SymmetricAlg], **headers: Any
-    ) -> BinaPy:
-        ...

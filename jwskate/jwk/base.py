@@ -79,7 +79,7 @@ class Jwk(Dict[str, Any]):
             return super().__new__(subclass)
         return super().__new__(cls)
 
-    def __init__(self, params: Dict[str, Any], kid: Optional[str] = None):
+    def __init__(self, params: Dict[str, Any], include_kid_thumbprint: bool = False):
         """
         Initialize a Jwk. Accepts a `dict` with the parsed Jwk contents, and an optional kid if it isn't already part
         of the dict.
@@ -90,8 +90,8 @@ class Jwk(Dict[str, Any]):
         super().__init__({key: val for key, val in params.items() if val is not None})
         self.is_private = False
         self._validate()
-        if self.get("kid") is None:
-            self["kid"] = kid or self.thumbprint()
+        if self.get("kid") is None and include_kid_thumbprint:
+            self["kid"] = self.thumbprint()
 
     def __getattr__(self, item: str) -> Any:
         """
@@ -344,7 +344,7 @@ class Jwk(Dict[str, Any]):
         if issubclass(keyalg, RsaKeyWrap):
             rsa = keyalg(self.public_jwk().to_cryptography_key())
             if cek:
-                cek_jwk = SymmetricJwk.from_bytes(cek, alg=keyalg.name)
+                cek_jwk = SymmetricJwk.from_bytes(cek)
             else:
                 cek_jwk = SymmetricJwk.generate_for_alg(enc)
                 cek = cek_jwk.key
@@ -354,21 +354,25 @@ class Jwk(Dict[str, Any]):
             ecdh: EcdhEs = keyalg(self.public_jwk().to_cryptography_key())
             epk = epk or Jwk.from_cryptography_key(ecdh.generate_ephemeral_key())
             encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
-            headers = {"epk": epk.public_jwk()}
-
             if isinstance(ecdh, EcdhEs_AesKw):
                 if cek:
-                    cek_jwk = SymmetricJwk.from_bytes(cek, alg=keyalg.name)
+                    cek_jwk = SymmetricJwk.from_bytes(cek)
                 else:
                     cek_jwk = SymmetricJwk.generate_for_alg(enc)
                     cek = cek_jwk.key
                 wrapped_cek = ecdh.wrap_key_with_epk(
-                    cek, epk.to_cryptography_key(), alg=alg
+                    cek, epk.to_cryptography_key(), alg=alg, **headers
                 )
-                return cek_jwk, headers, wrapped_cek
+                return cek_jwk, {"epk": epk.public_jwk()}, wrapped_cek
             else:
-                cek = ecdh.sender_key(epk.to_cryptography_key(), encalg, **headers)
-                return SymmetricJwk.from_bytes(cek), headers, BinaPy(b"")
+                cek = ecdh.sender_key(
+                    epk.to_cryptography_key(), encalg.name, encalg.key_size, **headers
+                )
+                return (
+                    SymmetricJwk.from_bytes(cek),
+                    {"epk": epk.public_jwk()},
+                    BinaPy(b""),
+                )
         elif issubclass(keyalg, AesKeyWrap):
             aes = keyalg(self.to_cryptography_key())
             if cek:
@@ -413,7 +417,9 @@ class Jwk(Dict[str, Any]):
             if isinstance(ecdh, EcdhEs_AesKw):
                 cek = ecdh.unwrap_key_with_epk(wrapped_cek, epk, alg=alg)
             else:
-                cek = ecdh.recipient_key(epk, encalg, **headers)
+                cek = ecdh.recipient_key(
+                    epk, alg=encalg.name, key_size=encalg.key_size, **headers
+                )
             return SymmetricJwk.from_bytes(cek)
         elif issubclass(keyalg, AesKeyWrap):
             aes = keyalg(self.to_cryptography_key())

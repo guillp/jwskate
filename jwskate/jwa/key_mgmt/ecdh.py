@@ -69,27 +69,29 @@ class EcdhEs(
     def sender_key(
         self,
         ephemeral_private_key: asymmetric.ec.EllipticCurvePrivateKey,
-        aesalg: Type[SymmetricAlg],
+        alg: str,
+        key_size: int,
         **headers: Any,
     ) -> BinaPy:
         with self.public_key_required() as key:
             apu = BinaPy(headers.get("apu", b"")).decode_from("b64u")
             apv = BinaPy(headers.get("apv", b"")).decode_from("b64u")
-            otherinfo = self.otherinfo(aesalg.name, apu, apv, aesalg.key_size)
-            cek = self.derive(ephemeral_private_key, key, otherinfo, aesalg.key_size)
+            otherinfo = self.otherinfo(alg, apu, apv, key_size)
+            cek = self.derive(ephemeral_private_key, key, otherinfo, key_size)
             return cek
 
     def recipient_key(
         self,
         ephemeral_public_key: asymmetric.ec.EllipticCurvePublicKey,
-        aesalg: Type[SymmetricAlg],
+        alg: str,
+        key_size: int,
         **headers: Any,
     ) -> BinaPy:
         with self.private_key_required() as key:
             apu = BinaPy(headers.get("apu", b"")).decode_from("b64u")
             apv = BinaPy(headers.get("apv", b"")).decode_from("b64u")
-            otherinfo = self.otherinfo(aesalg.name, apu, apv, aesalg.key_size)
-            cek = self.derive(key, ephemeral_public_key, otherinfo, aesalg.key_size)
+            otherinfo = self.otherinfo(alg, apu, apv, key_size)
+            cek = self.derive(key, ephemeral_public_key, otherinfo, key_size)
             return cek
 
 
@@ -102,7 +104,9 @@ class EcdhEs_AesKw(EcdhEs):
         ephemeral_private_key: asymmetric.ec.EllipticCurvePrivateKey,
         **headers: Any,
     ) -> BinaPy:
-        aes_key = self.sender_key(ephemeral_private_key, self.kwalg, **headers)
+        aes_key = self.sender_key(
+            ephemeral_private_key, key_size=self.kwalg.key_size, **headers
+        )
         return self.kwalg(aes_key).wrap_key(plainkey)
 
     def unwrap_key_with_epk(
@@ -111,7 +115,9 @@ class EcdhEs_AesKw(EcdhEs):
         ephemeral_public_key: asymmetric.ec.EllipticCurvePublicKey,
         **headers: Any,
     ) -> BinaPy:
-        aes_key = self.recipient_key(ephemeral_public_key, self.kwalg, **headers)
+        aes_key = self.recipient_key(
+            ephemeral_public_key, key_size=self.kwalg.key_size, **headers
+        )
         return self.kwalg(aes_key).unwrap_key(cipherkey)
 
 

@@ -460,11 +460,11 @@ def test_decrypt(
     assert encrypted_jwe.enc == encryption_alg
     try:
         assert encrypted_jwe.decrypt(decryption_jwk) == encryption_plaintext
-    except Exception:
+    except Exception as exc:
         cek = encrypted_jwe.unwrap_cek(decryption_jwk)
         assert (
             False
-        ), f"Decryption by JWSkate failed for {encrypted_jwe}, unwrapped CEK: {cek}"
+        ), f"Decryption by JWSkate failed for {encrypted_jwe}, unwrapped CEK: {cek}, exception: {exc}"
 
 
 def test_decrypt_by_jwcrypto(

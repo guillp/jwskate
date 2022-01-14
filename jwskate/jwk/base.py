@@ -12,6 +12,7 @@ from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from jwskate.jwa import EncryptionAlg, KeyManagementAlg, SignatureAlg
 
 from .. import DirectKeyUse, EcdhEs
+from ..jwa.key_mgmt import AesGmcKeyWrap
 from ..jwa.key_mgmt.aeskw import AesKeyWrap
 from ..jwa.key_mgmt.ecdh import EcdhEs_AesKw
 from ..jwa.key_mgmt.rsa import RsaKeyWrap
@@ -374,7 +375,7 @@ class Jwk(Dict[str, Any]):
                     BinaPy(b""),
                 )
         elif issubclass(keyalg, AesKeyWrap):
-            aes = keyalg(self.to_cryptography_key())
+            aes: AesKeyWrap = keyalg(self.to_cryptography_key())
             if cek:
                 cek_jwk = SymmetricJwk.from_bytes(cek, alg=keyalg.name)
             else:
@@ -382,6 +383,23 @@ class Jwk(Dict[str, Any]):
                 cek = cek_jwk.key
             wrapped_cek = aes.wrap_key(cek)
             return cek_jwk, {}, wrapped_cek
+        elif issubclass(keyalg, AesGmcKeyWrap):
+            aesgcm: AesGmcKeyWrap = keyalg(self.to_cryptography_key())
+            if cek:
+                cek_jwk = SymmetricJwk.from_bytes(cek, alg=keyalg.name)
+            else:
+                cek_jwk = SymmetricJwk.generate_for_alg(enc)
+                cek = cek_jwk.key
+            iv = aesgcm.generate_iv()
+            wrapped_cek, tag = aesgcm.wrap_key(cek, iv)
+            return (
+                cek_jwk,
+                {
+                    "iv": iv.encode_to("b64u").decode(),
+                    "tag": tag.encode_to("b64u").decode(),
+                },
+                wrapped_cek,
+            )
         elif issubclass(keyalg, DirectKeyUse):
             return self, {}, BinaPy(b"")
         else:
@@ -408,11 +426,12 @@ class Jwk(Dict[str, Any]):
         elif issubclass(keyalg, EcdhEs):
             ecdh = keyalg(self.to_cryptography_key())
             epk = headers.get("epk")
-            if epk:
-                epk_jwk = Jwk(epk)
-                if epk_jwk.is_private:
-                    raise ValueError("The EPK present in the header is private.")
-                epk = epk_jwk.to_cryptography_key()
+            if epk is None:
+                raise ValueError("No EPK in the headers!")
+            epk_jwk = Jwk(epk)
+            if epk_jwk.is_private:
+                raise ValueError("The EPK present in the header is private.")
+            epk = epk_jwk.to_cryptography_key()
             encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
             if isinstance(ecdh, EcdhEs_AesKw):
                 cek = ecdh.unwrap_key_with_epk(wrapped_cek, epk, alg=alg)
@@ -424,6 +443,18 @@ class Jwk(Dict[str, Any]):
         elif issubclass(keyalg, AesKeyWrap):
             aes = keyalg(self.to_cryptography_key())
             cek = aes.unwrap_key(wrapped_cek)
+            return SymmetricJwk.from_bytes(cek)
+        elif issubclass(keyalg, AesGmcKeyWrap):
+            aesgcm = keyalg(self.to_cryptography_key())
+            iv = headers.get("iv")
+            if iv is None:
+                raise ValueError("No 'iv' in headers!")
+            iv = BinaPy(iv).decode_from("b64u")
+            tag = headers.get("tag")
+            if tag is None:
+                raise ValueError("No 'tag' in headers!")
+            tag = BinaPy(tag).decode_from("b64u")
+            cek = aesgcm.unwrap_key(wrapped_cek, tag, iv)
             return SymmetricJwk.from_bytes(cek)
         elif issubclass(keyalg, DirectKeyUse):
             return self

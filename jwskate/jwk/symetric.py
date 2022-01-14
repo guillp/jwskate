@@ -19,6 +19,7 @@ from jwskate.jwa import (
     DirectKeyUse,
 )
 
+from ..jwa.key_mgmt import A128GCMKW, A192GCMKW, A256GCMKW
 from ..jwa.key_mgmt.aeskw import AesKeyWrap
 from .alg import select_alg, select_algs
 from .base import Jwk, JwkParameter
@@ -39,7 +40,16 @@ class SymmetricJwk(Jwk):
     SIGNATURE_ALGORITHMS = {sigalg.name: sigalg for sigalg in [HS256, HS384, HS512]}
 
     KEY_MANAGEMENT_ALGORITHMS = {
-        keyalg.name: keyalg for keyalg in [A128KW, A192KW, A256KW, DirectKeyUse]
+        keyalg.name: keyalg
+        for keyalg in [
+            A128KW,
+            A192KW,
+            A256KW,
+            A128GCMKW,
+            A192GCMKW,
+            A256GCMKW,
+            DirectKeyUse,
+        ]
     }
 
     ENCRYPTION_ALGORITHMS = {

@@ -353,7 +353,7 @@ def encryption_plaintext() -> bytes:
         "ECDH-ES+A128KW",
         "ECDH-ES+A192KW",
         "ECDH-ES+A256KW",
-        "A128GCMK",
+        "A128GCMKW",
         "A192GCMKW",
         "A256GCMKW",
         "PBES2-HS256+A128KW",

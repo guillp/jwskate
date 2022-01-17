@@ -2,14 +2,15 @@ from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import asymmetric, hashes
 
-from ..base import AsymmetricSignatureAlg
+from ..base import AsymmetricAlg, SignatureAlg
 from ..ec import P_256, P_384, P_521, ECCurve, secp256k1
 
 
 class ECSignatureAlg(
-    AsymmetricSignatureAlg[
+    AsymmetricAlg[
         asymmetric.ec.EllipticCurvePrivateKey, asymmetric.ec.EllipticCurvePublicKey
     ],
+    SignatureAlg,
 ):
     curve: ECCurve
     hashing_alg: hashes.HashAlgorithm

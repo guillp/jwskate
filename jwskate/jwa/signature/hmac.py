@@ -2,10 +2,10 @@ from typing import Type
 
 from cryptography.hazmat.primitives import hashes, hmac
 
-from ..base import SymmetricSignatureAlg
+from ..base import SignatureAlg, SymmetricAlg
 
 
-class HMACSigAlg(SymmetricSignatureAlg):
+class HMACSigAlg(SymmetricAlg, SignatureAlg):
     mac: Type[hmac.HMAC] = hmac.HMAC
     hash_alg: hashes.HashAlgorithm
     min_key_size: int

@@ -93,14 +93,6 @@ class SignatureAlg(Alg):
         ...
 
 
-class SymmetricSignatureAlg(SymmetricAlg, SignatureAlg):
-    pass
-
-
-class AsymmetricSignatureAlg(AsymmetricAlg[Kpriv, Kpub], SignatureAlg):
-    pass
-
-
 class EncryptionAlg(SymmetricAlg):
     tag_size: int
     iv_size: int

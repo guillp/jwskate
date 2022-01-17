@@ -3,11 +3,12 @@ from cryptography import exceptions
 from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from ..base import AsymmetricSignatureAlg
+from ..base import AsymmetricAlg, SignatureAlg
 
 
 class RSASigAlg(
-    AsymmetricSignatureAlg[asymmetric.rsa.RSAPrivateKey, asymmetric.rsa.RSAPublicKey]
+    AsymmetricAlg[asymmetric.rsa.RSAPrivateKey, asymmetric.rsa.RSAPublicKey],
+    SignatureAlg,
 ):
     hashing_alg: hashes.HashAlgorithm
     padding_alg: padding.AsymmetricPadding = padding.PKCS1v15()

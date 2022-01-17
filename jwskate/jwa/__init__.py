@@ -1,7 +1,6 @@
 from .base import (
     Alg,
     AsymmetricAlg,
-    AsymmetricSignatureAlg,
     EncryptionAlg,
     KeyManagementAlg,
     SignatureAlg,

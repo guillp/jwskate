@@ -4,6 +4,8 @@ import pytest
 
 from jwskate import P_521, ECJwk, InvalidJwe, JweCompact, Jwk, RSAJwk, SymmetricJwk
 
+JWCRYPTO_UNSUPPORTED_ALGS = ["RSA-OAEP-384", "RSA-OAEP-512"]
+
 
 def test_jwe() -> None:
     plaintext = b"The true sign of intelligence is not knowledge but imagination."
@@ -347,6 +349,8 @@ def encryption_plaintext() -> bytes:
         "RSA1_5",
         "RSA-OAEP",
         "RSA-OAEP-256",
+        "RSA-OAEP-384",
+        "RSA-OAEP-512",
         "A128KW",
         "A192KW",
         "A256KW",
@@ -517,6 +521,9 @@ def test_decrypt_by_jwcrypto(
     import jwcrypto.jwk  # type: ignore[import]
     from jwcrypto.common import InvalidJWEOperation, json_encode  # type: ignore[import]
 
+    if key_management_alg in JWCRYPTO_UNSUPPORTED_ALGS:
+        pytest.skip(f"jwcrypto doesn't support key management alg {key_management_alg}")
+
     jwe_algs_and_rsa1_5 = jwcrypto.jwe.default_allowed_algs + ["RSA1_5"]
 
     jwe = jwcrypto.jwe.JWE(algs=jwe_algs_and_rsa1_5)
@@ -549,6 +556,9 @@ def jwcrypto_encrypted_jwe(
     import jwcrypto.jwe
     import jwcrypto.jwk
     from jwcrypto.common import json_encode
+
+    if key_management_alg in JWCRYPTO_UNSUPPORTED_ALGS:
+        pytest.skip(f"jwcrypto doesn't support key management alg {key_management_alg}")
 
     jwe_algs_and_rsa1_5 = jwcrypto.jwe.default_allowed_algs + ["RSA1_5"]
     jwe = jwcrypto.jwe.JWE(

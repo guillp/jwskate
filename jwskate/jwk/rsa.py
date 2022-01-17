@@ -15,6 +15,8 @@ from jwskate.jwa import (
     RS512,
     RsaEsOaep,
     RsaEsOaepSha256,
+    RsaEsOaepSha384,
+    RsaEsOaepSha512,
     RsaEsPcks1v1_5,
     SignatureAlg,
 )
@@ -71,7 +73,14 @@ class RSAJwk(Jwk):
     }
 
     KEY_MANAGEMENT_ALGORITHMS = {
-        keyalg.name: keyalg for keyalg in [RsaEsPcks1v1_5, RsaEsOaep, RsaEsOaepSha256]
+        keyalg.name: keyalg
+        for keyalg in [
+            RsaEsPcks1v1_5,
+            RsaEsOaep,
+            RsaEsOaepSha256,
+            RsaEsOaepSha384,
+            RsaEsOaepSha512,
+        ]
     }
 
     @classmethod

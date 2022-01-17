@@ -31,6 +31,8 @@ from .key_mgmt import (
     Pbes2_HS512_A256KW,
     RsaEsOaep,
     RsaEsOaepSha256,
+    RsaEsOaepSha384,
+    RsaEsOaepSha512,
     RsaEsPcks1v1_5,
 )
 from .okp import X448, X25519, Ed448, Ed25519, OKPCurve
@@ -77,6 +79,8 @@ __all__ = [
     "Pbes2_HS512_A256KW",
     "RsaEsOaep",
     "RsaEsOaepSha256",
+    "RsaEsOaepSha384",
+    "RsaEsOaepSha512",
     "RsaEsPcks1v1_5",
     "HS256",
     "HS384",

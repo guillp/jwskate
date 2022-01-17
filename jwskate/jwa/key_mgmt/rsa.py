@@ -62,3 +62,25 @@ class RsaEsOaepSha256(RsaKeyWrap):
         algorithm=hashes.SHA256(),
         label=None,
     )
+
+
+class RsaEsOaepSha384(RsaKeyWrap):
+    name = "RSA-OAEP-384"
+    description = "RSA-OAEP using SHA-384 and MGF1 with SHA-384"
+
+    padding = padding.OAEP(
+        mgf=padding.MGF1(algorithm=hashes.SHA384()),
+        algorithm=hashes.SHA384(),
+        label=None,
+    )
+
+
+class RsaEsOaepSha512(RsaKeyWrap):
+    name = "RSA-OAEP-512"
+    description = "RSA-OAEP using SHA-512 and MGF1 with SHA-512"
+
+    padding = padding.OAEP(
+        mgf=padding.MGF1(algorithm=hashes.SHA512()),
+        algorithm=hashes.SHA512(),
+        label=None,
+    )

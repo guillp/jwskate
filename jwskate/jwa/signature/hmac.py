@@ -1,5 +1,6 @@
 from typing import Type
 
+from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes, hmac
 
 from ..base import SignatureAlg, SymmetricAlg
@@ -9,6 +10,16 @@ class HMACSigAlg(SymmetricAlg, SignatureAlg):
     mac: Type[hmac.HMAC] = hmac.HMAC
     hash_alg: hashes.HashAlgorithm
     min_key_size: int
+
+    def sign(self, data: bytes) -> BinaPy:
+        m = self.mac(self.key, self.hash_alg)
+        m.update(data)
+        signature = m.finalize()
+        return BinaPy(signature)
+
+    def verify(self, data: bytes, signature: bytes) -> bool:
+        candidate_signature = self.sign(data)
+        return candidate_signature == signature
 
 
 class HS256(HMACSigAlg):

@@ -1,14 +1,17 @@
 import secrets
-from typing import Any, Iterable, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 from binapy import BinaPy
 
 from jwskate.jwa import (
     A128GCM,
+    A128GCMKW,
     A128KW,
     A192GCM,
+    A192GCMKW,
     A192KW,
     A256GCM,
+    A256GCMKW,
     A256KW,
     HS256,
     HS384,
@@ -16,14 +19,12 @@ from jwskate.jwa import (
     Aes128CbcHmacSha256,
     Aes192CbcHmacSha384,
     Aes256CbcHmacSha512,
+    AesKeyWrap,
     DirectKeyUse,
 )
 
-from ..jwa.key_mgmt import A128GCMKW, A192GCMKW, A256GCMKW
-from ..jwa.key_mgmt.aeskw import AesKeyWrap
-from .alg import select_alg, select_algs
+from .alg import UnsupportedAlg, select_alg
 from .base import Jwk, JwkParameter
-from .exceptions import UnsupportedAlg
 
 
 class SymmetricJwk(Jwk):
@@ -68,7 +69,7 @@ class SymmetricJwk(Jwk):
         raise ValueError("Symmetric keys don't have a public key")
 
     @classmethod
-    def from_bytes(cls, k: Union[bytes, str], **params: str) -> "SymmetricJwk":
+    def from_bytes(cls, k: Union[bytes, str], **params: Any) -> "SymmetricJwk":
         """
         Initializes a SymmetricJwk from a raw secret key.
         The provided secret key is encoded and used as the `k` parameter for the returned SymetricKey.
@@ -113,30 +114,6 @@ class SymmetricJwk(Jwk):
     @property
     def key_size(self) -> int:
         return len(self.key) * 8
-
-    def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
-        sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
-
-        m = sigalg.mac(self.key, sigalg.hash_alg)
-        m.update(data)
-        signature = m.finalize()
-        return BinaPy(signature)
-
-    def verify(
-        self,
-        data: bytes,
-        signature: bytes,
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
-    ) -> bool:
-        for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
-            m = sigalg.mac(self.key, sigalg.hash_alg)
-            m.update(data)
-            candidate_signature = m.finalize()
-            if signature == candidate_signature:
-                return True
-
-        return False
 
     def encrypt(
         self,

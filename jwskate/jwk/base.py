@@ -9,15 +9,25 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
-from jwskate.jwa import EncryptionAlg, KeyManagementAlg, SignatureAlg
+from jwskate.jwa import (
+    AesGmcKeyWrap,
+    AesKeyWrap,
+    AsymmetricAlg,
+    DirectKeyUse,
+    EcdhEs,
+    EcdhEs_AesKw,
+    EncryptionAlg,
+    KeyManagementAlg,
+    RsaKeyWrap,
+    SignatureAlg,
+    SymmetricAlg,
+)
 
-from .. import DirectKeyUse, EcdhEs
-from ..jwa.key_mgmt import AesGmcKeyWrap
-from ..jwa.key_mgmt.aeskw import AesKeyWrap
-from ..jwa.key_mgmt.ecdh import EcdhEs_AesKw
-from ..jwa.key_mgmt.rsa import RsaKeyWrap
-from .alg import select_alg
-from .exceptions import InvalidJwk, UnsupportedAlg
+from .alg import UnsupportedAlg, select_alg, select_algs
+
+
+class InvalidJwk(ValueError):
+    pass
 
 
 @dataclass
@@ -240,15 +250,23 @@ class Jwk(Dict[str, Any]):
             )
         )
 
-    def sign(self, data: bytes, alg: Optional[str]) -> BinaPy:
+    def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
         """
         Signs a data using this Jwk, and returns the signature.
-        This is implemented by subclasses.
         :param data: the data to sign
         :param alg: the alg to use (if this key doesn't have an `alg` parameter).
         :return: the generated signature.
         """
-        raise NotImplementedError  # pragma: no cover
+        sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
+        wrapper: SignatureAlg
+        if issubclass(sigalg, AsymmetricAlg):
+            wrapper = sigalg(self.to_cryptography_key())
+
+        elif issubclass(sigalg, SymmetricAlg):
+            wrapper = sigalg(self.key)
+
+        signature = wrapper.sign(data)
+        return BinaPy(signature)
 
     def verify(
         self,
@@ -259,13 +277,23 @@ class Jwk(Dict[str, Any]):
     ) -> bool:
         """
         Verifies a signature using this Jwk, and returns `True` if valid.
-        This is implemented by subclasses.
         :param data: the data to verify
         :param signature: the signature to verify
         :param alg: the alg to use to verify the signature (if this key doesn't have an `alg` parameter)
         :return: `True` if the signature matches, `False` otherwise
         """
-        raise NotImplementedError  # pragma: no cover
+        wrapper: SignatureAlg
+        for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
+            if issubclass(sigalg, AsymmetricAlg):
+                key = self.public_jwk().to_cryptography_key()
+                wrapper = sigalg(key)
+            elif issubclass(sigalg, SymmetricAlg):
+                key = self.key
+                wrapper = sigalg(key)
+            if wrapper.verify(data, signature):
+                return True
+
+        return False
 
     def encrypt(
         self,

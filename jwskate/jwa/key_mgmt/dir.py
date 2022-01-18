@@ -9,10 +9,6 @@ class DirectKeyUse(KeyManagementAlg, SymmetricAlg):
     name = "dir"
     description = "Direct use of a shared symmetric key as the CEK"
 
-    @classmethod
-    def check_key(cls, key: bytes) -> None:
-        pass
-
     def sender_key(self, aesalg: Type[SymmetricAlg], **headers: Any) -> BinaPy:
         aesalg.check_key(self.key)
         return BinaPy(self.key)

@@ -8,7 +8,13 @@ from ..base import KeyManagementAlg, SymmetricAlg
 
 
 class AesGmcKeyWrap(KeyManagementAlg, SymmetricAlg):
-    iv_size = 96
+    iv_size: int = 96
+    key_size: int
+
+    @classmethod
+    def check_key(cls, key: bytes) -> None:
+        if not isinstance(key, bytes) or len(key) * 8 != cls.key_size:
+            raise ValueError(f"Key must be {cls.key_size} bits")
 
     def wrap_key(self, plainkey: bytes, iv: bytes) -> Tuple[BinaPy, BinaPy]:
         if len(iv) * 8 != self.iv_size:

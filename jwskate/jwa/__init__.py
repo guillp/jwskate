@@ -16,14 +16,20 @@ from .encryption import (
     Aes256CbcHmacSha512,
 )
 from .key_mgmt import (
+    A128GCMKW,
     A128KW,
+    A192GCMKW,
     A192KW,
+    A256GCMKW,
     A256KW,
+    AesGmcKeyWrap,
+    AesKeyWrap,
     DirectKeyUse,
     EcdhEs,
     EcdhEs_A128KW,
     EcdhEs_A192KW,
     EcdhEs_A256KW,
+    EcdhEs_AesKw,
     Pbes2,
     Pbes2_HS256_A128KW,
     Pbes2_HS384_A192KW,
@@ -33,6 +39,7 @@ from .key_mgmt import (
     RsaEsOaepSha384,
     RsaEsOaepSha512,
     RsaEsPcks1v1_5,
+    RsaKeyWrap,
 )
 from .okp import X448, X25519, Ed448, Ed25519, OKPCurve
 from .signature import (
@@ -49,6 +56,7 @@ from .signature import (
     RS256,
     RS384,
     RS512,
+    EdDsa,
 )
 
 __all__ = [
@@ -64,6 +72,11 @@ __all__ = [
     "Aes128CbcHmacSha256",
     "Aes192CbcHmacSha384",
     "Aes256CbcHmacSha512",
+    "AesGmcKeyWrap",
+    "A128GCMKW",
+    "A192GCMKW",
+    "A256GCMKW",
+    "AesKeyWrap",
     "A128GCM",
     "A192GCM",
     "A256GCM",
@@ -72,10 +85,12 @@ __all__ = [
     "A256KW",
     "DirectKeyUse",
     "EcdhEs",
+    "EcdhEs_AesKw",
     "Pbes2",
     "Pbes2_HS256_A128KW",
     "Pbes2_HS384_A192KW",
     "Pbes2_HS512_A256KW",
+    "RsaKeyWrap",
     "RsaEsOaep",
     "RsaEsOaepSha256",
     "RsaEsOaepSha384",
@@ -84,6 +99,7 @@ __all__ = [
     "HS256",
     "HS384",
     "HS512",
+    "EdDsa",
     "ES256",
     "ES256K",
     "ES384",

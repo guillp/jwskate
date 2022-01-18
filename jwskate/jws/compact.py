@@ -110,6 +110,13 @@ class JwsCompact(BaseToken):
         """
         return b".".join(self.value.split(b".", 2)[:2])
 
+    @property
+    def alg(self) -> str:
+        alg = self.get_header("alg")
+        if alg is None or not isinstance(alg, str):
+            raise KeyError("This JWE doesn't have a valid 'alg' header")
+        return alg
+
     def verify_signature(
         self,
         jwk: Union[Jwk, Dict[str, Any]],

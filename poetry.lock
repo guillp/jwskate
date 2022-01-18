@@ -284,7 +284,7 @@ dev = ["twine", "markdown", "flake8", "wheel"]
 
 [[package]]
 name = "identify"
-version = "2.4.2"
+version = "2.4.4"
 description = "File identification library for Python"
 category = "dev"
 optional = false
@@ -506,7 +506,7 @@ test = ["pytest (==6.2.4)", "pytest-cov (==2.12.1)"]
 
 [[package]]
 name = "mkdocs-material"
-version = "8.1.5"
+version = "8.1.7"
 description = "A Material Design theme for MkDocs"
 category = "dev"
 optional = false
@@ -1043,7 +1043,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "types-cryptography"
-version = "3.3.12"
+version = "3.3.14"
 description = "Typing stubs for cryptography"
 category = "dev"
 optional = false
@@ -1055,7 +1055,7 @@ types-ipaddress = "*"
 
 [[package]]
 name = "types-enum34"
-version = "1.1.2"
+version = "1.1.3"
 description = "Typing stubs for enum34"
 category = "dev"
 optional = false
@@ -1063,7 +1063,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-ipaddress"
-version = "1.0.2"
+version = "1.0.3"
 description = "Typing stubs for ipaddress"
 category = "dev"
 optional = false
@@ -1071,7 +1071,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-requests"
-version = "2.27.5"
+version = "2.27.7"
 description = "Typing stubs for requests"
 category = "dev"
 optional = false
@@ -1082,7 +1082,7 @@ types-urllib3 = "<1.27"
 
 [[package]]
 name = "types-urllib3"
-version = "1.26.3"
+version = "1.26.7"
 description = "Typing stubs for urllib3"
 category = "dev"
 optional = false
@@ -1171,7 +1171,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.2,<4.0"
-content-hash = "c3380899110f2e323c665326a0215992f98082e7d658e19b4b29ed2366ea3a5d"
+content-hash = "4a86f16ef94a92a99850156050091784473afd78d029285f145d68ebe3e32f6f"
 
 [metadata.files]
 astunparse = [
@@ -1381,8 +1381,8 @@ ghp-import = [
     {file = "ghp_import-2.0.2-py3-none-any.whl", hash = "sha256:5f8962b30b20652cdffa9c5a9812f7de6bcb56ec475acac579807719bf242c46"},
 ]
 identify = [
-    {file = "identify-2.4.2-py2.py3-none-any.whl", hash = "sha256:67c1e66225870dce721228176637a8ef965e8dd58450bcc7592249d0dfc4da6c"},
-    {file = "identify-2.4.2.tar.gz", hash = "sha256:93e8ec965e888f2212aa5c24b2b662f4832c39acb1d7196a70ea45acb626a05e"},
+    {file = "identify-2.4.4-py2.py3-none-any.whl", hash = "sha256:aa68609c7454dbcaae60a01ff6b8df1de9b39fe6e50b1f6107ec81dcda624aa6"},
+    {file = "identify-2.4.4.tar.gz", hash = "sha256:6b4b5031f69c48bf93a646b90de9b381c6b5f560df4cbe0ed3cf7650ae741e4d"},
 ]
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
@@ -1519,8 +1519,8 @@ mkdocs-include-markdown-plugin = [
     {file = "mkdocs_include_markdown_plugin-3.2.3.tar.gz", hash = "sha256:64dd8c408a1b5b7422d4a5a826c434e5372af2fb7bd244dd5c87e09ff8f13302"},
 ]
 mkdocs-material = [
-    {file = "mkdocs-material-8.1.5.tar.gz", hash = "sha256:cab1fc730d72fd17ae59d9c59361b7161f8ffc3e8d40d7156b756d6492f6d6e8"},
-    {file = "mkdocs_material-8.1.5-py2.py3-none-any.whl", hash = "sha256:98dd282d81129a99b540cd56769d6879367e1096cf5a0a89b46279d8fba9accb"},
+    {file = "mkdocs-material-8.1.7.tar.gz", hash = "sha256:16a50e3f08f1e41bdc3115a00045d174e7fd8219c26917d0d0b48b2cc9d5a18f"},
+    {file = "mkdocs_material-8.1.7-py2.py3-none-any.whl", hash = "sha256:71bcac6795b22dcf8bab8b9ad3fe462242c4cd05d28398281902425401f23462"},
 ]
 mkdocs-material-extensions = [
     {file = "mkdocs-material-extensions-1.0.3.tar.gz", hash = "sha256:bfd24dfdef7b41c312ede42648f9eb83476ea168ec163b613f9abd12bbfddba2"},
@@ -1799,24 +1799,24 @@ typed-ast = [
     {file = "typed_ast-1.5.1.tar.gz", hash = "sha256:484137cab8ecf47e137260daa20bafbba5f4e3ec7fda1c1e69ab299b75fa81c5"},
 ]
 types-cryptography = [
-    {file = "types-cryptography-3.3.12.tar.gz", hash = "sha256:aab189d3a63453fba48a9e5937f354ed8d4d2151c0aef44dc813cdcce631f375"},
-    {file = "types_cryptography-3.3.12-py3-none-any.whl", hash = "sha256:1a81e18c2456f996d10b2410d16fbdc6f19653131e4ce0e09978015e9207c476"},
+    {file = "types-cryptography-3.3.14.tar.gz", hash = "sha256:be07857ab3e52f254bf5559f8019d85b2200391c3e1f008b98f26ebedac027a8"},
+    {file = "types_cryptography-3.3.14-py3-none-any.whl", hash = "sha256:c90ec0031c3d5262660990b62d9ec076bf5ed55eebfbe0011a53778e8aa62b9d"},
 ]
 types-enum34 = [
-    {file = "types-enum34-1.1.2.tar.gz", hash = "sha256:22a08eacf89a1b71b2b770321b6940abe12afd6214c12917c4f119c935ff732a"},
-    {file = "types_enum34-1.1.2-py3-none-any.whl", hash = "sha256:a1e1dcb80ae9d5a86c69ac7fcd65aec529541faaedffb3b2c840b0cbed8fbd61"},
+    {file = "types-enum34-1.1.3.tar.gz", hash = "sha256:043691f4f1a9803aa1c9a6b2d6b73999110adb0967e3996ad108b3895457839e"},
+    {file = "types_enum34-1.1.3-py3-none-any.whl", hash = "sha256:5092385397ad49225fd8e416cdd45791204d9f67802d4a4495202249825d677f"},
 ]
 types-ipaddress = [
-    {file = "types-ipaddress-1.0.2.tar.gz", hash = "sha256:b3f29a5e1dabab9ec00c75654b53b07251f731d57295097c72c864524a31034d"},
-    {file = "types_ipaddress-1.0.2-py3-none-any.whl", hash = "sha256:cb5eb3ad21acea538a1b404bbe2c43a7ba918e56d94c7399730cfece01b0a947"},
+    {file = "types-ipaddress-1.0.3.tar.gz", hash = "sha256:106edb640ba7fc7b6d1eb3fe6bca0f925785311418f61eff6a4334ba83207b42"},
+    {file = "types_ipaddress-1.0.3-py3-none-any.whl", hash = "sha256:a88c87535ede87f9ccabe40e390e3c8985bf7717fe8c4d5d752b00c3491b14fe"},
 ]
 types-requests = [
-    {file = "types-requests-2.27.5.tar.gz", hash = "sha256:a67dc1a8512312b8cb89f3ba95f9a0e69ef3436ae77c9bd4f328cd88f17adda2"},
-    {file = "types_requests-2.27.5-py3-none-any.whl", hash = "sha256:9c9390b18b222956155af6678570f452edafa3bb94bd5a4efe67da1105aa128c"},
+    {file = "types-requests-2.27.7.tar.gz", hash = "sha256:f38bd488528cdcbce5b01dc953972f3cead0d060cfd9ee35b363066c25bab13c"},
+    {file = "types_requests-2.27.7-py3-none-any.whl", hash = "sha256:2e0e100dd489f83870d4f61949d3a7eae4821e7bfbf46c57e463c38f92d473d4"},
 ]
 types-urllib3 = [
-    {file = "types-urllib3-1.26.3.tar.gz", hash = "sha256:e0c57152d7efc408a877adfc9073316dcd3e3ffb39962e90544f7597696c0d7c"},
-    {file = "types_urllib3-1.26.3-py3-none-any.whl", hash = "sha256:580c784925d5902d5fb3b67c0c1019b3d20b8f2d54050f0bb07862d52b93ad03"},
+    {file = "types-urllib3-1.26.7.tar.gz", hash = "sha256:cfd1fbbe4ba9a605ed148294008aac8a7b8b7472651d1cc357d507ae5962e3d2"},
+    {file = "types_urllib3-1.26.7-py3-none-any.whl", hash = "sha256:3adcf2cb5981809091dbff456e6999fe55f201652d8c360f99997de5ac2f556e"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.0.1-py3-none-any.whl", hash = "sha256:7f001e5ac290a0c0401508864c7ec868be4e701886d5b573a9528ed3973d9d3b"},

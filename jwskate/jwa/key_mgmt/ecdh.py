@@ -4,7 +4,7 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 
-from ..base import AsymmetricAlg, KeyManagementAlg, SymmetricAlg
+from ..base import AsymmetricAlg, KeyManagementAlg
 from .aeskw import A128KW, A192KW, A256KW, AesKeyWrap
 
 

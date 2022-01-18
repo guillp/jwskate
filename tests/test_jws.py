@@ -1,7 +1,7 @@
 import pytest
 from binapy import BinaPy
 
-from jwskate import P_521, ECJwk, Jwk, JwsCompact, RSAJwk, SymmetricJwk
+from jwskate import P_521, ECJwk, Jwk, JwsCompact, OKPJwk, RSAJwk, SymmetricJwk
 
 
 def test_jws_compact(private_jwk: Jwk) -> None:
@@ -65,6 +65,13 @@ RSA_PRIVATE_KEY = {
     "ZBKCQsMf3HaEGBjTVJs_jcK8-TRXvaKe-7ZMaQj8VfBdYkssbu0NKDDh"
     "jJ-GtiseaDVWt7dcH0cfwxgFUHpQh7FoCrjFJ6h6ZEpMF6xmujs4qMpP"
     "z8aaI4",
+}
+
+OKP_ED25519_PRIVATE_KEY = {
+    "kty": "OKP",
+    "crv": "Ed25519",
+    "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
+    "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
 }
 
 SYMMETRIC_SIGNATURE_KEY = {
@@ -152,6 +159,24 @@ def rsa_private_jwk() -> Jwk:
     return jwk
 
 
+@pytest.fixture(scope="module")
+def okp_ed25519_signature_jwk() -> Jwk:
+    jwk = Jwk(OKP_ED25519_PRIVATE_KEY)
+    assert isinstance(jwk, OKPJwk)
+    assert jwk.is_private
+    assert jwk.kty == "OKP"
+    assert (
+        jwk.private_key.hex()
+        == "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60"
+    )
+    assert (
+        jwk.public_key.hex()
+        == "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+    )
+    assert jwk.thumbprint() == "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k"
+    return jwk
+
+
 @pytest.fixture(scope="session")
 def symmetric_signature_jwk() -> Jwk:
     """[https://datatracker.ietf.org/doc/html/rfc7520#section-3.5]"""
@@ -194,6 +219,7 @@ def signature_payload() -> bytes:
         "PS256",
         "PS384",
         "PS512",
+        "EdDSA",
     ]
 )
 def signature_alg(request: pytest.FixtureRequest) -> str:
@@ -207,18 +233,19 @@ def signature_jwk(
     ec_p256_private_jwk: Jwk,
     ec_p384_private_jwk: Jwk,
     ec_p521_private_jwk: Jwk,
+    okp_ed25519_signature_jwk: Jwk,
     symmetric_signature_jwk: Jwk,
 ) -> Jwk:
-    if signature_alg in rsa_private_jwk.supported_signing_algorithms():
-        return rsa_private_jwk
-    if signature_alg in ec_p521_private_jwk.supported_signing_algorithms():
-        return ec_p521_private_jwk
-    if signature_alg in ec_p384_private_jwk.supported_signing_algorithms():
-        return ec_p384_private_jwk
-    if signature_alg in ec_p256_private_jwk.supported_signing_algorithms():
-        return ec_p256_private_jwk
-    if signature_alg in symmetric_signature_jwk.supported_signing_algorithms():
-        return symmetric_signature_jwk
+    for key in (
+        rsa_private_jwk,
+        ec_p521_private_jwk,
+        ec_p384_private_jwk,
+        ec_p256_private_jwk,
+        okp_ed25519_signature_jwk,
+        symmetric_signature_jwk,
+    ):
+        if signature_alg in key.supported_signing_algorithms():
+            return key
 
     pytest.skip(f"No key supports this signature alg: {signature_alg}")
 

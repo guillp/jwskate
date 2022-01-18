@@ -1,7 +1,7 @@
 from typing import Any, Dict, Iterable, List, Optional, Union
 
+from .alg import UnsupportedAlg
 from .base import Jwk
-from .exceptions import UnsupportedAlg
 
 
 class JwkSet(Dict[str, Any]):

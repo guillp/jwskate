@@ -3,7 +3,10 @@ from typing import Iterable, List, Mapping, Optional, Type, TypeVar
 
 from jwskate.jwa import Alg
 
-from .exceptions import UnsupportedAlg
+
+class UnsupportedAlg(ValueError):
+    pass
+
 
 T = TypeVar("T", bound=Type[Alg])
 
@@ -75,7 +78,7 @@ def select_algs(
                 "This key has an 'alg' parameter, you should use that alg for each operation."
             )
 
-    possible_algs: List[str]
+    possible_algs: List[str] = []
     if alg:
         possible_algs = [alg]
     elif algs:

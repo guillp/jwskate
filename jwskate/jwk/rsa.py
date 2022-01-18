@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Optional, Union
 
 from binapy import BinaPy
-from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 from jwskate.jwa import (
     PS256,
@@ -18,18 +17,11 @@ from jwskate.jwa import (
     RsaEsOaepSha384,
     RsaEsOaepSha512,
     RsaEsPcks1v1_5,
-    SignatureAlg,
 )
 
-from .alg import select_alg, select_algs
+from .alg import select_alg
 from .base import Jwk, JwkParameter
 from .symetric import SymmetricJwk
-
-
-@dataclass
-class RSASignatureAlg(SignatureAlg):
-    padding_alg: padding.AsymmetricPadding
-    min_key_size: Optional[int]
 
 
 class RSAJwk(Jwk):
@@ -122,7 +114,7 @@ class RSAJwk(Jwk):
             return rsa.RSAPublicNumbers(e=self.exponent, n=self.modulus).public_key()
 
     @classmethod
-    def public(cls, n: int, e: int, **params: str) -> RSAJwk:
+    def public(cls, n: int, e: int, **params: Any) -> RSAJwk:
         """
         Initialize a Public RsaJwk from a modulus and an exponent.
         :param n: the modulus
@@ -150,7 +142,7 @@ class RSAJwk(Jwk):
         dp: Optional[int] = None,
         dq: Optional[int] = None,
         qi: Optional[int] = None,
-        **params: str,
+        **params: Any,
     ) -> RSAJwk:
         """
         Initializes a Private RsaJwk from its required parameters.
@@ -275,28 +267,6 @@ class RSAJwk(Jwk):
         :return: the first CRT coefficient (from parameter `qi`)
         """
         return BinaPy(self.qi).decode_from("b64u").to_int()
-
-    def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
-        sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
-        wrapper = sigalg(self.to_cryptography_key())
-        signature = wrapper.sign(data)
-        return signature
-
-    def verify(
-        self,
-        data: bytes,
-        signature: bytes,
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
-    ) -> bool:
-        public_key = self.public_jwk().to_cryptography_key()
-
-        for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
-            wrapper = sigalg(public_key)
-            if wrapper.verify(data, signature):
-                return True
-
-        return False
 
     def wrap_key(self, plainkey: bytes, alg: Optional[str] = None) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Mapping, Optional, Union
+from typing import Any, List, Mapping, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import asymmetric
@@ -21,11 +21,10 @@ from jwskate.jwa import (
     secp256k1,
 )
 
-from .alg import select_alg, select_algs
 from .base import Jwk, JwkParameter
 
 
-class UnsupportedCurve(KeyError):
+class UnsupportedEllipticCurve(KeyError):
     pass
 
 
@@ -65,7 +64,7 @@ class ECJwk(Jwk):
     def get_curve(cls, crv: str) -> ECCurve:
         curve = cls.CURVES.get(crv)
         if curve is None:
-            raise UnsupportedCurve(crv)
+            raise UnsupportedEllipticCurve(crv)
         return curve
 
     @classmethod
@@ -90,7 +89,7 @@ class ECJwk(Jwk):
         )
 
     @classmethod
-    def private(cls, crv: str, x: int, y: int, d: int, **params: str) -> "ECJwk":
+    def private(cls, crv: str, x: int, y: int, d: int, **params: Any) -> "ECJwk":
         """
         Initialize a private ECJwk from its private parameters.
         :param crv: the curve to use
@@ -244,22 +243,3 @@ class ECJwk(Jwk):
 
     def supported_encryption_algorithms(self) -> List[str]:
         return list(self.ENCRYPTION_ALGORITHMS)
-
-    def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
-        sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
-        wrapper = sigalg(self.to_cryptography_key())
-        return BinaPy(wrapper.sign(data))
-
-    def verify(
-        self,
-        data: bytes,
-        signature: bytes,
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
-    ) -> bool:
-        public_key = self.public_jwk().to_cryptography_key()
-        for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
-            if sigalg(public_key).verify(data, signature):
-                return True
-
-        return False

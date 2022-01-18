@@ -5,6 +5,13 @@ from ..base import KeyManagementAlg, SymmetricAlg
 
 
 class AesKeyWrap(KeyManagementAlg, SymmetricAlg):
+    key_size: int
+
+    @classmethod
+    def check_key(cls, key: bytes) -> None:
+        if not isinstance(key, bytes) or len(key) * 8 != cls.key_size:
+            raise ValueError(f"Key must be {cls.key_size} bits")
+
     def wrap_key(self, plainkey: bytes) -> BinaPy:
         return BinaPy(keywrap.aes_key_wrap(self.key, plainkey))
 

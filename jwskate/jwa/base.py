@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import Generic, Iterator, Optional, Type, TypeVar, Union
+from typing import Generic, Iterator, Optional, Tuple, Type, TypeVar, Union
 
 from binapy import BinaPy
 
@@ -13,18 +13,13 @@ class Alg:
 
 
 class SymmetricAlg(Alg):
-    key_size: int
-
     def __init__(self, key: bytes):
         self.check_key(key)
         self.key = key
 
     @classmethod
     def check_key(cls, key: bytes) -> None:
-        if len(key) * 8 != cls.key_size:
-            raise ValueError(
-                f"This key size of {len(key) * 8} bits doesn't match the expected keysize of {cls.key_size} bits"
-            )
+        pass
 
     @classmethod
     def supports_key(cls, key: bytes) -> bool:
@@ -48,8 +43,8 @@ class PublicKeyRequired(AttributeError):
 
 
 class AsymmetricAlg(Generic[Kpriv, Kpub], Alg):
-    private_key_class: Type[Kpriv]
-    public_key_class: Type[Kpub]
+    private_key_class: Union[Type[Kpriv], Tuple[Type[Kpriv], ...]]
+    public_key_class: Union[Type[Kpub], Tuple[Type[Kpub], ...]]
 
     use_epk: bool = False
 
@@ -73,13 +68,13 @@ class AsymmetricAlg(Generic[Kpriv, Kpub], Alg):
     def private_key_required(self) -> Iterator[Kpriv]:
         if not isinstance(self.key, self.private_key_class):
             raise PrivateKeyRequired()
-        yield self.key
+        yield self.key  # type: ignore
 
     @contextmanager
     def public_key_required(self) -> Iterator[Kpub]:
         if not isinstance(self.key, self.public_key_class):
             raise PublicKeyRequired()
-        yield self.key
+        yield self.key  # type: ignore
 
     def generate_ephemeral_key(self) -> Kpriv:
         ...
@@ -94,8 +89,16 @@ class SignatureAlg(Alg):
 
 
 class EncryptionAlg(SymmetricAlg):
+    key_size: int
     tag_size: int
     iv_size: int
+
+    @classmethod
+    def check_key(cls, key: bytes) -> None:
+        if cls.key_size is not None and len(key) * 8 != cls.key_size:
+            raise ValueError(
+                f"This key size of {len(key) * 8} bits doesn't match the expected keysize of {cls.key_size} bits"
+            )
 
     def encrypt(self, iv: bytes, plaintext: bytes, aad: Optional[bytes]) -> BinaPy:
         ...

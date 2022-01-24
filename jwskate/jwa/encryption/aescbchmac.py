@@ -5,10 +5,10 @@ from cryptography import exceptions
 from cryptography.hazmat.primitives import ciphers, constant_time, hashes, hmac, padding
 from cryptography.hazmat.primitives.ciphers import algorithms, modes
 
-from ..base import EncryptionAlg
+from ..base import AESAlg
 
 
-class AesCbcHmacSha2(EncryptionAlg):
+class AesCbcHmacSha2(AESAlg):
     mac_key_size: int
     aes_key_size: int
     iv_size: int = 16

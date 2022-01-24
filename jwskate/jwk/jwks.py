@@ -1,10 +1,10 @@
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 from .alg import UnsupportedAlg
-from .base import Jwk
+from .base import BaseJsonDict, Jwk
 
 
-class JwkSet(Dict[str, Any]):
+class JwkSet(BaseJsonDict):
     """
     A set of JWK keys, with methods for easy management of keys.
     A JwkSet is a dict subclass, so you can do anything with a JwkSet that you can do with a dict.

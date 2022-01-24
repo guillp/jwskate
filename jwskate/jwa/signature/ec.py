@@ -3,7 +3,7 @@ from cryptography import exceptions
 from cryptography.hazmat.primitives import asymmetric, hashes
 
 from ..base import AsymmetricAlg, SignatureAlg
-from ..ec import P_256, P_384, P_521, ECCurve, secp256k1
+from ..ec import P_256, P_384, P_521, EllipticCurve, secp256k1
 
 
 class ECSignatureAlg(
@@ -12,7 +12,7 @@ class ECSignatureAlg(
     ],
     SignatureAlg,
 ):
-    curve: ECCurve
+    curve: EllipticCurve
     hashing_alg: hashes.HashAlgorithm
     public_key_class = asymmetric.ec.EllipticCurvePublicKey
     private_key_class = asymmetric.ec.EllipticCurvePrivateKey

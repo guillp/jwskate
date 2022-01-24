@@ -3,20 +3,32 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
 from jwskate.jwa import (
+    AESAlg,
     AesGmcKeyWrap,
     AesKeyWrap,
     AsymmetricAlg,
     DirectKeyUse,
     EcdhEs,
     EcdhEs_AesKw,
-    EncryptionAlg,
     KeyManagementAlg,
     RsaKeyWrap,
     SignatureAlg,
@@ -24,6 +36,9 @@ from jwskate.jwa import (
 )
 
 from .alg import UnsupportedAlg, select_alg, select_algs
+
+if TYPE_CHECKING:
+    from .jwks import JwkSet
 
 
 class InvalidJwk(ValueError):
@@ -38,7 +53,19 @@ class JwkParameter:
     kind: str
 
 
-class Jwk(Dict[str, Any]):
+D = TypeVar("D", bound="BaseJsonDict")
+
+
+class BaseJsonDict(Dict[str, Any]):
+    @classmethod
+    def from_json(cls: Type[D], j: str) -> D:
+        return cls(json.loads(j))
+
+    def to_json(self, *args: Any, **kwargs: Any) -> str:
+        return json.dumps(self, *args, **kwargs)
+
+
+class Jwk(BaseJsonDict):
     """
     Represents a Json Web Key (JWK), as specified in RFC7517.
     A JWK is a JSON object that represents a cryptographic key.  The members of the object
@@ -60,7 +87,7 @@ class Jwk(Dict[str, Any]):
 
     SIGNATURE_ALGORITHMS: Mapping[str, Type[SignatureAlg]] = {}
     KEY_MANAGEMENT_ALGORITHMS: Mapping[str, Type[KeyManagementAlg]] = {}
-    ENCRYPTION_ALGORITHMS: Mapping[str, Type[EncryptionAlg]] = {}
+    ENCRYPTION_ALGORITHMS: Mapping[str, Type[AESAlg]] = {}
 
     def __init_subclass__(cls) -> None:
         """
@@ -249,6 +276,15 @@ class Jwk(Dict[str, Any]):
                 **params,
             )
         )
+
+    def as_jwks(self) -> JwkSet:
+        """
+        Return a JwkSet containing this single key.
+        :return: a JwkSet
+        """
+        from .jwks import JwkSet
+
+        return JwkSet(keys=(self,))
 
     def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
         """

@@ -1,12 +1,19 @@
+"""
+This module implements the Json Web Algorithms as defined in RFC7518.
+
+Each algorithm is represented as a wrapper around a symmetric or asymmetric key, and implements the cryptographic
+operations as methods. The cryptographic operations themselves are delegated to `cryptography`.
+"""
+
 from .base import (
+    AESAlg,
     Alg,
     AsymmetricAlg,
-    EncryptionAlg,
     KeyManagementAlg,
     SignatureAlg,
     SymmetricAlg,
 )
-from .ec import P_256, P_384, P_521, ECCurve, secp256k1
+from .ec import P_256, P_384, P_521, EllipticCurve, secp256k1
 from .encryption import (
     A128GCM,
     A192GCM,
@@ -61,13 +68,15 @@ from .signature import (
 
 __all__ = [
     "Alg",
-    "EncryptionAlg",
+    "AsymmetricAlg",
+    "SymmetricAlg",
+    "AESAlg",
     "KeyManagementAlg",
     "SignatureAlg",
     "P_256",
     "P_384",
     "P_521",
-    "ECCurve",
+    "EllipticCurve",
     "secp256k1",
     "Aes128CbcHmacSha256",
     "Aes192CbcHmacSha384",

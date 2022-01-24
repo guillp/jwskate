@@ -18,6 +18,8 @@ class RSASigAlg(
     public_key_class = asymmetric.rsa.RSAPublicKey
 
     def sign(self, data: bytes) -> BinaPy:
+        if self.read_only:
+            raise NotImplementedError
         with self.private_key_required() as key:
             return BinaPy(key.sign(data, self.padding_alg, self.hashing_alg))
 
@@ -72,3 +74,10 @@ class PS512(RSASigAlg):
     description = "RSASSA-PSS using SHA-512 and MGF1 with SHA-512"
     hashing_alg = hashes.SHA512()
     padding_alg = padding.PSS(mgf=padding.MGF1(hashes.SHA512()), salt_length=512 // 8)
+
+
+class RS1(RSASigAlg):
+    name = "RS1"
+    description = "RSASSA-PKCS1-v1_5 with SHA-1"
+    hashing_alg = hashes.SHA1()
+    read_only = True

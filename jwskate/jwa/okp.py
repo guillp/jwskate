@@ -1,3 +1,7 @@
+"""
+This module contains classes that describe CFRG Elliptic Curve Diffie-Hellman algorithms as specified in RFC8037.
+"""
+
 from dataclasses import dataclass
 from typing import Callable, Protocol, Tuple
 

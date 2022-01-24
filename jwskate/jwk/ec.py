@@ -13,11 +13,11 @@ from jwskate.jwa import (
     P_256,
     P_384,
     P_521,
-    ECCurve,
     EcdhEs,
     EcdhEs_A128KW,
     EcdhEs_A192KW,
     EcdhEs_A256KW,
+    EllipticCurve,
     secp256k1,
 )
 
@@ -48,7 +48,7 @@ class ECJwk(Jwk):
         ),
     }
 
-    CURVES: Mapping[str, ECCurve] = {
+    CURVES: Mapping[str, EllipticCurve] = {
         curve.name: curve for curve in [P_256, P_384, P_521, secp256k1]
     }
 
@@ -61,7 +61,7 @@ class ECJwk(Jwk):
     }
 
     @classmethod
-    def get_curve(cls, crv: str) -> ECCurve:
+    def get_curve(cls, crv: str) -> EllipticCurve:
         curve = cls.CURVES.get(crv)
         if curve is None:
             raise UnsupportedEllipticCurve(crv)
@@ -202,7 +202,7 @@ class ECJwk(Jwk):
         )
 
     @property
-    def curve(self) -> ECCurve:
+    def curve(self) -> EllipticCurve:
         if not isinstance(self.crv, str) or self.crv not in self.CURVES:
             raise AttributeError("unsupported crv", self.crv)
         return self.CURVES[self.crv]

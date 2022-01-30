@@ -4,7 +4,7 @@ from typing import Any, Dict, Union
 class BaseToken:
     def __init__(self, value: Union[bytes, str], max_size: int = 16 * 1024):
         """
-        Initialize an Jwt from its string representation.
+        Initialize a Jwt from its string representation.
 
         :param value: the string or bytes representation of this Jwt
         :param max_size: if the JWT length is larger than this value, raise a `ValueError`. This is to avoid JSON deserialization vulnerabilities.

@@ -1,10 +1,16 @@
-from typing import Any, Dict, Iterable, Optional, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Tuple, Union
 
 from binapy import BinaPy
 
-from jwskate.jwk.alg import select_alg
 from jwskate.jwk.base import Jwk
 from jwskate.token import BaseToken
+
+from .signature import JwsSignature
+
+if TYPE_CHECKING:
+    from .json import JwsJsonFlat, JwsJsonGeneral
 
 
 class InvalidJws(ValueError):
@@ -13,7 +19,7 @@ class InvalidJws(ValueError):
 
 class JwsCompact(BaseToken):
     """
-    Represents a a Json Web Signature (JWS), using compact serialization, as defined in RFC7515.
+    Represents a Json Web Signature (JWS), using compact serialization, as defined in RFC7515.
     """
 
     def __init__(self, value: Union[bytes, str]):
@@ -23,12 +29,8 @@ class JwsCompact(BaseToken):
         """
         super().__init__(value)
 
-        if self.value.count(b".") != 2:
-            raise InvalidJws(
-                "A JWS must contain a header, a payload and a signature, separated by dots"
-            )
+        header, payload, signature = self.split(self.value)
 
-        header, payload, signature = self.value.split(b".")
         try:
             self.headers = BinaPy(header).decode_from("b64u").parse_from("json")
         except ValueError:
@@ -51,6 +53,16 @@ class JwsCompact(BaseToken):
             )
 
     @classmethod
+    def split(cls, value: bytes) -> Tuple[BinaPy, BinaPy, BinaPy]:
+        if value.count(b".") != 2:
+            raise InvalidJws(
+                "A JWS must contain a header, a payload and a signature, separated by dots"
+            )
+
+        header, payload, signature = value.split(b".")
+        return BinaPy(header), BinaPy(payload), BinaPy(signature)
+
+    @classmethod
     def sign(
         cls,
         payload: bytes,
@@ -68,30 +80,14 @@ class JwsCompact(BaseToken):
         """
         jwk = Jwk(jwk)
 
-        if not jwk.is_private:
-            raise ValueError("Signing requires a private JWK")
-
-        sigalg = select_alg(jwk.alg, alg, jwk.SIGNATURE_ALGORITHMS)
+        headers = dict(extra_headers or {}, alg=alg)
         kid = jwk.get("kid")
-
-        headers = dict(extra_headers or {}, alg=sigalg.name)
         if kid:
             headers["kid"] = kid
 
-        signed_part = cls.assemble_signed_part(headers, payload)
-        signature = jwk.sign(signed_part, alg=sigalg.name)
+        signed_part = JwsSignature.assemble_signed_part(headers, payload)
+        signature = jwk.sign(signed_part, alg=alg)
         return cls.from_parts(signed_part, signature)
-
-    @classmethod
-    def assemble_signed_part(
-        cls, headers: Dict[str, Any], payload: Union[bytes, str]
-    ) -> bytes:
-        return b".".join(
-            (
-                BinaPy.serialize_to("json", headers).encode_to("b64u"),
-                BinaPy(payload).encode_to("b64u"),
-            )
-        )
 
     @classmethod
     def from_parts(
@@ -131,3 +127,20 @@ class JwsCompact(BaseToken):
         """
         jwk = Jwk(jwk)
         return jwk.verify(self.signed_part, self.signature, alg, algs)
+
+    def flat_json(self, unprotected_header: Any = None) -> JwsJsonFlat:
+        from .json import JwsJsonFlat
+
+        protected, payload, signature = self.split(self.value)
+        content = {
+            "payload": payload.ascii(),
+            "protected": protected.ascii(),
+            "signature": signature.ascii(),
+        }
+        if unprotected_header is not None:
+            content["header"] = unprotected_header
+        return JwsJsonFlat(content)
+
+    def general_json(self) -> JwsJsonGeneral:
+        jws = self.flat_json()
+        return jws.generalize()

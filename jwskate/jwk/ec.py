@@ -33,7 +33,12 @@ class ECJwk(Jwk):
     Represent an Elliptic Curve Jwk, with `kty=EC`.
     """
 
-    kty = "EC"
+    KTY = "EC"
+
+    CRYPTOGRAPHY_KEY_CLASSES = (
+        asymmetric.ec.EllipticCurvePrivateKey,
+        asymmetric.ec.EllipticCurvePublicKey,
+    )
 
     PARAMS: Mapping[str, JwkParameter] = {
         "crv": JwkParameter("Curve", is_private=False, is_required=True, kind="name"),

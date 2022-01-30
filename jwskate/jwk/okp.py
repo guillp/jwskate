@@ -25,7 +25,14 @@ class OKPJwk(Jwk):
     Represent an OKP Jwk, with `kty=OKP`.
     """
 
-    kty = "OKP"
+    KTY = "OKP"
+
+    CRYPTOGRAPHY_KEY_CLASSES = (
+        ed25519.Ed25519PrivateKey,
+        ed25519.Ed25519PublicKey,
+        ed448.Ed448PrivateKey,
+        ed448.Ed448PublicKey,
+    )
 
     PARAMS = {
         "crv": JwkParameter("Curve", is_private=False, is_required=True, kind="name"),
@@ -120,6 +127,7 @@ class OKPJwk(Jwk):
     def private(cls, crv: str, x: bytes, d: bytes, **params: Any) -> OKPJwk:
         return cls(
             dict(
+                kty=cls.KTY,
                 crv=crv,
                 x=BinaPy(x).encode_to("b64u").decode(),
                 d=BinaPy(d).encode_to("b64u").decode(),

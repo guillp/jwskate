@@ -32,7 +32,8 @@ class SymmetricJwk(Jwk):
     Implement Symetric keys, with `kty=oct`.
     """
 
-    kty = "oct"
+    KTY = "oct"
+    CRYPTOGRAPHY_KEY_CLASSES = (bytes,)
 
     PARAMS = {
         "k": JwkParameter("Key Value", is_private=True, is_required=True, kind="b64u"),

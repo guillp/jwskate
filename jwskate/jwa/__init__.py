@@ -6,7 +6,7 @@ operations as methods. The cryptographic operations themselves are delegated to 
 """
 
 from .base import (
-    BaseAESAlg,
+    BaseAESEncryptionAlg,
     BaseAlg,
     BaseAsymmetricAlg,
     BaseKeyManagementAlg,
@@ -70,7 +70,7 @@ __all__ = [
     "BaseAlg",
     "BaseAsymmetricAlg",
     "BaseSymmetricAlg",
-    "BaseAESAlg",
+    "BaseAESEncryptionAlg",
     "BaseKeyManagementAlg",
     "BaseSignatureAlg",
     "P_256",

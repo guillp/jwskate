@@ -392,8 +392,6 @@ def encryption_alg(request: pytest.FixtureRequest) -> str:
 @pytest.fixture(
     scope="module",
     params=[
-        b"foo",
-        b"P@ssword1!",
         'pAvkcJv!$N8HtIuf3W@KaF&2Gv"EAD/BK[_FEoLIuvMS*aG0tm4,.?'.encode(),
     ],
 )

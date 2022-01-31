@@ -165,7 +165,7 @@ class BaseSignatureAlg(BaseAlg):
         raise NotImplementedError
 
 
-class BaseAESAlg(BaseSymmetricAlg):
+class BaseAESEncryptionAlg(BaseSymmetricAlg):
     """
     Base class for AES encryption algorithms.
     """
@@ -180,6 +180,22 @@ class BaseAESAlg(BaseSymmetricAlg):
             raise ValueError(
                 f"This key size of {len(key) * 8} bits doesn't match the expected keysize of {cls.key_size} bits"
             )
+
+    @classmethod
+    def generate_key(cls) -> BinaPy:
+        """
+        Generates a key of an appropriate size for this AES alg subclass.
+        :return: a random AES key.
+        """
+        return BinaPy.random_bits(cls.key_size)
+
+    @classmethod
+    def generate_iv(cls) -> BinaPy:
+        """
+        Generate an Initialisation Vector of the appropriate size.
+        :return: a random IV.
+        """
+        return BinaPy.random_bits(cls.iv_size)
 
     def encrypt(
         self, plaintext: bytes, iv: bytes, aad: Optional[bytes]

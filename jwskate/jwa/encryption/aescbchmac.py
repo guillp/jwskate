@@ -5,22 +5,22 @@ from cryptography import exceptions
 from cryptography.hazmat.primitives import ciphers, constant_time, hashes, hmac, padding
 from cryptography.hazmat.primitives.ciphers import algorithms, modes
 
-from ..base import BaseAESAlg
+from ..base import BaseAESEncryptionAlg
 
 
-class BaseAesCbcHmacSha2(BaseAESAlg):
+class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
     """
     Implements the family of AES-CBC with HMAC-SHA encryption algorithms.
     """
 
     mac_key_size: int
-    """Required key size for the Hash algorithm."""
+    """Required key size for the Hash algorithm, in bits."""
 
     aes_key_size: int
-    """Required key size for the AES algorithm."""
+    """Required key size for the AES algorithm, in bits."""
 
-    iv_size: int = 16
-    """Initialization Vector size for the AES algorithm."""
+    iv_size: int = 128
+    """Initialization Vector size for the AES algorithm, in bits."""
 
     hash_alg: hashes.HashAlgorithm
     """Hash algorithm to use."""
@@ -102,8 +102,8 @@ class Aes128CbcHmacSha256(BaseAesCbcHmacSha2):
     description = __doc__
     mac_key_size = 128
     aes_key_size = 128
-    hash_alg = hashes.SHA256()
     tag_size = 16
+    hash_alg = hashes.SHA256()
 
 
 class Aes192CbcHmacSha384(BaseAesCbcHmacSha2):
@@ -113,8 +113,8 @@ class Aes192CbcHmacSha384(BaseAesCbcHmacSha2):
     description = __doc__
     mac_key_size = 192
     aes_key_size = 192
-    hash_alg = hashes.SHA384()
     tag_size = 24
+    hash_alg = hashes.SHA384()
 
 
 class Aes256CbcHmacSha512(BaseAesCbcHmacSha2):
@@ -125,6 +125,5 @@ class Aes256CbcHmacSha512(BaseAesCbcHmacSha2):
     key_size = 512
     mac_key_size = 256
     aes_key_size = 256
-    iv_size = 16
     tag_size = 32
     hash_alg = hashes.SHA512()

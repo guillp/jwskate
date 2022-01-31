@@ -22,7 +22,7 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 
 from jwskate.jwa import (
-    BaseAESAlg,
+    BaseAESEncryptionAlg,
     BaseAesGcmKeyWrap,
     BaseAesKeyWrap,
     BaseAsymmetricAlg,
@@ -92,7 +92,7 @@ class Jwk(BaseJsonDict):
 
     SIGNATURE_ALGORITHMS: Mapping[str, Type[BaseSignatureAlg]] = {}
     KEY_MANAGEMENT_ALGORITHMS: Mapping[str, Type[BaseKeyManagementAlg]] = {}
-    ENCRYPTION_ALGORITHMS: Mapping[str, Type[BaseAESAlg]] = {}
+    ENCRYPTION_ALGORITHMS: Mapping[str, Type[BaseAESEncryptionAlg]] = {}
 
     def __init_subclass__(cls) -> None:
         """
@@ -420,68 +420,61 @@ class Jwk(BaseJsonDict):
         from jwskate import SymmetricJwk
 
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
+        encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
+
+        cek_headers: Dict[str, Any] = {}
         if issubclass(keyalg, RsaKeyWrap):
             rsa = keyalg(self.public_jwk().to_cryptography_key())
             if cek:
-                cek_jwk = SymmetricJwk.from_bytes(cek)
+                encalg.check_key(cek)
             else:
-                cek_jwk = SymmetricJwk.generate_for_alg(enc)
-                cek = cek_jwk.key
+                cek = encalg.generate_key()
             wrapped_cek = rsa.wrap_key(cek)
-            return cek_jwk, {}, wrapped_cek
         elif issubclass(keyalg, EcdhEs):
             ecdh: EcdhEs = keyalg(self.public_jwk().to_cryptography_key())
             epk = epk or Jwk.from_cryptography_key(ecdh.generate_ephemeral_key())
-            encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
+            cek_headers = {"epk": epk.public_jwk()}
             if isinstance(ecdh, BaseEcdhEs_AesKw):
                 if cek:
-                    cek_jwk = SymmetricJwk.from_bytes(cek)
+                    encalg.check_key(cek)
                 else:
-                    cek_jwk = SymmetricJwk.generate_for_alg(enc)
-                    cek = cek_jwk.key
+                    cek = encalg.generate_key()
                 wrapped_cek = ecdh.wrap_key_with_epk(
                     cek, epk.to_cryptography_key(), alg=alg, **headers
                 )
-                return cek_jwk, {"epk": epk.public_jwk()}, wrapped_cek
             else:
                 cek = ecdh.sender_key(
                     epk.to_cryptography_key(), encalg.name, encalg.key_size, **headers
                 )
-                return (
-                    SymmetricJwk.from_bytes(cek),
-                    {"epk": epk.public_jwk()},
-                    BinaPy(b""),
-                )
+                wrapped_cek = BinaPy(b"")
         elif issubclass(keyalg, BaseAesKeyWrap):
             aes: BaseAesKeyWrap = keyalg(self.to_cryptography_key())
             if cek:
-                cek_jwk = SymmetricJwk.from_bytes(cek, alg=keyalg.name)
+                encalg.check_key(cek)
             else:
-                cek_jwk = SymmetricJwk.generate_for_alg(enc)
-                cek = cek_jwk.key
+                cek = encalg.generate_key()
             wrapped_cek = aes.wrap_key(cek)
-            return cek_jwk, {}, wrapped_cek
         elif issubclass(keyalg, BaseAesGcmKeyWrap):
             aesgcm: BaseAesGcmKeyWrap = keyalg(self.to_cryptography_key())
             if cek:
-                cek_jwk = SymmetricJwk.from_bytes(cek, alg=keyalg.name)
+                encalg.check_key(cek)
             else:
-                cek_jwk = SymmetricJwk.generate_for_alg(enc)
-                cek = cek_jwk.key
+                cek = encalg.generate_key()
             iv = aesgcm.generate_iv()
             wrapped_cek, tag = aesgcm.wrap_key(cek, iv)
-            return (
-                cek_jwk,
-                {
-                    "iv": iv.encode_to("b64u").decode(),
-                    "tag": tag.encode_to("b64u").decode(),
-                },
-                wrapped_cek,
-            )
+            cek_headers = {
+                "iv": iv.encode_to("b64u").decode(),
+                "tag": tag.encode_to("b64u").decode(),
+            }
+
         elif issubclass(keyalg, DirectKeyUse):
-            return self, {}, BinaPy(b"")
+            dir = keyalg(self.key)
+            cek = dir.sender_key(encalg)
+            wrapped_cek = BinaPy(b"")
         else:
             raise UnsupportedAlg(f"Unsupported Key Management Alg {keyalg}")
+
+        return SymmetricJwk.from_bytes(cek), cek_headers, wrapped_cek
 
     def recipient_key(
         self, wrapped_cek: bytes, alg: str, enc: str, **headers: Any
@@ -489,18 +482,19 @@ class Jwk(BaseJsonDict):
         """
         For DH-based algs. As a token recipient, derive the same CEK that was used for encryption, based on the
         recipient private key and the sender ephemeral public key.
-        :param alg: the Key Management algorithm to use to produce the CEK
+        :param wrapped_cek: the wrapped cek
+        :param alg: the Key Management algorithm to use to unwrap the CEK
         :param enc: the encryption algorithm to use with the CEK
-        :param extra_headers: additional headers that may be used to produce the CEK
-        :return: the CEK
+        :param headers: additional headers that may be used to produce the CEK
+        :return: the clear-text CEK
         """
         from jwskate import SymmetricJwk
 
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
+        encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
         if issubclass(keyalg, RsaKeyWrap):
             rsa = keyalg(self.to_cryptography_key())
             cek = rsa.unwrap_key(wrapped_cek)
-            return SymmetricJwk.from_bytes(cek)
         elif issubclass(keyalg, EcdhEs):
             ecdh = keyalg(self.to_cryptography_key())
             epk = headers.get("epk")
@@ -517,11 +511,9 @@ class Jwk(BaseJsonDict):
                 cek = ecdh.recipient_key(
                     epk, alg=encalg.name, key_size=encalg.key_size, **headers
                 )
-            return SymmetricJwk.from_bytes(cek)
         elif issubclass(keyalg, BaseAesKeyWrap):
             aes = keyalg(self.to_cryptography_key())
             cek = aes.unwrap_key(wrapped_cek)
-            return SymmetricJwk.from_bytes(cek)
         elif issubclass(keyalg, BaseAesGcmKeyWrap):
             aesgcm = keyalg(self.to_cryptography_key())
             iv = headers.get("iv")
@@ -533,11 +525,13 @@ class Jwk(BaseJsonDict):
                 raise ValueError("No 'tag' in headers!")
             tag = BinaPy(tag).decode_from("b64u")
             cek = aesgcm.unwrap_key(wrapped_cek, tag, iv)
-            return SymmetricJwk.from_bytes(cek)
         elif issubclass(keyalg, DirectKeyUse):
-            return self
+            dir_ = keyalg(self.key)
+            cek = dir_.recipient_key(encalg)
         else:
             raise UnsupportedAlg(f"Unsupported Key Management Alg {keyalg}")
+
+        return SymmetricJwk.from_bytes(cek)
 
     @classmethod
     def from_cryptography_key(cls, cryptography_key: Any) -> Jwk:

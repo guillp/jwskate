@@ -1,4 +1,3 @@
-import secrets
 from typing import Any, List, Optional, Tuple, Union
 
 from binapy import BinaPy
@@ -88,7 +87,7 @@ class SymmetricJwk(Jwk):
         :param params: additional parameters for the returned Jwk
         :return: a SymmetricJwk with a random key
         """
-        key = secrets.token_bytes(size // 8)
+        key = BinaPy.random_bits(size)
         return cls.from_bytes(key, **params)
 
     @classmethod
@@ -126,7 +125,7 @@ class SymmetricJwk(Jwk):
         encalg = select_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
 
         if iv is None:
-            iv = secrets.token_bytes(encalg.iv_size)
+            iv = encalg.generate_iv()
 
         wrapper = encalg(self.key)
         ciphertext, tag = wrapper.encrypt(plaintext, iv, aad)

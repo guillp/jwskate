@@ -41,7 +41,7 @@ from .jwa import (
     Aes128CbcHmacSha256,
     Aes192CbcHmacSha384,
     Aes256CbcHmacSha512,
-    BaseAESAlg,
+    BaseAESEncryptionAlg,
     BaseAlg,
     BaseAsymmetricAlg,
     BaseEcdhEs_AesKw,

@@ -142,7 +142,8 @@ class JweCompact(BaseToken):
         self, jwk_or_password: Union[Jwk, Dict[str, Any], bytes, str]
     ) -> Jwk:
         if isinstance(jwk_or_password, (bytes, str)):
-            return self.unwrap_cek_with_password(jwk_or_password)
+            password = jwk_or_password
+            return self.unwrap_cek_with_password(password)
 
         jwk = Jwk(jwk_or_password)
         cek = jwk.recipient_key(self.wrapped_cek, **self.headers)

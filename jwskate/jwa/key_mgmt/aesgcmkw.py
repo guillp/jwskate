@@ -1,46 +1,63 @@
-import secrets
 from typing import Tuple
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives.ciphers import aead
 
-from ..base import BaseKeyManagementAlg, BaseSymmetricAlg
+from ..base import BaseAESEncryptionAlg, BaseKeyManagementAlg
+from ..encryption.aesgcm import BaseAESGCM
 
 
-class BaseAesGcmKeyWrap(BaseKeyManagementAlg, BaseSymmetricAlg):
-    iv_size: int = 96
+class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
+    """
+    Base class for AES-GCM Key wrapping algorithms.
+    """
+
     key_size: int
-
-    @classmethod
-    def check_key(cls, key: bytes) -> None:
-        if not isinstance(key, bytes) or len(key) * 8 != cls.key_size:
-            raise ValueError(f"Key must be {cls.key_size} bits")
+    """Required key size, in bits."""
+    tag_size: int = 16
+    """Authentication tag size, in bits."""
+    iv_size: int = 96
+    """Initialisation Vector size, in bits."""
 
     def wrap_key(self, plainkey: bytes, iv: bytes) -> Tuple[BinaPy, BinaPy]:
-        if len(iv) * 8 != self.iv_size:
-            raise ValueError("Invalid IV size, must be {self.iv_size} bits")
-        cipherkey, tag = BinaPy(
-            aead.AESGCM(self.key).encrypt(iv, plainkey, b"")
-        ).cut_at(-16)
-        return cipherkey, tag
+        """
+        Wrap a key using the given Initialisation Vector (`iv`).
+        :param plainkey: the plaintext key to wrap.
+        :param iv: the Initialisation Vector to use.
+        :return: a tuple (wrapped_key, authentication_tag).
+        """
+        return self.encrypt(plainkey, iv, b"")
 
     def unwrap_key(self, cipherkey: bytes, tag: bytes, iv: bytes) -> BinaPy:
-        return BinaPy(aead.AESGCM(self.key).decrypt(iv, cipherkey + tag, b""))
-
-    def generate_iv(self) -> BinaPy:
-        return BinaPy(secrets.token_bytes(self.iv_size // 8))
+        """
+        Unwrap a key and authenticates it with the authentication `tag`, using the given Initialisation Vector (`iv`).
+        :param cipherkey: the ciphered key.
+        :param tag: the authentication tag.
+        :param iv: the Initialisation Vector.
+        :return: the unwrapped key.
+        """
+        return self.decrypt(cipherkey, tag, iv, b"")
 
 
 class A128GCMKW(BaseAesGcmKeyWrap):
+    """Key wrapping with AES GCM using 128-bit key"""
+
     name = "A128GCMKW"
+    description = __doc__
     key_size = 128
 
 
 class A192GCMKW(BaseAesGcmKeyWrap):
+    """Key wrapping with AES GCM using 192-bit key"""
+
     name = "A192GCMKW"
+    description = __doc__
     key_size = 192
 
 
 class A256GCMKW(BaseAesGcmKeyWrap):
+    """Key wrapping with AES GCM using 256-bit key"""
+
     name = "A256GCMKW"
+    description = __doc__
     key_size = 256

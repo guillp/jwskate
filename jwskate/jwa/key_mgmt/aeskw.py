@@ -1,10 +1,10 @@
 from binapy import BinaPy
 from cryptography.hazmat.primitives import keywrap
 
-from ..base import KeyManagementAlg, SymmetricAlg
+from ..base import BaseKeyManagementAlg, BaseSymmetricAlg
 
 
-class AesKeyWrap(KeyManagementAlg, SymmetricAlg):
+class BaseAesKeyWrap(BaseKeyManagementAlg, BaseSymmetricAlg):
     key_size: int
 
     @classmethod
@@ -19,19 +19,19 @@ class AesKeyWrap(KeyManagementAlg, SymmetricAlg):
         return BinaPy(keywrap.aes_key_unwrap(self.key, cipherkey))
 
 
-class A128KW(AesKeyWrap):
+class A128KW(BaseAesKeyWrap):
     name = "A128KW"
     description = "AES Key Wrap with default initial value using 128-bit key"
     key_size = 128
 
 
-class A192KW(AesKeyWrap):
+class A192KW(BaseAesKeyWrap):
     name = "A192KW"
     description = "AES Key Wrap with default initial value using 192-bit key"
     key_size = 192
 
 
-class A256KW(AesKeyWrap):
+class A256KW(BaseAesKeyWrap):
     name = "A256KW"
     description = "AES Key Wrap with default initial value using 256-bit key"
     key_size = 256

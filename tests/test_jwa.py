@@ -69,8 +69,9 @@ def test_aes_128_hmac_sha256() -> None:
     cipher = Aes128CbcHmacSha256(key)
     assert cipher.aes_key == enc_key
     assert cipher.mac_key == mac_key
-    ciphertext_with_tag = cipher.encrypt(iv, plaintext, aad)
-    assert ciphertext_with_tag == ciphertext + tag
+    result_ciphertext, result_tag = cipher.encrypt(plaintext, iv, aad)
+    assert result_ciphertext == ciphertext
+    assert result_tag == tag
 
 
 def test_aes_192_hmac_sha384() -> None:
@@ -146,8 +147,9 @@ def test_aes_192_hmac_sha384() -> None:
     cipher = Aes192CbcHmacSha384(key)
     assert cipher.aes_key == enc_key
     assert cipher.mac_key == mac_key
-    ciphertext_with_tag = cipher.encrypt(iv, plaintext, aad)
-    assert ciphertext_with_tag == ciphertext + tag
+    result_ciphertext, result_tag = cipher.encrypt(plaintext, iv, aad)
+    assert result_ciphertext == ciphertext
+    assert result_tag == tag
 
 
 def test_ecdhes() -> None:

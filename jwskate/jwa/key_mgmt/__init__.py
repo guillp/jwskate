@@ -1,7 +1,7 @@
-from .aesgcm import A128GCMKW, A192GCMKW, A256GCMKW, AesGmcKeyWrap
-from .aeskw import A128KW, A192KW, A256KW, AesKeyWrap
+from .aesgcmkw import A128GCMKW, A192GCMKW, A256GCMKW, BaseAesGcmKeyWrap
+from .aeskw import A128KW, A192KW, A256KW, BaseAesKeyWrap
 from .dir import DirectKeyUse
-from .ecdh import EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW, EcdhEs_AesKw
+from .ecdh import BaseEcdhEs_AesKw, EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW
 from .pbes2 import Pbes2, Pbes2_HS256_A128KW, Pbes2_HS384_A192KW, Pbes2_HS512_A256KW
 from .rsa import (
     RsaEsOaep,
@@ -13,17 +13,17 @@ from .rsa import (
 )
 
 __all__ = [
-    "AesGmcKeyWrap",
     "A128GCMKW",
     "A192GCMKW",
     "A256GCMKW",
-    "AesKeyWrap",
+    "BaseAesGcmKeyWrap",
     "A128KW",
     "A192KW",
     "A256KW",
+    "BaseAesKeyWrap",
     "DirectKeyUse",
     "EcdhEs",
-    "EcdhEs_AesKw",
+    "BaseEcdhEs_AesKw",
     "EcdhEs_A128KW",
     "EcdhEs_A192KW",
     "EcdhEs_A256KW",

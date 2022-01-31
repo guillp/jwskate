@@ -3,10 +3,10 @@ from typing import Type
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes, hmac
 
-from ..base import SignatureAlg, SymmetricAlg
+from ..base import BaseSignatureAlg, BaseSymmetricAlg
 
 
-class HMACSigAlg(SymmetricAlg, SignatureAlg):
+class HMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
     mac: Type[hmac.HMAC] = hmac.HMAC
     hash_alg: hashes.HashAlgorithm
     min_key_size: int

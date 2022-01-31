@@ -60,6 +60,7 @@ class ECJwk(Jwk):
     SIGNATURE_ALGORITHMS = {
         sigalg.name: sigalg for sigalg in [ES256, ES384, ES512, ES256K]
     }
+
     KEY_MANAGEMENT_ALGORITHMS = {
         keyalg.name: keyalg
         for keyalg in [EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW]
@@ -82,13 +83,13 @@ class ECJwk(Jwk):
         :param params: additional parameters for the returned ECJwk
         :return: an ECJwk initialized with the supplied parameters
         """
-        coord_size = cls.CURVES[crv].coordinate_size
+        coord_size = cls.get_curve(crv).coordinate_size
         return cls(
             dict(
                 key="EC",
                 crv=crv,
-                x=BinaPy.from_int(x, coord_size).encode_to("b64u"),
-                y=BinaPy.from_int(y, coord_size).encode_to("b64u"),
+                x=BinaPy.from_int(x, length=coord_size).encode_to("b64u"),
+                y=BinaPy.from_int(y, length=coord_size).encode_to("b64u"),
                 **params,
             )
         )
@@ -104,7 +105,7 @@ class ECJwk(Jwk):
         :param params: additional parameters for the returned ECJwk
         :return: an ECJWk initialized with the supplied parameters
         """
-        coord_size = cls.CURVES[crv].coordinate_size
+        coord_size = cls.get_curve(crv).coordinate_size
         return cls(
             dict(
                 kty="EC",
@@ -126,37 +127,21 @@ class ECJwk(Jwk):
 
     @classmethod
     def from_cryptography_key(cls, key: Any) -> ECJwk:
+        curve = EllipticCurve.get_curve(key)
         if isinstance(key, asymmetric.ec.EllipticCurvePrivateKey):
-            priv = key.private_numbers()  # type: ignore[attr-defined]
-            pub = key.public_key().public_numbers()
-            try:
-                curve = next(
-                    c
-                    for c in cls.CURVES.values()
-                    if c.cryptography_curve.name == pub.curve.name
-                )
-            except StopIteration:
-                raise ValueError("Unsupported curve", pub.curve.name)
+            x, y, d = curve.get_parameters(key)
             return cls.private(
                 crv=curve.name,
-                x=pub.x,
-                y=pub.y,
-                d=priv.private_value,
+                x=x,
+                y=y,
+                d=d,
             )
         elif isinstance(key, asymmetric.ec.EllipticCurvePublicKey):
-            pub = key.public_numbers()
-            try:
-                curve = next(
-                    c
-                    for c in cls.CURVES.values()
-                    if c.cryptography_curve.name == pub.curve.name
-                )
-            except StopIteration:
-                raise ValueError("Unsupported curve", pub.curve.name)
+            x, y = curve.get_public_parameters(key)
             return cls.public(
                 crv=curve.name,
-                x=pub.x,
-                y=pub.y,
+                x=x,
+                y=y,
             )
         else:
             raise TypeError(
@@ -196,13 +181,12 @@ class ECJwk(Jwk):
         curve = cls.get_curve(crv)
         if curve is None:
             raise ValueError("Unsupported curve", crv)
-        key = asymmetric.ec.generate_private_key(curve.cryptography_curve)
-        pn = key.private_numbers()  # type: ignore
+        x, y, d = curve.generate()
         return cls.private(
             crv=crv,
-            x=pn.public_numbers.x,
-            y=pn.public_numbers.y,
-            d=pn.private_value,
+            x=x,
+            y=y,
+            d=d,
             **params,
         )
 

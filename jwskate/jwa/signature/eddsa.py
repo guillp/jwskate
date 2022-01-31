@@ -4,15 +4,15 @@ from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519
 
-from ..base import AsymmetricAlg, SignatureAlg
+from ..base import BaseAsymmetricAlg, BaseSignatureAlg
 
 
 class EdDsa(
-    AsymmetricAlg[
+    BaseAsymmetricAlg[
         Union[ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey],
         Union[ed25519.Ed25519PublicKey, ed448.Ed448PublicKey],
     ],
-    SignatureAlg,
+    BaseSignatureAlg,
 ):
 
     private_key_class = (ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey)

@@ -4,12 +4,12 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from ..base import AsymmetricAlg, KeyManagementAlg
+from ..base import BaseAsymmetricAlg, BaseKeyManagementAlg
 
 
 class RsaKeyWrap(
-    KeyManagementAlg,
-    AsymmetricAlg[asymmetric.rsa.RSAPrivateKey, asymmetric.rsa.RSAPublicKey],
+    BaseKeyManagementAlg,
+    BaseAsymmetricAlg[asymmetric.rsa.RSAPrivateKey, asymmetric.rsa.RSAPublicKey],
 ):
     padding: Any
 

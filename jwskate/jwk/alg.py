@@ -1,14 +1,14 @@
 import warnings
 from typing import Iterable, List, Mapping, Optional, Type, TypeVar
 
-from jwskate.jwa import Alg
+from jwskate.jwa import BaseAlg
 
 
 class UnsupportedAlg(ValueError):
     pass
 
 
-T = TypeVar("T", bound=Type[Alg])
+T = TypeVar("T", bound=Type[BaseAlg])
 
 
 def select_alg(

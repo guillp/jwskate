@@ -19,7 +19,7 @@ from jwskate.jwa import (
     Aes128CbcHmacSha256,
     Aes192CbcHmacSha384,
     Aes256CbcHmacSha512,
-    AesKeyWrap,
+    BaseAesKeyWrap,
     DirectKeyUse,
 )
 
@@ -129,11 +129,8 @@ class SymmetricJwk(Jwk):
             iv = secrets.token_bytes(encalg.iv_size)
 
         wrapper = encalg(self.key)
-        ciphertext_with_tag = wrapper.encrypt(iv, plaintext, aad)
-        ciphertext = ciphertext_with_tag[: -encalg.tag_size]
-        tag = ciphertext_with_tag[-encalg.tag_size :]
-
-        return BinaPy(ciphertext), BinaPy(tag), BinaPy(iv)
+        ciphertext, tag = wrapper.encrypt(plaintext, iv, aad)
+        return ciphertext, tag, BinaPy(iv)
 
     def decrypt(
         self,
@@ -151,15 +148,14 @@ class SymmetricJwk(Jwk):
             )
 
         decryptor = encalg(self.key)
-        ciphertext_with_tag = ciphertext + tag
-        plaintext: bytes = decryptor.decrypt(iv, ciphertext_with_tag, aad)
+        plaintext: bytes = decryptor.decrypt(ciphertext, tag, iv, aad)
 
         return BinaPy(plaintext)
 
     def wrap_key(self, plainkey: bytes, alg: Optional[str] = None) -> BinaPy:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.to_cryptography_key())
-        if isinstance(wrapper, AesKeyWrap):
+        if isinstance(wrapper, BaseAesKeyWrap):
             cipherkey = wrapper.wrap_key(plainkey)
         else:
             raise UnsupportedAlg(keyalg)
@@ -168,7 +164,7 @@ class SymmetricJwk(Jwk):
     def unwrap_key(self, cipherkey: bytes, alg: Optional[str] = None) -> Jwk:
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.key)
-        if isinstance(wrapper, AesKeyWrap):
+        if isinstance(wrapper, BaseAesKeyWrap):
             plaintext = wrapper.unwrap_key(cipherkey)
         else:
             raise UnsupportedAlg(keyalg)

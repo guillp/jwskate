@@ -1,17 +1,17 @@
 """
 This module implements the Json Web Algorithms as defined in RFC7518.
 
-Each algorithm is represented as a wrapper around a symmetric or asymmetric key, and implements the cryptographic
+Each algorithm is represented as a wrapper around a symmetric or asymmetric key, and exposes the cryptographic
 operations as methods. The cryptographic operations themselves are delegated to `cryptography`.
 """
 
 from .base import (
-    AESAlg,
-    Alg,
-    AsymmetricAlg,
-    KeyManagementAlg,
-    SignatureAlg,
-    SymmetricAlg,
+    BaseAESAlg,
+    BaseAlg,
+    BaseAsymmetricAlg,
+    BaseKeyManagementAlg,
+    BaseSignatureAlg,
+    BaseSymmetricAlg,
 )
 from .ec import P_256, P_384, P_521, EllipticCurve, secp256k1
 from .encryption import (
@@ -29,14 +29,14 @@ from .key_mgmt import (
     A192KW,
     A256GCMKW,
     A256KW,
-    AesGmcKeyWrap,
-    AesKeyWrap,
+    BaseAesGcmKeyWrap,
+    BaseAesKeyWrap,
+    BaseEcdhEs_AesKw,
     DirectKeyUse,
     EcdhEs,
     EcdhEs_A128KW,
     EcdhEs_A192KW,
     EcdhEs_A256KW,
-    EcdhEs_AesKw,
     Pbes2,
     Pbes2_HS256_A128KW,
     Pbes2_HS384_A192KW,
@@ -67,12 +67,12 @@ from .signature import (
 )
 
 __all__ = [
-    "Alg",
-    "AsymmetricAlg",
-    "SymmetricAlg",
-    "AESAlg",
-    "KeyManagementAlg",
-    "SignatureAlg",
+    "BaseAlg",
+    "BaseAsymmetricAlg",
+    "BaseSymmetricAlg",
+    "BaseAESAlg",
+    "BaseKeyManagementAlg",
+    "BaseSignatureAlg",
     "P_256",
     "P_384",
     "P_521",
@@ -81,20 +81,20 @@ __all__ = [
     "Aes128CbcHmacSha256",
     "Aes192CbcHmacSha384",
     "Aes256CbcHmacSha512",
-    "AesGmcKeyWrap",
     "A128GCMKW",
     "A192GCMKW",
     "A256GCMKW",
-    "AesKeyWrap",
+    "BaseAesGcmKeyWrap",
     "A128GCM",
     "A192GCM",
     "A256GCM",
+    "BaseAesKeyWrap",
     "A128KW",
     "A192KW",
     "A256KW",
     "DirectKeyUse",
     "EcdhEs",
-    "EcdhEs_AesKw",
+    "BaseEcdhEs_AesKw",
     "EcdhEs_A128KW",
     "EcdhEs_A192KW",
     "EcdhEs_A256KW",

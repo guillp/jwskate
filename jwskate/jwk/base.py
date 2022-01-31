@@ -22,17 +22,17 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 
 from jwskate.jwa import (
-    AESAlg,
-    AesGmcKeyWrap,
-    AesKeyWrap,
-    AsymmetricAlg,
+    BaseAESAlg,
+    BaseAesGcmKeyWrap,
+    BaseAesKeyWrap,
+    BaseAsymmetricAlg,
+    BaseEcdhEs_AesKw,
+    BaseKeyManagementAlg,
+    BaseSignatureAlg,
+    BaseSymmetricAlg,
     DirectKeyUse,
     EcdhEs,
-    EcdhEs_AesKw,
-    KeyManagementAlg,
     RsaKeyWrap,
-    SignatureAlg,
-    SymmetricAlg,
 )
 
 from .alg import UnsupportedAlg, select_alg, select_algs
@@ -90,9 +90,9 @@ class Jwk(BaseJsonDict):
 
     CRYPTOGRAPHY_KEY_CLASSES: ClassVar[Iterable[Any]]
 
-    SIGNATURE_ALGORITHMS: Mapping[str, Type[SignatureAlg]] = {}
-    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, Type[KeyManagementAlg]] = {}
-    ENCRYPTION_ALGORITHMS: Mapping[str, Type[AESAlg]] = {}
+    SIGNATURE_ALGORITHMS: Mapping[str, Type[BaseSignatureAlg]] = {}
+    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, Type[BaseKeyManagementAlg]] = {}
+    ENCRYPTION_ALGORITHMS: Mapping[str, Type[BaseAESAlg]] = {}
 
     def __init_subclass__(cls) -> None:
         """
@@ -313,11 +313,11 @@ class Jwk(BaseJsonDict):
         :return: the generated signature.
         """
         sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
-        wrapper: SignatureAlg
-        if issubclass(sigalg, AsymmetricAlg):
+        wrapper: BaseSignatureAlg
+        if issubclass(sigalg, BaseAsymmetricAlg):
             wrapper = sigalg(self.to_cryptography_key())
 
-        elif issubclass(sigalg, SymmetricAlg):
+        elif issubclass(sigalg, BaseSymmetricAlg):
             wrapper = sigalg(self.key)
 
         signature = wrapper.sign(data)
@@ -337,12 +337,12 @@ class Jwk(BaseJsonDict):
         :param alg: the alg to use to verify the signature (if this key doesn't have an `alg` parameter)
         :return: `True` if the signature matches, `False` otherwise
         """
-        wrapper: SignatureAlg
+        wrapper: BaseSignatureAlg
         for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
-            if issubclass(sigalg, AsymmetricAlg):
+            if issubclass(sigalg, BaseAsymmetricAlg):
                 key = self.public_jwk().to_cryptography_key()
                 wrapper = sigalg(key)
-            elif issubclass(sigalg, SymmetricAlg):
+            elif issubclass(sigalg, BaseSymmetricAlg):
                 key = self.key
                 wrapper = sigalg(key)
             if wrapper.verify(data, signature):
@@ -433,7 +433,7 @@ class Jwk(BaseJsonDict):
             ecdh: EcdhEs = keyalg(self.public_jwk().to_cryptography_key())
             epk = epk or Jwk.from_cryptography_key(ecdh.generate_ephemeral_key())
             encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
-            if isinstance(ecdh, EcdhEs_AesKw):
+            if isinstance(ecdh, BaseEcdhEs_AesKw):
                 if cek:
                     cek_jwk = SymmetricJwk.from_bytes(cek)
                 else:
@@ -452,8 +452,8 @@ class Jwk(BaseJsonDict):
                     {"epk": epk.public_jwk()},
                     BinaPy(b""),
                 )
-        elif issubclass(keyalg, AesKeyWrap):
-            aes: AesKeyWrap = keyalg(self.to_cryptography_key())
+        elif issubclass(keyalg, BaseAesKeyWrap):
+            aes: BaseAesKeyWrap = keyalg(self.to_cryptography_key())
             if cek:
                 cek_jwk = SymmetricJwk.from_bytes(cek, alg=keyalg.name)
             else:
@@ -461,8 +461,8 @@ class Jwk(BaseJsonDict):
                 cek = cek_jwk.key
             wrapped_cek = aes.wrap_key(cek)
             return cek_jwk, {}, wrapped_cek
-        elif issubclass(keyalg, AesGmcKeyWrap):
-            aesgcm: AesGmcKeyWrap = keyalg(self.to_cryptography_key())
+        elif issubclass(keyalg, BaseAesGcmKeyWrap):
+            aesgcm: BaseAesGcmKeyWrap = keyalg(self.to_cryptography_key())
             if cek:
                 cek_jwk = SymmetricJwk.from_bytes(cek, alg=keyalg.name)
             else:
@@ -511,18 +511,18 @@ class Jwk(BaseJsonDict):
                 raise ValueError("The EPK present in the header is private.")
             epk = epk_jwk.to_cryptography_key()
             encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
-            if isinstance(ecdh, EcdhEs_AesKw):
+            if isinstance(ecdh, BaseEcdhEs_AesKw):
                 cek = ecdh.unwrap_key_with_epk(wrapped_cek, epk, alg=alg)
             else:
                 cek = ecdh.recipient_key(
                     epk, alg=encalg.name, key_size=encalg.key_size, **headers
                 )
             return SymmetricJwk.from_bytes(cek)
-        elif issubclass(keyalg, AesKeyWrap):
+        elif issubclass(keyalg, BaseAesKeyWrap):
             aes = keyalg(self.to_cryptography_key())
             cek = aes.unwrap_key(wrapped_cek)
             return SymmetricJwk.from_bytes(cek)
-        elif issubclass(keyalg, AesGmcKeyWrap):
+        elif issubclass(keyalg, BaseAesGcmKeyWrap):
             aesgcm = keyalg(self.to_cryptography_key())
             iv = headers.get("iv")
             if iv is None:

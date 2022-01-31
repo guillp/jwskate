@@ -1,7 +1,7 @@
 # Usage
 
-To use JsonWebSkate in a project
+To use `jwskate` in a project
 
 ```
-    import jwskate
+    from jwskate import *
 ```

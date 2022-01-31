@@ -4,13 +4,13 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 
-from ..base import AsymmetricAlg, KeyManagementAlg
-from .aeskw import A128KW, A192KW, A256KW, AesKeyWrap
+from ..base import BaseAsymmetricAlg, BaseKeyManagementAlg
+from .aeskw import A128KW, A192KW, A256KW, BaseAesKeyWrap
 
 
 class EcdhEs(
-    KeyManagementAlg,
-    AsymmetricAlg[
+    BaseKeyManagementAlg,
+    BaseAsymmetricAlg[
         asymmetric.ec.EllipticCurvePrivateKey, asymmetric.ec.EllipticCurvePublicKey
     ],
 ):
@@ -95,8 +95,8 @@ class EcdhEs(
             return cek
 
 
-class EcdhEs_AesKw(EcdhEs):
-    kwalg: Type[AesKeyWrap]
+class BaseEcdhEs_AesKw(EcdhEs):
+    kwalg: Type[BaseAesKeyWrap]
 
     def wrap_key_with_epk(
         self,
@@ -121,16 +121,16 @@ class EcdhEs_AesKw(EcdhEs):
         return self.kwalg(aes_key).unwrap_key(cipherkey)
 
 
-class EcdhEs_A128KW(EcdhEs_AesKw):
+class EcdhEs_A128KW(BaseEcdhEs_AesKw):
     name = "ECDH-ES+A128KW"
     kwalg = A128KW
 
 
-class EcdhEs_A192KW(EcdhEs_AesKw):
+class EcdhEs_A192KW(BaseEcdhEs_AesKw):
     name = "ECDH-ES+A192KW"
     kwalg = A192KW
 
 
-class EcdhEs_A256KW(EcdhEs_AesKw):
+class EcdhEs_A256KW(BaseEcdhEs_AesKw):
     name = "ECDH-ES+A256KW"
     kwalg = A256KW

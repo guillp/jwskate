@@ -4,12 +4,12 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf import pbkdf2
 
-from ..base import KeyManagementAlg
-from .aeskw import A128KW, A192KW, A256KW, AesKeyWrap
+from ..base import BaseKeyManagementAlg
+from .aeskw import A128KW, A192KW, A256KW, BaseAesKeyWrap
 
 
-class Pbes2(KeyManagementAlg):
-    kwalg: Type[AesKeyWrap]
+class Pbes2(BaseKeyManagementAlg):
+    kwalg: Type[BaseAesKeyWrap]
     hash_alg: hashes.HashAlgorithm
 
     def __init__(self, password: Union[bytes, str]):

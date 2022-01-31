@@ -4,10 +4,10 @@ from typing import Tuple
 from binapy import BinaPy
 from cryptography.hazmat.primitives.ciphers import aead
 
-from ..base import KeyManagementAlg, SymmetricAlg
+from ..base import BaseKeyManagementAlg, BaseSymmetricAlg
 
 
-class AesGmcKeyWrap(KeyManagementAlg, SymmetricAlg):
+class BaseAesGcmKeyWrap(BaseKeyManagementAlg, BaseSymmetricAlg):
     iv_size: int = 96
     key_size: int
 
@@ -31,16 +31,16 @@ class AesGmcKeyWrap(KeyManagementAlg, SymmetricAlg):
         return BinaPy(secrets.token_bytes(self.iv_size // 8))
 
 
-class A128GCMKW(AesGmcKeyWrap):
+class A128GCMKW(BaseAesGcmKeyWrap):
     name = "A128GCMKW"
     key_size = 128
 
 
-class A192GCMKW(AesGmcKeyWrap):
+class A192GCMKW(BaseAesGcmKeyWrap):
     name = "A192GCMKW"
     key_size = 192
 
 
-class A256GCMKW(AesGmcKeyWrap):
+class A256GCMKW(BaseAesGcmKeyWrap):
     name = "A256GCMKW"
     key_size = 256

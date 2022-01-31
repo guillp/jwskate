@@ -2,22 +2,20 @@
 
 ## Stable release
 
-To install JsonWebSkate, run this command in your
-terminal:
+To install `jwskate`, run this command in your terminal:
 
 ``` console
 $ pip install jwskate
 ```
 
-This is the preferred method to install JsonWebSkate, as it will always install the most recent stable release.
+This is the preferred method to install `jwskate`, as it will always install the most recent stable release.
 
 If you don't have [pip][] installed, this [Python installation guide][]
 can guide you through the process.
 
 ## From source
 
-The source for JsonWebSkate can be downloaded from
-the [Github repo][].
+The source for `jwskate` can be downloaded from the [Github repo][].
 
 You can either clone the public repository:
 

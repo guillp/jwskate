@@ -423,6 +423,7 @@ class Jwk(BaseJsonDict):
         encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
 
         cek_headers: Dict[str, Any] = {}
+
         if issubclass(keyalg, RsaKeyWrap):
             rsa = keyalg(self.public_jwk().to_cryptography_key())
             if cek:
@@ -430,6 +431,7 @@ class Jwk(BaseJsonDict):
             else:
                 cek = encalg.generate_key()
             wrapped_cek = rsa.wrap_key(cek)
+
         elif issubclass(keyalg, EcdhEs):
             ecdh: EcdhEs = keyalg(self.public_jwk().to_cryptography_key())
             epk = epk or Jwk.from_cryptography_key(ecdh.generate_ephemeral_key())
@@ -454,6 +456,7 @@ class Jwk(BaseJsonDict):
             else:
                 cek = encalg.generate_key()
             wrapped_cek = aes.wrap_key(cek)
+
         elif issubclass(keyalg, BaseAesGcmKeyWrap):
             aesgcm: BaseAesGcmKeyWrap = keyalg(self.to_cryptography_key())
             if cek:
@@ -492,9 +495,11 @@ class Jwk(BaseJsonDict):
 
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
+
         if issubclass(keyalg, RsaKeyWrap):
             rsa = keyalg(self.to_cryptography_key())
             cek = rsa.unwrap_key(wrapped_cek)
+
         elif issubclass(keyalg, EcdhEs):
             ecdh = keyalg(self.to_cryptography_key())
             epk = headers.get("epk")
@@ -511,9 +516,11 @@ class Jwk(BaseJsonDict):
                 cek = ecdh.recipient_key(
                     epk, alg=encalg.name, key_size=encalg.key_size, **headers
                 )
+
         elif issubclass(keyalg, BaseAesKeyWrap):
             aes = keyalg(self.to_cryptography_key())
             cek = aes.unwrap_key(wrapped_cek)
+
         elif issubclass(keyalg, BaseAesGcmKeyWrap):
             aesgcm = keyalg(self.to_cryptography_key())
             iv = headers.get("iv")
@@ -525,6 +532,7 @@ class Jwk(BaseJsonDict):
                 raise ValueError("No 'tag' in headers!")
             tag = BinaPy(tag).decode_from("b64u")
             cek = aesgcm.unwrap_key(wrapped_cek, tag, iv)
+
         elif issubclass(keyalg, DirectKeyUse):
             dir_ = keyalg(self.key)
             cek = dir_.recipient_key(encalg)

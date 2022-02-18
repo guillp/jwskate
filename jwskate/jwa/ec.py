@@ -3,8 +3,9 @@ This module contains classes that describe Elliptic Curves as described in RFC75
 """
 
 from dataclasses import dataclass
-from typing import ClassVar, Dict, Tuple, Union
+from typing import Any, ClassVar, Dict, Tuple, Union
 
+from binapy import BinaPy
 from cryptography.hazmat.primitives.asymmetric import ec
 
 
@@ -59,27 +60,43 @@ class EllipticCurve:
         raise NotImplementedError(f"Unsupported Curve {key.curve.name}")
 
     @classmethod
-    def get_public_parameters(cls, key: ec.EllipticCurvePublicKey) -> Tuple[int, int]:
-        """
-        Extract the public parameters `x` and `y` from a given `cryptography` `EllipticCurvePublicKey`.
-        :param key:  an Elliptic Curve public key from `cryptography`.
-        :return: a tuple of `x` and `y` coordinates, as int
-        """
-        x = key.public_numbers().x
-        y = key.public_numbers().y
-        return x, y
-
-    @classmethod
-    def get_parameters(cls, key: ec.EllipticCurvePrivateKey) -> Tuple[int, int, int]:
+    def get_parameters(
+        cls, key: Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey]
+    ) -> Dict[str, Any]:
         """
         Extract all private and public parameters from a given `cryptography` `EllipticCurvePrivateKey`.
-        :param key: an Elliptic Curve private key from `cryptography`.
+        :param key: an Elliptic Curve public or private key from `cryptography`.
         :return: a tuple of `x`, `y` coordinates and `d` private key, as int
         """
-        x, y = cls.get_public_parameters(key.public_key())
-        pn = key.private_numbers()  # type: ignore
-        d = pn.private_value
-        return x, y, d
+        if not isinstance(key, (ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey)):
+            raise TypeError(
+                "A EllipticCurvePrivateKey or a EllipticCurvePublicKey is required."
+            )
+        crv = cls.get_curve(key)
+        if isinstance(key, ec.EllipticCurvePrivateKey):
+            public_numbers = key.public_key().public_numbers()
+        elif isinstance(key, ec.EllipticCurvePublicKey):
+            public_numbers = key.public_numbers()
+        x = (
+            BinaPy.from_int(public_numbers.x, crv.coordinate_size)
+            .encode_to("b64u")
+            .ascii()
+        )
+        y = (
+            BinaPy.from_int(public_numbers.y, crv.coordinate_size)
+            .encode_to("b64u")
+            .ascii()
+        )
+        parameters = {"kty": "EC", "crv": crv.name, "x": x, "y": y}
+        if isinstance(key, ec.EllipticCurvePrivateKey):
+            pn = key.private_numbers()  # type: ignore
+            d = (
+                BinaPy.from_int(pn.private_value, crv.coordinate_size)
+                .encode_to("b64u")
+                .ascii()
+            )
+            parameters["d"] = d
+        return parameters
 
 
 P_256 = EllipticCurve(

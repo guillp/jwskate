@@ -70,7 +70,7 @@ def test_jwt_signer(issuer: str, private_jwk: Jwk) -> None:
     assert isinstance(jwt, Jwt)
     assert jwt.subject == "some_id"
     assert jwt.audience == "some_audience"
-    assert pytest.approx(jwt.iat, now)
+    assert jwt.iat == pytest.approx(now.timestamp())
     assert jwt.expires_at is not None
     assert jwt.expires_at > now
 

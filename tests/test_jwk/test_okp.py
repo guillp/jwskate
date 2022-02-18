@@ -1,6 +1,8 @@
 import pytest
+from cryptography.hazmat.primitives.asymmetric import ed25519
 
 from jwskate import Jwk, JwsCompact, OKPJwk
+from jwskate.jwk.okp import UnsupportedOKPCurve
 
 
 @pytest.mark.parametrize("curve", ["Ed25519", "Ed448", "X25519", "X448"])
@@ -35,3 +37,14 @@ def test_okp_ed25519_sign() -> None:
     )
 
     assert jws.verify_signature(jwk=jwk.public_jwk(), alg="EdDSA")
+
+
+def test_unknown_curve() -> None:
+    with pytest.raises(UnsupportedOKPCurve):
+        Jwk({"kty": "OKP", "crv": "foobar", "x": "abcd"})
+
+
+def test_from_to_cryptography() -> None:
+    okp_key = ed25519.Ed25519PrivateKey.generate()
+    jwk = Jwk.from_cryptography_key(okp_key)
+    assert jwk.kty == "OKP"

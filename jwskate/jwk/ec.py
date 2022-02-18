@@ -66,12 +66,21 @@ class ECJwk(Jwk):
         for keyalg in [EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW]
     }
 
+    def _validate(self) -> None:
+        if not isinstance(self.crv, str) or self.crv not in self.CURVES:
+            raise UnsupportedEllipticCurve(self.crv)
+        super()._validate()
+
     @classmethod
     def get_curve(cls, crv: str) -> EllipticCurve:
         curve = cls.CURVES.get(crv)
         if curve is None:
             raise UnsupportedEllipticCurve(crv)
         return curve
+
+    @property
+    def curve(self) -> EllipticCurve:
+        return self.get_curve(self.crv)
 
     @classmethod
     def public(cls, crv: str, x: int, y: int, **params: str) -> "ECJwk":
@@ -127,26 +136,8 @@ class ECJwk(Jwk):
 
     @classmethod
     def from_cryptography_key(cls, key: Any) -> ECJwk:
-        curve = EllipticCurve.get_curve(key)
-        if isinstance(key, asymmetric.ec.EllipticCurvePrivateKey):
-            x, y, d = curve.get_parameters(key)
-            return cls.private(
-                crv=curve.name,
-                x=x,
-                y=y,
-                d=d,
-            )
-        elif isinstance(key, asymmetric.ec.EllipticCurvePublicKey):
-            x, y = curve.get_public_parameters(key)
-            return cls.public(
-                crv=curve.name,
-                x=x,
-                y=y,
-            )
-        else:
-            raise TypeError(
-                "A EllipticCurvePrivateKey or a EllipticCurvePublicKey is required."
-            )
+        parameters = EllipticCurve.get_parameters(key)
+        return cls(parameters)
 
     def to_cryptography_key(
         self,
@@ -189,12 +180,6 @@ class ECJwk(Jwk):
             d=d,
             **params,
         )
-
-    @property
-    def curve(self) -> EllipticCurve:
-        if not isinstance(self.crv, str) or self.crv not in self.CURVES:
-            raise AttributeError("unsupported crv", self.crv)
-        return self.CURVES[self.crv]
 
     @property
     def x_coordinate(self) -> int:

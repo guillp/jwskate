@@ -50,11 +50,21 @@ class OKPJwk(Jwk):
 
     SIGNATURE_ALGORITHMS = {alg.name: alg for alg in (EdDsa,)}
 
+    def _validate(self) -> None:
+        if not isinstance(self.crv, str) or self.crv not in self.CURVES:
+            raise UnsupportedOKPCurve(self.crv)
+        super()._validate()
+
+    @classmethod
+    def get_curve(cls, crv: str) -> OKPCurve:
+        curve = cls.CURVES.get(crv)
+        if curve is None:
+            raise UnsupportedOKPCurve(crv)
+        return curve
+
     @property
     def curve(self) -> OKPCurve:
-        if not isinstance(self.crv, str) or self.crv not in self.CURVES:
-            raise AttributeError("unsupported crv", self.crv)
-        return self.CURVES[self.crv]
+        return self.get_curve(self.crv)
 
     @property
     def public_key(self) -> bytes:
@@ -137,8 +147,6 @@ class OKPJwk(Jwk):
 
     @classmethod
     def generate(cls, crv: str = "Ed25519", **params: Any) -> OKPJwk:
-        curve = cls.CURVES.get(crv)
-        if curve is None:
-            raise ValueError("Unsupported Curve", crv)
+        curve = cls.get_curve(crv)
         x, d = curve.generate()
         return cls.private(crv=crv, x=x, d=d, **params)

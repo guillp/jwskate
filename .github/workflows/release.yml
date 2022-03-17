@@ -6,7 +6,7 @@ name: release & publish workflow
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branch: release
+    branches: [ release ]
     tags:
       - 'v*'
 
@@ -29,7 +29,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: generate change log
+      - name: Generate Changelog
         uses: heinrichreimer/github-changelog-generator-action@v2.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -50,12 +50,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install tox-gh-actions poetry
 
-      - name: pre-publish documentation
+      - name: Build documentation
         run: |
-          poetry install -E doc
+          poetry install
           poetry run mkdocs build
 
-      - name: publish documentation
+      - name: Publish documentation
         uses: peaceiris/actions-gh-pages@v3
         with:
           personal_token: ${{ secrets.PERSONAL_TOKEN }}
@@ -65,11 +65,11 @@ jobs:
         run: >-
           poetry build
 
-      - name: show temporary files
+      - name: Show temporary files
         run: >-
           ls -l
 
-      - name: create github release
+      - name: Create GitHub release
         id: create_release
         uses: softprops/action-gh-release@v1
         env:
@@ -80,7 +80,7 @@ jobs:
           draft: false
           prerelease: false
 
-      - name:
+      - name: Publish on PyPi
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__

@@ -104,11 +104,20 @@ print(jwt)
 * Json Web Keys (JWK) loading and generation
 * Arbitrary data signature and verification using Json Web Keys
 * Json Web Signatures (JWS) signing and verification
-* Json Web Encryptions (JWE) encryption and decryption
+* Json Web Encryption (JWE) encryption and decryption
 * Json Web Tokens (JWT) signing, verification and validation
 * 100% type annotated
-* 100% code coverage
+* nearly 100% code coverage
 * Relies on [cryptography](https://cryptography.io)
+
+## Why a new lib ?
+
+There are already multiple implementations of JOSE and Json Web Crypto related specifications in Python. However, I have
+been dissatisfied by all of them so far, so I decided to come up with my own module.
+
+- [PyJWT](https://pyjwt.readthedocs.io): lacks support for JWK, JWE, JWS, requires PEM keys.
+- [JWCrypto](https://jwcrypto.readthedocs.io/): very inconsistent and complex API.
+- [Python-JOSE](https://python-jose.readthedocs.io/): lacks easy support for JWT validation (checking the standard claims like iss, exp, etc.).
 
 ## TODO
 * Implement key loading and dumping to/from PEM or X509

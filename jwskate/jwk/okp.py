@@ -141,7 +141,7 @@ class OKPJwk(Jwk):
                 crv=crv,
                 x=BinaPy(x).encode_to("b64u").decode(),
                 d=BinaPy(d).encode_to("b64u").decode(),
-                **params
+                **params,
             )
         )
 

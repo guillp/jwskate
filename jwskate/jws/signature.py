@@ -16,7 +16,7 @@ class JwsSignature(BaseJsonDict):
         protected: Mapping[str, Any],
         signature: bytes,
         header: Optional[Any],
-        **kwargs: Any
+        **kwargs: Any,
     ) -> S:
         content = dict(
             kwargs,
@@ -53,7 +53,7 @@ class JwsSignature(BaseJsonDict):
         alg: Optional[str] = None,
         extra_protected_headers: Optional[Mapping[str, Any]] = None,
         header: Optional[Any] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> S:
         jwk = Jwk(jwk)
 

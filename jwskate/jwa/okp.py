@@ -5,7 +5,13 @@ This module contains classes that describe CFRG Elliptic Curve Diffie-Hellman al
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, ClassVar, Dict, Protocol, Tuple, Type, Union
+from typing import Any, ClassVar, Dict, Tuple, Type, Union
+
+# to support Python 3.7
+try:
+    from typing import Protocol
+except ImportError:
+    from typing_extensions import Protocol  # type: ignore[misc]
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519

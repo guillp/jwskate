@@ -26,7 +26,6 @@ def test_jwt() -> None:
     assert jwt.is_expired()
     assert jwt.sub == "123456"
     assert jwt.subject == "123456"
-    assert jwt.audience == "client_id"
     assert jwt.audiences == ["client_id"]
     assert jwt.nonce == "nonce"
     assert jwt.amr == ["pwd", "otp"]
@@ -69,7 +68,7 @@ def test_jwt_signer(issuer: str, private_jwk: Jwk) -> None:
     jwt = signer.sign(subject="some_id", audience="some_audience")
     assert isinstance(jwt, Jwt)
     assert jwt.subject == "some_id"
-    assert jwt.audience == "some_audience"
+    assert jwt.audiences == ["some_audience"]
     assert jwt.iat == pytest.approx(now.timestamp())
     assert jwt.expires_at is not None
     assert jwt.expires_at > now
@@ -94,7 +93,7 @@ def test_empty_jwt(private_jwk: Jwk) -> None:
     assert jwt.expires_at is None
     assert jwt.not_before is None
     assert jwt.issuer is None
-    assert jwt.audience is None
+    assert jwt.audiences is None
     assert jwt.subject is None
     assert jwt.jwt_token_id is None
     assert jwt.kid == private_jwk.kid

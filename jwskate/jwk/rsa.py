@@ -1,3 +1,5 @@
+"""This module implements JWK representing RSA keys."""
+
 from __future__ import annotations
 
 from typing import Any, Optional, Union
@@ -25,9 +27,7 @@ from .symetric import SymmetricJwk
 
 
 class RSAJwk(Jwk):
-    """
-    Represent a RSA Jwk, with `kty=RSA`.
-    """
+    """Represent a RSA Jwk, with `kty=RSA`."""
 
     KTY = "RSA"
     CRYPTOGRAPHY_KEY_CLASSES = (rsa.RSAPrivateKey, rsa.RSAPublicKey)
@@ -78,6 +78,17 @@ class RSAJwk(Jwk):
 
     @classmethod
     def from_cryptography_key(cls, key: Any) -> RSAJwk:
+        """Initialize a Jwk from a `cryptography` RSA key.
+
+        Args:
+          key: a `cryptography` RSA key
+
+        Returns:
+            a RSAJwk initialized with the given key
+
+        Raises:
+            TypeError: if the given key type is not supported
+        """
         if isinstance(key, rsa.RSAPrivateKey):
             priv = key.private_numbers()  # type: ignore[attr-defined]
             pub = key.public_key().public_numbers()
@@ -101,6 +112,11 @@ class RSAJwk(Jwk):
             raise TypeError("A RSAPrivateKey or a RSAPublicKey is required.")
 
     def to_cryptography_key(self) -> Union[rsa.RSAPrivateKey, rsa.RSAPublicKey]:
+        """Initialize a `cryptography` key based on this Jwk.
+
+        Returns:
+            a cryptography RSAPrivateKey or RSAPublicKey
+        """
         if self.is_private:
             return rsa.RSAPrivateNumbers(
                 self.first_prime_factor,
@@ -116,12 +132,15 @@ class RSAJwk(Jwk):
 
     @classmethod
     def public(cls, n: int, e: int, **params: Any) -> RSAJwk:
-        """
-        Initialize a Public RsaJwk from a modulus and an exponent.
-        :param n: the modulus
-        :param e: the exponent
-        :param params: additional parameters for the return RSAJwk
-        :return: a RsaJwk
+        """Initialize a public RsaJwk from a modulus and an exponent.
+
+        Args:
+          n: the modulus
+          e: the exponent
+          **params: additional members to include in the Jwk
+
+        Returns:
+          a RsaJwk initialized from the provided parameters
         """
         return cls(
             dict(
@@ -145,18 +164,21 @@ class RSAJwk(Jwk):
         qi: Optional[int] = None,
         **params: Any,
     ) -> RSAJwk:
-        """
-        Initializes a Private RsaJwk from its required parameters.
-        :param n: the modulus
-        :param e: the exponent
-        :param d: the private exponent
-        :param p: the first prime factor
-        :param q: the second prime factor
-        :param dp: the first factor CRT exponent
-        :param dq: the second factor CRT exponent
-        :param qi: the first CRT coefficient
-        :param params: additional parameters for the return RSAJwk
-        :return:
+        """Initializes a Private RsaJwk from its required parameters.
+
+        Args:
+          n: the modulus
+          e: the exponent
+          d: the private exponent
+          p: the first prime factor
+          q: the second prime factor
+          dp: the first factor CRT exponent
+          dq: the second factor CRT exponent
+          qi: the first CRT coefficient
+          **params: additional members to include in the Jwk
+
+        Returns:
+            a RSAJwk initialized from the given parameters
         """
         return cls(
             dict(
@@ -184,12 +206,15 @@ class RSAJwk(Jwk):
         )
 
     @classmethod
-    def generate(cls, key_size: int = 4096, **params: str) -> RSAJwk:
-        """
-        Generates a new random Private RSAJwk.
-        :param key_size: the key size to use for the generated key.
-        :param params: additional parameters for the generated RSAJwk
-        :return: a generated RSAJwk
+    def generate(cls, key_size: int = 4096, **params: Any) -> RSAJwk:
+        """Generates a new random private RSAJwk.
+
+        Args:
+          key_size: the key size to use for the generated key. (Default value = 4096)
+          **params: additional members to include in the Jwk
+
+        Returns:
+          a generated RSAJwk
         """
         private_key = rsa.generate_private_key(65537, key_size=key_size)
         pn = private_key.private_numbers()
@@ -207,69 +232,86 @@ class RSAJwk(Jwk):
 
     @property
     def modulus(self) -> int:
-        """
-        Returns the modulus from this Jwk.
-        :return: the key modulus (from parameter `n`)
+        """Returns the modulus from this Jwk.
+
+        Returns:
+            the key modulus (from parameter `n`)
         """
         return BinaPy(self.n).decode_from("b64u").to_int()
 
     @property
     def exponent(self) -> int:
-        """
-        Returns the exponent from this Jwk.
-        :return: the key exponent (from parameter `e`)
+        """Returns the exponent from this Jwk.
+
+        Returns:
+            the key exponent (from parameter `e`)
         """
         return BinaPy(self.e).decode_from("b64u").to_int()
 
     @property
     def private_exponent(self) -> int:
-        """
-        Returns the private exponent from this Jwk.
-        :return: the key private exponent (from parameter `d`)
+        """Returns the private exponent from this Jwk.
+
+        Returns:
+            the key private exponent (from parameter `d`)
         """
         return BinaPy(self.d).decode_from("b64u").to_int()
 
     @property
     def first_prime_factor(self) -> int:
-        """
-        Returns the first prime factor from this Jwk.
-        :return: the first prime factor (from parameter `p`)
+        """Returns the first prime factor from this Jwk.
+
+        Returns:
+            the first prime factor (from parameter `p`)
         """
         return BinaPy(self.p).decode_from("b64u").to_int()
 
     @property
     def second_prime_factor(self) -> int:
-        """
-        Returns the second prime factor from this Jwk.
-        :return: the second prime factor (from parameter `q`)
+        """Returns the second prime factor from this Jwk.
+
+        Returns:
+            the second prime factor (from parameter `q`)
         """
         return BinaPy(self.q).decode_from("b64u").to_int()
 
     @property
     def first_factor_crt_exponent(self) -> int:
-        """
-        Returns the first factor CRT exponent from this Jwk.
-        :return: the first factor CRT coefficient (from parameter `dp`)
+        """Returns the first factor CRT exponent from this Jwk.
+
+        Returns:
+            the first factor CRT coefficient (from parameter `dp`)
         """
         return BinaPy(self.dp).decode_from("b64u").to_int()
 
     @property
     def second_factor_crt_exponent(self) -> int:
-        """
-        Returns the second factor CRT exponent from this Jwk.
-        :return: the second factor CRT coefficient (from parameter `dq`)
+        """Returns the second factor CRT exponent from this Jwk.
+
+        Returns:
+            the second factor CRT coefficient (from parameter `dq`)
         """
         return BinaPy(self.dq).decode_from("b64u").to_int()
 
     @property
     def first_crt_coefficient(self) -> int:
-        """
-        Returns the first CRT coefficient from this Jwk
-        :return: the first CRT coefficient (from parameter `qi`)
+        """Returns the first CRT coefficient from this Jwk.
+
+        Returns:
+            the first CRT coefficient (from parameter `qi`)
         """
         return BinaPy(self.qi).decode_from("b64u").to_int()
 
     def wrap_key(self, plainkey: bytes, alg: Optional[str] = None) -> BinaPy:
+        """Wrap a symmetric key using this RSA key.
+
+        Args:
+          plainkey: the symmetric key to wrap
+          alg: the Key Management alg to use
+
+        Returns:
+            the wrapped symmetric key
+        """
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.public_jwk().to_cryptography_key())
         ciphertext = wrapper.wrap_key(plainkey)
@@ -280,6 +322,15 @@ class RSAJwk(Jwk):
         cipherkey: bytes,
         alg: Optional[str] = None,
     ) -> Jwk:
+        """Unwrap a symmetric key using this RSA key.
+
+        Args:
+          cipherkey: the wrapped symmetric key
+          alg: the Key Management alg to use
+
+        Returns:
+            the clear-text unwrapped key
+        """
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.to_cryptography_key())
         plaintext = wrapper.unwrap_key(cipherkey)

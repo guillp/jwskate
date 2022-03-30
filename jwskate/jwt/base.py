@@ -1,12 +1,14 @@
 """This modules contains the `Jwt` base class."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from binapy import BinaPy
 
 from jwskate.jwk import Jwk
 
-from ..token import BaseToken
+from ..token import BaseCompactToken
 
 if TYPE_CHECKING:
     from jwskate import EncryptedJwt, SignedJwt
@@ -16,14 +18,14 @@ class InvalidJwt(ValueError):
     """Raised when an invalid Jwt is parsed."""
 
 
-class Jwt(BaseToken):
+class Jwt(BaseCompactToken):
     """Represents a Json Web Token."""
 
     def __new__(cls, value: Union[bytes, str]):  # type: ignore
-        """
-        Allow parsing both Signed and Encrypted Jwts. Returns the appropriate subclass.
+        """Allow parsing both Signed and Encrypted JWTs. Returns the appropriate subclass instance.
 
-        :param value: the token value
+        Args:
+            value: the token value
         """
         if not isinstance(value, bytes):
             value = value.encode("ascii")
@@ -47,21 +49,23 @@ class Jwt(BaseToken):
         alg: Optional[str] = None,
         extra_headers: Optional[Dict[str, Any]] = None,
     ) -> "SignedJwt":
-        """
-        Sign a JSON payload with a `Jwk` and returns the resulting `SignedJwt`.
+        """Sign a JSON payload with a `Jwk` and returns the resulting `SignedJwt`.
 
-        :param claims: the payload to sign
-        :param jwk: the Jwk to use for signing
-        :param alg: the alg to use for signing
-        :param extra_headers: additional headers to include in the Jwt
-        :return: a `SignedJwt`
+        This method cannot generate a token without a signature. If you want to use an unsigned token (with alg=none),
+        use `.unprotected()` instead.
+
+        Args:
+          claims: the payload to sign
+          jwk: the Jwk to use for signing
+          alg: the alg to use for signing
+          extra_headers: additional headers to include in the Jwt
+
+        Returns:
+          the resulting token
         """
         from .signed import SignedJwt
 
         jwk = Jwk(jwk)
-
-        if not jwk.is_private:
-            raise ValueError("Signing requires a private JWK")
 
         alg = alg or jwk.get("alg")
         kid = jwk.get("kid")
@@ -85,11 +89,14 @@ class Jwt(BaseToken):
         claims: Dict[str, Any],
         extra_headers: Optional[Dict[str, Any]] = None,
     ) -> "SignedJwt":
-        """
-        Generate a JWT that is not signed and not encrypted (with alg=none).
+        """Generate a JWT that is not signed and not encrypted (with alg=none).
 
-        :param claims: the claims to set in the token.
-        :param extra_headers: additional headers to insert in the token.
+        Args:
+          claims: the claims to set in the token.
+          extra_headers: additional headers to insert in the token.
+
+        Returns:
+            the resulting token
         """
         from .signed import SignedJwt
 
@@ -111,16 +118,19 @@ class Jwt(BaseToken):
         enc_alg: Optional[str],
         enc: Optional[str],
     ) -> "EncryptedJwt":
-        """
-        Sign then encrypt a payload with a `Jwk` and returns the resulting `EncryptedJwt`.
+        """Sign then encrypt a payload with a `Jwk` and returns the resulting `EncryptedJwt`.
 
-        :param claims: the payload to encrypt
-        :param sign_jwk: the Jwk to use for signature
-        :param sign_alg: the alg to use for signature
-        :param enc_jwk: the Jwk to use for encryption
-        :param enc_alg: the alg to use for CEK encryption
-        :param enc: the alg to use for payload encryption
-        :return: an EncryptedJwt
-        """
+        NOT IMPLEMENTED YET.
 
+        Args:
+          claims: the payload to encrypt
+          sign_jwk: the Jwk to use for signature
+          sign_alg: the alg to use for signature
+          enc_jwk: the Jwk to use for encryption
+          enc_alg: the alg to use for CEK encryption
+          enc: the alg to use for payload encryption
+
+        Returns:
+          the resulting token
+        """
         raise NotImplementedError

@@ -1,3 +1,5 @@
+"""This module implements Json Web Key Sets (JWKS)."""
+
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 from .alg import UnsupportedAlg
@@ -5,11 +7,12 @@ from .base import BaseJsonDict, Jwk
 
 
 class JwkSet(BaseJsonDict):
-    """
-    A set of JWK keys, with methods for easy management of keys.
-    A JwkSet is a dict subclass, so you can do anything with a JwkSet that you can do with a dict.
-    In addition, it provides a few helpers methods to get the keys, add or remove keys, and verify signatures using keys
-    from this set.
+    """A set of JWK keys, with methods for easy management of keys.
+
+    A JwkSet is a dict subclass, so you can do anything with a JwkSet
+    that you can do with a dict. In addition, it provides a few helpers
+    methods to get the keys, add or remove keys, and verify signatures
+    using keys from this set.
     """
 
     def __init__(
@@ -17,13 +20,15 @@ class JwkSet(BaseJsonDict):
         jwks: Optional[Dict[str, Any]] = None,
         keys: Optional[Iterable[Jwk]] = None,
     ):
-        """
-        Intiializes a JwkSet. Multiple inputs can be provided:
+        """Intiialize a JwkSet. Multiple inputs can be provided.
+
         - a `dict` from the parsed JSON object representing this JwkSet (in paramter `jwks`)
         - a list of `Jwk` (in parameter `keys`
         - nothing, to initialize an empty JwkSet
-        :param jwks: a dict, containing the JwkSet, parsed as a JSON object.
-        :param keys: a list of Jwk, that will be added to this JwkSet
+
+        Args:
+            jwks: a dict, containing the JwkSet, parsed as a JSON object.
+            keys: a list of Jwk, that will be added to this JwkSet
         """
         if jwks is None and keys is None:
             keys = []
@@ -42,17 +47,24 @@ class JwkSet(BaseJsonDict):
 
     @property
     def jwks(self) -> List[Jwk]:
-        """
-        Returns the list of keys from this JwkSet, as `Jwk` instances
-        :return: a list of `Jwk`
+        """Return the list of keys from this JwkSet, as `Jwk` instances.
+
+        Returns:
+            a list of `Jwk`
         """
         return self.get("keys", [])
 
     def get_jwk_by_kid(self, kid: str) -> Jwk:
-        """
-        Returns a Jwk from this JwkSet, based on its kid.
-        :param kid:
-        :return:
+        """Return a Jwk from this JwkSet, based on its kid.
+
+        Args:
+          kid: the kid of the key to obtain
+
+        Returns:
+            the key with the matching Key ID
+
+        Raises:
+            KeyError: if no key matches
         """
         jwk = next(filter(lambda jwk: jwk.get("kid") == kid, self.jwks), None)
         if isinstance(jwk, Jwk):
@@ -60,9 +72,10 @@ class JwkSet(BaseJsonDict):
         raise KeyError(kid)
 
     def __len__(self) -> int:
-        """
-        Returns the number of Jwk in this JwkSet.
-        :return: the number of keys
+        """Return the number of Jwk in this JwkSet.
+
+        Returns:
+            the number of keys
         """
         return len(self.jwks)
 
@@ -72,12 +85,15 @@ class JwkSet(BaseJsonDict):
         kid: Optional[str] = None,
         use: Optional[str] = None,
     ) -> str:
-        """
-        Adds a Jwk in this JwkSet
-        :param jwk: the Jwk to add (either a `Jwk` instance, or a dict containing the Jwk parameters)
-        :param kid: the kid to use, if `jwk` doesn't contain one
-        :param use: the defined use for the added Jwk
-        :return: the kid from the added Jwk (it may be generated if no kid is provided)
+        """Add a Jwk in this JwkSet.
+
+        Args:
+          jwk: the Jwk to add (either a `Jwk` instance, or a dict containing the Jwk parameters)
+          kid: the kid to use, if `jwk` doesn't contain one
+          use: the defined use for the added Jwk
+
+        Returns:
+          the kid from the added Jwk (it may be generated if no kid is provided)
         """
         if not isinstance(jwk, Jwk):
             jwk = Jwk(jwk)
@@ -97,9 +113,13 @@ class JwkSet(BaseJsonDict):
         return kid
 
     def remove_jwk(self, kid: str) -> None:
-        """
-        Removes a Jwk from this JwkSet, based on a `kid`.
-        :param kid: the `kid` from the key to be removed.
+        """Removes a Jwk from this JwkSet, based on a `kid`.
+
+        Args:
+          kid: the `kid` from the key to be removed.
+
+        Raises:
+            KeyError: if no key matches
         """
         try:
             jwk = self.get_jwk_by_kid(kid)
@@ -115,19 +135,25 @@ class JwkSet(BaseJsonDict):
         algs: Optional[Iterable[str]] = None,
         kid: Optional[str] = None,
     ) -> bool:
-        """
-        Verifies a signature with the key from this key set. It implements multiple techniques to avoid trying all keys:
-        If a `kid` is provided, only the key with this `kid` will be tried.
-        Otherwise, if an `alg` if provided, only keys that are compatible with the supplied `alg` will be tried.
-        Otherwise,
-        :param data: the signed data to verify
-        :param signature: the signature to verify against the signed data
-        :param alg: one or several algs to verify the signature
-        :param kid: the kid of the Jwk that will be used to validate the signature. If no kid is provided, multiple keys
-        from this key set may be tried.
-        :return: `True` if the signature validates with any of the tried keys, `False` otherwise
-        """
+        """Verify a signature with the key from this key set.
 
+        It implements multiple techniques to avoid trying all keys:
+        If a `kid` is provided, only the key with this `kid` will be tried.
+        Otherwise, if an `alg` or several `algs` are provided, only keys that are compatible with the supplied `alg` will be tried.
+        Otherwise, keys that have use = signature will be tried.
+        And if the signature is still not verified at that point, the keys with no specified alg and use will be tried.
+
+        Args:
+          data: the signed data to verify
+          signature: the signature to verify against the signed data
+          alg: alg to verify the signature, if there is only 1
+          algs: list of allowed signature algs, if there are several
+          kid: the kid of the Jwk that will be used to validate the signature. If no kid is provided, multiple keys
+        from this key set may be tried.
+
+        Returns:
+          `True` if the signature validates with any of the tried keys, `False` otherwise
+        """
         # if a kid is provided, try only the key matching `kid`
         if kid is not None:
             jwk = self.get_jwk_by_kid(kid)
@@ -155,7 +181,7 @@ class JwkSet(BaseJsonDict):
 
         # then with the keys that have no defined `use`
         for jwk in self.jwks:
-            if jwk.get("use") is None:
+            if jwk.get("use") is None and jwk.get("alg") is None:
                 try:
                     if jwk.verify(data, signature, alg):
                         return True

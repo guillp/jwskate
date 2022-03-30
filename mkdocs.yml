@@ -7,10 +7,10 @@ nav:
   - home: index.md
   - installation: installation.md
   - usage: usage.md
-  - modules: api.md
+  - API: api.md
   - contributing: contributing.md
-  - authors: authors.md
-  - history: history.md
+  #- authors: authors.md
+  #- history: history.md
 theme:
   name: material
   language: en
@@ -49,6 +49,7 @@ plugins:
   - search:
       lang: en
   - mkdocstrings:
+      enable_inventory: true
       watch:
         - jwskate
 extra:

@@ -1,3 +1,5 @@
+"""This module implements the JWS Compact format."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Tuple, Union
@@ -5,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Tuple, Union
 from binapy import BinaPy
 
 from jwskate.jwk.base import Jwk
-from jwskate.token import BaseToken
+from jwskate.token import BaseCompactToken
 
 from .signature import JwsSignature
 
@@ -14,18 +16,17 @@ if TYPE_CHECKING:
 
 
 class InvalidJws(ValueError):
-    """Raised when an invalid Jws is parsed"""
+    """Raised when an invalid Jws is parsed."""
 
 
-class JwsCompact(BaseToken):
-    """
-    Represents a Json Web Signature (JWS), using compact serialization, as defined in RFC7515.
-    """
+class JwsCompact(BaseCompactToken):
+    """Represents a Json Web Signature (JWS), using compact serialization, as defined in RFC7515."""
 
     def __init__(self, value: Union[bytes, str]):
-        """
-        Initializes a Jws, from its compact representation.
-        :param value: the Jws value
+        """Initialize a Jws, from its compact representation.
+
+        Args:
+            value: the JWS token value
         """
         super().__init__(value)
 
@@ -54,6 +55,17 @@ class JwsCompact(BaseToken):
 
     @classmethod
     def split(cls, value: bytes) -> Tuple[BinaPy, BinaPy, BinaPy]:
+        """Splits a JWS token value into its (header, payload, signature) parts.
+
+        Args:
+          value: the JWS token value
+
+        Returns:
+            a (header, payload, signature)
+
+        Raises:
+            InvalidJws: if the provided value doesn't have 2 dots.
+        """
         if value.count(b".") != 2:
             raise InvalidJws(
                 "A JWS must contain a header, a payload and a signature, separated by dots"
@@ -70,13 +82,16 @@ class JwsCompact(BaseToken):
         alg: Optional[str] = None,
         extra_headers: Optional[Dict[str, Any]] = None,
     ) -> "JwsCompact":
-        """
-        Signs a payload into a Jws and returns the resulting JwsCompact
-        :param payload: the payload to sign
-        :param jwk: the jwk to use to sign this payload
-        :param alg: the alg to use
-        :param extra_headers: additional headers to add to the Jws Headers
-        :return: a JwsCompact
+        """Sign a payload and returns the resulting JwsCompact.
+
+        Args:
+          payload: the payload to sign
+          jwk: the jwk to use to sign this payload
+          alg: the alg to use
+          extra_headers: additional headers to add to the Jws Headers
+
+        Returns:
+          the resulting token
         """
         jwk = Jwk(jwk)
 
@@ -93,6 +108,17 @@ class JwsCompact(BaseToken):
     def from_parts(
         cls, signed_part: Union[bytes, str], signature: Union[bytes, str]
     ) -> "JwsCompact":
+        """Constructs a JWS token based on its signed part and signature values.
+
+        Signed part is the concatenation of the header and payload, both encoded in Base64-Url, and joined by a dot.
+
+        Args:
+          signed_part: the signed part
+          signature: the signature value
+
+        Returns:
+            the resulting token
+        """
         if not isinstance(signed_part, bytes):
             signed_part = signed_part.encode("ascii")
 
@@ -100,17 +126,25 @@ class JwsCompact(BaseToken):
 
     @property
     def signed_part(self) -> bytes:
-        """
-        Returns the signed part (header + payload) from this JwsCompact
-        :return:
+        """Returns the signed part (header + payload) from this JwsCompact.
+
+        Returns:
+            the signed part
         """
         return b".".join(self.value.split(b".", 2)[:2])
 
     @property
     def alg(self) -> str:
+        """Get the signature algorithm (alg) from this token headers.
+
+        Returns:
+            the `alg` value
+        Raises:
+            AttributeError: if the `alg` header value is not a string
+        """
         alg = self.get_header("alg")
         if alg is None or not isinstance(alg, str):
-            raise KeyError("This JWE doesn't have a valid 'alg' header")
+            raise AttributeError("This JWS doesn't have a valid 'alg' header")
         return alg
 
     def verify_signature(
@@ -119,16 +153,28 @@ class JwsCompact(BaseToken):
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
-        """
-        Verify the signature from this JwsCompact using a Jwk
-        :param jwk: the Jwk to use to validate this signature
-        :param alg: the alg to use
-        :return: `True` if the signature matches, `False` otherwise
+        """Verify the signature from this JwsCompact using a Jwk.
+
+        Args:
+          jwk: the Jwk to use to validate this signature
+          alg: the alg to use, if there is only 1 allowed
+          algs: the allowed algs, if here are several
+
+        Returns:
+         `True` if the signature matches, `False` otherwise
         """
         jwk = Jwk(jwk)
         return jwk.verify(self.signed_part, self.signature, alg, algs)
 
     def flat_json(self, unprotected_header: Any = None) -> JwsJsonFlat:
+        """Create a JWS in JSON flat format based on this Compact JWS.
+
+        Args:
+          unprotected_header: optional unprotected header to include in the JWS JSON
+
+        Returns:
+            the resulting token
+        """
         from .json import JwsJsonFlat
 
         protected, payload, signature = self.split(self.value)
@@ -141,6 +187,16 @@ class JwsCompact(BaseToken):
             content["header"] = unprotected_header
         return JwsJsonFlat(content)
 
-    def general_json(self) -> JwsJsonGeneral:
-        jws = self.flat_json()
+    def general_json(self, unprotected_header: Any = None) -> JwsJsonGeneral:
+        """Create a JWS in JSON General format based on this JWS Compact.
+
+        The resulting token will have a single signature which is the one from this token.
+
+        Args:
+            unprotected_header: optional unprotected header to include in the JWS JSON
+
+        Returns:
+            the resulting token
+        """
+        jws = self.flat_json(unprotected_header)
         return jws.generalize()

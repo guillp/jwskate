@@ -1,3 +1,5 @@
+"""This module contains several utilities for algorithmic agility."""
+
 import warnings
 from typing import Iterable, List, Mapping, Optional, Type, TypeVar
 
@@ -5,7 +7,7 @@ from jwskate.jwa import BaseAlg
 
 
 class UnsupportedAlg(ValueError):
-    pass
+    """Raised when an UnsupportedAlg is requested."""
 
 
 T = TypeVar("T", bound=Type[BaseAlg])
@@ -14,14 +16,21 @@ T = TypeVar("T", bound=Type[BaseAlg])
 def select_alg(
     jwk_alg: Optional[str], alg: Optional[str], supported_algs: Mapping[str, T]
 ) -> T:
-    """
-    Given an alg parameter from a JWK, and/or a user-specified alg, return the alg to use.
+    """Given an alg parameter from a JWK, and/or a user-specified alg, return the alg to use.
 
     This checks the coherency between the user specified `alg` and the `jwk_alg`, and will emit a warning
     if the user specified alg is different from the `jwk_alg`.
-    :param jwk_alg: the alg from the JWK, if any
-    :param alg: a user specified alg
-    :return: the alg to use
+
+    Args:
+      jwk_alg: the alg from the JWK, if any
+      alg: a user specified alg
+      supported_algs: a mapping of supported alg names to alg wrapper
+
+    Returns:
+      the alg to use
+
+    Raises:
+        UnsupportedAlg: if the requested alg is not supported
     """
     choosen_alg: str
     if jwk_alg is not None:
@@ -39,13 +48,9 @@ def select_alg(
     try:
         return supported_algs[choosen_alg]
     except KeyError:
-        raise ValueError(
+        raise UnsupportedAlg(
             f"Alg {choosen_alg} is not supported. Supported algs: {list(supported_algs)}."
         )
-
-    raise ValueError(
-        "This key doesn't have an 'alg' parameter, you need to provide the signing alg for each operation."
-    )
 
 
 def select_algs(
@@ -54,16 +59,25 @@ def select_algs(
     algs: Optional[Iterable[str]],
     supported_algs: Mapping[str, T],
 ) -> List[T]:
-    """
-    Given an alg parameter from a JWK, and/or a user-specified alg, and/or a user specified list of useable algs,
-    return a list of algorithms.
+    """Given an alg parameter from a JWK, and/or a user-specified alg, and/or a user specified list of useable algs, return a list of algorithms.
 
     This method is typically used to get the list of possible algs when checking a signature.
-    :param jwk_alg: the alg from the JWK, if any
-    :param alg: a user specified alg to use
-    :param algs: a user specified list of algs to use
-    :param supported_algs: a mapping of alg names to alg description
-    :return: a list of possible algs to check
+
+    Args:
+      jwk_alg: the alg from the JWK, if any
+      alg: a user specified alg to use
+      algs: a user specified list of algs to use, if several are allowed
+      supported_algs: a mapping of alg names to alg wrappers
+
+    Returns:
+      a list of possible algs to check
+
+    Raises:
+        ValueError: if both 'alg' and 'algs' parameters are used
+        UnsupportedAlg: if none of the requested alg are supported
+
+    Warnings:
+        if the requested 'alg' is different that the 'jwk_alg', or the 'jwk_alg' is not in the 'algs'
     """
     if alg and algs:
         raise ValueError("Please use either parameter 'alg' or 'algs', not both.")

@@ -1,3 +1,5 @@
+"""This module implements AES based Key Management algorithms."""
+
 from binapy import BinaPy
 from cryptography.hazmat.primitives import keywrap
 
@@ -5,37 +7,51 @@ from ..base import BaseKeyManagementAlg, BaseSymmetricAlg
 
 
 class BaseAesKeyWrap(BaseKeyManagementAlg, BaseSymmetricAlg):
-    """
-    Base class for AES KW algorithms.
-    """
+    """Base class for AES KW algorithms."""
 
     key_size: int
     """Required AES key size in bits."""
 
     @classmethod
     def check_key(cls, key: bytes) -> None:
+        """Check that a key is valid for usage with this algorithm.
+
+        To be valid, a key must be `bytes` and be of appropriate length (128, 192 or 256 bits).
+
+        Args:
+          key: a key to check
+
+        Raises:
+            ValueError: if the key is not appropriate
+        """
         if not isinstance(key, bytes) or len(key) * 8 != cls.key_size:
             raise ValueError(f"Key must be {cls.key_size} bits")
 
     def wrap_key(self, plainkey: bytes) -> BinaPy:
-        """
-        Wrap a key.
-        :param plainkey: the key to wrap.
-        :return: the wrapped key.
+        """Wrap a key.
+
+        Args:
+          plainkey: the key to wrap.
+
+        Returns:
+          BinaPy: the wrapped key.
         """
         return BinaPy(keywrap.aes_key_wrap(self.key, plainkey))
 
     def unwrap_key(self, cipherkey: bytes) -> BinaPy:
-        """
-        Unwrap a key.
-        :param cipherkey: the wrapped key.
-        :return: the unwrapped key.
+        """Unwrap a key.
+
+        Args:
+          cipherkey: the wrapped key.
+
+        Returns:
+          BinaPy: the unwrapped key.
         """
         return BinaPy(keywrap.aes_key_unwrap(self.key, cipherkey))
 
 
 class A128KW(BaseAesKeyWrap):
-    """AES Key Wrap with default initial value using 128-bit key"""
+    """AES Key Wrap with default initial value using 128-bit key."""
 
     name = "A128KW"
     description = __doc__
@@ -43,7 +59,7 @@ class A128KW(BaseAesKeyWrap):
 
 
 class A192KW(BaseAesKeyWrap):
-    """AES Key Wrap with default initial value using 192-bit key"""
+    """AES Key Wrap with default initial value using 192-bit key."""
 
     name = "A192KW"
     description = __doc__
@@ -51,7 +67,7 @@ class A192KW(BaseAesKeyWrap):
 
 
 class A256KW(BaseAesKeyWrap):
-    """AES Key Wrap with default initial value using 256-bit key"""
+    """AES Key Wrap with default initial value using 256-bit key."""
 
     name = "A256KW"
     description = __doc__

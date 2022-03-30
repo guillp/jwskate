@@ -1,3 +1,5 @@
+"""This module implements the Edwards-curve Digital Signature Algorithm (EdDSA)."""
+
 from typing import Union
 
 from binapy import BinaPy
@@ -14,17 +16,19 @@ class EdDsa(
     ],
     BaseSignatureAlg,
 ):
+    """EdDSA signature algorithms."""
 
     private_key_class = (ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey)
     public_key_class = (ed25519.Ed25519PublicKey, ed448.Ed448PublicKey)
 
     name = "EdDSA"
+    description = __doc__
 
-    def sign(self, data: bytes) -> BinaPy:
+    def sign(self, data: bytes) -> BinaPy:  # noqa: D102
         with self.private_key_required() as key:
             return BinaPy(key.sign(data))
 
-    def verify(self, data: bytes, signature: bytes) -> bool:
+    def verify(self, data: bytes, signature: bytes) -> bool:  # noqa: D102
         with self.public_key_required() as key:
             try:
                 key.verify(signature, data)

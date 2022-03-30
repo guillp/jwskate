@@ -1,3 +1,5 @@
+"""This module implements AES-CBC with HMAC-SHA based Encryption algorithms."""
+
 from typing import Optional, Tuple
 
 from binapy import BinaPy
@@ -9,9 +11,7 @@ from ..base import BaseAESEncryptionAlg
 
 
 class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
-    """
-    Implements the family of AES-CBC with HMAC-SHA encryption algorithms.
-    """
+    """Implements the family of AES-CBC with HMAC-SHA encryption algorithms."""
 
     mac_key_size: int
     """Required key size for the Hash algorithm, in bits."""
@@ -26,12 +26,14 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
     """Hash algorithm to use."""
 
     def __init_subclass__(cls) -> None:
+        """This automatically sets the total key size based on the MAC and AES key sizes."""
         cls.key_size = cls.mac_key_size + cls.aes_key_size
 
     def __init__(self, key: bytes) -> None:
-        """
-        Initialize this wrapper with the given key.
-        :param key: the key to use for encryption and decryption.
+        """Initialize this wrapper with the given key.
+
+        Args:
+            key: the key to use for encryption and decryption.
         """
         super().__init__(key)
         self.mac_key = self.key[: self.mac_key_size // 8]
@@ -39,12 +41,15 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         self.padding = padding.PKCS7(algorithms.AES.block_size)
 
     def mac(self, ciphertext: bytes, iv: bytes, aad: Optional[bytes] = None) -> BinaPy:
-        """
-        Produce a Message Authentication Code for the given `ciphertext`, `iv` and `aad`.
-        :param ciphertext: the ciphertext.
-        :param iv: the Initialization Vector.
-        :param aad: the Additional Authenticated data.
-        :return: the resulting MAC.
+        """Produce a Message Authentication Code for the given `ciphertext`, `iv` and `aad`.
+
+        Args:
+          ciphertext: the ciphertext
+          iv: the Initialization Vector
+          aad: the Additional Authenticated data
+
+        Returns:
+          the resulting MAC.
         """
         if aad is None:
             aad = b""
@@ -59,13 +64,15 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
     def encrypt(
         self, plaintext: bytes, iv: bytes, aad: Optional[bytes] = None
     ) -> Tuple[BinaPy, BinaPy]:
-        """
-        Encrypt and MAC the given `plaintext`, using the given Initialization Vector (`iv`)
-        and optional Additional Authenticated Data (`aad`).
-        :param plaintext: the plain data to cipher.
-        :param iv: the Initialization Vector.
-        :param aad: the Additional Authenticated Data, if any.
-        :return: the ciphered data and authentication tag.
+        """Encrypt and MAC the given `plaintext`, using the given Initialization Vector (`iv`) and optional Additional Authenticated Data (`aad`).
+
+        Args:
+          plaintext: the plain data to encrypt
+          iv: the Initialization Vector
+          aad: the Additional Authenticated Data, if any
+
+        Returns:
+          a tuple (encrypted_data, authentication_tag)
         """
         cipher = ciphers.Cipher(algorithms.AES(self.aes_key), modes.CBC(iv)).encryptor()
         padder = self.padding.padder()
@@ -77,13 +84,16 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
     def decrypt(
         self, ciphertext: bytes, auth_tag: bytes, iv: bytes, aad: Optional[bytes]
     ) -> BinaPy:
-        """
-        Decrypt and authenticate the given ciphertext with authentication tag (`ciphertext_with_tag`), as produced by `encrypt()`.
-        :param ciphertext: the ciphertext.
-        :param auth_tag: the authentication tag.
-        :param iv: the Initialization Vector.
-        :param aad: the Additional Authenticated Data, if any.
-        :return: the plain data.
+        """Decrypt and authenticate the given ciphertext with authentication tag (`ciphertext_with_tag`), as produced by `encrypt()`.
+
+        Args:
+          ciphertext: the ciphertext
+          auth_tag: the authentication tag
+          iv: the Initialization Vector
+          aad: the Additional Authenticated Data, if any
+
+        Returns:
+          the decrypted data
         """
         mac = self.mac(ciphertext, iv, aad)
         if not constant_time.bytes_eq(mac, auth_tag):
@@ -96,7 +106,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
 
 class Aes128CbcHmacSha256(BaseAesCbcHmacSha2):
-    """AES_128_CBC_HMAC_SHA_256"""
+    """AES_128_CBC_HMAC_SHA_256."""
 
     name = "A128CBC-HS256"
     description = __doc__
@@ -107,7 +117,7 @@ class Aes128CbcHmacSha256(BaseAesCbcHmacSha2):
 
 
 class Aes192CbcHmacSha384(BaseAesCbcHmacSha2):
-    """AES_192_CBC_HMAC_SHA_384"""
+    """AES_192_CBC_HMAC_SHA_384."""
 
     name = "A192CBC-HS384"
     description = __doc__
@@ -118,7 +128,7 @@ class Aes192CbcHmacSha384(BaseAesCbcHmacSha2):
 
 
 class Aes256CbcHmacSha512(BaseAesCbcHmacSha2):
-    """AES_256_CBC_HMAC_SHA_512"""
+    """AES_256_CBC_HMAC_SHA_512."""
 
     name = "A256CBC-HS512"
     description = __doc__

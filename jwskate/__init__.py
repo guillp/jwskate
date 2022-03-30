@@ -1,14 +1,16 @@
-"""
-`jwskate` implements the various Json Web Crypto-related standards: JWA, JWK, JWKS, JWE, JWT. Each standard has its
-own submodule, but for convenience, you can import any class or component directly from the root `jwskate` module.
+"""Main module for `jwskate`.
 
-`jwskate` doesn't implement any actual cryptographic operation, it just provides a set of convenient wrappers
-around the `cryptography` module.
+The `jwskate` module implements the various Json Web Crypto-related
+standards: JWA, JWK, JWKS, JWE, JWT. Each standard has its own submodule, but
+for convenience, you can import any class or component directly from the root
+`jwskate` module.
+
+`jwskate` doesn't implement any actual cryptographic operation, it just
+provides a set of convenient wrappers around the `cryptography` module.
 """
 
 __author__ = """Guillaume Pujol"""
 __email__ = "guill.p.linux@gmail.com"
-__version__ = "0.1.0"
 
 from .jwa import (
     A128GCM,
@@ -46,6 +48,8 @@ from .jwa import (
     BaseAsymmetricAlg,
     BaseEcdhEs_AesKw,
     BaseKeyManagementAlg,
+    BasePbes2,
+    BaseRsaKeyWrap,
     BaseSignatureAlg,
     BaseSymmetricAlg,
     DirectKeyUse,
@@ -58,16 +62,16 @@ from .jwa import (
     EdDsa,
     EllipticCurve,
     OKPCurve,
-    Pbes2,
     Pbes2_HS256_A128KW,
     Pbes2_HS384_A192KW,
     Pbes2_HS512_A256KW,
+    PrivateKeyRequired,
+    PublicKeyRequired,
     RsaEsOaep,
     RsaEsOaepSha256,
     RsaEsOaepSha384,
     RsaEsOaepSha512,
     RsaEsPcks1v1_5,
-    RsaKeyWrap,
     secp256k1,
 )
 from .jwe import InvalidJwe, JweCompact

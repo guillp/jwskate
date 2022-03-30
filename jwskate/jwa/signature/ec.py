@@ -1,3 +1,5 @@
+"""This module implement Elliptic Curve signature algorithms."""
+
 from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import asymmetric, hashes
@@ -6,18 +8,20 @@ from ..base import BaseAsymmetricAlg, BaseSignatureAlg
 from ..ec import P_256, P_384, P_521, EllipticCurve, secp256k1
 
 
-class ECSignatureAlg(
+class BaseECSignatureAlg(
     BaseAsymmetricAlg[
         asymmetric.ec.EllipticCurvePrivateKey, asymmetric.ec.EllipticCurvePublicKey
     ],
     BaseSignatureAlg,
 ):
+    """Base class for Elliptic Curve signature algorithms."""
+
     curve: EllipticCurve
     hashing_alg: hashes.HashAlgorithm
     public_key_class = asymmetric.ec.EllipticCurvePublicKey
     private_key_class = asymmetric.ec.EllipticCurvePrivateKey
 
-    def sign(self, data: bytes) -> BinaPy:
+    def sign(self, data: bytes) -> BinaPy:  # noqa: D102
         with self.private_key_required() as key:
             dss_sig = key.sign(data, asymmetric.ec.ECDSA(self.hashing_alg))
             r, s = asymmetric.utils.decode_dss_signature(dss_sig)
@@ -25,7 +29,7 @@ class ECSignatureAlg(
                 s, self.curve.coordinate_size
             )
 
-    def verify(self, data: bytes, signature: bytes) -> bool:
+    def verify(self, data: bytes, signature: bytes) -> bool:  # noqa: D102
         with self.public_key_required() as key:
             if len(signature) != self.curve.coordinate_size * 2:
                 raise ValueError(
@@ -51,29 +55,37 @@ class ECSignatureAlg(
                 return False
 
 
-class ES256(ECSignatureAlg):
+class ES256(BaseECSignatureAlg):  # noqa: D415
+    """ECDSA using P-256 and SHA-256"""
+
     name = "ES256"
-    description = "ECDSA using P-256 and SHA-256"
+    description = __doc__
     curve = P_256
     hashing_alg = hashes.SHA256()
 
 
-class ES384(ECSignatureAlg):
+class ES384(BaseECSignatureAlg):  # noqa: D415
+    """ECDSA using P-384 and SHA-384"""
+
     name = "ES384"
-    description = "ECDSA using P-384 and SHA-384"
+    description = __doc__
     curve = P_384
     hashing_alg = hashes.SHA384()
 
 
-class ES512(ECSignatureAlg):
+class ES512(BaseECSignatureAlg):  # noqa: D415
+    """ECDSA using P-521 and SHA-512"""
+
     name = "ES512"
-    description = "ECDSA using P-521 and SHA-512"
+    description = __doc__
     curve = P_521
     hashing_alg = hashes.SHA512()
 
 
-class ES256K(ECSignatureAlg):
+class ES256K(BaseECSignatureAlg):  # noqa: D415
+    """ECDSA using secp256k1 and SHA-256"""
+
     name = "ES256k"
-    description = "ECDSA using secp256k1 and SHA-256"
+    description = __doc__
     curve = secp256k1
     hashing_alg = hashes.SHA256()

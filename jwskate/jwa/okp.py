@@ -1,6 +1,4 @@
-"""
-This module contains classes that describe CFRG Elliptic Curve Diffie-Hellman algorithms as specified in RFC8037.
-"""
+"""This module contains classes that describe CFRG Elliptic Curve Diffie- Hellman algorithms as specified in RFC8037."""
 
 from __future__ import annotations
 
@@ -17,34 +15,36 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
 
 
-class PublicKeyProtocol(Protocol):
+class PublicKeyProtocol(Protocol):  # noqa
     def public_bytes(
         self,
         encoding: serialization.Encoding,
         format: serialization.PublicFormat,
-    ) -> bytes:
+    ) -> bytes:  # noqa
         ...
 
 
-class PrivateKeyProtocol(Protocol):
+class PrivateKeyProtocol(Protocol):  # noqa
     def private_bytes(
         self,
         encoding: serialization.Encoding,
         format: serialization.PrivateFormat,
         encryption_algorithm: serialization.KeySerializationEncryption,
-    ) -> bytes:
+    ) -> bytes:  # noqa
         ...
 
-    def public_key(self) -> PublicKeyProtocol:
+    def public_key(self) -> PublicKeyProtocol:  # noqa
         ...
 
     @classmethod
-    def generate(self) -> PrivateKeyProtocol:
+    def generate(self) -> PrivateKeyProtocol:  # noqa
         ...
 
 
 @dataclass
 class OKPCurve:
+    """Represent an Octet Key Pair (OKP) Curve."""
+
     name: str
     """Curve name as defined in [IANA JOSE](https://www.iana.org/assignments/jose/jose.xhtml#web-key-elliptic-curve).
     This name will appear in `alg` headers."""
@@ -62,14 +62,17 @@ class OKPCurve:
     """Curve usage (`'sig'` or '`enc'`)."""
 
     instances: ClassVar[Dict[str, OKPCurve]] = {}
+    """Registry of subclasses, in a {name: instance} mapping."""
 
     def __post_init__(self) -> None:
+        """Automatically registers subclasses in the instance registry."""
         self.instances[self.name] = self
 
     def generate(self) -> Tuple[bytes, bytes]:
-        """
-        Generate a new private key on this curve.
-        :return: a tuple of `x` (public  part), and `d` (private part), as bytes.
+        """Generate a new private key on this curve.
+
+        Returns:
+            a tuple of `x` (public  part), and `d` (private part), as bytes
         """
         key = self.cryptography_private_key_class.generate()
         x = key.public_key().public_bytes(
@@ -84,10 +87,16 @@ class OKPCurve:
 
     @classmethod
     def get_curve(cls, key: Union[PublicKeyProtocol, PrivateKeyProtocol]) -> OKPCurve:
-        """
-        Return the appropriate `OKPCurve` instance for a given `cryptography` private or public key.
-        :param key: `cryptography` private or public OKP key.
-        :return: the appropriate `OKPCurve` for the given key.
+        """Return the appropriate `OKPCurve` instance for a given `cryptography` private or public key.
+
+        Args:
+          key(Union[PublicKeyProtocol, PrivateKeyProtocol]): `cryptography` private or public OKP key.
+
+        Returns:
+          OKPCurve: the appropriate `OKPCurve` for the given key
+
+        Raises:
+            NotImplementedError: if the required OKP curve is not supported
         """
         for c in cls.instances.values():
             if isinstance(

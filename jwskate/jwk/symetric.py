@@ -1,3 +1,5 @@
+"""This module implements JWK representing Symmetric keys."""
+
 from typing import Any, List, Optional, Tuple, Union
 
 from binapy import BinaPy
@@ -27,9 +29,7 @@ from .base import Jwk, JwkParameter
 
 
 class SymmetricJwk(Jwk):
-    """
-    Implement Symetric keys, with `kty=oct`.
-    """
+    """Implement Symetric keys, with `kty=oct`."""
 
     KTY = "oct"
     CRYPTOGRAPHY_KEY_CLASSES = (bytes,)
@@ -66,32 +66,54 @@ class SymmetricJwk(Jwk):
     }
 
     def public_jwk(self) -> "Jwk":
+        """This always raises a ValueError since SymmetricKeys are always private.
+
+        Raises:
+            ValueError: symmetric keys are always private, it makes no sense to use them as public keys
+        """
         raise ValueError("Symmetric keys don't have a public key")
 
     @classmethod
     def from_bytes(cls, k: Union[bytes, str], **params: Any) -> "SymmetricJwk":
-        """
-        Initializes a SymmetricJwk from a raw secret key.
-        The provided secret key is encoded and used as the `k` parameter for the returned SymetricKey.
-        :param k: the key to use
-        :param params: additional parameters for the returned Jwk
-        :return: a SymmetricJwk
+        """Initializes a SymmetricJwk from a raw secret key. The provided secret key is encoded and used as the `k` parameter for the returned SymetricKey.
+
+        Args:
+          k: the key to use
+          **params: additional members to include in the Jwk
+
+        Returns:
+          the resulting SymmetricJwk
         """
         return cls(dict(kty="oct", k=BinaPy(k).encode_to("b64u").decode(), **params))
 
     @classmethod
     def generate(cls, size: int = 128, **params: str) -> "SymmetricJwk":
-        """
-        Generates a random SymmetricJwk, with a given key size.
-        :param size: the size of the generated key, in bytes.
-        :param params: additional parameters for the returned Jwk
-        :return: a SymmetricJwk with a random key
+        """Generate a random SymmetricJwk, with a given key size.
+
+        Args:
+          size: the size of the generated key, in bytes
+          **params: additional members to include in the Jwk
+
+        Returns:
+            a SymmetricJwk with a randomly generated key
         """
         key = BinaPy.random_bits(size)
         return cls.from_bytes(key, **params)
 
     @classmethod
     def generate_for_alg(cls, alg: str, **params: str) -> "SymmetricJwk":
+        """Generate a SymmetricJwk that is suitable for use with the given alg.
+
+        Args:
+          alg: the signing algorithm to use this key with
+          **params: additional members to include in the Jwk
+
+        Returns:
+            the resulting Jwk
+
+        Raises:
+            ValueError: if the provided `alg` is not supported
+        """
         if alg in cls.SIGNATURE_ALGORITHMS:
             sigalg = cls.SIGNATURE_ALGORITHMS[alg]
             return cls.generate(sigalg.min_key_size, alg=alg, **params)
@@ -101,18 +123,31 @@ class SymmetricJwk(Jwk):
         raise ValueError("Unsupported alg", alg)
 
     def to_cryptography_key(self) -> Any:
+        """Converts this Jwk into a key usable with `cryptography`.
+
+        For SymmetricJwk instances, those are just `bytes` values.
+
+        Returns:
+            the raw private key, as `bytes`
+        """
         return self.key
 
     @property
     def key(self) -> bytes:
-        """
-        Returns the raw symmetric key.
-        :return: the key from the `k` parameter, base64u-decoded.
+        """Returns the raw symmetric key.
+
+        Returns:
+             the key from the `k` parameter, base64u-decoded
         """
         return BinaPy(self.k).decode_from("b64u")
 
     @property
     def key_size(self) -> int:
+        """The key size, in bits.
+
+        Returns:
+            the key size in bits
+        """
         return len(self.key) * 8
 
     def encrypt(
@@ -122,6 +157,19 @@ class SymmetricJwk(Jwk):
         alg: Optional[str] = None,
         iv: Optional[bytes] = None,
     ) -> Tuple[BinaPy, BinaPy, BinaPy]:
+        """Encrypt arbitrary data using this key. Supports Authenticated Encryption with the Additional Authenticated Data (`aad`). An Initializatin Vector (IV) will be generated automatically. You can choose your own IV by providing the `iv` parameter (only use this if you know what you are doing).
+
+        This return the ciphertext, the authentication tag, and the used IV (if an IV was provided as parameter, the same IV is returned).
+
+        Args:
+          plaintext: the plaintext to encrypt
+          aad: the Additional Authentication Data, if any
+          alg: the encryption alg to use
+          iv: the IV to use, if you want a specific value
+
+        Returns:
+            a (ciphertext, authentication_tag, iv) tuple
+        """
         encalg = select_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
 
         if iv is None:
@@ -139,19 +187,36 @@ class SymmetricJwk(Jwk):
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
     ) -> BinaPy:
+        """Decrypt arbitrary data.
+
+        Args:
+          ciphertext: the encrypted data
+          tag: the authentication tag
+          iv: the Initialization Vector (must be the same as used during encryption)
+          aad: the Additional Authenticated Data (must be the same as used during encryption)
+          alg: the decryption alg (must be the same as used during encryption)
+
+        Returns:
+            the decrypted clear-text
+        """
         encalg = select_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
-
-        if self.key_size != encalg.key_size:
-            raise ValueError(
-                f"This key size of {self.key_size} doesn't match the expected keysize for {encalg.name} of {encalg.key_size} bits"
-            )
-
         decryptor = encalg(self.key)
         plaintext: bytes = decryptor.decrypt(ciphertext, tag, iv, aad)
 
         return BinaPy(plaintext)
 
     def wrap_key(self, plainkey: bytes, alg: Optional[str] = None) -> BinaPy:
+        """Wrap a symmetric key.
+
+        Args:
+          plainkey: the symmetric key to wrap
+          alg: the encryption alg to use
+
+        Returns:
+            the wrapped key
+        Raises:
+            UnsupportedAlg: if the provided alg is not supported
+        """
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.to_cryptography_key())
         if isinstance(wrapper, BaseAesKeyWrap):
@@ -161,6 +226,17 @@ class SymmetricJwk(Jwk):
         return BinaPy(cipherkey)
 
     def unwrap_key(self, cipherkey: bytes, alg: Optional[str] = None) -> Jwk:
+        """Unwrap a symmetric key.
+
+        Args:
+          cipherkey: the wrapped key
+          alg: the decryption alg
+
+        Returns:
+            the clear-text symmetric key
+        Raises:
+            UnsupportedAlg: if the provided alg is not supported
+        """
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         wrapper = keyalg(self.key)
         if isinstance(wrapper, BaseAesKeyWrap):
@@ -170,6 +246,11 @@ class SymmetricJwk(Jwk):
         return SymmetricJwk.from_bytes(plaintext)
 
     def supported_key_management_algorithms(self) -> List[str]:
+        """Return the list of supported Key Management algorithms, usable for key (un)wrapping with this key.
+
+        Returns:
+            a list of supported algorithms identifiers
+        """
         return [
             name
             for name, alg in self.KEY_MANAGEMENT_ALGORITHMS.items()
@@ -177,6 +258,11 @@ class SymmetricJwk(Jwk):
         ]
 
     def supported_encryption_algorithms(self) -> List[str]:
+        """Return the list of supported Encryption/Decryption algorithms with this key.
+
+        Returns:
+            a list of supported algorithms identifiers
+        """
         return [
             name
             for name, alg in self.ENCRYPTION_ALGORITHMS.items()

@@ -1,3 +1,5 @@
+"""This module implements the `Jwk` base class, which provides most of the common features of all JWK types."""
+
 from __future__ import annotations
 
 import hashlib
@@ -14,7 +16,6 @@ from typing import (
     Optional,
     Tuple,
     Type,
-    TypeVar,
     Union,
 )
 
@@ -28,52 +29,47 @@ from jwskate.jwa import (
     BaseAsymmetricAlg,
     BaseEcdhEs_AesKw,
     BaseKeyManagementAlg,
+    BaseRsaKeyWrap,
     BaseSignatureAlg,
     BaseSymmetricAlg,
     DirectKeyUse,
     EcdhEs,
-    RsaKeyWrap,
 )
 
+from ..token import BaseJsonDict
 from .alg import UnsupportedAlg, select_alg, select_algs
 
 if TYPE_CHECKING:
     from .jwks import JwkSet
 
 
+class UnsupportedKeyType(ValueError):
+    """Raised when an unsupported Key Type is requested."""
+
+
 class InvalidJwk(ValueError):
-    pass
+    """Raised when an invalid JWK is encountered."""
 
 
 @dataclass
-class JwkParameter:
+class JwkParameter:  # noqa: D101
     description: str
     is_private: bool
     is_required: bool
     kind: str
 
 
-D = TypeVar("D", bound="BaseJsonDict")
-
-
-class BaseJsonDict(Dict[str, Any]):
-    @classmethod
-    def from_json(cls: Type[D], j: str) -> D:
-        return cls(json.loads(j))
-
-    def to_json(self, *args: Any, **kwargs: Any) -> str:
-        return json.dumps(self, *args, **kwargs)
-
-
 class Jwk(BaseJsonDict):
-    """
-    Represents a Json Web Key (JWK), as specified in RFC7517.
-    A JWK is a JSON object that represents a cryptographic key.  The members of the object
-    represent properties of the key, including its value.
-    Just like a parsed JSON object, a :class:`Jwk` is a dict, so you can do with a Jwk anything you can do with a `dict`.
-    In addition, all keys parameters are exposed as attributes.
-    There are subclasses of `Jwk` for each specific Key Type, but you shouldn't have to use the subclasses directly
-    since they all present a common interface.
+    """Represents a Json Web Key (JWK), as specified in RFC7517.
+
+    A JWK is a JSON object that represents a cryptographic key.  The
+    members of the object represent properties of the key, including its
+    value. Just like a parsed JSON object, a :class:`Jwk` is a dict, so
+    you can do with a Jwk anything you can do with a `dict`. In
+    addition, all keys parameters are exposed as attributes. There are
+    subclasses of `Jwk` for each specific Key Type, but you shouldn't
+    have to use the subclasses directly since they all present a common
+    interface.
     """
 
     subclasses: Dict[str, Type[Jwk]] = {}
@@ -95,21 +91,26 @@ class Jwk(BaseJsonDict):
     ENCRYPTION_ALGORITHMS: Mapping[str, Type[BaseAESEncryptionAlg]] = {}
 
     def __init_subclass__(cls) -> None:
-        """
-        Automatically add subclasses to the registry.
-        This allows __new__ to pick the appropriate subclass when creating a Jwk
+        """Automatically add subclasses to the registry.
+
+        This allows __new__ to pick the appropriate subclass when
+        creating a Jwk
         """
         Jwk.subclasses[cls.KTY] = cls
         for klass in cls.CRYPTOGRAPHY_KEY_CLASSES:
             Jwk.cryptography_key_types[klass] = cls
 
     def __new__(cls, jwk: Union[Jwk, Dict[str, Any]]):  # type: ignore
-        """
-        Overridden `__new__` to allow Jwk to accept:
-        - a `dict` with the parsed Jwk content
-        - another Jwk, which will be used as-is instead of creating a copy
-        - an instance from a `cryptography` public or private key class
-        :param jwk: a dict containing JWK parameters, or another Jwk instance, or a `cryptography` key.
+        """Overridden `__new__` to make the Jwk constructor smarter.
+
+        The Jwk constructor will accept:
+
+            - a `dict` with the parsed Jwk content
+            - another Jwk, which will be used as-is instead of creating a copy
+            - an instance from a `cryptography` public or private key class
+
+        Args:
+            jwk: a dict containing JWK parameters, or another Jwk instance, or a `cryptography` key
         """
         if cls == Jwk:
             if isinstance(jwk, Jwk):
@@ -123,17 +124,18 @@ class Jwk(BaseJsonDict):
                 if subclass is None:
                     raise ValueError("Unsupported Key Type", kty)
                 return super().__new__(subclass)
-
-            return cls.from_cryptography_key(jwk)
+            else:
+                return cls.from_cryptography_key(jwk)
         return super().__new__(cls)
 
     def __init__(self, params: Dict[str, Any], include_kid_thumbprint: bool = False):
-        """
-        Initialize a Jwk. Accepts a `dict` with the parsed Jwk contents, and an optional kid if it isn't already part
-        of the dict.
-        If no `kid` is supplied and `include_kid_thumbprint`, a default kid is generated based on the key thumbprint (defined in RFC7638)
-        :param params: a dict with the parsed Jwk parameters.
-        :param kid: a Key Id to use if no `kid` parameters is present in `params`.
+        """Initialize a Jwk.
+
+        This accepts a `dict` with the parsed Jwk contents, and an optional kid if it isn't already part of the dict. If no `kid` is supplied and `include_kid_thumbprint`, a default kid is generated based on the key thumbprint (defined in RFC7638)
+
+        Args:
+            params: a dict with the parsed Jwk parameters
+            include_kid_thumbprint: if `True` (default), and there is no kid in the provided params, generate a kid based on the key thumbprint
         """
         super().__init__({key: val for key, val in params.items() if val is not None})
         self.is_private = False
@@ -142,10 +144,16 @@ class Jwk(BaseJsonDict):
             self["kid"] = self.thumbprint()
 
     def __getattr__(self, item: str) -> Any:
-        """
-        Allows access to key parameters as attributes, like `jwk.kid`, `jwk.kty`, instead of `jwk['kid']`, `jwk['kty']`, etc.
-        :param item:
-        :return:
+        """Allows access to key parameters as attributes, like `jwk.kid`, `jwk.kty`, instead of `jwk['kid']`, `jwk['kty']`, etc.
+
+        Args:
+            item: the member to access
+
+        Return:
+            the member value
+
+        Raises:
+            AttributeError: if the member is not found
         """
         value = self.get(item)
         if value is None:
@@ -153,11 +161,14 @@ class Jwk(BaseJsonDict):
         return value
 
     def thumbprint(self, hashalg: str = "SHA256") -> str:
-        """Returns the key thumbprint as specified by RFC 7638.
+        """Return the key thumbprint as specified by RFC 7638.
 
-        :param hashalg: A hash function (defaults to SHA256)
+        Args:
+          hashalg: A hash function (defaults to SHA256)
+
+        Returns:
+            the calculated thumbprint
         """
-
         digest = hashlib.new(hashalg)
 
         t = {"kty": self.get("kty")}
@@ -171,22 +182,34 @@ class Jwk(BaseJsonDict):
 
     @property
     def kty(self) -> str:
+        """Return the Key Type.
+
+        Returns:
+            the key type
+        """
         return self.KTY
 
     @property
     def alg(self) -> Optional[str]:
+        """Return the configured key alg, if any.
+
+        Returns:
+            the key alg
+        """
         alg = self.get("alg")
         if alg is not None and not isinstance(alg, str):
             raise TypeError(f"Invalid alg type {type(str)}", alg)
         return alg
 
     def _validate(self) -> None:
-        """
-        Internal method used to validate a Jwk. It checks that all required parameters are present and well-formed.
-        If the key is private, it sets the `is_private` flag to `True`.
+        """Internal method used to validate a Jwk. It checks that all required parameters are present and well-formed. If the key is private, it sets the `is_private` flag to `True`.
+
+        Raises:
+            TypeError: if the key type doesn't match the subclass
+            InvalidJwk: if the JWK misses required members or has invalid members
         """
         if self.get("kty") != self.KTY:
-            raise RuntimeError(
+            raise TypeError(
                 f"This key 'kty' {self.get('kty')} doesn't match this Jwk subclass intended 'kty' {self.KTY}!"
             )
 
@@ -239,30 +262,34 @@ class Jwk(BaseJsonDict):
         self.is_private = jwk_is_private
 
     def supported_signing_algorithms(self) -> List[str]:
-        """
-        Return a dict of signing algs that are compatible for use with this Jwk.
-        :return: a dict of signing algs
+        """Return the list of Signature algorithms that can be used with this key.
+
+        Returns:
+          a list of supported algs
         """
         return list(self.SIGNATURE_ALGORITHMS)
 
     def supported_key_management_algorithms(self) -> List[str]:
-        """
-        Return a dict of key management algs that are compatible for use with this Jwk.
-        :return: a dict of key management algs
+        """Return the list of Key Management algorithms that can be used with this key.
+
+        Returns:
+            a list of supported algs
         """
         return list(self.KEY_MANAGEMENT_ALGORITHMS)
 
     def supported_encryption_algorithms(self) -> List[str]:
-        """
-        Return a dict of encryption algs that are compatible for use with this Jwk.
-        :return: a dict of encryption algs
+        """Return the list of Encryption algorithms that can be used with this key.
+
+        Returns:
+            a list of supported algs
         """
         return list(self.ENCRYPTION_ALGORITHMS)
 
     def public_jwk(self) -> Jwk:
-        """
-        Return the public Jwk associated with this private Jwk.
-        :return: a Jwk containing only the public parameters.
+        """Return the public Jwk associated with this key.
+
+        Returns:
+          a Jwk with the public key
         """
         if not self.is_private:
             return self
@@ -297,20 +324,24 @@ class Jwk(BaseJsonDict):
         )
 
     def as_jwks(self) -> JwkSet:
-        """
-        Return a JwkSet containing this single key.
-        :return: a JwkSet
+        """Return a JwkSet with this key as single element.
+
+        Returns:
+            a JwsSet with this single key
         """
         from .jwks import JwkSet
 
         return JwkSet(keys=(self,))
 
     def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
-        """
-        Signs a data using this Jwk, and returns the signature.
-        :param data: the data to sign
-        :param alg: the alg to use (if this key doesn't have an `alg` parameter).
-        :return: the generated signature.
+        """Sign a data using this Jwk, and return the generated signature.
+
+        Args:
+          data: the data to sign
+          alg: the alg to use (if this key doesn't have an `alg` parameter)
+
+        Returns:
+          the generated signature
         """
         sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
         wrapper: BaseSignatureAlg
@@ -330,12 +361,16 @@ class Jwk(BaseJsonDict):
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
-        """
-        Verifies a signature using this Jwk, and returns `True` if valid.
-        :param data: the data to verify
-        :param signature: the signature to verify
-        :param alg: the alg to use to verify the signature (if this key doesn't have an `alg` parameter)
-        :return: `True` if the signature matches, `False` otherwise
+        """Verify a signature using this Jwk, and return `True` if valid.
+
+        Args:
+          data: the data to verify
+          signature: the signature to verify
+          alg: the allowed signature alg, if there is only one
+          algs: the allowed signature algs, if there are several
+
+        Returns:
+          `True` if the signature matches, `False` otherwise
         """
         wrapper: BaseSignatureAlg
         for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
@@ -357,17 +392,18 @@ class Jwk(BaseJsonDict):
         alg: Optional[str] = None,
         iv: Optional[bytes] = None,
     ) -> Tuple[BinaPy, BinaPy, BinaPy]:
-        """
-        Encrypts a plaintext, with an optional Additional Authenticated Data (AAD) using this JWK, and returns
-        the Encrypted Data, the Authentication Tag and the used Initialization Vector.
-        :param plaintext: the data to encrypt.
-        :param aad: the Additional Authenticated Data (AAD) to include in the authentication tag
-        :param alg: the alg to use to encrypt the data
-        :param iv: the Initialization Vector that was used to encrypt the data. If `iv` is passed as parameter, this
-        will return that same value. Otherwise, an IV is generated.
-        :return: a tuple (ciphertext, authentication_tag, iv)
-        """
+        """Encrypt a plaintext, with an optional Additional Authenticated Data (AAD) using this JWK, and return the Encrypted Data, the Authentication Tag and the used Initialization Vector.
 
+        Args:
+          plaintext: the data to encrypt.
+          aad: the Additional Authenticated Data (AAD) to include in the authentication tag
+          alg: the alg to use to encrypt the data
+          iv: the Initialization Vector that was used to encrypt the data. If `iv` is passed as parameter, this
+        will return that same value. Otherwise, an IV is generated.
+
+        Returns:
+          a tuple (ciphertext, authentication_tag, iv), as raw data
+        """
         raise NotImplementedError  # pragma: no cover
 
     def decrypt(
@@ -378,27 +414,43 @@ class Jwk(BaseJsonDict):
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
     ) -> BinaPy:
-        """
-        Decrypts an encrypted data using this Jwk, and returns the encrypted result.
+        """Decrypt an encrypted data using this Jwk, and return the encrypted result.
+
         This is implemented by subclasses.
-        :param ciphertext: the data to decrypt
-        :param iv: the Initialization Vector (IV) that was used for encryption
-        :param tag: the Authentication Tag that will be verified while decrypting data
-        :param aad: the Additional Authentication Data (AAD) to verify the Tag against
-        :param alg: the alg to use for decryption
-        :return: the clear-text data
+
+        Args:
+          ciphertext: the data to decrypt
+          tag: the Authentication Tag that will be verified while decrypting data
+          iv: the Initialization Vector (IV) that was used for encryption
+          aad: the Additional Authentication Data (AAD) to verify the Tag against
+          alg: the alg to use for decryption
+
+        Returns:
+          the clear-text data
         """
         raise NotImplementedError  # pragma: no cover
 
     def wrap_key(self, key: bytes, alg: Optional[str] = None) -> BinaPy:
-        """
-        Wraps a key using a Key Management Algorithm alg.
+        """Wrap a symmetric key using a Key Management Algorithm alg.
+
+        Args:
+          key: the symmetric key to wrap
+          alg: the Key Management alg to use
+
+        Returns:
+            the wrapped key
         """
         raise NotImplementedError
 
     def unwrap_key(self, cipherkey: bytes, alg: Optional[str] = None) -> Jwk:
-        """
-        Unwraps a key using a Key Management Algorithm alg.
+        """Unwrap a symmetric key using a Key Management Algorithm alg.
+
+        Args:
+          cipherkey: the wrapped key
+          alg: the Key Management alg to use
+
+        Returns:
+            the unwrapped key
         """
         raise NotImplementedError
 
@@ -410,12 +462,25 @@ class Jwk(BaseJsonDict):
         epk: Optional[Jwk] = None,
         **headers: Any,
     ) -> Tuple[Jwk, Mapping[str, Any], BinaPy]:
-        """
-        For DH-based algs. As a token issuer, derive a EPK and CEK from the recipient public key.
-        :param alg: the Key Management algorithm to use to produce the CEK
-        :param enc: the encryption algorithm to use with the CEK
-        :param extra_headers: additional headers that may be used to produce the CEK
-        :return: a tuple (CEK, additional_headers_map, wrapped_cek)
+        """For DH-based algs. As a token issuer, derive a EPK and CEK from the recipient public key.
+
+        For algorithms that rely on a random CEK, you can provide that value instead of letting `jwskate` generate a
+        safe, unique random value for you. Likewise, for algorithms that rely on an ephemeral key, you can provide an
+        EPK that you generated yourself, instead of letting `jwskate` generate an appropriate value for you.
+        Only use this if you know what you are doing!
+
+        Args:
+          enc: the encryption algorithm to use with the CEK
+          alg: the Key Management algorithm to use to produce the CEK
+          cek: CEK to use (leave `None` to have an adequate random value generated automatically)
+          epk: EPK to use (leave `None` to have an adequate ephemeral key generated automatically)
+          **headers: additional headers to include for the CEK derivation
+
+        Returns:
+          Tuple[Jwk,Mapping[str,Any],BinaPy]: a tuple (CEK, additional_headers_map, wrapped_cek)
+
+        Raises:
+            UnsupportedAlg: if the requested alg identifier is not supported
         """
         from jwskate import SymmetricJwk
 
@@ -424,7 +489,7 @@ class Jwk(BaseJsonDict):
 
         cek_headers: Dict[str, Any] = {}
 
-        if issubclass(keyalg, RsaKeyWrap):
+        if issubclass(keyalg, BaseRsaKeyWrap):
             rsa = keyalg(self.public_jwk().to_cryptography_key())
             if cek:
                 encalg.check_key(cek)
@@ -472,7 +537,7 @@ class Jwk(BaseJsonDict):
 
         elif issubclass(keyalg, DirectKeyUse):
             dir = keyalg(self.key)
-            cek = dir.sender_key(encalg)
+            cek = dir.direct_key(encalg)
             wrapped_cek = BinaPy(b"")
         else:
             raise UnsupportedAlg(f"Unsupported Key Management Alg {keyalg}")
@@ -482,21 +547,26 @@ class Jwk(BaseJsonDict):
     def recipient_key(
         self, wrapped_cek: bytes, alg: str, enc: str, **headers: Any
     ) -> Jwk:
-        """
-        For DH-based algs. As a token recipient, derive the same CEK that was used for encryption, based on the
-        recipient private key and the sender ephemeral public key.
-        :param wrapped_cek: the wrapped cek
-        :param alg: the Key Management algorithm to use to unwrap the CEK
-        :param enc: the encryption algorithm to use with the CEK
-        :param headers: additional headers that may be used to produce the CEK
-        :return: the clear-text CEK
+        """For DH-based algs. As a token recipient, derive the same CEK that was used for encryption, based on the recipient private key and the sender ephemeral public key.
+
+        Args:
+          wrapped_cek: the wrapped CEK
+          alg: the Key Management algorithm to use to unwrap the CEK
+          enc: the encryption algorithm to use with the CEK
+          **headers:
+
+        Returns:
+          the clear-text CEK, as a SymmetricJwk instance
+
+        Raises:
+            UnsupportedAlg: if the requested alg identifier is not supported
         """
         from jwskate import SymmetricJwk
 
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
         encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
 
-        if issubclass(keyalg, RsaKeyWrap):
+        if issubclass(keyalg, BaseRsaKeyWrap):
             rsa = keyalg(self.to_cryptography_key())
             cek = rsa.unwrap_key(wrapped_cek)
 
@@ -535,7 +605,7 @@ class Jwk(BaseJsonDict):
 
         elif issubclass(keyalg, DirectKeyUse):
             dir_ = keyalg(self.key)
-            cek = dir_.recipient_key(encalg)
+            cek = dir_.direct_key(encalg)
         else:
             raise UnsupportedAlg(f"Unsupported Key Management Alg {keyalg}")
 
@@ -543,43 +613,104 @@ class Jwk(BaseJsonDict):
 
     @classmethod
     def from_cryptography_key(cls, cryptography_key: Any) -> Jwk:
-        """
-        Initializes a Jwk from a key from the `cryptography` library.
+        """Initialize a Jwk from a key from the `cryptography` library.
 
-        `key` can be any private or public key supported by cryptography.
+        The input key can be any private or public key supported by cryptography.
+
+        Args:
+          cryptography_key: a `cryptography` key instance
+
+        Returns:
+            the matching `Jwk` instance
+
+        Raises:
+            TypeError: if the key type is not supported
         """
         for klass in cryptography_key.__class__.mro():
             jwk_class = cls.cryptography_key_types.get(klass)
             if jwk_class:
                 return jwk_class.from_cryptography_key(cryptography_key)
 
-        raise ValueError(f"Unsupported Jwk class for this Key Type: {cryptography_key}")
+        raise TypeError(f"Unsupported Jwk class for this Key Type: {cryptography_key}")
 
     def to_cryptography_key(self) -> Any:
-        """
-        Returns a key from the `cryptography` library that matches this Jwk
+        """Return a key from the `cryptography` library that matches this Jwk.
+
+        This is implemented by subclasses.
+
+        Returns:
+            a `cryptography`key instance initialized from the current key
         """
         raise NotImplementedError
 
     @classmethod
-    def from_pem_private_key(cls, data: bytes, password: Optional[bytes] = None) -> Jwk:
-        cryptography_key = serialization.load_pem_private_key(data, password)
+    def from_pem_key(cls, data: bytes, password: Optional[bytes] = None) -> Jwk:
+        """Load a Jwk from a PEM encoded private or public key.
+
+        Args:
+          data: the PEM encoded data to load
+          password: the password to decrypt the PEM, if required
+
+        Returns:
+            a Jwk instance from the loaded key
+        """
+        try:
+            cryptography_key = serialization.load_pem_private_key(data, password)
+        except Exception:
+            try:
+                cryptography_key = serialization.load_pem_public_key(data)
+                if password is not None:
+                    raise ValueError(
+                        "A public key was loaded from PEM, while a password was provided for decryption."
+                        "Only private keys are encrypted in PEM."
+                    )
+            except Exception:
+                raise ValueError(
+                    "The provided data is not a private or a public PEM encoded key."
+                )
+
         return cls.from_cryptography_key(cryptography_key)
 
-    def to_pem_private_key(cls, password: Optional[bytes] = None) -> str:
+    def to_pem_key(self, password: Optional[bytes] = None) -> str:
+        """Serialize this key to PEM format.
+
+        For private keys, you can provide a password for encryption.
+
+        Args:
+          password: password to use to encrypt the PEM
+
+        Returns:
+            the PEM encrypted key, as
+        """
         raise NotImplementedError
 
     @classmethod
-    def generate(self, **kwargs: Any) -> Jwk:
-        """
-        Generates a Private Key. This method is implemented by subclasses for specific Key Types
-        and returns an instance of that specific subclass.
+    def generate(cls, **kwargs: Any) -> Jwk:
+        """Generates a Private Key. This method is implemented by subclasses for specific Key Types and returns an instance of that specific subclass.
+
+        Args:
+          **kwargs: specific parameters depending on the type of key, or additional members to include in the Jwk
+
+        Returns:
+            a Jwk instance with a generated key
         """
         raise NotImplementedError
 
     @classmethod
     def generate_for_kty(cls, kty: str, **kwargs: Any) -> Jwk:
+        """Generate a key with a specific type and return the resulting Jwk.
+
+        Args:
+          kty: key type to generate
+          **kwargs: specific parameters depending on the key type, or additional members to include in the Jwk
+
+        Returns:
+            the resulting Jwk
+
+        Raises:
+            UnsupportedKeyType: if the key type is not supported
+        """
         jwk_class = cls.subclasses.get(kty)
         if jwk_class is None:
-            raise ValueError("Unsupported Key Type:", kty)
+            raise UnsupportedKeyType("Unsupported Key Type:", kty)
         return jwk_class.generate(**kwargs)

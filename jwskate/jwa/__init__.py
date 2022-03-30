@@ -1,8 +1,8 @@
-"""
-This module implements the Json Web Algorithms as defined in RFC7518.
+"""This module implements the Json Web Algorithms as defined in RFC7518.
 
-Each algorithm is represented as a wrapper around a symmetric or asymmetric key, and exposes the cryptographic
-operations as methods. The cryptographic operations themselves are delegated to `cryptography`.
+Each algorithm is represented as a wrapper around a symmetric or
+asymmetric key, and exposes the cryptographic operations as methods. The
+cryptographic operations themselves are delegated to `cryptography`.
 """
 
 from .base import (
@@ -12,6 +12,8 @@ from .base import (
     BaseKeyManagementAlg,
     BaseSignatureAlg,
     BaseSymmetricAlg,
+    PrivateKeyRequired,
+    PublicKeyRequired,
 )
 from .ec import P_256, P_384, P_521, EllipticCurve, secp256k1
 from .encryption import (
@@ -32,12 +34,13 @@ from .key_mgmt import (
     BaseAesGcmKeyWrap,
     BaseAesKeyWrap,
     BaseEcdhEs_AesKw,
+    BasePbes2,
+    BaseRsaKeyWrap,
     DirectKeyUse,
     EcdhEs,
     EcdhEs_A128KW,
     EcdhEs_A192KW,
     EcdhEs_A256KW,
-    Pbes2,
     Pbes2_HS256_A128KW,
     Pbes2_HS384_A192KW,
     Pbes2_HS512_A256KW,
@@ -46,7 +49,6 @@ from .key_mgmt import (
     RsaEsOaepSha384,
     RsaEsOaepSha512,
     RsaEsPcks1v1_5,
-    RsaKeyWrap,
 )
 from .okp import X448, X25519, Ed448, Ed25519, OKPCurve
 from .signature import (
@@ -98,11 +100,11 @@ __all__ = [
     "EcdhEs_A128KW",
     "EcdhEs_A192KW",
     "EcdhEs_A256KW",
-    "Pbes2",
+    "BasePbes2",
     "Pbes2_HS256_A128KW",
     "Pbes2_HS384_A192KW",
     "Pbes2_HS512_A256KW",
-    "RsaKeyWrap",
+    "BaseRsaKeyWrap",
     "RsaEsOaep",
     "RsaEsOaepSha256",
     "RsaEsOaepSha384",
@@ -127,4 +129,6 @@ __all__ = [
     "Ed448",
     "X448",
     "X25519",
+    "PrivateKeyRequired",
+    "PublicKeyRequired",
 ]

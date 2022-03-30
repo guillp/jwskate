@@ -1,6 +1,6 @@
-"""
-This module contains classes that describe Elliptic Curves as described in RFC7518.
-"""
+"""This module contains classes that describe Elliptic Curves as described in RFC7518."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, ClassVar, Dict, Tuple, Union
@@ -11,10 +11,10 @@ from cryptography.hazmat.primitives.asymmetric import ec
 
 @dataclass
 class EllipticCurve:
-    """
-    A descriptive class for Elliptic Curves.
+    """A descriptive class for Elliptic Curves.
 
-    Elliptic Curves have a name, a `cryptography.ec.EllipticCurve`, and a coordinate size.
+    Elliptic Curves have a name, a `cryptography.ec.EllipticCurve`, and
+    a coordinate size.
     """
 
     name: str
@@ -28,15 +28,18 @@ class EllipticCurve:
     coordinate_size: int
     """Coordinate size, in bytes."""
 
-    instances: "ClassVar[Dict[str, EllipticCurve]]" = {}
+    instances: ClassVar[Dict[str, EllipticCurve]] = {}
+    """Registry of subclasses, in a {name: instance} mapping."""
 
     def __post_init__(self) -> None:
+        """Automatically register subclasses in the instance registry."""
         self.instances[self.name] = self
 
     def generate(self) -> Tuple[int, int, int]:
-        """
-        Generate a new EC key on this curve.
-        :return: A tuple of 4 `int`s: x and y coordinates (public) and d private key.
+        """Generate a new EC key on this curve.
+
+        Returns:
+             a tuple of 4 `int`s: `x` and `y` coordinates (public key) and `d` (private key)
         """
         key = ec.generate_private_key(self.cryptography_curve)
         pn = key.private_numbers()  # type: ignore
@@ -49,10 +52,16 @@ class EllipticCurve:
     def get_curve(
         cls, key: Union[ec.EllipticCurvePublicKey, ec.EllipticCurvePrivateKey]
     ) -> "EllipticCurve":
-        """
-        Get the appropriate `EllipticCurve` instance for a given `cryptography` `EllipticCurvePublicKey`.
-        :param key: an Elliptic Curve private or public key from `cryptography`.
-        :return: the appropriate instance of EllipticCurve for the given key.
+        """Get the appropriate `EllipticCurve` instance for a given `cryptography` `EllipticCurvePublicKey`.
+
+        Args:
+          key(Union[ec.EllipticCurvePublicKey, ec.EllipticCurvePrivateKey]): an Elliptic Curve private or public key from `cryptography`.
+
+        Returns:
+          the appropriate instance of EllipticCurve for the given key.
+
+        Raises:
+            NotImplementedError: if the curve is not supported
         """
         for c in cls.instances.values():
             if c.cryptography_curve.name == key.curve.name:
@@ -63,10 +72,16 @@ class EllipticCurve:
     def get_parameters(
         cls, key: Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey]
     ) -> Dict[str, Any]:
-        """
-        Extract all private and public parameters from a given `cryptography` `EllipticCurvePrivateKey`.
-        :param key: an Elliptic Curve public or private key from `cryptography`.
-        :return: a tuple of `x`, `y` coordinates and `d` private key, as int
+        """Extract all private and public parameters from a given `cryptography` `EllipticCurvePrivateKey`.
+
+        Args:
+          key: an Elliptic Curve public or private key from `cryptography`.
+
+        Returns:
+          a tuple of `x`, `y` (public coordinates) and `d` (private key), as `int`
+
+        Raises:
+            TypeError: if the provided key is not an EllipticCurvePrivateKey or EllipticCurvePublicKey
         """
         if not isinstance(key, (ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey)):
             raise TypeError(

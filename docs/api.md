@@ -1,6 +1,6 @@
 ::: jwskate
     selection:
-        docstring_style: restructured-text
+        docstring_style: google
         filters:
             - "!^_"
             - "^__init__"

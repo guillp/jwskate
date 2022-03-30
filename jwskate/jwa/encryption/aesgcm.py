@@ -1,3 +1,5 @@
+"""This module implements AES-GCM based encryption algorithms."""
+
 from typing import Optional, Tuple
 
 from binapy import BinaPy
@@ -7,12 +9,27 @@ from ..base import BaseAESEncryptionAlg
 
 
 class BaseAESGCM(BaseAESEncryptionAlg):
+    """Base class for AES-GCM encryption algorithms."""
+
     iv_size = 96
     tag_size = 16
 
     def encrypt(
         self, plaintext: bytes, iv: bytes, aad: Optional[bytes]
     ) -> Tuple[BinaPy, BinaPy]:
+        """Encrypt a plaintext, with the given IV and Additional Authenticated Data.".
+
+        Args:
+          plaintext: the data to encrypt
+          iv: the IV to use
+          aad: Additional Authenticated Data, if any
+
+        Returns:
+            a (ciphertext, authentication_tag) tuple
+
+        Raises:
+            ValueError: if the IV size is not appropriate
+        """
         if len(iv) * 8 != self.iv_size:
             raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
         ciphertext_with_tag = BinaPy(aead.AESGCM(self.key).encrypt(iv, plaintext, aad))
@@ -22,6 +39,20 @@ class BaseAESGCM(BaseAESEncryptionAlg):
     def decrypt(
         self, ciphertext: bytes, auth_tag: bytes, iv: bytes, aad: Optional[bytes]
     ) -> BinaPy:
+        """Decrypt a ciphertext.
+
+        Args:
+          ciphertext: the data to decrypt
+          auth_tag: the Authentication Tag
+          iv: the Initialization Vector
+          aad: the Additional Authentication Tag
+
+        Returns:
+            the decrypted data
+
+        Raises:
+            ValueError: if the IV size is not appropriate
+        """
         if len(iv) * 8 != self.iv_size:
             raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
         ciphertext_with_tag = ciphertext + auth_tag
@@ -29,7 +60,7 @@ class BaseAESGCM(BaseAESEncryptionAlg):
 
 
 class A128GCM(BaseAESGCM):
-    """AES GCM using 128-bit key"""
+    """AES GCM using 128-bit key."""
 
     name = "A128GCM"
     description = __doc__
@@ -37,7 +68,7 @@ class A128GCM(BaseAESGCM):
 
 
 class A192GCM(BaseAESGCM):
-    """AES GCM using 192-bit key"""
+    """AES GCM using 192-bit key."""
 
     name = "A192GCM"
     description = __doc__
@@ -45,7 +76,7 @@ class A192GCM(BaseAESGCM):
 
 
 class A256GCM(BaseAESGCM):
-    """AES GCM using 256-bit key"""
+    """AES GCM using 256-bit key."""
 
     name = "A256GCM"
     description = __doc__

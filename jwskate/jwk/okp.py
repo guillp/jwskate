@@ -1,3 +1,5 @@
+"""This module implements JWK representing Octet Key Pairs from [RFC8037](https://datatracker.ietf.org/doc/rfc8037/)."""
+
 from __future__ import annotations
 
 from typing import Any, Mapping
@@ -17,13 +19,11 @@ from .base import Jwk, JwkParameter
 
 
 class UnsupportedOKPCurve(KeyError):
-    pass
+    """Raised when an unsupported OKP curve is requested."""
 
 
 class OKPJwk(Jwk):
-    """
-    Represent an OKP Jwk, with `kty=OKP`.
-    """
+    """Represent an OKP Jwk, with `kty=OKP`."""
 
     KTY = "OKP"
 
@@ -57,6 +57,17 @@ class OKPJwk(Jwk):
 
     @classmethod
     def get_curve(cls, crv: str) -> OKPCurve:
+        """Get the OKPCurve instance from a curve identifier.
+
+        Args:
+          crv: a crv identifier
+
+        Returns:
+            the matching OKPCurve instance
+
+        Raises:
+            UnsupportedOKPCurve: if the curve is not supported
+        """
         curve = cls.CURVES.get(crv)
         if curve is None:
             raise UnsupportedOKPCurve(crv)
@@ -64,18 +75,41 @@ class OKPJwk(Jwk):
 
     @property
     def curve(self) -> OKPCurve:
+        """Get the OKPCurve instance for this key.
+
+        Returns:
+            the OKPCurve for this key
+        """
         return self.get_curve(self.crv)
 
     @property
     def public_key(self) -> bytes:
+        """Get the public key from this Jwk.
+
+        Returns:
+            the public key (from param `x`)
+        """
         return BinaPy(self.x).decode_from("b64u")
 
     @property
     def private_key(self) -> bytes:
+        """Get the private key from this Jwk.
+
+        Returns:
+            the private key (from param `d`)
+        """
         return BinaPy(self.d).decode_from("b64u")
 
     @classmethod
     def from_cryptography_key(cls, key: Any) -> OKPJwk:
+        """Initialize a OKPJwk from a `cryptography` key.
+
+        Args:
+          key:
+
+        Returns:
+            the matching OKPJwk
+        """
         if isinstance(key, ed25519.Ed25519PrivateKey):
             priv = key.private_bytes(
                 encoding=Encoding.Raw,
@@ -110,12 +144,23 @@ class OKPJwk(Jwk):
                 x=pub,
                 d=priv,
             )
+        elif isinstance(key, ed448.Ed448PublicKey):
+            pub = key.public_bytes(encoding=Encoding.Raw, format=PublicFormat.Raw)
+            return cls.public(crv="Ed448", x=pub)
         else:
             raise TypeError(
-                "A Ed25519PrivateKey or a Ed25519PublicKey or a Ed448PrivateKey or a Ed448PrivateKey is required."
+                "A Ed25519PrivateKey or a Ed25519PublicKey or a Ed448PrivateKey or a Ed448PublicKey is required."
             )
 
     def to_cryptography_key(self) -> Any:
+        """Intialize a `cryptography` key based on this Jwk.
+
+        Returns:
+            a Ed25519PrivateKey or a Ed25519PublicKey or a Ed448PrivateKey or a Ed448PublicKey based on the current Jwk
+
+        Raises:
+            UnsupportedOKPCurve: if this Jwk curve is not supported.
+        """
         if self.curve.name == "Ed25519":
             if self.is_private:
                 return ed25519.Ed25519PrivateKey.from_private_bytes(self.private_key)
@@ -131,10 +176,31 @@ class OKPJwk(Jwk):
 
     @classmethod
     def public(cls, crv: str, x: bytes, **params: Any) -> OKPJwk:
+        """Initialize a public OKPJwk based on the provided parameters.
+
+        Args:
+          crv: the key curve
+          x: the public key
+          **params: additional members to include in the Jwk
+
+        Returns:
+            the resulting OKPJwk
+        """
         return cls(dict(crv=crv, x=BinaPy(x).encode_to("b64u"), **params))
 
     @classmethod
     def private(cls, crv: str, x: bytes, d: bytes, **params: Any) -> OKPJwk:
+        """Initialize a private OKPJwk based on the provided parameters.
+
+        Args:
+          crv: the OKP curve
+          x: the public key
+          d: the private key
+          **params: additional members to include in the Jwk
+
+        Returns:
+            the resulting OKPJwk
+        """
         return cls(
             dict(
                 kty=cls.KTY,
@@ -147,6 +213,15 @@ class OKPJwk(Jwk):
 
     @classmethod
     def generate(cls, crv: str = "Ed25519", **params: Any) -> OKPJwk:
+        """Generate a private OKPJwk on a given curve.
+
+        Args:
+          crv: the curve to use
+          **params: additional members to include in the Jwk
+
+        Returns:
+            the resulting OKPJwk
+        """
         curve = cls.get_curve(crv)
         x, d = curve.generate()
         return cls.private(crv=crv, x=x, d=d, **params)

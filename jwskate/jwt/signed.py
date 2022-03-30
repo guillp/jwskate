@@ -11,20 +11,19 @@ from .base import InvalidJwt, Jwt
 
 
 class ExpiredJwt(ValueError):
-    """Raised when an expired JWT is validated."""
+    """Raised when trying to validate an expired JWT token."""
 
 
 class InvalidSignature(ValueError):
-    """Raised when a JWT signature doesn't match the expected value."""
+    """Raised when trying to validate a JWT with an invalid signature."""
 
 
 class InvalidClaim(ValueError):
-    """Raised a signed JWT contains an invalid claim."""
+    """Raised when trying to validate a JWT with unexpected claims."""
 
 
 class SignedJwt(Jwt):
-    """
-    Represents a Signed Json Web Token (JWT), as defined in RFC7519.
+    """Represent a Signed Json Web Token (JWT), as defined in RFC7519.
 
     A signed JWT contains a JSON object as payload, which represents claims.
 
@@ -32,10 +31,10 @@ class SignedJwt(Jwt):
     """
 
     def __init__(self, value: Union[bytes, str]) -> None:
-        """
-        Initialize a `SignedJwt`, from its compact serialized value.
+        """Initialize a `SignedJwt`, from its compact serialized value.
 
-        :param value: the token value.
+        Args:
+            value: the token value.
         """
         super().__init__(value)
 
@@ -69,11 +68,12 @@ class SignedJwt(Jwt):
 
     @property
     def signed_part(self) -> bytes:
-        """
-        Return the signed part of this JWT.
+        """Return the actual signed data from this token.
 
-        The signed part is composed of the header and payload, in their Base64-Url encoding, joined by a dot.
-        :return: the signed part as bytes
+        The signed part is composed of the header and payload, encoded in Base64-Url, joined by a dot.
+
+        Returns:
+          the signed part as bytes
         """
         return b".".join(self.value.split(b".", 2)[:2])
 
@@ -83,11 +83,15 @@ class SignedJwt(Jwt):
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
-        """
-        Verify this JWT signature using a given key and algorithm.
+        """Verify this JWT signature using a given key and algorithm(s).
 
-        :param jwk: the private Jwk to use to verify the signature.
-        :param alg: the alg to use to verify the signature.
+        Args:
+          jwk: the private Jwk to use to verify the signature
+          alg: the alg to use to verify the signature, if only 1 is allowed
+          algs: the allowed signature algs, if there are several
+
+        Returns:
+            `True` if the token signature is verified, `False` otherwise
         """
         jwk = Jwk(jwk)
 
@@ -96,10 +100,10 @@ class SignedJwt(Jwt):
         )
 
     def is_expired(self) -> Optional[bool]:
-        """
-        Check if this token is expired, based on its `exp` claim.
+        """Check if this token is expired, based on its `exp` claim.
 
-        :return: `True` if the token is expired, `False` if it's not, `None` if there is no `exp` claim.
+        Returns:
+            `True` if the token is expired, `False` if it's not, `None` if there is no `exp` claim.
         """
         exp = self.expires_at
         if exp is None:
@@ -108,50 +112,70 @@ class SignedJwt(Jwt):
 
     @property
     def expires_at(self) -> Optional[datetime]:
-        """
-        Return the token expiration date, from the `exp` claim.
+        """Get the "Expires At" (exp) date from this token.
 
-        :return: a `datetime` initialized from the `exp` claim, or `None` if there is no `exp` claim.
+        Returns:
+          a `datetime` initialized from the `exp` claim, or `None` if there is no `exp` claim
+
+        Raises:
+            AttributeError: if the `exp` claim cannot be parsed to a date
         """
         exp = self.get_claim("exp")
         if not exp:
             return None
-        exp_dt = datetime.fromtimestamp(exp)
-        return exp_dt
+        try:
+            exp_dt = datetime.fromtimestamp(exp)
+            return exp_dt
+        except (TypeError, OSError):
+            raise AttributeError("invalid `exp `claim", exp)
 
     @property
     def issued_at(self) -> Optional[datetime]:
-        """
-        Return the token "issued at" date, from the `iat` claim.
+        """Get the "Issued At" (iat) date from this token.
 
-        :return: a `datetime` initialized from the `iat` claim, or `None` if there is no `iat` claim.
+        Returns:
+          a `datetime` initialized from the `iat` claim, or `None` if there is no `iat` claim
+
+        Raises:
+            AttributeError: if the `iss` claim cannot be parsed to a date
         """
         iat = self.get_claim("iat")
         if not iat:
             return None
-        iat_dt = datetime.fromtimestamp(iat)
-        return iat_dt
+        try:
+            iat_dt = datetime.fromtimestamp(iat)
+            return iat_dt
+        except (TypeError, OSError):
+            raise AttributeError("invalid `iat `claim", iat)
 
     @property
     def not_before(self) -> Optional[datetime]:
-        """
-        Return the token "not before" date, from the `nbf` claim.
+        """Get the "Not Before" (nbf) date from this token.
 
-        :return: a `datetime` initialized from the `nbf` claim, or `None` if there is no `nbf` claim.
+        Returns:
+          a `datetime` initialized from the `nbf` claim, or `None` if there is no `nbf` claim
+
+        Raises:
+            AttributeError: if the `nbf` claim cannot be parsed to a date
         """
         nbf = self.get_claim("nbf")
         if not nbf:
             return None
-        nbf_dt = datetime.fromtimestamp(nbf)
-        return nbf_dt
+        try:
+            nbf_dt = datetime.fromtimestamp(nbf)
+            return nbf_dt
+        except (TypeError, OSError):
+            raise AttributeError("invalid `nbf `claim", nbf)
 
     @property
     def issuer(self) -> Optional[str]:
-        """
-        Return the token issuer.
+        """Get the Issuer (iss) claim from this token.
 
-        This validates that the `iss` claim is a string.
-        :return: the issuer, as `str`, or `None` if there is no `ìss` claim.
+        Returns:
+          the issuer, as `str`, or `None` if there is no `ìss` claim
+
+        Raises:
+            AttributeError: if the `ìss` claim value is not a string
         """
         iss = self.get_claim("iss")
         if iss is None or isinstance(iss, str):
@@ -159,33 +183,16 @@ class SignedJwt(Jwt):
         raise AttributeError("iss has an unexpected type", type(iss))
 
     @property
-    def audience(self) -> Optional[str]:
-        """
-        Return the token single audience, from the `aud` claim.
-
-        If this token has multiple audiences, this will raise an `InvalidClaim`. Use `.audiences()` instead to get those
-        audiences as a list.
-
-        :return: the single audience from this token, from the `aud` claim.
-        """
-        aud = self.get_claim("aud")
-        if aud is None or isinstance(aud, str):
-            return aud
-        if isinstance(aud, list):
-            raise InvalidClaim(
-                "this token has multiple audiences. Use SignedJwt.audiences() to get them as a list."
-            )
-        raise AttributeError("aud has an unexpected type", type(aud))
-
-    @property
     def audiences(self) -> Optional[List[str]]:
-        """
-        Return the token audiences, from the `aud` claim.
+        """Get the audience(s) (aud) claim from this token.
 
-        If this token has a single audience, this will return a `list` anyway. If you intend to get tokens that always
-        contain a signle audience, use `.audience()` instead.
+        If this token has a single audience, this will return a `list` anyway.
 
-        :return: a list of audiences from this token, from the `aud` claim.
+        Returns:
+            the list of audiences from this token, from the `aud` claim.
+
+        Raises:
+            AttributeError: if the audience is an unexpected type
         """
         aud = self.get_claim("aud")
         if aud is None:
@@ -198,11 +205,13 @@ class SignedJwt(Jwt):
 
     @property
     def subject(self) -> Optional[str]:
-        """
-        Return the token subject, from the `sub` claim.
+        """Get the Subject (sub) from this token claims.
 
-        This validates that the `sub` claim is a string.
-        :return: the subject, as `str`, or `None` if there is no `sub` claim.
+        Returns:
+          the subject, as `str`, or `None` if there is no `sub` claim
+
+        Raises:
+            AttributeError: if the `sub` value is not a string
         """
         sub = self.get_claim("sub")
         if sub is None or isinstance(sub, str):
@@ -211,11 +220,13 @@ class SignedJwt(Jwt):
 
     @property
     def jwt_token_id(self) -> Optional[str]:
-        """
-        Return the token Identifier, from the `jti` claim.
+        """Get the JWT Token ID (jti) from this token claims.
 
-        This validates that the `jti` claim is a string.
-        :return: the token identifier, as `str`, or `None` if there is no `jti` claim.
+        Returns:
+          the token identifier, as `str`, or `None` if there is no `jti` claim
+
+        Raises:
+          AttributeError: if the `jti` value is not a string
         """
         jti = self.get_claim("jti")
         if jti is None or isinstance(jti, str):
@@ -224,10 +235,13 @@ class SignedJwt(Jwt):
 
     @property
     def alg(self) -> Optional[str]:
-        """
-        Return the signing alg from the JWT header.
+        """Get the signature algorithm from the header.
 
-        :return: the token signing alg, from the header `alg`.
+        Returns:
+          the token signing alg, from the `alg` header
+
+        Raises:
+            AttributeError: if the alg is not a string
         """
         alg = self.get_header("alg")
         if alg is None or isinstance(alg, str):
@@ -236,10 +250,13 @@ class SignedJwt(Jwt):
 
     @property
     def kid(self) -> Optional[str]:
-        """
-        Return the signing key id from the JWT header.
+        """Get the Key ID (kid) from the JWT header.
 
-        :return: the token signing key id, from the header `kid`.
+        Returns:
+          the token signing key id, from the `kid` header
+
+        Raises:
+            AttributeError: if the kid is present but is not a string
         """
         kid = self.get_header("kid")
         if kid is None or isinstance(kid, str):
@@ -247,21 +264,25 @@ class SignedJwt(Jwt):
         raise AttributeError("kid has an unexpected type", type(kid))
 
     def get_claim(self, key: str, default: Any = None) -> Any:
-        """
-        Get a claim from this Jwt.
+        """Get a claim from this Jwt.
 
-        :param key: the claim name.
-        :param default: a default value if the claim is not found.
-        :return: the claim value if found, or `default` if not found.
+        Args:
+          key: the claim name.
+          default: a default value if the claim is not found
+
+        Returns:
+          the claim value if found, or `default` if not found
         """
         return self.claims.get(key, default)
 
     def __getitem__(self, item: str) -> Any:
-        """
-        Allow claim access with subscription.
+        """Allow claim access with subscription.
 
-        :param item: the claim name.
-        :return: the claim value.
+        Args:
+          item: the claim name
+
+        Returns:
+         the claim value
         """
         value = self.get_claim(item)
         if value is None:
@@ -269,11 +290,13 @@ class SignedJwt(Jwt):
         return value
 
     def __getattr__(self, item: str) -> Any:
-        """
-        Allow claim access as attributes.
+        """Allow claim access as attributes.
 
-        :param item: the claim name.
-        :return: the claim value
+        Args:
+            item: the claim name
+
+        Returns:
+            the claim value
         """
         value = self.get_claim(item)
         if value is None:
@@ -281,18 +304,18 @@ class SignedJwt(Jwt):
         return value
 
     def __str__(self) -> str:
-        """
-        Return the Jwt serialized value, as `str`.
+        """Return the Jwt serialized value, as `str`.
 
-        :return: the serialized token value.
+        Returns:
+            the serialized token value.
         """
         return self.value.decode()
 
     def __bytes__(self) -> bytes:
-        """
-        Return the Jwt serialized value, as `bytes`.
+        """Return the Jwt serialized value, as `bytes`.
 
-        :return: the serialized token value.
+        Returns:
+            the serialized token value.
         """
         return self.value
 
@@ -305,19 +328,29 @@ class SignedJwt(Jwt):
         check_exp: bool = True,
         **kwargs: Any,
     ) -> None:
-        """
-        Validate a `SignedJwt` signature and expected claims.
+        """Validate a `SignedJwt` signature and expected claims.
 
         This verifies the signature using the provided `jwk` and `alg`, then checks the token issuer, audience and expiration date.
-        This can also check custom claims using `kwargs`, ut
+        This can also check custom claims using extra `kwargs`, whose values can be:
 
-        :param jwk: the signing key to use to verify the signature.
-        :param alg: the signing alg to use to verify the signature.
-        :param issuer: the expected issuer for this token.
-        :param audience: the expected audience for this token.
-        :param check_exp: ìf `True` (default), check that the token is not expired.
-        :param kwargs: additionnal claims to validate.
-        :return: `None`. Raises exceptions if any validation check fails.
+        - a static value (`str`, `int`, etc.): the value from the token will be compared "as-is"
+        - a callable, taking the claim value as parameter: if that callable returns `True`, the claim is considered as valid
+
+        Args:
+          jwk: the signing key to use to verify the signature.
+          alg: the signing alg to use to verify the signature. (Default value = None)
+          issuer: the expected issuer for this token. (Default value = None)
+          audience: the expected audience for this token. (Default value = None)
+          check_exp: ìf `True` (default), check that the token is not expired.
+          **kwargs: additional claims to check
+
+        Returns:
+          Raises exceptions if any validation check fails.
+
+        Raises:
+          InvalidSignature: if the signature is not valid
+          InvalidClaim: if a claim doesn't validate
+          ExpiredJwt: if the expiration date is passed
         """
         if not self.verify_signature(jwk, alg):
             raise InvalidSignature("Signature is not valid.")
@@ -335,7 +368,13 @@ class SignedJwt(Jwt):
                 raise ExpiredJwt(f"This token expired at {self.expires_at}")
 
         for key, value in kwargs.items():
-            if self.get_claim(key) != value:
-                raise InvalidClaim(
-                    key, f"unexpected value for claim {key}", self.get_claim(key)
-                )
+            claim = self.get_claim(key)
+            if callable(value):
+                if not value(claim):
+                    raise InvalidClaim(
+                        key,
+                        f"value of claim {key} doesn't validate with the provided validator",
+                        claim,
+                    )
+            elif claim != value:
+                raise InvalidClaim(key, f"unexpected value for claim {key}", claim)

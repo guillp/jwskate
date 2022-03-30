@@ -75,6 +75,16 @@ from .jwa import (
     secp256k1,
 )
 from .jwe import InvalidJwe, JweCompact
-from .jwk import ECJwk, InvalidJwk, Jwk, JwkSet, OKPJwk, RSAJwk, SymmetricJwk
+from .jwk import (
+    ECJwk,
+    InvalidJwk,
+    Jwk,
+    JwkSet,
+    OKPJwk,
+    RSAJwk,
+    SymmetricJwk,
+    UnsupportedEllipticCurve,
+    UnsupportedOKPCurve,
+)
 from .jws import JwsCompact
 from .jwt import EncryptedJwt, InvalidJwt, InvalidSignature, Jwt, JwtSigner, SignedJwt

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Mapping
 
 from binapy import BinaPy
-from cryptography.hazmat.primitives.asymmetric import ed448, ed25519
+from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
     NoEncryption,
@@ -32,6 +32,10 @@ class OKPJwk(Jwk):
         ed25519.Ed25519PublicKey,
         ed448.Ed448PrivateKey,
         ed448.Ed448PublicKey,
+        x25519.X25519PrivateKey,
+        x25519.X25519PublicKey,
+        x448.X448PrivateKey,
+        x448.X448PublicKey,
     )
 
     PARAMS = {
@@ -147,9 +151,44 @@ class OKPJwk(Jwk):
         elif isinstance(key, ed448.Ed448PublicKey):
             pub = key.public_bytes(encoding=Encoding.Raw, format=PublicFormat.Raw)
             return cls.public(crv="Ed448", x=pub)
+        elif isinstance(key, x25519.X25519PrivateKey):
+            priv = key.private_bytes(
+                encoding=Encoding.Raw,
+                format=PrivateFormat.Raw,
+                encryption_algorithm=NoEncryption(),
+            )
+            pub = key.public_key().public_bytes(
+                encoding=Encoding.Raw, format=PublicFormat.Raw
+            )
+            return cls.private(
+                crv="X25519",
+                x=pub,
+                d=priv,
+            )
+        elif isinstance(key, x25519.X25519PublicKey):
+            pub = key.public_bytes(encoding=Encoding.Raw, format=PublicFormat.Raw)
+            return cls.public(crv="X25519", x=pub)
+        elif isinstance(key, x448.X448PrivateKey):
+            priv = key.private_bytes(
+                encoding=Encoding.Raw,
+                format=PrivateFormat.Raw,
+                encryption_algorithm=NoEncryption(),
+            )
+            pub = key.public_key().public_bytes(
+                encoding=Encoding.Raw, format=PublicFormat.Raw
+            )
+            return cls.private(
+                crv="X448",
+                x=pub,
+                d=priv,
+            )
+        elif isinstance(key, x448.X448PublicKey):
+            pub = key.public_bytes(encoding=Encoding.Raw, format=PublicFormat.Raw)
+            return cls.public(crv="X448", x=pub)
         else:
             raise TypeError(
-                "A Ed25519PrivateKey or a Ed25519PublicKey or a Ed448PrivateKey or a Ed448PublicKey is required."
+                "Unsupported key type for OKP. Supported key types are: "
+                + ", ".join(kls.__name__ for kls in cls.CRYPTOGRAPHY_KEY_CLASSES)
             )
 
     def to_cryptography_key(self) -> Any:
@@ -171,8 +210,18 @@ class OKPJwk(Jwk):
                 return ed448.Ed448PrivateKey.from_private_bytes(self.private_key)
             else:
                 return ed448.Ed448PublicKey.from_public_bytes(self.public_key)
+        elif self.curve.name == "X25519":
+            if self.is_private:
+                return x25519.X25519PrivateKey.from_private_bytes(self.private_key)
+            else:
+                return x25519.X25519PublicKey.from_public_bytes(self.public_key)
+        elif self.curve.name == "X448":
+            if self.is_private:
+                return x448.X448PrivateKey.from_private_bytes(self.private_key)
+            else:
+                return x448.X448PublicKey.from_public_bytes(self.public_key)
         else:
-            return UnsupportedOKPCurve(self.curve)
+            raise UnsupportedOKPCurve(self.curve)
 
     @classmethod
     def public(cls, crv: str, x: bytes, **params: Any) -> OKPJwk:
@@ -186,7 +235,9 @@ class OKPJwk(Jwk):
         Returns:
             the resulting OKPJwk
         """
-        return cls(dict(crv=crv, x=BinaPy(x).encode_to("b64u"), **params))
+        return cls(
+            dict(kty="OKP", crv=crv, x=BinaPy(x).encode_to("b64u").ascii(), **params)
+        )
 
     @classmethod
     def private(cls, crv: str, x: bytes, d: bytes, **params: Any) -> OKPJwk:
@@ -205,8 +256,8 @@ class OKPJwk(Jwk):
             dict(
                 kty=cls.KTY,
                 crv=crv,
-                x=BinaPy(x).encode_to("b64u").decode(),
-                d=BinaPy(d).encode_to("b64u").decode(),
+                x=BinaPy(x).encode_to("b64u").ascii(),
+                d=BinaPy(d).encode_to("b64u").ascii(),
                 **params,
             )
         )

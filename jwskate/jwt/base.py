@@ -11,7 +11,7 @@ from jwskate.jwk import Jwk
 from ..token import BaseCompactToken
 
 if TYPE_CHECKING:
-    from jwskate import EncryptedJwt, SignedJwt
+    from jwskate import EncryptedJwt, SignedJwt  # pragma: no cover
 
 
 class InvalidJwt(ValueError):

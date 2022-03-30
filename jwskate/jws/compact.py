@@ -12,7 +12,7 @@ from jwskate.token import BaseCompactToken
 from .signature import JwsSignature
 
 if TYPE_CHECKING:
-    from .json import JwsJsonFlat, JwsJsonGeneral
+    from .json import JwsJsonFlat, JwsJsonGeneral  # pragma: no cover
 
 
 class InvalidJws(ValueError):

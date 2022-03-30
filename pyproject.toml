@@ -26,7 +26,7 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.7,<4.0"
 cryptography = ">=3.4"
-binapy = "^0.4.0"
+binapy = "^0.4"
 
 [tool.poetry.dev-dependencies]
 black  = "^22"

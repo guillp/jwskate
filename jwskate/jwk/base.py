@@ -40,7 +40,7 @@ from ..token import BaseJsonDict
 from .alg import UnsupportedAlg, select_alg, select_algs
 
 if TYPE_CHECKING:
-    from .jwks import JwkSet
+    from .jwks import JwkSet  # pragma: no cover
 
 
 class UnsupportedKeyType(ValueError):
@@ -125,23 +125,31 @@ class Jwk(BaseJsonDict):
                     raise ValueError("Unsupported Key Type", kty)
                 return super().__new__(subclass)
             else:
+                # this will trigger double __init__
                 return cls.from_cryptography_key(jwk)
-        return super().__new__(cls)
+        return super().__new__(cls, jwk)
 
-    def __init__(self, params: Dict[str, Any], include_kid_thumbprint: bool = False):
+    def __init__(
+        self, params: Union[Dict[str, Any], Any], include_kid_thumbprint: bool = False
+    ):
         """Initialize a Jwk.
 
-        This accepts a `dict` with the parsed Jwk contents, and an optional kid if it isn't already part of the dict. If no `kid` is supplied and `include_kid_thumbprint`, a default kid is generated based on the key thumbprint (defined in RFC7638)
+        This accepts a `dict` with the parsed Jwk contents, and an optional kid if it isn't already part of the dict. If no `kid` is supplied and `include_kid_thumbprint`, a default kid is generated based on the key thumbprint (defined in RFC7638).
 
         Args:
             params: a dict with the parsed Jwk parameters
             include_kid_thumbprint: if `True` (default), and there is no kid in the provided params, generate a kid based on the key thumbprint
         """
-        super().__init__({key: val for key, val in params.items() if val is not None})
-        self.is_private = False
-        self._validate()
-        if self.get("kid") is None and include_kid_thumbprint:
-            self["kid"] = self.thumbprint()
+        if isinstance(
+            params, dict
+        ):  # this is to avoid double init due to the __new__ above
+            super().__init__(
+                {key: val for key, val in params.items() if val is not None}
+            )
+            self.is_private = False
+            self._validate()
+            if self.get("kid") is None and include_kid_thumbprint:
+                self["kid"] = self.thumbprint()
 
     def __getattr__(self, item: str) -> Any:
         """Allows access to key parameters as attributes, like `jwk.kid`, `jwk.kty`, instead of `jwk['kid']`, `jwk['kty']`, etc.

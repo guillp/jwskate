@@ -22,7 +22,7 @@ A Pythonic implementation of Json Web Signature, Keys, Algorithms, Tokens and En
 extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).
 
 * Free software: MIT
-* Documentation: <https://jwskate.readthedocs.io>
+* Documentation: <https://guillp.github.io/jwskate/>
 
 
 A quick usage example, generating an RSA private key, signing some data, then validating that signature:

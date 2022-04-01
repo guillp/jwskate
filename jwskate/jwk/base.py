@@ -100,7 +100,7 @@ class Jwk(BaseJsonDict):
         for klass in cls.CRYPTOGRAPHY_KEY_CLASSES:
             Jwk.cryptography_key_types[klass] = cls
 
-    def __new__(cls, jwk: Union[Jwk, Dict[str, Any]]):  # type: ignore
+    def __new__(cls, jwk: Union[Jwk, Dict[str, Any]], *args, **kwargs):  # type: ignore
         """Overridden `__new__` to make the Jwk constructor smarter.
 
         The Jwk constructor will accept:
@@ -126,8 +126,8 @@ class Jwk(BaseJsonDict):
                 return super().__new__(subclass)
             else:
                 # this will trigger double __init__
-                return cls.from_cryptography_key(jwk)
-        return super().__new__(cls, jwk)
+                return cls.from_cryptography_key(jwk, *args, **kwargs)
+        return super().__new__(cls, jwk, *args, **jwk)
 
     def __init__(
         self, params: Union[Dict[str, Any], Any], include_kid_thumbprint: bool = False
@@ -251,7 +251,9 @@ class Jwk(BaseJsonDict):
             elif param.kind == "name":
                 pass
             else:
-                assert False, f"Unsupported param '{name}' type '{param.kind}'"
+                assert (
+                    False
+                ), f"Unsupported param '{name}' type '{param.kind}'"  # pragma: no cover
 
         # if at least one of the supplied parameter was private, then all required private parameters must be provided
         if jwk_is_private:

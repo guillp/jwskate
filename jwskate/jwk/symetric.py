@@ -1,5 +1,4 @@
 """This module implements JWK representing Symmetric keys."""
-
 from typing import Any, List, Optional, Tuple, Union
 
 from binapy import BinaPy
@@ -121,6 +120,24 @@ class SymmetricJwk(Jwk):
             encalg = cls.ENCRYPTION_ALGORITHMS[alg]
             return cls.generate(encalg.key_size, alg=alg, **params)
         raise ValueError("Unsupported alg", alg)
+
+    def thumbprint(self, hashalg: str = "SHA256") -> str:
+        """Return the key thumbprint as specified by RFC 7638.
+
+        This is reimplemented for SymmetricJwk because the private parameter 'k' must be included.
+
+        Args:
+          hashalg: A hash function (defaults to SHA256)
+
+        Returns:
+            the calculated thumbprint
+        """
+        return (
+            BinaPy.serialize_to("json", {"k": self.k, "kty": self.kty})
+            .encode_to("sha256")
+            .encode_to("b64u")
+            .ascii()
+        )
 
     def to_cryptography_key(self) -> Any:
         """Converts this Jwk into a key usable with `cryptography`.

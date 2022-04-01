@@ -1,7 +1,7 @@
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from jwskate import InvalidJwk, Jwk
+from jwskate import InvalidJwk, Jwk, RSAJwk
 
 
 def test_jwk_copy() -> None:
@@ -17,24 +17,53 @@ def test_jwk_copy() -> None:
 
 def test_invalid_jwk() -> None:
     with pytest.raises(ValueError):
+        # kty is not str
         Jwk({"kty": 1.5})
 
     with pytest.raises(ValueError):
+        # kty is unknown
         Jwk({"kty": "caesar13"})
 
     with pytest.raises(InvalidJwk):
+        # attributes are missing
         Jwk({"kty": "RSA"})
 
     with pytest.raises(InvalidJwk):
+        # x is not a base64u
         Jwk({"kty": "RSA", "x": "$+!"})
 
     with pytest.raises(InvalidJwk):
+        # attribute 'd' (private exponent) is missing
         Jwk(
             {
                 "kty": "RSA",
                 "n": "oRHn4oGv23ylRL3RSsL4p_e6Ywinnj2N2tT5OLe5pEZTg-LFBhjFxcJaB-p1dh6XX47EtSfa-JHffU0o5ZRK2ySyNDtlrFAkOpAHH6U83ayE2QPYGzrFrrvHDa8wIMUWymzxpPwGgKBwZZqtTT6d-iy4Ux3AWV-bUv6Z7WijHnOy7aVzZ4dFERLVf2FaaYXDET7GO4v-oQ5ss_guYdmewN039jxkjz_KrA-0Fyhalf9hL8IHfpdpSlHosrmjORG5y9LkYK0J6zxSBF5ZvLIBK33BTzPPiCMwKLyAcV6qdcAcvV4kthKO0iUKBK4eE8D0N8HcSPvA9F_PpLS_k5F2lw",
                 "e": "AQAB",
                 "p": "0mzP9sbFxU5YxNNLgUEdRQSO-ojqWrzbI02PfQLGyzXumvOh_Qr73OpHStU8CAAcUBaQdRGidsVdb5cq6JG2zvbEEYiX-dCHqTJs8wfktGCL7eV-ZVh7fhJ1sYVBN20yv8aSH63uUPZnJXR1AUyrvRumuerdPxp8X951PESrJd0",
+            }
+        )
+
+    with pytest.raises(InvalidJwk):
+        # k is not a str
+        Jwk({"kty": "oct", "k": 1.23})
+
+    with pytest.raises(InvalidJwk):
+        # k is not a base64u
+        Jwk({"kty": "oct", "k": "Foo****"})
+
+    with pytest.raises(InvalidJwk):
+        # oth is unsupported
+        Jwk({"kty": "RSA", "oth": "foo"})
+
+    with pytest.raises(InvalidJwk):
+        # key is public and has key_ops: ["sign"]
+        Jwk(
+            {
+                "kty": "EC",
+                "key_ops": ["sign"],
+                "crv": "P-256",
+                "x": "vGVh-60pT34a0JLeiaers66I0JLRilpf5tbnZsa-q3U",
+                "y": "y99gwPgQH1lrIBQPwgJoHCoeQjF96M7XfxGXu_Pjyzk",
             }
         )
 
@@ -53,3 +82,45 @@ def test_init_from_cryptography() -> None:
     private_key = rsa.generate_private_key(65537, 2048)
     jwk = Jwk(private_key)
     assert jwk.kty == "RSA"
+
+
+def test_missing_kty() -> None:
+    with pytest.raises(ValueError):
+        Jwk({"foo": "kty_is_missing"})
+
+
+def test_include_kid() -> None:
+    jwk = Jwk({"kty": "oct", "k": "foobar"}, include_kid_thumbprint=True)
+    assert jwk.kid == jwk.thumbprint() == "p91YUDdd513xDMIoKEJAySww4jB3hionP-1CUWx6b8g"
+
+
+def test_getattr() -> None:
+    jwk = Jwk.generate_for_kty("oct")
+    with pytest.raises(AttributeError):
+        jwk.foo
+
+
+def test_invalid_alg() -> None:
+    jwk = Jwk({"kty": "oct", "k": "foobar", "alg": 1.34})
+    with pytest.raises(TypeError):
+        jwk.alg
+
+
+def test_invalid_class_for_kty() -> None:
+    with pytest.raises(TypeError):
+        RSAJwk({"kty": "oct", "k": "foobar"})
+
+
+@pytest.mark.parametrize(
+    "private_key_ops, public_key_ops",
+    [
+        ("sign", "verify"),
+        ("decrypt", "encrypt"),
+        ("unwrapKey", "wrapKey"),
+    ],
+)
+def test_key_ops(private_key_ops: str, public_key_ops: str) -> None:
+    private_jwk = Jwk.generate_for_kty("EC", key_ops=[private_key_ops])
+    public_jwk = private_jwk.public_jwk()
+    assert public_key_ops in public_jwk.key_ops
+    assert private_key_ops not in public_jwk.key_ops

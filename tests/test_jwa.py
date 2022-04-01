@@ -153,7 +153,7 @@ def test_aes_192_hmac_sha384() -> None:
 
 
 def test_ecdhes() -> None:
-    """https://datatracker.ietf.org/doc/html/rfc7518#appendix-C"""
+    """See [https://datatracker.ietf.org/doc/html/rfc7518#appendix-C]."""
     alice_ephemeral_key = Jwk(
         {
             "kty": "EC",

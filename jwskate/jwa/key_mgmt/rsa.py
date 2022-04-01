@@ -85,7 +85,7 @@ class RsaEsOaep(BaseRsaKeyWrap):  # noqa: D415
     )
 
 
-class RsaEsOaepSha256(BaseRsaKeyWrap):
+class RsaEsOaepSha256(BaseRsaKeyWrap):  # noqa: D415
     """RSAES OAEP using SHA-256 and MGF1 with SHA-256"""
 
     name = "RSA-OAEP-256"
@@ -98,7 +98,7 @@ class RsaEsOaepSha256(BaseRsaKeyWrap):
     )
 
 
-class RsaEsOaepSha384(BaseRsaKeyWrap):
+class RsaEsOaepSha384(BaseRsaKeyWrap):  # noqa: D415
     """RSA-OAEP using SHA-384 and MGF1 with SHA-384"""
 
     name = "RSA-OAEP-384"
@@ -111,7 +111,7 @@ class RsaEsOaepSha384(BaseRsaKeyWrap):
     )
 
 
-class RsaEsOaepSha512(BaseRsaKeyWrap):
+class RsaEsOaepSha512(BaseRsaKeyWrap):  # noqa: D415
     """RSA-OAEP using SHA-512 and MGF1 with SHA-512"""
 
     name = "RSA-OAEP-512"

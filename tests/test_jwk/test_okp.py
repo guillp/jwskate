@@ -14,6 +14,8 @@ def test_jwk_okp_generate(curve: str) -> None:
     assert "x" in jwk
     assert "d" in jwk
 
+    assert jwk.supported_encryption_algorithms() == []
+
 
 def test_okp_ed25519_sign() -> None:
     jwk = Jwk(

@@ -16,3 +16,5 @@ def test_jwk_ec_generate() -> None:
     assert public_jwk.crv == "P-256"
     assert "x" in public_jwk
     assert "y" in public_jwk
+
+    assert jwk.supported_encryption_algorithms() == []

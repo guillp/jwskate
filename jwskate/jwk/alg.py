@@ -10,6 +10,10 @@ class UnsupportedAlg(ValueError):
     """Raised when an UnsupportedAlg is requested."""
 
 
+class ExpectedAlgRequired(ValueError):
+    """Raised when the expected signature alg(s) must be provided."""
+
+
 T = TypeVar("T", bound=Type[BaseAlg])
 
 
@@ -111,6 +115,6 @@ def select_algs(
                 f"None of the user-specified alg(s) are supported. {possible_algs}"
             )
 
-    raise ValueError(
-        "This key doesn't have an 'alg' parameter, you need to provide the signing alg for each operation."
+    raise ExpectedAlgRequired(
+        "This key doesn't have an 'alg' parameter, so you need to provide the expected signing alg(s) for each operation."
     )

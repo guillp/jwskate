@@ -1,4 +1,4 @@
-# JWSKATE
+# JwSkate
 
 
 <p align="center">

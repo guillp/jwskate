@@ -2,7 +2,20 @@ from datetime import datetime
 
 import pytest
 
-from jwskate import InvalidJwt, InvalidSignature, Jwk, Jwt, JwtSigner, SignedJwt
+from jwskate import (
+    ExpectedAlgRequired,
+    ExpiredJwt,
+    InvalidClaim,
+    InvalidJwt,
+    InvalidSignature,
+    Jwk,
+    Jwt,
+    JwtSigner,
+    SignatureAlgs,
+    SignedJwt,
+    SymmetricJwk,
+    UnsupportedAlg,
+)
 
 
 def test_jwt() -> None:
@@ -32,6 +45,7 @@ def test_jwt() -> None:
     assert jwt.exp == 1629204620
     assert jwt.expires_at == datetime.fromtimestamp(1629204620)
     assert jwt.issued_at == datetime.fromtimestamp(1629204560)
+    assert jwt.nonce == jwt["nonce"]
     jwt.validate(
         jwk=Jwk(
             {
@@ -111,4 +125,53 @@ def test_empty_jwt(private_jwk: Jwk) -> None:
     )
     assert bytes(jwt) == str(jwt).encode()
     assert jwt.signed_part == b"eyJhbGciOiJSUzI1NiIsImtpZCI6IkpXSy1BQkNEIn0.e30"
-    jwt.validate(jwk=private_jwk)
+
+    jwt.validate(jwk=private_jwk, check_exp=False)
+
+    with pytest.raises(InvalidClaim):
+        jwt.validate(jwk=private_jwk)
+
+
+def test_validate() -> None:
+    jwt = SignedJwt(
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaXNzIjoiaHR0cHM6Ly9pc3N1ZXIubG9jYWwiLCJhdWQiOiJodHRwczovL2F1ZGllbmNlLmxvY2FsIiwiZXhwIjoyMDAwMDAwMDAwLCJpYXQiOjE1MTYyMzkwMjIsImNsYWltMSI6IkkgaGF2ZSBhIDEifQ.bl5iNgXfkbmgDXItaUx7_1lUMNtOffihsShVP8MeE1g"
+    )
+    jwk = SymmetricJwk.from_bytes("your-256-bit-secret")
+
+    jwt.validate(
+        jwk,
+        iss="https://issuer.local",
+        audience="https://audience.local",
+        sub="1234567890",
+        name="John Doe",
+        algs=SignatureAlgs.ALL_SYMMETRIC,
+        claim1=lambda value: "1" in value,
+    )
+
+    with pytest.raises(ExpectedAlgRequired):
+        # expected algs must be provided, unless jwk has an 'alg' parameter
+        jwt.validate(jwk)
+
+    with pytest.raises(UnsupportedAlg):
+        # unsupported alg
+        jwt.validate(jwk, alg="foobar")
+
+    with pytest.raises(UnsupportedAlg):
+        # unsupported alg
+        jwt.validate(jwk, algs=SignatureAlgs.ALL_ASYMMETRIC)
+
+    with pytest.raises(InvalidClaim):
+        jwt.validate(jwk, sub="invalid_sub", algs=SignatureAlgs.ALL_SYMMETRIC)
+
+    with pytest.raises(InvalidClaim):
+        jwt.validate(jwk, issuer="invalid_iss", algs=SignatureAlgs.ALL_SYMMETRIC)
+
+    with pytest.raises(InvalidClaim):
+        jwt.validate(
+            jwk, algs=SignatureAlgs.ALL_SYMMETRIC, claim1=lambda value: "2" in value
+        )
+
+    with pytest.raises(ExpiredJwt):
+        SignedJwt(
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaXNzIjoiaHR0cHM6Ly9pc3N1ZXIubG9jYWwiLCJhdWQiOiJodHRwczovL2F1ZGllbmNlLmxvY2FsIiwiZXhwIjoxNTE2MjM5MDIyLCJpYXQiOjE1MTYyMzkwMjIsImNsYWltMSI6IkkgaGF2ZSBhIDEifQ.k4qhY14C0sJYTaUiAIc2kkybmaIxaUMkirIkln10SG4"
+        ).validate(jwk, algs=SignatureAlgs.ALL_SYMMETRIC)

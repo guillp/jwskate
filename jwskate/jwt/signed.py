@@ -323,6 +323,7 @@ class SignedJwt(Jwt):
         self,
         jwk: Union[Jwk, Dict[str, Any]],
         alg: Optional[str] = None,
+        algs: Optional[Iterable[str]] = None,
         issuer: Optional[str] = None,
         audience: Union[None, str] = None,
         check_exp: bool = True,
@@ -352,7 +353,7 @@ class SignedJwt(Jwt):
           InvalidClaim: if a claim doesn't validate
           ExpiredJwt: if the expiration date is passed
         """
-        if not self.verify_signature(jwk, alg):
+        if not self.verify_signature(jwk, alg, algs):
             raise InvalidSignature("Signature is not valid.")
 
         if issuer is not None:
@@ -361,11 +362,14 @@ class SignedJwt(Jwt):
 
         if audience is not None:
             if self.audiences is None or audience not in self.audiences:
-                raise InvalidClaim("aud", "Unexpected audience", self.audience)
+                raise InvalidClaim("aud", "Unexpected audience", self.audiences)
 
         if check_exp:
-            if self.is_expired():
+            expired = self.is_expired()
+            if expired is True:
                 raise ExpiredJwt(f"This token expired at {self.expires_at}")
+            elif expired is None:
+                raise InvalidClaim("exp", "This token misses a 'exp' claim.")
 
         for key, value in kwargs.items():
             claim = self.get_claim(key)

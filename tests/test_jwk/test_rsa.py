@@ -31,6 +31,7 @@ def rsa_private_jwk() -> Jwk:
 
     assert jwk.thumbprint() == "Qfq9DOLKNRyptzTJBhCFlzccbA0ac7Ag9GVFL11GAfM"
 
+    assert jwk.supported_encryption_algorithms() == []
     return jwk
 
 

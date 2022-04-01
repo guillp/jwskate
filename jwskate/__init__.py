@@ -12,6 +12,7 @@ provides a set of convenient wrappers around the `cryptography` module.
 __author__ = """Guillaume Pujol"""
 __email__ = "guill.p.linux@gmail.com"
 
+from .enums import EncryptionAlgs, KeyManagementAlgs, SignatureAlgs
 from .jwa import (
     A128GCM,
     A128GCMKW,
@@ -77,14 +78,25 @@ from .jwa import (
 from .jwe import InvalidJwe, JweCompact
 from .jwk import (
     ECJwk,
+    ExpectedAlgRequired,
     InvalidJwk,
     Jwk,
     JwkSet,
     OKPJwk,
     RSAJwk,
     SymmetricJwk,
+    UnsupportedAlg,
     UnsupportedEllipticCurve,
     UnsupportedOKPCurve,
 )
 from .jws import JwsCompact
-from .jwt import EncryptedJwt, InvalidJwt, InvalidSignature, Jwt, JwtSigner, SignedJwt
+from .jwt import (
+    EncryptedJwt,
+    ExpiredJwt,
+    InvalidClaim,
+    InvalidJwt,
+    InvalidSignature,
+    Jwt,
+    JwtSigner,
+    SignedJwt,
+)

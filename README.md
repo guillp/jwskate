@@ -31,7 +31,7 @@ A quick usage example, generating an RSA private key, signing some data, then va
 from jwskate import Jwk
 
 # generate a RSA Jwk and sign a plaintext with it
-rsa_private_jwk = Jwk.generate_for_kty("RSA", key_size=2048)
+rsa_private_jwk = Jwk.generate_for_kty("RSA", key_size=2048, kid="my_key")
 
 data = b"Signing is easy!"
 alg = "RS256"
@@ -58,7 +58,7 @@ The result of this print JWK will look like this:
   'dp': '...',
   'dq': '...',
   'qi': '...',
-  'kid': 'lfuHddfsvWsjLbMA4ZMCN0JD71RHmbKRCEo13tbyifY'
+  'kid': 'my_key'
 }
 ```
 
@@ -67,11 +67,12 @@ Now let's sign a JWT containing arbitrary claims:
 ```python
 from jwskate import Jwk, Jwt
 
-private_jwk = Jwk.generate_for_kty("RSA")
+private_jwk = Jwk.generate_for_kty("EC", kid="my_key")
 claims = {"sub": "some_sub", "claim1": "value1"}
-sign_alg = "RS256"
+sign_alg = "ES256"
 
-jwt = Jwt.sign(claims, private_jwk, sign_alg)  # that's it! we have a signed JWT
+jwt = Jwt.sign(claims, private_jwk, sign_alg)
+# that's it! we have a signed JWT
 assert jwt.claims == claims  # claims can be accessed as a dict
 assert jwt.sub == "some_sub"  # or individual claims can be accessed as attributes
 assert jwt["claim1"] == "value1"  # or as dict items
@@ -81,25 +82,37 @@ assert jwt.verify_signature(private_jwk.public_jwk(), sign_alg)
 
 print(jwt)
 ```
+This will output the full JWT compact representation. You can inspect it for example at <https://jwt.io>
 ```
-eyJhbGciOiJSUzI1NiIsImtpZCI6IkhyRnRZRk52U2g2WVp4WVpNY043XzM0dWNrN1hodTZFT2JoLWhkQVdqbHMifQ.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.RiBmKWC1Tu2IgUZNqSv84Gv1X-TttuKcUnee38Jn_KvRDjBw3ZQ1dEuG6hI8FVX4rDXmRMGNNsS51KL5BLTZNYd6Q34SJr_udIkwlW6xW-s39XzW1eMUSUkHa0p7CMpH32Vf-1ZPqnJMjMX6iq2nUOYxtPDZ5xdEjcTQhQf8llWunWhnTLLyMhY8Npz4c0veJkI9KxjM4_zLchpM0TR7OleBqflmbOzU14z2490K8VhHOfGxBr7Hj1WHvFMwC77qPU6jr6TSmHMFy5WvERfkbfpNgRQPFBWBDXT2uuWbFELUZHjfjaVA-uEy7SclDswTURKc-H-XWtdWKjb-tKKO5iNXd4qCeCakun5B3ykN7pE_u_bXO4fb5eSHWnBVByEa7UFBNLHIX2-aXOHZ95LpylDmXSpDTfHmpOGxxwT5SaRzosGH_cRbdmBKNEtTb0PG8tBQeq1uTpbhTL2u_H0KHUN8_C5GO5-5yelKhpMsHObFIcmy3WktRsgL98ATOXGYK0zShGeHc7JRHGJ5DQmU-FMK-eVe6J19LEpT0CgN4EljfsfSY7LBAFTE3yk3y95FDoYun7u_NcyZB5q_lhtHUKkTPqGLUEahNKCbn85AjMA8oLjlsAH123Hwz89NpxSY_FFWxSkUPAz477LWJUbgwGZhXUZYSFUQzk5DQ-0XMQU
+eyJhbGciOiJFUzI1NiIsImtpZCI6Im15a2V5In0.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.C1KcDyDT8qXwUqcWzPKkQD7f6xai-gCgaRFMdKPe80Vk7XeYNa8ovuLwvdXgGW4ZZ_lL73QIyncY7tHGXUthag
 ```
 
 Or let's sign a JWT with the standardised lifetime, subject, audience and ID claims:
 ```python
 from jwskate import Jwk, JwtSigner
 
-private_jwk = Jwk.generate_for_kty("RSA")
-signer = JwtSigner(issuer="https://myissuer.com", jwk=private_jwk, alg="RS256")
+private_jwk = Jwk.generate_for_kty("EC")
+signer = JwtSigner(issuer="https://myissuer.com", jwk=private_jwk, alg="ES256")
 jwt = signer.sign(
     subject="some_sub",
     audience="some_aud",
     extra_claims={"custom_claim1": "value1", "custom_claim2": "value2"},
 )
 
-print(jwt)
+print(jwt.claims)
 ```
-
+The generated JWT claims will include the standardised claims:
+```
+{'custom_claim1': 'value1',
+ 'custom_claim2': 'value2',
+ 'iss': 'https://myissuer.com',
+ 'aud': 'some_aud',
+ 'sub': 'some_sub',
+ 'iat': 1648823184,
+ 'exp': 1648823244,
+ 'jti': '3b400e27-c111-4013-84e0-714acd76bf3a'
+}
+```
 ## Features
 
 * Simple, Clean, Pythonic interface
@@ -132,7 +145,7 @@ The same is true for Json Web tokens in JSON format.
 
 ### JWA Wrappers
 While you can directly use `cryptography` to do the cryptographic operations that are described in [JWA](https://www.rfc-editor.org/info/rfc7518),
-its usage is not straightforward and leaves you with plenty of options to carefully select, leaving room for errors.
+its usage is not straightforward and gives you plenty of options to carefully select, leaving room for errors.
 To work around this, `jwskate` comes with a set of wrappers that implement the exact JWA specification, with minimum
 risk of mistakes.
 

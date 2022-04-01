@@ -659,13 +659,15 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="normal">12</span>
 <span class="normal">13</span>
 <span class="normal">14</span>
-<span class="normal">15</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span><span class="p">,</span> <span class="n">Jwt</span>
+<span class="normal">15</span>
+<span class="normal">16</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span><span class="p">,</span> <span class="n">Jwt</span>
 
-<span class="n">private_jwk</span> <span class="o">=</span> <span class="n">Jwk</span><span class="o">.</span><span class="n">generate_for_kty</span><span class="p">(</span><span class="s2">&quot;RSA&quot;</span><span class="p">,</span> <span class="n">kid</span><span class="o">=</span><span class="s2">&quot;mykey&quot;</span><span class="p">)</span>
+<span class="n">private_jwk</span> <span class="o">=</span> <span class="n">Jwk</span><span class="o">.</span><span class="n">generate_for_kty</span><span class="p">(</span><span class="s2">&quot;EC&quot;</span><span class="p">,</span> <span class="n">kid</span><span class="o">=</span><span class="s2">&quot;my_key&quot;</span><span class="p">)</span>
 <span class="n">claims</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;sub&quot;</span><span class="p">:</span> <span class="s2">&quot;some_sub&quot;</span><span class="p">,</span> <span class="s2">&quot;claim1&quot;</span><span class="p">:</span> <span class="s2">&quot;value1&quot;</span><span class="p">}</span>
-<span class="n">sign_alg</span> <span class="o">=</span> <span class="s2">&quot;RS256&quot;</span>
+<span class="n">sign_alg</span> <span class="o">=</span> <span class="s2">&quot;ES256&quot;</span>
 
-<span class="n">jwt</span> <span class="o">=</span> <span class="n">Jwt</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">claims</span><span class="p">,</span> <span class="n">private_jwk</span><span class="p">,</span> <span class="n">sign_alg</span><span class="p">)</span>  <span class="c1"># that&#39;s it! we have a signed JWT</span>
+<span class="n">jwt</span> <span class="o">=</span> <span class="n">Jwt</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">claims</span><span class="p">,</span> <span class="n">private_jwk</span><span class="p">,</span> <span class="n">sign_alg</span><span class="p">)</span>
+<span class="c1"># that&#39;s it! we have a signed JWT</span>
 <span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">claims</span> <span class="o">==</span> <span class="n">claims</span>  <span class="c1"># claims can be accessed as a dict</span>
 <span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">sub</span> <span class="o">==</span> <span class="s2">&quot;some_sub&quot;</span>  <span class="c1"># or individual claims can be accessed as attributes</span>
 <span class="k">assert</span> <span class="n">jwt</span><span class="p">[</span><span class="s2">&quot;claim1&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;value1&quot;</span>  <span class="c1"># or as dict items</span>
@@ -676,7 +678,8 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="p">)</span>
 </code></pre></div>
 </td></tr></table>
-<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>eyJhbGciOiJSUzI1NiIsImtpZCI6IkhyRnRZRk52U2g2WVp4WVpNY043XzM0dWNrN1hodTZFT2JoLWhkQVdqbHMifQ.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.RiBmKWC1Tu2IgUZNqSv84Gv1X-TttuKcUnee38Jn_KvRDjBw3ZQ1dEuG6hI8FVX4rDXmRMGNNsS51KL5BLTZNYd6Q34SJr_udIkwlW6xW-s39XzW1eMUSUkHa0p7CMpH32Vf-1ZPqnJMjMX6iq2nUOYxtPDZ5xdEjcTQhQf8llWunWhnTLLyMhY8Npz4c0veJkI9KxjM4_zLchpM0TR7OleBqflmbOzU14z2490K8VhHOfGxBr7Hj1WHvFMwC77qPU6jr6TSmHMFy5WvERfkbfpNgRQPFBWBDXT2uuWbFELUZHjfjaVA-uEy7SclDswTURKc-H-XWtdWKjb-tKKO5iNXd4qCeCakun5B3ykN7pE_u_bXO4fb5eSHWnBVByEa7UFBNLHIX2-aXOHZ95LpylDmXSpDTfHmpOGxxwT5SaRzosGH_cRbdmBKNEtTb0PG8tBQeq1uTpbhTL2u_H0KHUN8_C5GO5-5yelKhpMsHObFIcmy3WktRsgL98ATOXGYK0zShGeHc7JRHGJ5DQmU-FMK-eVe6J19LEpT0CgN4EljfsfSY7LBAFTE3yk3y95FDoYun7u_NcyZB5q_lhtHUKkTPqGLUEahNKCbn85AjMA8oLjlsAH123Hwz89NpxSY_FFWxSkUPAz477LWJUbgwGZhXUZYSFUQzk5DQ-0XMQU
+This will output the full JWT compact representation. You can inspect it for example at <a href="https://jwt.io">https://jwt.io</a>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>eyJhbGciOiJFUzI1NiIsImtpZCI6Im15a2V5In0.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.C1KcDyDT8qXwUqcWzPKkQD7f6xai-gCgaRFMdKPe80Vk7XeYNa8ovuLwvdXgGW4ZZ_lL73QIyncY7tHGXUthag
 </code></pre></div>
 </td></tr></table></p>
 <p>Or let's sign a JWT with the standardised lifetime, subject, audience and ID claims:
@@ -692,15 +695,35 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="normal">10</span>
 <span class="normal">11</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span><span class="p">,</span> <span class="n">JwtSigner</span>
 
-<span class="n">private_jwk</span> <span class="o">=</span> <span class="n">Jwk</span><span class="o">.</span><span class="n">generate_for_kty</span><span class="p">(</span><span class="s2">&quot;RSA&quot;</span><span class="p">)</span>
-<span class="n">signer</span> <span class="o">=</span> <span class="n">JwtSigner</span><span class="p">(</span><span class="n">issuer</span><span class="o">=</span><span class="s2">&quot;https://myissuer.com&quot;</span><span class="p">,</span> <span class="n">jwk</span><span class="o">=</span><span class="n">private_jwk</span><span class="p">,</span> <span class="n">alg</span><span class="o">=</span><span class="s2">&quot;RS256&quot;</span><span class="p">)</span>
+<span class="n">private_jwk</span> <span class="o">=</span> <span class="n">Jwk</span><span class="o">.</span><span class="n">generate_for_kty</span><span class="p">(</span><span class="s2">&quot;EC&quot;</span><span class="p">)</span>
+<span class="n">signer</span> <span class="o">=</span> <span class="n">JwtSigner</span><span class="p">(</span><span class="n">issuer</span><span class="o">=</span><span class="s2">&quot;https://myissuer.com&quot;</span><span class="p">,</span> <span class="n">jwk</span><span class="o">=</span><span class="n">private_jwk</span><span class="p">,</span> <span class="n">alg</span><span class="o">=</span><span class="s2">&quot;ES256&quot;</span><span class="p">)</span>
 <span class="n">jwt</span> <span class="o">=</span> <span class="n">signer</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span>
     <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;some_sub&quot;</span><span class="p">,</span>
     <span class="n">audience</span><span class="o">=</span><span class="s2">&quot;some_aud&quot;</span><span class="p">,</span>
     <span class="n">extra_claims</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;custom_claim1&quot;</span><span class="p">:</span> <span class="s2">&quot;value1&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_claim2&quot;</span><span class="p">:</span> <span class="s2">&quot;value2&quot;</span><span class="p">},</span>
 <span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="o">.</span><span class="n">claims</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+The generated JWT claims will include the standardised claims:
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>{&#39;custom_claim1&#39;: &#39;value1&#39;,
+ &#39;custom_claim2&#39;: &#39;value2&#39;,
+ &#39;iss&#39;: &#39;https://myissuer.com&#39;,
+ &#39;aud&#39;: &#39;some_aud&#39;,
+ &#39;sub&#39;: &#39;some_sub&#39;,
+ &#39;iat&#39;: 1648823184,
+ &#39;exp&#39;: 1648823244,
+ &#39;jti&#39;: &#39;3b400e27-c111-4013-84e0-714acd76bf3a&#39;
+}
 </code></pre></div>
 </td></tr></table></p>
 <h3 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h3>
@@ -733,7 +756,7 @@ been dissatisfied by all of them so far, so I decided to come up with my own mod
 The same is true for Json Web tokens in JSON format.</p>
 <h4 id="jwa-wrappers">JWA Wrappers<a class="headerlink" href="#jwa-wrappers" title="Permanent link">&para;</a></h4>
 <p>While you can directly use <code>cryptography</code> to do the cryptographic operations that are described in <a href="https://www.rfc-editor.org/info/rfc7518">JWA</a>,
-its usage is not straightforward and leaves you with plenty of options to carefully select, leaving room for errors.
+its usage is not straightforward and gives you plenty of options to carefully select, leaving room for errors.
 To work around this, <code>jwskate</code> comes with a set of wrappers that implement the exact JWA specification, with minimum
 risk of mistakes.</p>
 <h4 id="safe-signature-verification">Safe Signature Verification<a class="headerlink" href="#safe-signature-verification" title="Permanent link">&para;</a></h4>

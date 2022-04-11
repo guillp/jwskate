@@ -167,7 +167,7 @@ class ECJwk(Jwk):
         Returns:
             an ECJwk initialized from the provided `cryptography` key
         """
-        parameters = EllipticCurve.get_parameters(key)
+        parameters = EllipticCurve.get_jwk_parameters(key)
         return cls(parameters)
 
     def to_cryptography_key(

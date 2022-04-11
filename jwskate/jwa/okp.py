@@ -90,7 +90,7 @@ class OKPCurve:
         """Return the appropriate `OKPCurve` instance for a given `cryptography` private or public key.
 
         Args:
-          key(Union[PublicKeyProtocol, PrivateKeyProtocol]): `cryptography` private or public OKP key.
+          key: `cryptography` private or public OKP key.
 
         Returns:
           OKPCurve: the appropriate `OKPCurve` for the given key

@@ -55,7 +55,7 @@ class EllipticCurve:
         """Get the appropriate `EllipticCurve` instance for a given `cryptography` `EllipticCurvePublicKey`.
 
         Args:
-          key(Union[ec.EllipticCurvePublicKey, ec.EllipticCurvePrivateKey]): an Elliptic Curve private or public key from `cryptography`.
+          key: an Elliptic Curve private or public key from `cryptography`.
 
         Returns:
           the appropriate instance of EllipticCurve for the given key.
@@ -69,16 +69,16 @@ class EllipticCurve:
         raise NotImplementedError(f"Unsupported Curve {key.curve.name}")
 
     @classmethod
-    def get_parameters(
+    def get_jwk_parameters(
         cls, key: Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey]
     ) -> Dict[str, Any]:
-        """Extract all private and public parameters from a given `cryptography` `EllipticCurvePrivateKey`.
+        """Extract all private and public parameters from a given `cryptography` `EllipticCurvePrivateKey` or `EllipticCurvePublicKey`.
 
         Args:
           key: an Elliptic Curve public or private key from `cryptography`.
 
         Returns:
-          a tuple of `x`, `y` (public coordinates) and `d` (private key), as `int`
+          a dict of JWK parameters matching that key
 
         Raises:
             TypeError: if the provided key is not an EllipticCurvePrivateKey or EllipticCurvePublicKey

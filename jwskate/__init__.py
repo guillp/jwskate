@@ -89,7 +89,7 @@ from .jwk import (
     UnsupportedEllipticCurve,
     UnsupportedOKPCurve,
 )
-from .jws import JwsCompact
+from .jws import InvalidJws, JwsCompact
 from .jwt import (
     EncryptedJwt,
     ExpiredJwt,

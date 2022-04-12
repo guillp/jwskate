@@ -235,9 +235,7 @@ class OKPJwk(Jwk):
         Returns:
             the resulting OKPJwk
         """
-        return cls(
-            dict(kty="OKP", crv=crv, x=BinaPy(x).encode_to("b64u").ascii(), **params)
-        )
+        return cls(dict(kty="OKP", crv=crv, x=BinaPy(x).to("b64u").ascii(), **params))
 
     @classmethod
     def private(cls, crv: str, x: bytes, d: bytes, **params: Any) -> OKPJwk:
@@ -256,8 +254,8 @@ class OKPJwk(Jwk):
             dict(
                 kty=cls.KTY,
                 crv=crv,
-                x=BinaPy(x).encode_to("b64u").ascii(),
-                d=BinaPy(d).encode_to("b64u").ascii(),
+                x=BinaPy(x).to("b64u").ascii(),
+                d=BinaPy(d).to("b64u").ascii(),
                 **params,
             )
         )

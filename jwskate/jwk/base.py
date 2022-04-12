@@ -186,7 +186,7 @@ class Jwk(BaseJsonDict):
 
         intermediary = json.dumps(t, separators=(",", ":"), sort_keys=True)
         digest.update(intermediary.encode("utf8"))
-        return BinaPy(digest.digest()).encode_to("b64u").decode()
+        return BinaPy(digest.digest()).to("b64u").ascii()
 
     @property
     def kty(self) -> str:
@@ -541,8 +541,8 @@ class Jwk(BaseJsonDict):
             iv = aesgcm.generate_iv()
             wrapped_cek, tag = aesgcm.wrap_key(cek, iv)
             cek_headers = {
-                "iv": iv.encode_to("b64u").decode(),
-                "tag": tag.encode_to("b64u").decode(),
+                "iv": iv.to("b64u").ascii(),
+                "tag": tag.to("b64u").ascii(),
             }
 
         elif issubclass(keyalg, DirectKeyUse):

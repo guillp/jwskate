@@ -116,8 +116,8 @@ class ECJwk(Jwk):
             dict(
                 key="EC",
                 crv=crv,
-                x=BinaPy.from_int(x, length=coord_size).encode_to("b64u"),
-                y=BinaPy.from_int(y, length=coord_size).encode_to("b64u"),
+                x=BinaPy.from_int(x, length=coord_size).to("b64u"),
+                y=BinaPy.from_int(y, length=coord_size).to("b64u"),
                 **params,
             )
         )
@@ -141,9 +141,9 @@ class ECJwk(Jwk):
             dict(
                 kty="EC",
                 crv=crv,
-                x=BinaPy.from_int(x, coord_size).encode_to("b64u").decode(),
-                y=BinaPy.from_int(y, coord_size).encode_to("b64u").decode(),
-                d=BinaPy.from_int(d, coord_size).encode_to("b64u").decode(),
+                x=BinaPy.from_int(x, coord_size).to("b64u").ascii(),
+                y=BinaPy.from_int(y, coord_size).to("b64u").ascii(),
+                d=BinaPy.from_int(d, coord_size).to("b64u").ascii(),
                 **params,
             )
         )

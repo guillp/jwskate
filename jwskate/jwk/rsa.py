@@ -145,8 +145,8 @@ class RSAJwk(Jwk):
         return cls(
             dict(
                 kty="RSA",
-                n=BinaPy.from_int(n).encode_to("b64u").decode(),
-                e=BinaPy.from_int(e).encode_to("b64u").decode(),
+                n=BinaPy.from_int(n).to("b64u").ascii(),
+                e=BinaPy.from_int(e).to("b64u").ascii(),
                 **params,
             )
         )
@@ -183,24 +183,14 @@ class RSAJwk(Jwk):
         return cls(
             dict(
                 kty="RSA",
-                n=BinaPy.from_int(n).encode_to("b64u").decode(),
-                e=BinaPy.from_int(e).encode_to("b64u").decode(),
-                d=BinaPy.from_int(d).encode_to("b64u").decode(),
-                p=BinaPy.from_int(p).encode_to("b64u").decode()
-                if p is not None
-                else None,
-                q=BinaPy.from_int(q).encode_to("b64u").decode()
-                if q is not None
-                else None,
-                dp=BinaPy.from_int(dp).encode_to("b64u").decode()
-                if dp is not None
-                else None,
-                dq=BinaPy.from_int(dq).encode_to("b64u").decode()
-                if dq is not None
-                else None,
-                qi=BinaPy.from_int(qi).encode_to("b64u").decode()
-                if qi is not None
-                else None,
+                n=BinaPy.from_int(n).to("b64u").ascii(),
+                e=BinaPy.from_int(e).to("b64u").ascii(),
+                d=BinaPy.from_int(d).to("b64u").ascii(),
+                p=BinaPy.from_int(p).to("b64u").ascii() if p is not None else None,
+                q=BinaPy.from_int(q).to("b64u").ascii() if q is not None else None,
+                dp=BinaPy.from_int(dp).to("b64u").ascii() if dp is not None else None,
+                dq=BinaPy.from_int(dq).to("b64u").ascii() if dq is not None else None,
+                qi=BinaPy.from_int(qi).to("b64u").ascii() if qi is not None else None,
                 **params,
             )
         )

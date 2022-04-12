@@ -97,11 +97,11 @@ class JweCompact(BaseCompactToken):
         return cls(
             b".".join(
                 (
-                    BinaPy.serialize_to("json", headers).encode_to("b64u"),
-                    BinaPy(cek).encode_to("b64u"),
-                    BinaPy(iv).encode_to("b64u"),
-                    BinaPy(ciphertext).encode_to("b64u"),
-                    BinaPy(tag).encode_to("b64u"),
+                    BinaPy.serialize_to("json", headers).to("b64u"),
+                    BinaPy(cek).to("b64u"),
+                    BinaPy(iv).to("b64u"),
+                    BinaPy(ciphertext).to("b64u"),
+                    BinaPy(tag).to("b64u"),
                 )
             )
         )
@@ -174,7 +174,7 @@ class JweCompact(BaseCompactToken):
         )
 
         headers = dict(extra_headers, **cek_headers, alg=alg, enc=enc)
-        aad = BinaPy.serialize_to("json", headers).encode_to("b64u")
+        aad = BinaPy.serialize_to("json", headers).to("b64u")
 
         ciphertext, tag, iv = cek_jwk.encrypt(
             plaintext=plaintext, aad=aad, iv=iv, alg=enc
@@ -287,10 +287,8 @@ class JweCompact(BaseCompactToken):
 
         wrapped_cek = wrapper.wrap_key(cek, salt, count)
 
-        headers = dict(
-            alg=alg, enc=enc, p2s=BinaPy(salt).encode_to("b64u").decode(), p2c=count
-        )
-        aad = BinaPy.serialize_to("json", headers).encode_to("b64u")
+        headers = dict(alg=alg, enc=enc, p2s=BinaPy(salt).to("b64u").ascii(), p2c=count)
+        aad = BinaPy.serialize_to("json", headers).to("b64u")
         ciphertext, tag, iv = cek_jwk.encrypt(
             plaintext=plaintext, aad=aad, alg=enc, iv=iv
         )

@@ -43,8 +43,8 @@ class JwsSignature(BaseJsonDict):
         """
         content = dict(
             kwargs,
-            protected=BinaPy.serialize_to("json", protected).encode_to("b64u").ascii(),
-            signature=BinaPy(signature).encode_to("b64u").ascii(),
+            protected=BinaPy.serialize_to("json", protected).to("b64u").ascii(),
+            signature=BinaPy(signature).to("b64u").ascii(),
         )
         if header is not None:
             content["header"] = header
@@ -143,8 +143,8 @@ class JwsSignature(BaseJsonDict):
         """
         return b".".join(
             (
-                BinaPy.serialize_to("json", headers).encode_to("b64u"),
-                BinaPy(payload).encode_to("b64u"),
+                BinaPy.serialize_to("json", headers).to("b64u"),
+                BinaPy(payload).to("b64u"),
             )
         )
 

@@ -52,4 +52,4 @@ repos:
             - types-cryptography
             - types-requests
             - pytest-mypy
-            - binapy==0.4.0
+            - binapy==0.5.0

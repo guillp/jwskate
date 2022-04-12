@@ -83,7 +83,7 @@ class SymmetricJwk(Jwk):
         Returns:
           the resulting SymmetricJwk
         """
-        return cls(dict(kty="oct", k=BinaPy(k).encode_to("b64u").decode(), **params))
+        return cls(dict(kty="oct", k=BinaPy(k).to("b64u").ascii(), **params))
 
     @classmethod
     def generate(cls, size: int = 128, **params: str) -> "SymmetricJwk":
@@ -134,8 +134,8 @@ class SymmetricJwk(Jwk):
         """
         return (
             BinaPy.serialize_to("json", {"k": self.k, "kty": self.kty})
-            .encode_to("sha256")
-            .encode_to("b64u")
+            .to("sha256")
+            .to("b64u")
             .ascii()
         )
 

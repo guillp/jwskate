@@ -69,7 +69,7 @@ class JwsJsonFlat(JwsSignature):
         signature = super().sign(
             payload, jwk, alg, extra_protected_headers, header, **kwargs
         )
-        signature["payload"] = BinaPy(payload).encode_to("b64u").ascii()
+        signature["payload"] = BinaPy(payload).to("b64u").ascii()
         return cls(signature)
 
     def generalize(self) -> JwsJsonGeneral:
@@ -177,7 +177,7 @@ class JwsJsonGeneral(BaseJsonDict):
         Returns:
             A JwsJsonGeneral with the generated signatures.
         """
-        jws = cls({"payload": BinaPy(payload).encode_to("b64u").ascii()})
+        jws = cls({"payload": BinaPy(payload).to("b64u").ascii()})
         for parameters in signature_parameters:
             jws.add_signature(*parameters)
         return jws

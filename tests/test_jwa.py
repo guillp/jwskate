@@ -180,7 +180,7 @@ def test_ecdhes() -> None:
         otherinfo,
         128,
     )
-    assert BinaPy(alice_cek).encode_to("b64u") == b"VqqN6vgjbSBcIijNcacQGg"
+    assert BinaPy(alice_cek).to("b64u") == b"VqqN6vgjbSBcIijNcacQGg"
 
     bob_cek = EcdhEs.derive(
         bob_private_key.to_cryptography_key(),
@@ -188,4 +188,4 @@ def test_ecdhes() -> None:
         otherinfo,
         128,
     )
-    assert BinaPy(bob_cek).encode_to("b64u") == b"VqqN6vgjbSBcIijNcacQGg"
+    assert BinaPy(bob_cek).to("b64u") == b"VqqN6vgjbSBcIijNcacQGg"

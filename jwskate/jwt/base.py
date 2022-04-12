@@ -77,10 +77,10 @@ class Jwt(BaseCompactToken):
         if kid:
             headers["kid"] = kid
 
-        headers_part = BinaPy.serialize_to("json", headers).encode_to("b64u")
-        claims_part = BinaPy.serialize_to("json", claims).encode_to("b64u")
+        headers_part = BinaPy.serialize_to("json", headers).to("b64u")
+        claims_part = BinaPy.serialize_to("json", claims).to("b64u")
         signed_value = b".".join((headers_part, claims_part))
-        signature = jwk.sign(signed_value, alg=alg).encode_to("b64u")
+        signature = jwk.sign(signed_value, alg=alg).to("b64u")
         return SignedJwt(b".".join((signed_value, signature)))
 
     @classmethod
@@ -102,8 +102,8 @@ class Jwt(BaseCompactToken):
 
         headers = dict(extra_headers or {}, alg="none")
 
-        headers_part = BinaPy.serialize_to("json", headers).encode_to("b64u")
-        claims_part = BinaPy.serialize_to("json", claims).encode_to("b64u")
+        headers_part = BinaPy.serialize_to("json", headers).to("b64u")
+        claims_part = BinaPy.serialize_to("json", claims).to("b64u")
         signed_value = b".".join((headers_part, claims_part))
         signature = b""
         return SignedJwt(b".".join((signed_value, signature)))

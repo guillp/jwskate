@@ -122,7 +122,7 @@ class JwsCompact(BaseCompactToken):
         if not isinstance(signed_part, bytes):
             signed_part = signed_part.encode("ascii")
 
-        return cls(b".".join((signed_part, BinaPy(signature).encode_to("b64u"))))
+        return cls(b".".join((signed_part, BinaPy(signature).to("b64u"))))
 
     @property
     def signed_part(self) -> bytes:

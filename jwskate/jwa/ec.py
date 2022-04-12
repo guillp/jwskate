@@ -92,22 +92,14 @@ class EllipticCurve:
             public_numbers = key.public_key().public_numbers()
         elif isinstance(key, ec.EllipticCurvePublicKey):
             public_numbers = key.public_numbers()
-        x = (
-            BinaPy.from_int(public_numbers.x, crv.coordinate_size)
-            .encode_to("b64u")
-            .ascii()
-        )
-        y = (
-            BinaPy.from_int(public_numbers.y, crv.coordinate_size)
-            .encode_to("b64u")
-            .ascii()
-        )
+        x = BinaPy.from_int(public_numbers.x, crv.coordinate_size).to("b64u").ascii()
+        y = BinaPy.from_int(public_numbers.y, crv.coordinate_size).to("b64u").ascii()
         parameters = {"kty": "EC", "crv": crv.name, "x": x, "y": y}
         if isinstance(key, ec.EllipticCurvePrivateKey):
             pn = key.private_numbers()  # type: ignore
             d = (
                 BinaPy.from_int(pn.private_value, crv.coordinate_size)
-                .encode_to("b64u")
+                .to("b64u")
                 .ascii()
             )
             parameters["d"] = d

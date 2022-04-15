@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "jwskate"
-version = "0.1.0"
+version = "0.1.1"
 homepage = "https://github.com/guillp/jwskate"
 description = "A Pythonic implementation of Json Web Signature, Keys, Algorithms, Tokens and Encryption (RFC7514 to 7519), on top of the `cryptography` module."
 authors = ["Guillaume Pujol <guill.p.linux@gmail.com>"]

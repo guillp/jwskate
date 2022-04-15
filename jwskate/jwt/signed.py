@@ -1,6 +1,6 @@
 """This modules contains classes and utilities to generate and validate signed JWT."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 from binapy import BinaPy
@@ -108,7 +108,7 @@ class SignedJwt(Jwt):
         exp = self.expires_at
         if exp is None:
             return None
-        return exp < datetime.now()
+        return exp < datetime.now(timezone.utc)
 
     @property
     def expires_at(self) -> Optional[datetime]:
@@ -124,7 +124,7 @@ class SignedJwt(Jwt):
         if not exp:
             return None
         try:
-            exp_dt = datetime.fromtimestamp(exp)
+            exp_dt = datetime.fromtimestamp(exp, tz=timezone.utc)
             return exp_dt
         except (TypeError, OSError):
             raise AttributeError("invalid `exp `claim", exp)
@@ -143,7 +143,7 @@ class SignedJwt(Jwt):
         if not iat:
             return None
         try:
-            iat_dt = datetime.fromtimestamp(iat)
+            iat_dt = datetime.fromtimestamp(iat, tz=timezone.utc)
             return iat_dt
         except (TypeError, OSError):
             raise AttributeError("invalid `iat `claim", iat)
@@ -162,7 +162,7 @@ class SignedJwt(Jwt):
         if not nbf:
             return None
         try:
-            nbf_dt = datetime.fromtimestamp(nbf)
+            nbf_dt = datetime.fromtimestamp(nbf, tz=timezone.utc)
             return nbf_dt
         except (TypeError, OSError):
             raise AttributeError("invalid `nbf `claim", nbf)

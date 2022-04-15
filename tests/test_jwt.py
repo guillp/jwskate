@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 
@@ -43,8 +43,8 @@ def test_jwt() -> None:
     assert jwt.nonce == "nonce"
     assert jwt.amr == ["pwd", "otp"]
     assert jwt.exp == 1629204620
-    assert jwt.expires_at == datetime.fromtimestamp(1629204620)
-    assert jwt.issued_at == datetime.fromtimestamp(1629204560)
+    assert jwt.expires_at == datetime.fromtimestamp(1629204620, tz=timezone.utc)
+    assert jwt.issued_at == datetime.fromtimestamp(1629204560, tz=timezone.utc)
     assert jwt.nonce == jwt["nonce"]
     jwt.validate(
         jwk=Jwk(
@@ -78,7 +78,7 @@ def test_unprotected() -> None:
 
 def test_jwt_signer(issuer: str, private_jwk: Jwk) -> None:
     signer = JwtSigner(issuer, private_jwk)
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     jwt = signer.sign(subject="some_id", audience="some_audience")
     assert isinstance(jwt, Jwt)
     assert jwt.subject == "some_id"

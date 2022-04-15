@@ -620,7 +620,7 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">rsa_private_jwk</span><span class="p">)</span>
 </code></pre></div>
 </td></tr></table>
-<p>The result of this print JWK will look like this:
+<p>The result of this print JWK will look like this:</p>
 <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -643,9 +643,9 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
   &#39;kid&#39;: &#39;my_key&#39;
 }
 </code></pre></div>
-</td></tr></table></p>
+</td></tr></table>
 <p>Now let's sign a JWT containing arbitrary claims:</p>
-<p><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -678,11 +678,11 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="p">)</span>
 </code></pre></div>
 </td></tr></table>
-This will output the full JWT compact representation. You can inspect it for example at <a href="https://jwt.io">https://jwt.io</a>
+<p>This will output the full JWT compact representation. You can inspect it for example at <a href="https://jwt.io">https://jwt.io</a></p>
 <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>eyJhbGciOiJFUzI1NiIsImtpZCI6Im15a2V5In0.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.C1KcDyDT8qXwUqcWzPKkQD7f6xai-gCgaRFMdKPe80Vk7XeYNa8ovuLwvdXgGW4ZZ_lL73QIyncY7tHGXUthag
 </code></pre></div>
-</td></tr></table></p>
-<p>Or let's sign a JWT with the standardised lifetime, subject, audience and ID claims:
+</td></tr></table>
+<p>Or let's sign a JWT with the standardised lifetime, subject, audience and ID claims:</p>
 <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -706,7 +706,7 @@ This will output the full JWT compact representation. You can inspect it for exa
 <span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="o">.</span><span class="n">claims</span><span class="p">)</span>
 </code></pre></div>
 </td></tr></table>
-The generated JWT claims will include the standardised claims:
+<p>The generated JWT claims will include the standardised claims:</p>
 <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -725,7 +725,7 @@ The generated JWT claims will include the standardised claims:
  &#39;jti&#39;: &#39;3b400e27-c111-4013-84e0-714acd76bf3a&#39;
 }
 </code></pre></div>
-</td></tr></table></p>
+</td></tr></table>
 <h3 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Simple, Clean, Pythonic interface</li>
@@ -747,7 +747,7 @@ been dissatisfied by all of them so far, so I decided to come up with my own mod
 <li><a href="https://pyjwt.readthedocs.io/..">PyJWT</a>: lacks support for JWK, JWE, JWS, requires keys in PEM format.</li>
 <li><a href="https://jwcrypto.readthedocs.io/">JWCrypto</a>: very inconsistent and complex API.</li>
 <li><a href="https://python-jose.readthedocs.io/">Python-JOSE</a>: lacks easy support for JWT validation
-(checking the standard claims like iss, exp, etc.), lacks easy access to claims</li>
+  (checking the standard claims like iss, exp, etc.), lacks easy access to claims</li>
 </ul>
 <h3 id="design">Design<a class="headerlink" href="#design" title="Permanent link">&para;</a></h3>
 <h4 id="jwk-are-dicts">JWK are dicts<a class="headerlink" href="#jwk-are-dicts" title="Permanent link">&para;</a></h4>

@@ -20,7 +20,7 @@ class JwkSet(BaseJsonDict):
         jwks: Optional[Dict[str, Any]] = None,
         keys: Optional[Iterable[Jwk]] = None,
     ):
-        """Intiialize a JwkSet. Multiple inputs can be provided.
+        """Initialize a JwkSet. Multiple inputs can be provided.
 
         - a `dict` from the parsed JSON object representing this JwkSet (in paramter `jwks`)
         - a list of `Jwk` (in parameter `keys`
@@ -126,6 +126,24 @@ class JwkSet(BaseJsonDict):
             self.jwks.remove(jwk)
         except KeyError:
             pass
+
+    @property
+    def is_private(self) -> bool:
+        """True if the JwkSet contains at least one private key.
+
+        Returns:
+            `True` if this JwkSet contains at least one private key
+
+        """
+        return any(key.is_private for key in self.jwks)
+
+    def public_jwks(self) -> "JwkSet":
+        """Return another JwkSet with the public keys associated with the current keys.
+
+        Returns:
+            a public JwkSet
+        """
+        return JwkSet(keys=(key.public_jwk() for key in self.jwks))
 
     def verify(
         self,

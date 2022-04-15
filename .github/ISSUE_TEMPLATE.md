@@ -1,6 +1,6 @@
-* `jwskate` version:
-* Python version:
-* Operating System:
+- `jwskate` version:
+- Python version:
+- Operating System:
 
 ### Description
 

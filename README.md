@@ -6,14 +6,6 @@
         alt = "Release Status">
 </a>
 
-<a href="https://github.com/guillp/jwskate/actions">
-    <img src="https://github.com/guillp/jwskate/actions/workflows/main.yml/badge.svg?branch=release" alt="CI Status">
-</a>
-
-<a href="https://jwskate.readthedocs.io/en/latest/?badge=latest">
-    <img src="https://readthedocs.org/projects/jwskate/badge/?version=latest" alt="Documentation Status">
-</a>
-
 </p>
 
 A Pythonic implementation of Json Web Signature, Keys, Algorithms, Tokens and Encryption (RFC7514 to 7519), and their

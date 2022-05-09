@@ -139,7 +139,7 @@ class SymmetricJwk(Jwk):
             .ascii()
         )
 
-    def to_cryptography_key(self) -> Any:
+    def _to_cryptography_key(self) -> Any:
         """Converts this Jwk into a key usable with `cryptography`.
 
         For SymmetricJwk instances, those are just `bytes` values.
@@ -235,7 +235,7 @@ class SymmetricJwk(Jwk):
             UnsupportedAlg: if the provided alg is not supported
         """
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        wrapper = keyalg(self.to_cryptography_key())
+        wrapper = keyalg(self._to_cryptography_key())
         if isinstance(wrapper, BaseAesKeyWrap):
             cipherkey = wrapper.wrap_key(plainkey)
         else:

@@ -66,6 +66,10 @@ class ECJwk(Jwk):
         for keyalg in [EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW]
     }
 
+    @property
+    def is_private(self) -> bool:  # noqa: D102
+        return "d" in self
+
     def _validate(self) -> None:
         if not isinstance(self.crv, str) or self.crv not in self.CURVES:
             raise UnsupportedEllipticCurve(self.crv)
@@ -170,7 +174,7 @@ class ECJwk(Jwk):
         parameters = EllipticCurve.get_jwk_parameters(key)
         return cls(parameters)
 
-    def to_cryptography_key(
+    def _to_cryptography_key(
         self,
     ) -> Union[
         asymmetric.ec.EllipticCurvePrivateKey,

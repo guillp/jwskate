@@ -54,6 +54,10 @@ class OKPJwk(Jwk):
 
     SIGNATURE_ALGORITHMS = {alg.name: alg for alg in (EdDsa,)}
 
+    @property
+    def is_private(self) -> bool:  # noqa: D102
+        return "d" in self
+
     def _validate(self) -> None:
         if not isinstance(self.crv, str) or self.crv not in self.CURVES:
             raise UnsupportedOKPCurve(self.crv)
@@ -191,7 +195,7 @@ class OKPJwk(Jwk):
                 + ", ".join(kls.__name__ for kls in cls.CRYPTOGRAPHY_KEY_CLASSES)
             )
 
-    def to_cryptography_key(self) -> Any:
+    def _to_cryptography_key(self) -> Any:
         """Intialize a `cryptography` key based on this Jwk.
 
         Returns:

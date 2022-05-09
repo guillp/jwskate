@@ -64,12 +64,12 @@ def test_from_to_cryptography(
     assert private_jwk.kty == "OKP"
     assert private_jwk.crv == crv
     assert private_jwk.is_private
-    cryptography_private_key = private_jwk.to_cryptography_key()
+    cryptography_private_key = private_jwk.cryptography_key
     assert isinstance(cryptography_private_key, private_key_class)
 
     public_jwk = Jwk(private_key.public_key())
     assert public_jwk.kty == "OKP"
     assert public_jwk.crv == crv
     assert not public_jwk.is_private
-    cryptography_public_key = public_jwk.to_cryptography_key()
+    cryptography_public_key = public_jwk.cryptography_key
     assert isinstance(cryptography_public_key, public_key_class)

@@ -100,7 +100,7 @@ class Jwk(BaseJsonDict):
         for klass in cls.CRYPTOGRAPHY_KEY_CLASSES:
             Jwk.cryptography_key_types[klass] = cls
 
-    def __new__(cls, jwk: Union[Jwk, Dict[str, Any]], *args, **kwargs):  # type: ignore
+    def __new__(cls, key: Union[Jwk, Dict[str, Any], Any], *args, **kwargs):  # type: ignore
         """Overridden `__new__` to make the Jwk constructor smarter.
 
         The Jwk constructor will accept:
@@ -110,13 +110,11 @@ class Jwk(BaseJsonDict):
             - an instance from a `cryptography` public or private key class
 
         Args:
-            jwk: a dict containing JWK parameters, or another Jwk instance, or a `cryptography` key
+            key: a dict containing JWK parameters, or another Jwk instance, or a `cryptography` key
         """
         if cls == Jwk:
-            if isinstance(jwk, Jwk):
-                return jwk
-            elif isinstance(jwk, dict):
-                kty: Optional[str] = jwk.get("kty")
+            if isinstance(key, dict):
+                kty: Optional[str] = key.get("kty")
                 if kty is None:
                     raise ValueError("A Json Web Key must have a Key Type (kty)")
 
@@ -126,8 +124,8 @@ class Jwk(BaseJsonDict):
                 return super().__new__(subclass)
             else:
                 # this will trigger double __init__
-                return cls.from_cryptography_key(jwk, *args, **kwargs)
-        return super().__new__(cls, jwk, *args, **jwk)
+                return cls.from_cryptography_key(key, *args, **kwargs)
+        return super().__new__(cls, key, *args, **kwargs)
 
     def __init__(
         self, params: Union[Dict[str, Any], Any], include_kid_thumbprint: bool = False
@@ -146,10 +144,23 @@ class Jwk(BaseJsonDict):
             super().__init__(
                 {key: val for key, val in params.items() if val is not None}
             )
-            self.is_private = False
             self._validate()
             if self.get("kid") is None and include_kid_thumbprint:
                 self["kid"] = self.thumbprint()
+
+        try:
+            self.cryptography_key = self._to_cryptography_key()
+        except AttributeError as exc:
+            raise InvalidJwk() from exc
+
+    @property
+    def is_private(self) -> bool:
+        """Return `True` if the key is private, `False` otherwise.
+
+        Returns:
+            `True` if the key is private, `False` otherwise
+        """
+        return True
 
     def __getattr__(self, item: str) -> Any:
         """Allows access to key parameters as attributes, like `jwk.kid`, `jwk.kty`, instead of `jwk['kid']`, `jwk['kty']`, etc.
@@ -167,6 +178,21 @@ class Jwk(BaseJsonDict):
         if value is None:
             raise AttributeError(item)
         return value
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        """Override base method to avoid modifying cryptographic key attributes.
+
+        Args:
+            key: name of the attribute to set
+            value: value to set
+
+        Raises:
+            RuntimeError: when trying to modify cryptographic attributes
+
+        """
+        if key in self.PARAMS:
+            raise RuntimeError("JWK key attributes cannot be modified.")
+        super().__setitem__(key, value)
 
     def thumbprint(self, hashalg: str = "SHA256") -> str:
         """Return the key thumbprint as specified by RFC 7638.
@@ -266,10 +292,8 @@ class Jwk(BaseJsonDict):
 
         # if key is used for signing, it must be private
         for op in self.get("key_ops", []):
-            if op in ("sign", "decrypt", "unwrapKey") and not jwk_is_private:
+            if op in ("sign", "decrypt", "unwrapKey") and not self.is_private:
                 raise InvalidJwk(f"Key Operation is '{op}' but the key is public")
-
-        self.is_private = jwk_is_private
 
     def supported_signing_algorithms(self) -> List[str]:
         """Return the list of Signature algorithms that can be used with this key.
@@ -356,7 +380,7 @@ class Jwk(BaseJsonDict):
         sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
         wrapper: BaseSignatureAlg
         if issubclass(sigalg, BaseAsymmetricAlg):
-            wrapper = sigalg(self.to_cryptography_key())
+            wrapper = sigalg(self.cryptography_key)
 
         elif issubclass(sigalg, BaseSymmetricAlg):
             wrapper = sigalg(self.key)
@@ -385,7 +409,7 @@ class Jwk(BaseJsonDict):
         wrapper: BaseSignatureAlg
         for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
             if issubclass(sigalg, BaseAsymmetricAlg):
-                key = self.public_jwk().to_cryptography_key()
+                key = self.public_jwk().cryptography_key
                 wrapper = sigalg(key)
             elif issubclass(sigalg, BaseSymmetricAlg):
                 key = self.key
@@ -500,7 +524,7 @@ class Jwk(BaseJsonDict):
         cek_headers: Dict[str, Any] = {}
 
         if issubclass(keyalg, BaseRsaKeyWrap):
-            rsa = keyalg(self.public_jwk().to_cryptography_key())
+            rsa = keyalg(self.public_jwk().cryptography_key)
             if cek:
                 encalg.check_key(cek)
             else:
@@ -508,7 +532,7 @@ class Jwk(BaseJsonDict):
             wrapped_cek = rsa.wrap_key(cek)
 
         elif issubclass(keyalg, EcdhEs):
-            ecdh: EcdhEs = keyalg(self.public_jwk().to_cryptography_key())
+            ecdh: EcdhEs = keyalg(self.public_jwk().cryptography_key)
             epk = epk or Jwk.from_cryptography_key(ecdh.generate_ephemeral_key())
             cek_headers = {"epk": epk.public_jwk()}
             if isinstance(ecdh, BaseEcdhEs_AesKw):
@@ -517,15 +541,15 @@ class Jwk(BaseJsonDict):
                 else:
                     cek = encalg.generate_key()
                 wrapped_cek = ecdh.wrap_key_with_epk(
-                    cek, epk.to_cryptography_key(), alg=alg, **headers
+                    cek, epk.cryptography_key, alg=alg, **headers
                 )
             else:
                 cek = ecdh.sender_key(
-                    epk.to_cryptography_key(), encalg.name, encalg.key_size, **headers
+                    epk.cryptography_key, encalg.name, encalg.key_size, **headers
                 )
                 wrapped_cek = BinaPy(b"")
         elif issubclass(keyalg, BaseAesKeyWrap):
-            aes: BaseAesKeyWrap = keyalg(self.to_cryptography_key())
+            aes: BaseAesKeyWrap = keyalg(self.cryptography_key)
             if cek:
                 encalg.check_key(cek)
             else:
@@ -533,7 +557,7 @@ class Jwk(BaseJsonDict):
             wrapped_cek = aes.wrap_key(cek)
 
         elif issubclass(keyalg, BaseAesGcmKeyWrap):
-            aesgcm: BaseAesGcmKeyWrap = keyalg(self.to_cryptography_key())
+            aesgcm: BaseAesGcmKeyWrap = keyalg(self.cryptography_key)
             if cek:
                 encalg.check_key(cek)
             else:
@@ -577,7 +601,7 @@ class Jwk(BaseJsonDict):
         encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
 
         if issubclass(keyalg, BaseRsaKeyWrap):
-            rsa = keyalg(self.to_cryptography_key())
+            rsa = keyalg(self.cryptography_key)
             cek = rsa.unwrap_key(wrapped_cek)
 
         elif issubclass(keyalg, EcdhEs):
@@ -588,7 +612,7 @@ class Jwk(BaseJsonDict):
             epk_jwk = Jwk(epk)
             if epk_jwk.is_private:
                 raise ValueError("The EPK present in the header is private.")
-            epk = epk_jwk.to_cryptography_key()
+            epk = epk_jwk.cryptography_key
             encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
             if isinstance(ecdh, BaseEcdhEs_AesKw):
                 cek = ecdh.unwrap_key_with_epk(wrapped_cek, epk, alg=alg)
@@ -598,11 +622,11 @@ class Jwk(BaseJsonDict):
                 )
 
         elif issubclass(keyalg, BaseAesKeyWrap):
-            aes = keyalg(self.to_cryptography_key())
+            aes = keyalg(self.cryptography_key)
             cek = aes.unwrap_key(wrapped_cek)
 
         elif issubclass(keyalg, BaseAesGcmKeyWrap):
-            aesgcm = keyalg(self.to_cryptography_key())
+            aesgcm = keyalg(self.cryptography_key)
             iv = headers.get("iv")
             if iv is None:
                 raise ValueError("No 'iv' in headers!")
@@ -643,7 +667,7 @@ class Jwk(BaseJsonDict):
 
         raise TypeError(f"Unsupported Jwk class for this Key Type: {cryptography_key}")
 
-    def to_cryptography_key(self) -> Any:
+    def _to_cryptography_key(self) -> Any:
         """Return a key from the `cryptography` library that matches this Jwk.
 
         This is implemented by subclasses.

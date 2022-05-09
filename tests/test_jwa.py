@@ -175,16 +175,16 @@ def test_ecdhes() -> None:
 
     otherinfo = EcdhEs.otherinfo("A128GCM", b"Alice", b"Bob", 128)
     alice_cek = EcdhEs.derive(
-        alice_ephemeral_key.to_cryptography_key(),
-        bob_private_key.public_jwk().to_cryptography_key(),
+        alice_ephemeral_key.cryptography_key,
+        bob_private_key.public_jwk().cryptography_key,
         otherinfo,
         128,
     )
     assert BinaPy(alice_cek).to("b64u") == b"VqqN6vgjbSBcIijNcacQGg"
 
     bob_cek = EcdhEs.derive(
-        bob_private_key.to_cryptography_key(),
-        alice_ephemeral_key.public_jwk().to_cryptography_key(),
+        bob_private_key.cryptography_key,
+        alice_ephemeral_key.public_jwk().cryptography_key,
         otherinfo,
         128,
     )

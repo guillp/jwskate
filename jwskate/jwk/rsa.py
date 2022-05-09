@@ -76,6 +76,10 @@ class RSAJwk(Jwk):
         ]
     }
 
+    @property
+    def is_private(self) -> bool:  # noqa: D102
+        return "d" in self
+
     @classmethod
     def from_cryptography_key(cls, key: Any) -> RSAJwk:
         """Initialize a Jwk from a `cryptography` RSA key.
@@ -111,7 +115,7 @@ class RSAJwk(Jwk):
         else:
             raise TypeError("A RSAPrivateKey or a RSAPublicKey is required.")
 
-    def to_cryptography_key(self) -> Union[rsa.RSAPrivateKey, rsa.RSAPublicKey]:
+    def _to_cryptography_key(self) -> Union[rsa.RSAPrivateKey, rsa.RSAPublicKey]:
         """Initialize a `cryptography` key based on this Jwk.
 
         Returns:
@@ -303,7 +307,7 @@ class RSAJwk(Jwk):
             the wrapped symmetric key
         """
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        wrapper = keyalg(self.public_jwk().to_cryptography_key())
+        wrapper = keyalg(self.public_jwk()._to_cryptography_key())
         ciphertext = wrapper.wrap_key(plainkey)
         return BinaPy(ciphertext)
 
@@ -322,6 +326,6 @@ class RSAJwk(Jwk):
             the clear-text unwrapped key
         """
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        wrapper = keyalg(self.to_cryptography_key())
+        wrapper = keyalg(self._to_cryptography_key())
         plaintext = wrapper.unwrap_key(cipherkey)
         return SymmetricJwk.from_bytes(plaintext)

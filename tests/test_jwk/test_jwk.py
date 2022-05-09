@@ -8,7 +8,7 @@ def test_jwk_copy() -> None:
     jwk1 = Jwk.generate_for_kty("RSA")
 
     jwk2 = Jwk(jwk1)
-    assert jwk1 is jwk2
+    assert jwk1 is not jwk2
 
     jwk3 = jwk1.copy()
     assert jwk1 == jwk3

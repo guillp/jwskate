@@ -581,7 +581,7 @@ class Jwk(BaseJsonDict):
             cek = rsa.unwrap_key(wrapped_cek)
 
         elif issubclass(keyalg, EcdhEs):
-            ecdh = keyalg(self.to_cryptography_key())
+            ecdh = keyalg(self.cryptography_key)
             epk = headers.get("epk")
             if epk is None:
                 raise ValueError("No EPK in the headers!")

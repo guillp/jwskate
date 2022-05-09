@@ -122,8 +122,9 @@ class Jwk(BaseJsonDict):
                 if subclass is None:
                     raise ValueError("Unsupported Key Type", kty)
                 return super().__new__(subclass)
+            elif isinstance(key, str):
+                return cls.from_json(key)
             else:
-                # this will trigger double __init__
                 return cls.from_cryptography_key(key, *args, **kwargs)
         return super().__new__(cls, key, *args, **kwargs)
 

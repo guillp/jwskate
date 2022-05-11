@@ -23,7 +23,7 @@ from jwskate.jwa import (
 
 from .alg import select_alg
 from .base import Jwk, JwkParameter
-from .symetric import SymmetricJwk
+from .oct import SymmetricJwk
 
 
 class RSAJwk(Jwk):
@@ -81,11 +81,12 @@ class RSAJwk(Jwk):
         return "d" in self
 
     @classmethod
-    def from_cryptography_key(cls, key: Any) -> RSAJwk:
+    def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> RSAJwk:
         """Initialize a Jwk from a `cryptography` RSA key.
 
         Args:
-          key: a `cryptography` RSA key
+          cryptography_key: a `cryptography` RSA key
+          **kwargs: additional members to include in the Jwk
 
         Returns:
             a RSAJwk initialized with the given key
@@ -93,9 +94,9 @@ class RSAJwk(Jwk):
         Raises:
             TypeError: if the given key type is not supported
         """
-        if isinstance(key, rsa.RSAPrivateKey):
-            priv = key.private_numbers()  # type: ignore[attr-defined]
-            pub = key.public_key().public_numbers()
+        if isinstance(cryptography_key, rsa.RSAPrivateKey):
+            priv = cryptography_key.private_numbers()  # type: ignore[attr-defined]
+            pub = cryptography_key.public_key().public_numbers()
             return cls.private(
                 n=pub.n,
                 e=pub.e,
@@ -106,8 +107,8 @@ class RSAJwk(Jwk):
                 dq=priv.dmq1,
                 qi=priv.iqmp,
             )
-        elif isinstance(key, rsa.RSAPublicKey):
-            pub = key.public_numbers()
+        elif isinstance(cryptography_key, rsa.RSAPublicKey):
+            pub = cryptography_key.public_numbers()
             return cls.public(
                 n=pub.n,
                 e=pub.e,
@@ -204,7 +205,7 @@ class RSAJwk(Jwk):
         """Generates a new random private RSAJwk.
 
         Args:
-          key_size: the key size to use for the generated key. (Default value = 4096)
+          key_size: the key size to use for the generated key, in bits
           **params: additional members to include in the Jwk
 
         Returns:
@@ -307,7 +308,7 @@ class RSAJwk(Jwk):
             the wrapped symmetric key
         """
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        wrapper = keyalg(self.public_jwk()._to_cryptography_key())
+        wrapper = keyalg(self.public_jwk().cryptography_key)
         ciphertext = wrapper.wrap_key(plainkey)
         return BinaPy(ciphertext)
 
@@ -326,6 +327,6 @@ class RSAJwk(Jwk):
             the clear-text unwrapped key
         """
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        wrapper = keyalg(self._to_cryptography_key())
+        wrapper = keyalg(self.cryptography_key)
         plaintext = wrapper.unwrap_key(cipherkey)
         return SymmetricJwk.from_bytes(plaintext)

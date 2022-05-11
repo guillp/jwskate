@@ -48,6 +48,10 @@ def select_alg(
             choosen_alg = jwk_alg
     elif alg is not None:
         choosen_alg = alg
+    else:
+        raise ExpectedAlgRequired(
+            "This key doesn't have an 'alg' parameter, so you need to provide the expected signing alg(s) for each operation."
+        )
 
     try:
         return supported_algs[choosen_alg]

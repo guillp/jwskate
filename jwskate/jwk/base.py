@@ -100,7 +100,7 @@ class Jwk(BaseJsonDict):
         for klass in cls.CRYPTOGRAPHY_KEY_CLASSES:
             Jwk.cryptography_key_types[klass] = cls
 
-    def __new__(cls, key: Union[Jwk, Dict[str, Any], Any], *args, **kwargs):  # type: ignore
+    def __new__(cls, key: Union[Jwk, Dict[str, Any], Any], **kwargs: Any):  # type: ignore
         """Overridden `__new__` to make the Jwk constructor smarter.
 
         The Jwk constructor will accept:
@@ -111,8 +111,11 @@ class Jwk(BaseJsonDict):
 
         Args:
             key: a dict containing JWK parameters, or another Jwk instance, or a `cryptography` key
+            **kwargs: additional members to include in the Jwk
         """
         if cls == Jwk:
+            if isinstance(key, Jwk):
+                return cls.from_cryptography_key(key.cryptography_key, **kwargs)
             if isinstance(key, dict):
                 kty: Optional[str] = key.get("kty")
                 if kty is None:
@@ -125,8 +128,8 @@ class Jwk(BaseJsonDict):
             elif isinstance(key, str):
                 return cls.from_json(key)
             else:
-                return cls.from_cryptography_key(key, *args, **kwargs)
-        return super().__new__(cls, key, *args, **kwargs)
+                return cls.from_cryptography_key(key, **kwargs)
+        return super().__new__(cls, key, **kwargs)
 
     def __init__(
         self, params: Union[Dict[str, Any], Any], include_kid_thumbprint: bool = False
@@ -647,13 +650,14 @@ class Jwk(BaseJsonDict):
         return SymmetricJwk.from_bytes(cek)
 
     @classmethod
-    def from_cryptography_key(cls, cryptography_key: Any) -> Jwk:
+    def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> Jwk:
         """Initialize a Jwk from a key from the `cryptography` library.
 
         The input key can be any private or public key supported by cryptography.
 
         Args:
           cryptography_key: a `cryptography` key instance
+          **kwargs: additional members to include in the Jwk (e.g. kid, use)
 
         Returns:
             the matching `Jwk` instance
@@ -664,7 +668,7 @@ class Jwk(BaseJsonDict):
         for klass in cryptography_key.__class__.mro():
             jwk_class = cls.cryptography_key_types.get(klass)
             if jwk_class:
-                return jwk_class.from_cryptography_key(cryptography_key)
+                return jwk_class.from_cryptography_key(cryptography_key, **kwargs)
 
         raise TypeError(f"Unsupported Jwk class for this Key Type: {cryptography_key}")
 

@@ -86,17 +86,32 @@ class SymmetricJwk(Jwk):
         return cls(dict(kty="oct", k=BinaPy(k).to("b64u").ascii(), **params))
 
     @classmethod
-    def generate(cls, size: int = 128, **params: str) -> "SymmetricJwk":
+    def from_cryptography_key(
+        cls, cryptography_key: Any, **kwargs: Any
+    ) -> "SymmetricJwk":
+        """Alias for `from_bytes()` since symmetric keys are simply bytes.
+
+        Args:
+            cryptography_key: the key to use
+            **kwargs: additional members to include in the Jwk
+
+        Returns:
+            the resulting SymmetricJwk
+        """
+        return cls.from_bytes(cryptography_key, **kwargs)
+
+    @classmethod
+    def generate(cls, key_size: int = 128, **params: str) -> "SymmetricJwk":
         """Generate a random SymmetricJwk, with a given key size.
 
         Args:
-          size: the size of the generated key, in bytes
+          key_size: the size of the generated key, in bits
           **params: additional members to include in the Jwk
 
         Returns:
             a SymmetricJwk with a randomly generated key
         """
-        key = BinaPy.random_bits(size)
+        key = BinaPy.random_bits(key_size)
         return cls.from_bytes(key, **params)
 
     @classmethod
@@ -147,7 +162,7 @@ class SymmetricJwk(Jwk):
         Returns:
             the raw private key, as `bytes`
         """
-        return self.key
+        return BinaPy(self.k).decode_from("b64u")
 
     @property
     def key(self) -> bytes:
@@ -156,7 +171,7 @@ class SymmetricJwk(Jwk):
         Returns:
              the key from the `k` parameter, base64u-decoded
         """
-        return BinaPy(self.k).decode_from("b64u")
+        return self.cryptography_key
 
     @property
     def key_size(self) -> int:
@@ -192,7 +207,7 @@ class SymmetricJwk(Jwk):
         if iv is None:
             iv = encalg.generate_iv()
 
-        wrapper = encalg(self.key)
+        wrapper = encalg(self.cryptography_key)
         ciphertext, tag = wrapper.encrypt(plaintext, iv, aad)
         return ciphertext, tag, BinaPy(iv)
 
@@ -217,7 +232,7 @@ class SymmetricJwk(Jwk):
             the decrypted clear-text
         """
         encalg = select_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
-        decryptor = encalg(self.key)
+        decryptor = encalg(self.cryptography_key)
         plaintext: bytes = decryptor.decrypt(ciphertext, tag, iv, aad)
 
         return BinaPy(plaintext)
@@ -235,7 +250,7 @@ class SymmetricJwk(Jwk):
             UnsupportedAlg: if the provided alg is not supported
         """
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        wrapper = keyalg(self._to_cryptography_key())
+        wrapper = keyalg(self.cryptography_key)
         if isinstance(wrapper, BaseAesKeyWrap):
             cipherkey = wrapper.wrap_key(plainkey)
         else:
@@ -255,7 +270,7 @@ class SymmetricJwk(Jwk):
             UnsupportedAlg: if the provided alg is not supported
         """
         keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        wrapper = keyalg(self.key)
+        wrapper = keyalg(self.cryptography_key)
         if isinstance(wrapper, BaseAesKeyWrap):
             plaintext = wrapper.unwrap_key(cipherkey)
         else:
@@ -271,7 +286,7 @@ class SymmetricJwk(Jwk):
         return [
             name
             for name, alg in self.KEY_MANAGEMENT_ALGORITHMS.items()
-            if alg.supports_key(self.key)  # type: ignore
+            if alg.supports_key(self.cryptography_key)  # type: ignore
         ]
 
     def supported_encryption_algorithms(self) -> List[str]:
@@ -283,5 +298,5 @@ class SymmetricJwk(Jwk):
         return [
             name
             for name, alg in self.ENCRYPTION_ALGORITHMS.items()
-            if alg.supports_key(self.key)
+            if alg.supports_key(self.cryptography_key)
         ]

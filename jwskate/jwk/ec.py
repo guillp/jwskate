@@ -162,16 +162,17 @@ class ECJwk(Jwk):
         return self.curve.coordinate_size
 
     @classmethod
-    def from_cryptography_key(cls, key: Any) -> ECJwk:
+    def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> ECJwk:
         """Initialize an ECJwk from a `cryptography` key.
 
         Args:
-          key: `cryptography` key
+          cryptography_key: `cryptography` key
+          **kwargs: additional members to include in the Jwk
 
         Returns:
             an ECJwk initialized from the provided `cryptography` key
         """
-        parameters = EllipticCurve.get_jwk_parameters(key)
+        parameters = EllipticCurve.get_jwk_parameters(cryptography_key)
         return cls(parameters)
 
     def _to_cryptography_key(

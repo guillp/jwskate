@@ -131,6 +131,6 @@ class Jwt(BaseCompactToken):
           enc: the alg to use for payload encryption
 
         Returns:
-          the resulting token
+          the resulting JWE token, with signed JWT as payload
         """
         raise NotImplementedError

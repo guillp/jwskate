@@ -109,22 +109,23 @@ class OKPJwk(Jwk):
         return BinaPy(self.d).decode_from("b64u")
 
     @classmethod
-    def from_cryptography_key(cls, key: Any) -> OKPJwk:
+    def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> OKPJwk:
         """Initialize a OKPJwk from a `cryptography` key.
 
         Args:
-          key:
+          cryptography_key: a `cryptography` key
+          **kwargs: additional members to include in the Jwk
 
         Returns:
             the matching OKPJwk
         """
-        if isinstance(key, ed25519.Ed25519PrivateKey):
-            priv = key.private_bytes(
+        if isinstance(cryptography_key, ed25519.Ed25519PrivateKey):
+            priv = cryptography_key.private_bytes(
                 encoding=Encoding.Raw,
                 format=PrivateFormat.Raw,
                 encryption_algorithm=NoEncryption(),
             )
-            pub = key.public_key().public_bytes(
+            pub = cryptography_key.public_key().public_bytes(
                 encoding=Encoding.Raw, format=PublicFormat.Raw
             )
             return cls.private(
@@ -132,19 +133,21 @@ class OKPJwk(Jwk):
                 x=pub,
                 d=priv,
             )
-        elif isinstance(key, ed25519.Ed25519PublicKey):
-            pub = key.public_bytes(encoding=Encoding.Raw, format=PublicFormat.Raw)
+        elif isinstance(cryptography_key, ed25519.Ed25519PublicKey):
+            pub = cryptography_key.public_bytes(
+                encoding=Encoding.Raw, format=PublicFormat.Raw
+            )
             return cls.public(
                 crv="Ed25519",
                 x=pub,
             )
-        elif isinstance(key, ed448.Ed448PrivateKey):
-            priv = key.private_bytes(
+        elif isinstance(cryptography_key, ed448.Ed448PrivateKey):
+            priv = cryptography_key.private_bytes(
                 encoding=Encoding.Raw,
                 format=PrivateFormat.Raw,
                 encryption_algorithm=NoEncryption(),
             )
-            pub = key.public_key().public_bytes(
+            pub = cryptography_key.public_key().public_bytes(
                 encoding=Encoding.Raw, format=PublicFormat.Raw
             )
             return cls.private(
@@ -152,16 +155,18 @@ class OKPJwk(Jwk):
                 x=pub,
                 d=priv,
             )
-        elif isinstance(key, ed448.Ed448PublicKey):
-            pub = key.public_bytes(encoding=Encoding.Raw, format=PublicFormat.Raw)
+        elif isinstance(cryptography_key, ed448.Ed448PublicKey):
+            pub = cryptography_key.public_bytes(
+                encoding=Encoding.Raw, format=PublicFormat.Raw
+            )
             return cls.public(crv="Ed448", x=pub)
-        elif isinstance(key, x25519.X25519PrivateKey):
-            priv = key.private_bytes(
+        elif isinstance(cryptography_key, x25519.X25519PrivateKey):
+            priv = cryptography_key.private_bytes(
                 encoding=Encoding.Raw,
                 format=PrivateFormat.Raw,
                 encryption_algorithm=NoEncryption(),
             )
-            pub = key.public_key().public_bytes(
+            pub = cryptography_key.public_key().public_bytes(
                 encoding=Encoding.Raw, format=PublicFormat.Raw
             )
             return cls.private(
@@ -169,16 +174,18 @@ class OKPJwk(Jwk):
                 x=pub,
                 d=priv,
             )
-        elif isinstance(key, x25519.X25519PublicKey):
-            pub = key.public_bytes(encoding=Encoding.Raw, format=PublicFormat.Raw)
+        elif isinstance(cryptography_key, x25519.X25519PublicKey):
+            pub = cryptography_key.public_bytes(
+                encoding=Encoding.Raw, format=PublicFormat.Raw
+            )
             return cls.public(crv="X25519", x=pub)
-        elif isinstance(key, x448.X448PrivateKey):
-            priv = key.private_bytes(
+        elif isinstance(cryptography_key, x448.X448PrivateKey):
+            priv = cryptography_key.private_bytes(
                 encoding=Encoding.Raw,
                 format=PrivateFormat.Raw,
                 encryption_algorithm=NoEncryption(),
             )
-            pub = key.public_key().public_bytes(
+            pub = cryptography_key.public_key().public_bytes(
                 encoding=Encoding.Raw, format=PublicFormat.Raw
             )
             return cls.private(
@@ -186,8 +193,10 @@ class OKPJwk(Jwk):
                 x=pub,
                 d=priv,
             )
-        elif isinstance(key, x448.X448PublicKey):
-            pub = key.public_bytes(encoding=Encoding.Raw, format=PublicFormat.Raw)
+        elif isinstance(cryptography_key, x448.X448PublicKey):
+            pub = cryptography_key.public_bytes(
+                encoding=Encoding.Raw, format=PublicFormat.Raw
+            )
             return cls.public(crv="X448", x=pub)
         else:
             raise TypeError(

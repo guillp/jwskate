@@ -4,6 +4,6 @@ from .alg import ExpectedAlgRequired, UnsupportedAlg
 from .base import InvalidJwk, Jwk
 from .ec import ECJwk, UnsupportedEllipticCurve
 from .jwks import JwkSet
+from .oct import SymmetricJwk
 from .okp import OKPJwk, UnsupportedOKPCurve
 from .rsa import RSAJwk
-from .symetric import SymmetricJwk

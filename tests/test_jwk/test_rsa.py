@@ -55,7 +55,7 @@ def rsa_public_jwk(rsa_private_jwk: Jwk) -> Jwk:
     return public_jwk
 
 
-def test_rsa_jwk_sign(rsa_private_jwk: Jwk, rsa_public_jwk: Jwk) -> None:
+def test_sign(rsa_private_jwk: Jwk, rsa_public_jwk: Jwk) -> None:
     signature = rsa_private_jwk.sign(b"Hello World!", alg="RS256")
     assert (
         signature.hex()
@@ -72,7 +72,7 @@ def test_rsa_jwk_sign(rsa_private_jwk: Jwk, rsa_public_jwk: Jwk) -> None:
     assert rsa_public_jwk.verify(b"Hello World!", signature, alg="RS256")
 
 
-def test_public_rsa_jwk(rsa_private_jwk: Jwk) -> None:
+def test_public_jwk(rsa_private_jwk: Jwk) -> None:
     public_jwk = {
         key: val for key, val in rsa_private_jwk.items() if key in ("kty", "n", "e")
     }
@@ -86,7 +86,7 @@ def test_public_rsa_jwk(rsa_private_jwk: Jwk) -> None:
     assert jwk.thumbprint() == rsa_private_jwk.thumbprint()
 
 
-def test_jwk_rsa_generate() -> None:
+def test_generate() -> None:
     jwk = RSAJwk.generate(kid="myrsakey")
     assert jwk.kty == "RSA"
     assert jwk.kid == "myrsakey"

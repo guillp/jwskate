@@ -486,7 +486,7 @@ def encrypted_jwe(
 def test_decrypt(
     encryption_plaintext: bytes,
     encrypted_jwe: JweCompact,
-    decryption_jwk: Jwk,
+    decryption_jwk: Union[Jwk, bytes],
     key_management_alg: str,
     encryption_alg: str,
 ) -> None:

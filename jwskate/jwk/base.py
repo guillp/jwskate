@@ -396,6 +396,7 @@ class Jwk(BaseJsonDict):
         self,
         data: bytes,
         signature: bytes,
+        *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
@@ -426,11 +427,12 @@ class Jwk(BaseJsonDict):
     def encrypt(
         self,
         plaintext: bytes,
+        *,
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
         iv: Optional[bytes] = None,
     ) -> Tuple[BinaPy, BinaPy, BinaPy]:
-        """Encrypt a plaintext, with an optional Additional Authenticated Data (AAD) using this JWK, and return the Encrypted Data, the Authentication Tag and the used Initialization Vector.
+        """Encrypt a plaintext, with an optional Additional Authenticated Data (AAD) using this JWK, and return the Encrypted Data, the Initialization Vector and the Authentication Tag.
 
         Args:
           plaintext: the data to encrypt.
@@ -440,15 +442,16 @@ class Jwk(BaseJsonDict):
         will return that same value. Otherwise, an IV is generated.
 
         Returns:
-          a tuple (ciphertext, authentication_tag, iv), as raw data
+          a tuple (ciphertext, iv, authentication_tag), as raw data
         """
         raise NotImplementedError  # pragma: no cover
 
     def decrypt(
         self,
         ciphertext: bytes,
-        tag: bytes,
+        *,
         iv: bytes,
+        tag: bytes,
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
     ) -> BinaPy:
@@ -458,8 +461,8 @@ class Jwk(BaseJsonDict):
 
         Args:
           ciphertext: the data to decrypt
-          tag: the Authentication Tag that will be verified while decrypting data
           iv: the Initialization Vector (IV) that was used for encryption
+          tag: the Authentication Tag that will be verified while decrypting data
           aad: the Additional Authentication Data (AAD) to verify the Tag against
           alg: the alg to use for decryption
 
@@ -468,41 +471,24 @@ class Jwk(BaseJsonDict):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def wrap_key(self, key: bytes, alg: Optional[str] = None) -> BinaPy:
-        """Wrap a symmetric key using a Key Management Algorithm alg.
-
-        Args:
-          key: the symmetric key to wrap
-          alg: the Key Management alg to use
-
-        Returns:
-            the wrapped key
-        """
-        raise NotImplementedError
-
-    def unwrap_key(self, cipherkey: bytes, alg: Optional[str] = None) -> Jwk:
-        """Unwrap a symmetric key using a Key Management Algorithm alg.
-
-        Args:
-          cipherkey: the wrapped key
-          alg: the Key Management alg to use
-
-        Returns:
-            the unwrapped key
-        """
-        raise NotImplementedError
-
     def sender_key(
         self,
+        *,
         enc: str,
         alg: Optional[str],
         cek: Optional[bytes] = None,
         epk: Optional[Jwk] = None,
         **headers: Any,
-    ) -> Tuple[Jwk, Mapping[str, Any], BinaPy]:
+    ) -> Tuple[Jwk, BinaPy, Mapping[str, Any]]:
         """For DH-based algs. As a token issuer, derive a EPK and CEK from the recipient public key.
 
-        For algorithms that rely on a random CEK, you can provide that value instead of letting `jwskate` generate a
+        Returns a tuple with 3 items:
+
+        - the clear text CEK, as a SymmetricJwk instance. Use this key to encrypt your message, but do not communicate this key!
+        - the encrypted CEK, as bytes. You must send this to your recipient. This may be empty for algs which derive a CEK instead of generating one.
+        - extra headers depending on the Key Management algorithm, as a dict of name to values: you must send this to your recipient as well.
+
+        For algorithms that rely on a randomly generated CEK, you can provide that value instead of letting `jwskate` generate a
         safe, unique random value for you. Likewise, for algorithms that rely on an ephemeral key, you can provide an
         EPK that you generated yourself, instead of letting `jwskate` generate an appropriate value for you.
         Only use this if you know what you are doing!
@@ -515,7 +501,7 @@ class Jwk(BaseJsonDict):
           **headers: additional headers to include for the CEK derivation
 
         Returns:
-          Tuple[Jwk,Mapping[str,Any],BinaPy]: a tuple (CEK, additional_headers_map, wrapped_cek)
+          Tuple[Jwk,BinaPy,Mapping[str,Any]]: a tuple (cek, wrapped_cek, additional_headers_map)
 
         Raises:
             UnsupportedAlg: if the requested alg identifier is not supported
@@ -549,7 +535,10 @@ class Jwk(BaseJsonDict):
                 )
             else:
                 cek = ecdh.sender_key(
-                    epk.cryptography_key, encalg.name, encalg.key_size, **headers
+                    epk.cryptography_key,
+                    alg=encalg.name,
+                    key_size=encalg.key_size,
+                    **headers,
                 )
                 wrapped_cek = BinaPy(b"")
         elif issubclass(keyalg, BaseAesKeyWrap):
@@ -567,7 +556,7 @@ class Jwk(BaseJsonDict):
             else:
                 cek = encalg.generate_key()
             iv = aesgcm.generate_iv()
-            wrapped_cek, tag = aesgcm.wrap_key(cek, iv)
+            wrapped_cek, tag = aesgcm.wrap_key(cek, iv=iv)
             cek_headers = {
                 "iv": iv.to("b64u").ascii(),
                 "tag": tag.to("b64u").ascii(),
@@ -580,10 +569,10 @@ class Jwk(BaseJsonDict):
         else:
             raise UnsupportedAlg(f"Unsupported Key Management Alg {keyalg}")
 
-        return SymmetricJwk.from_bytes(cek), cek_headers, wrapped_cek
+        return SymmetricJwk.from_bytes(cek), wrapped_cek, cek_headers
 
     def recipient_key(
-        self, wrapped_cek: bytes, alg: str, enc: str, **headers: Any
+        self, wrapped_cek: bytes, *, alg: str, enc: str, **headers: Any
     ) -> Jwk:
         """For DH-based algs. As a token recipient, derive the same CEK that was used for encryption, based on the recipient private key and the sender ephemeral public key.
 
@@ -639,7 +628,7 @@ class Jwk(BaseJsonDict):
             if tag is None:
                 raise ValueError("No 'tag' in headers!")
             tag = BinaPy(tag).decode_from("b64u")
-            cek = aesgcm.unwrap_key(wrapped_cek, tag, iv)
+            cek = aesgcm.unwrap_key(wrapped_cek, tag=tag, iv=iv)
 
         elif issubclass(keyalg, DirectKeyUse):
             dir_ = keyalg(self.key)

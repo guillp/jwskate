@@ -232,7 +232,7 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         return BinaPy.random_bits(cls.iv_size)
 
     def encrypt(
-        self, plaintext: bytes, iv: bytes, aad: Optional[bytes]
+        self, plaintext: bytes, *, iv: bytes, aad: Optional[bytes]
     ) -> Tuple[BinaPy, BinaPy]:
         """Encrypt arbitrary data (`plaintext`) with the given Initialisation Vector (`iv`) and optional Additional Authentication Data (`aad`), return the ciphered text and authentication tag.
 
@@ -247,14 +247,14 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         raise NotImplementedError
 
     def decrypt(
-        self, ciphertext: bytes, auth_tag: bytes, iv: bytes, aad: Optional[bytes]
+        self, ciphertext: bytes, *, iv: bytes, auth_tag: bytes, aad: Optional[bytes]
     ) -> BinaPy:
         """Decrypt a ciphertext with a given Initialisation Vector (iv) and optional Additional Authentication Data (aad), returns the resulting clear text.
 
         Args:
           ciphertext: the data to decrypt
-          auth_tag: the authentication tag
           iv: the Initialisation Vector to use. Must be the same one used during encryption
+          auth_tag: the authentication tag
           aad: the Additional Authentication Data. Must be the same one used during encryption
 
         Returns:

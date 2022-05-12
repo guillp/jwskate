@@ -194,14 +194,14 @@ class JwkSet(BaseJsonDict):
         # if no kid and no alg are provided, try first the keys flagged for signature verification (`"use": "verify"`)
         for jwk in self.jwks:
             if jwk.get("use") == "verify":
-                if jwk.verify(data, signature, alg):
+                if jwk.verify(data, signature, alg=alg):
                     return True
 
         # then with the keys that have no defined `use`
         for jwk in self.jwks:
             if jwk.get("use") is None and jwk.get("alg") is None:
                 try:
-                    if jwk.verify(data, signature, alg):
+                    if jwk.verify(data, signature, alg=alg):
                         return True
                 except UnsupportedAlg:
                     continue

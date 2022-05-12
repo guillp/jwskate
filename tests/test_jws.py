@@ -295,19 +295,19 @@ def signed_jws_json_general(
 def test_validate_signature(
     signed_jws_compact: JwsCompact, validation_jwk: Jwk, signature_alg: str
 ) -> None:
-    assert signed_jws_compact.verify_signature(validation_jwk, signature_alg)
+    assert signed_jws_compact.verify_signature(validation_jwk, alg=signature_alg)
 
 
 def test_validate_signature_json_flat(
     signed_jws_json_flat: JwsJsonFlat, validation_jwk: Jwk, signature_alg: str
 ) -> None:
-    assert signed_jws_json_flat.verify_signature(validation_jwk, signature_alg)
+    assert signed_jws_json_flat.verify_signature(validation_jwk, alg=signature_alg)
 
 
 def test_validate_signature_json_general(
     signed_jws_json_general: JwsJsonGeneral, validation_jwk: Jwk, signature_alg: str
 ) -> None:
-    assert signed_jws_json_general.verify_signature(validation_jwk, signature_alg)
+    assert signed_jws_json_general.verify_signature(validation_jwk, alg=signature_alg)
 
 
 def test_jws_format_transformation(
@@ -391,5 +391,5 @@ def test_validate_signature_from_jwcrypto(
         signature_alg: the alg to use
     """
     assert JwsCompact(jwcrypto_signed_jws).verify_signature(
-        validation_jwk, signature_alg
+        validation_jwk, alg=signature_alg
     )

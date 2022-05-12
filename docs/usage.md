@@ -236,14 +236,65 @@ You can encrypt and decrypt arbitrary data with a Jwk instance, using the `encry
 from jwskate import Jwk
 
 data = b"Encryption is easy!"
+alg = "A256GCM"
 jwk = Jwk.generate_for_kty("oct", key_size=256)
 
-ciphertext, tag, iv = jwk.encrypt(data, alg="A256GCM")
+ciphertext, iv, tag = jwk.encrypt(data, alg=alg)
 
-assert jwk.decrypt(ciphertext, tag, iv, alg="A256GCM") == data
+assert jwk.decrypt(ciphertext, iv, tag, alg=alg) == data
 ```
 
 ## Key Management
 
 Encrypting/decrypting arbitrary data requires a symmetric key. But it is possible to encrypt/decrypt or otherwise derive
 symmetric keys from asymmetric keys, using Key Management algorithms.
+
+Some of those Key Management algorithms rely on key wrapping, where a randomly-generated symmetric key (called a Content Encryption Key or CEK)
+is itself asymetrically encrypted. It is also possible to use a symmetric key to "wrap" the CEK.
+Other algorithms rely on Diffie-Hellman, where the CEK is derived from a pair of keys, one private, the other public.
+
+You can use the methods `sender_key()` and `receiver_key()` to handle all the key management stuff for you.
+For `sender_key()`, which the message sender will use get a CEK, you just need to specify which encryption algorithm you will use with the CEK, and the key management algorithm you want to wrap or derive that CEK.
+It will return a tuple `(plaintext_message, encrypted_cek, extra_headers)`, with `plaintext_message` being the generated CEK (as an instance of `SymmetricJwk`),
+`encrypted_cek` is the wrapped CEK value (which can be empty for Diffie-Hellman based algorithms),
+and `extra_headers` a dict of extra headers that are required for the key management algorithm (for example, `epk` for ECDH-ES based algorithms),
+
+You can use `cleartext_cek` to encrypt your message with a given Encryption algorithm. You must then send `encrypted_cek` and `extra_headers` to your recipient, along with the encrypted message, and both Key Management and Encryption algorithms identifiers.
+
+```python
+from jwskate import Jwk
+
+plaintext_message = b"Key Management is easy!"
+recipient_private_jwk = Jwk.generate_for_kty("EC", crv="P-256")
+recipient_public_jwk = recipient_private_jwk.public_jwk()
+
+enc_alg = "A256GCM"
+km_alg = "ECDH-ES"
+plaintext_cek, encrypted_cek, extra_headers = recipient_public_jwk.sender_key(
+    enc=enc_alg, alg=km_alg
+)
+# ({'kty': 'oct', 'k': 'REsj-VE5spVuHa3QogfHO6a6vCrqMkVfyBKjGU4ZT2w'},
+#  b'',
+#  {'epk': {'kty': 'EC', 'crv': 'P-256', 'x': 'imX7QzIv0DWRS3KmCSLizb2z0TWSKWZYvl_rZXz1dFQ', 'y': 'ZZTjvzKgIMf_8q-hrKv2yLLYcHD-kdapjIcPBVwK_AY'}}
+# )
+
+encrypted_message, iv, tag = plaintext_cek.encrypt(plaintext_message, alg=enc_alg)
+```
+
+On recipient side, in order to decrypt the message, you will need to obtain the same symmetric CEK that was used to encrypt the message. That is done with `recipient_key()`.
+You need to provide it with the `encrypted_cek` received from the sender (possibly empty for Diffie-Hellman based algorithms),
+the Key Management algorithm that is used to wrap the CEK, the Encryption algorithm that is used to encrypt/decrypt the message, and the eventual extra headers depending on the Key Management algorithm.
+
+You can then use that CEK to decrypt the received message.
+
+```python
+# reusing the recipient_private_jwk, encrypted_message, encrypted_cek and extra_headers from above
+cek = recipient_private_jwk.recipient_key(
+    encrypted_cek, enc="A256GCM", alg="ECDH-ES", **extra_headers
+)
+plaintext_message_received = cek.decrypt(encrypted_message)
+
+assert plaintext_message_received == plaintext_message
+```
+
+

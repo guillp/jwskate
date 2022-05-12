@@ -154,7 +154,7 @@ class SymmetricJwk(Jwk):
             .ascii()
         )
 
-    def _to_cryptography_key(self) -> Any:
+    def _to_cryptography_key(self) -> BinaPy:
         """Converts this Jwk into a key usable with `cryptography`.
 
         For SymmetricJwk instances, those are just `bytes` values.
@@ -165,26 +165,18 @@ class SymmetricJwk(Jwk):
         return BinaPy(self.k).decode_from("b64u")
 
     @property
-    def key(self) -> bytes:
+    def key(self) -> BinaPy:
         """Returns the raw symmetric key.
 
         Returns:
              the key from the `k` parameter, base64u-decoded
         """
-        return self.cryptography_key
-
-    @property
-    def key_size(self) -> int:
-        """The key size, in bits.
-
-        Returns:
-            the key size in bits
-        """
-        return len(self.key) * 8
+        return self.cryptography_key  # type: ignore
 
     def encrypt(
         self,
         plaintext: bytes,
+        *,
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
         iv: Optional[bytes] = None,
@@ -208,14 +200,24 @@ class SymmetricJwk(Jwk):
             iv = encalg.generate_iv()
 
         wrapper = encalg(self.cryptography_key)
-        ciphertext, tag = wrapper.encrypt(plaintext, iv, aad)
-        return ciphertext, tag, BinaPy(iv)
+        ciphertext, tag = wrapper.encrypt(plaintext, iv=iv, aad=aad)
+        return ciphertext, BinaPy(iv), tag
+
+    @property
+    def key_size(self) -> int:
+        """The key size, in bits.
+
+        Returns:
+            the key size in bits
+        """
+        return len(self.key) * 8
 
     def decrypt(
         self,
         ciphertext: bytes,
-        tag: bytes,
+        *,
         iv: bytes,
+        tag: bytes,
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
     ) -> BinaPy:
@@ -223,8 +225,8 @@ class SymmetricJwk(Jwk):
 
         Args:
           ciphertext: the encrypted data
-          tag: the authentication tag
           iv: the Initialization Vector (must be the same as used during encryption)
+          tag: the authentication tag
           aad: the Additional Authenticated Data (must be the same as used during encryption)
           alg: the decryption alg (must be the same as used during encryption)
 
@@ -233,49 +235,9 @@ class SymmetricJwk(Jwk):
         """
         encalg = select_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
         decryptor = encalg(self.cryptography_key)
-        plaintext: bytes = decryptor.decrypt(ciphertext, tag, iv, aad)
+        plaintext: bytes = decryptor.decrypt(ciphertext, auth_tag=tag, iv=iv, aad=aad)
 
         return BinaPy(plaintext)
-
-    def wrap_key(self, plainkey: bytes, alg: Optional[str] = None) -> BinaPy:
-        """Wrap a symmetric key.
-
-        Args:
-          plainkey: the symmetric key to wrap
-          alg: the encryption alg to use
-
-        Returns:
-            the wrapped key
-        Raises:
-            UnsupportedAlg: if the provided alg is not supported
-        """
-        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        wrapper = keyalg(self.cryptography_key)
-        if isinstance(wrapper, BaseAesKeyWrap):
-            cipherkey = wrapper.wrap_key(plainkey)
-        else:
-            raise UnsupportedAlg(keyalg)
-        return BinaPy(cipherkey)
-
-    def unwrap_key(self, cipherkey: bytes, alg: Optional[str] = None) -> Jwk:
-        """Unwrap a symmetric key.
-
-        Args:
-          cipherkey: the wrapped key
-          alg: the decryption alg
-
-        Returns:
-            the clear-text symmetric key
-        Raises:
-            UnsupportedAlg: if the provided alg is not supported
-        """
-        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        wrapper = keyalg(self.cryptography_key)
-        if isinstance(wrapper, BaseAesKeyWrap):
-            plaintext = wrapper.unwrap_key(cipherkey)
-        else:
-            raise UnsupportedAlg(keyalg)
-        return SymmetricJwk.from_bytes(plaintext)
 
     def supported_key_management_algorithms(self) -> List[str]:
         """Return the list of supported Key Management algorithms, usable for key (un)wrapping with this key.

@@ -68,10 +68,11 @@ class EcdhEs(
     @classmethod
     def derive(
         cls,
+        *,
         private_key: asymmetric.ec.EllipticCurvePrivateKey,
         public_key: asymmetric.ec.EllipticCurvePublicKey,
         otherinfo: bytes,
-        keysize: int,
+        key_size: int,
     ) -> BinaPy:
         """Derive a key using ECDH and Concat KDF Hash.
 
@@ -79,14 +80,14 @@ class EcdhEs(
           private_key: the private key
           public_key: the public key
           otherinfo: the Concat KDF "otherinfo" parameter
-          keysize: the expected CEK key size
+          key_size: the expected CEK key size
 
         Returns:
             the derived key
         """
         shared_key = cls.ecdh(private_key, public_key)
         ckdf = ConcatKDFHash(
-            algorithm=hashes.SHA256(), length=keysize // 8, otherinfo=otherinfo
+            algorithm=hashes.SHA256(), length=key_size // 8, otherinfo=otherinfo
         )
         return BinaPy(ckdf.derive(shared_key))
 
@@ -101,6 +102,7 @@ class EcdhEs(
     def sender_key(
         self,
         ephemeral_private_key: asymmetric.ec.EllipticCurvePrivateKey,
+        *,
         alg: str,
         key_size: int,
         **headers: Any,
@@ -120,12 +122,18 @@ class EcdhEs(
             apu = BinaPy(headers.get("apu", b"")).decode_from("b64u")
             apv = BinaPy(headers.get("apv", b"")).decode_from("b64u")
             otherinfo = self.otherinfo(alg, apu, apv, key_size)
-            cek = self.derive(ephemeral_private_key, key, otherinfo, key_size)
+            cek = self.derive(
+                private_key=ephemeral_private_key,
+                public_key=key,
+                otherinfo=otherinfo,
+                key_size=key_size,
+            )
             return cek
 
     def recipient_key(
         self,
         ephemeral_public_key: asymmetric.ec.EllipticCurvePublicKey,
+        *,
         alg: str,
         key_size: int,
         **headers: Any,
@@ -145,7 +153,12 @@ class EcdhEs(
             apu = BinaPy(headers.get("apu", b"")).decode_from("b64u")
             apv = BinaPy(headers.get("apv", b"")).decode_from("b64u")
             otherinfo = self.otherinfo(alg, apu, apv, key_size)
-            cek = self.derive(key, ephemeral_public_key, otherinfo, key_size)
+            cek = self.derive(
+                private_key=key,
+                public_key=ephemeral_public_key,
+                otherinfo=otherinfo,
+                key_size=key_size,
+            )
             return cek
 
 

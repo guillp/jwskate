@@ -109,6 +109,7 @@ class JwsJsonFlat(JwsSignature):
     def verify_signature(
         self,
         jwk: Union[Jwk, Dict[str, Any]],
+        *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
@@ -122,7 +123,7 @@ class JwsJsonFlat(JwsSignature):
         Returns:
             `True` if the signature is verified, `False` otherwise.
         """
-        return self.jws_signature.verify(self.payload, jwk, alg, algs)
+        return self.jws_signature.verify(self.payload, jwk, alg=alg, algs=algs)
 
 
 class JwsJsonGeneral(BaseJsonDict):
@@ -281,6 +282,7 @@ class JwsJsonGeneral(BaseJsonDict):
     def verify_signature(
         self,
         jwk: Union[Jwk, Dict[str, Any]],
+        *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
@@ -296,6 +298,6 @@ class JwsJsonGeneral(BaseJsonDict):
             `True` if any of the signature verifies with the given key, `False` otherwise.
         """
         for signature in self.signatures:
-            if signature.verify(self.payload, jwk, alg, algs):
+            if signature.verify(self.payload, jwk, alg=alg, algs=algs):
                 return True
         return False

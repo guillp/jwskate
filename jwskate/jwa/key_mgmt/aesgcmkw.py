@@ -18,7 +18,7 @@ class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
     iv_size: int = 96
     """Initialisation Vector size, in bits."""
 
-    def wrap_key(self, plainkey: bytes, iv: bytes) -> Tuple[BinaPy, BinaPy]:
+    def wrap_key(self, plainkey: bytes, *, iv: bytes) -> Tuple[BinaPy, BinaPy]:
         """Wrap a key using the given Initialisation Vector (`iv`).
 
         Args:
@@ -28,9 +28,9 @@ class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
         Returns:
           a tuple (wrapped_key, authentication_tag)
         """
-        return self.encrypt(plainkey, iv, b"")
+        return self.encrypt(plainkey, iv=iv, aad=b"")
 
-    def unwrap_key(self, cipherkey: bytes, tag: bytes, iv: bytes) -> BinaPy:
+    def unwrap_key(self, cipherkey: bytes, *, tag: bytes, iv: bytes) -> BinaPy:
         """Unwrap a key and authenticates it with the authentication `tag`, using the given Initialisation Vector (`iv`).
 
         Args:
@@ -41,7 +41,7 @@ class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
         Returns:
           the unwrapped key.
         """
-        return self.decrypt(cipherkey, tag, iv, b"")
+        return self.decrypt(cipherkey, auth_tag=tag, iv=iv, aad=b"")
 
 
 class A128GCMKW(BaseAesGcmKeyWrap):

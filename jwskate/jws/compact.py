@@ -150,6 +150,7 @@ class JwsCompact(BaseCompactToken):
     def verify_signature(
         self,
         jwk: Union[Jwk, Dict[str, Any]],
+        *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
@@ -164,7 +165,7 @@ class JwsCompact(BaseCompactToken):
          `True` if the signature matches, `False` otherwise
         """
         jwk = Jwk(jwk)
-        return jwk.verify(self.signed_part, self.signature, alg, algs)
+        return jwk.verify(self.signed_part, self.signature, alg=alg, algs=algs)
 
     def flat_json(self, unprotected_header: Any = None) -> JwsJsonFlat:
         """Create a JWS in JSON flat format based on this Compact JWS.

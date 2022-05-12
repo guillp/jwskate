@@ -69,7 +69,7 @@ def test_aes_128_hmac_sha256() -> None:
     cipher = Aes128CbcHmacSha256(key)
     assert cipher.aes_key == enc_key
     assert cipher.mac_key == mac_key
-    result_ciphertext, result_tag = cipher.encrypt(plaintext, iv, aad)
+    result_ciphertext, result_tag = cipher.encrypt(plaintext, iv=iv, aad=aad)
     assert result_ciphertext == ciphertext
     assert result_tag == tag
 
@@ -147,7 +147,7 @@ def test_aes_192_hmac_sha384() -> None:
     cipher = Aes192CbcHmacSha384(key)
     assert cipher.aes_key == enc_key
     assert cipher.mac_key == mac_key
-    result_ciphertext, result_tag = cipher.encrypt(plaintext, iv, aad)
+    result_ciphertext, result_tag = cipher.encrypt(plaintext, iv=iv, aad=aad)
     assert result_ciphertext == ciphertext
     assert result_tag == tag
 
@@ -175,17 +175,17 @@ def test_ecdhes() -> None:
 
     otherinfo = EcdhEs.otherinfo("A128GCM", b"Alice", b"Bob", 128)
     alice_cek = EcdhEs.derive(
-        alice_ephemeral_key.cryptography_key,
-        bob_private_key.public_jwk().cryptography_key,
-        otherinfo,
-        128,
+        private_key=alice_ephemeral_key.cryptography_key,
+        public_key=bob_private_key.public_jwk().cryptography_key,
+        otherinfo=otherinfo,
+        key_size=128,
     )
     assert BinaPy(alice_cek).to("b64u") == b"VqqN6vgjbSBcIijNcacQGg"
 
     bob_cek = EcdhEs.derive(
-        bob_private_key.cryptography_key,
-        alice_ephemeral_key.public_jwk().cryptography_key,
-        otherinfo,
-        128,
+        private_key=bob_private_key.cryptography_key,
+        public_key=alice_ephemeral_key.public_jwk().cryptography_key,
+        otherinfo=otherinfo,
+        key_size=128,
     )
     assert BinaPy(bob_cek).to("b64u") == b"VqqN6vgjbSBcIijNcacQGg"

@@ -296,37 +296,3 @@ class RSAJwk(Jwk):
             the first CRT coefficient (from parameter `qi`)
         """
         return BinaPy(self.qi).decode_from("b64u").to_int()
-
-    def wrap_key(self, plainkey: bytes, alg: Optional[str] = None) -> BinaPy:
-        """Wrap a symmetric key using this RSA key.
-
-        Args:
-          plainkey: the symmetric key to wrap
-          alg: the Key Management alg to use
-
-        Returns:
-            the wrapped symmetric key
-        """
-        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        wrapper = keyalg(self.public_jwk().cryptography_key)
-        ciphertext = wrapper.wrap_key(plainkey)
-        return BinaPy(ciphertext)
-
-    def unwrap_key(
-        self,
-        cipherkey: bytes,
-        alg: Optional[str] = None,
-    ) -> Jwk:
-        """Unwrap a symmetric key using this RSA key.
-
-        Args:
-          cipherkey: the wrapped symmetric key
-          alg: the Key Management alg to use
-
-        Returns:
-            the clear-text unwrapped key
-        """
-        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        wrapper = keyalg(self.cryptography_key)
-        plaintext = wrapper.unwrap_key(cipherkey)
-        return SymmetricJwk.from_bytes(plaintext)

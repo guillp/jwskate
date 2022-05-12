@@ -152,6 +152,7 @@ class JwsSignature(BaseJsonDict):
         self,
         payload: bytes,
         jwk: Union[Jwk, Dict[str, Any]],
+        *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
@@ -168,4 +169,4 @@ class JwsSignature(BaseJsonDict):
         """
         jwk = Jwk(jwk)
         signed_part = self.assemble_signed_part(self.protected, payload)
-        return jwk.verify(signed_part, self.signature, alg, algs)
+        return jwk.verify(signed_part, self.signature, alg=alg, algs=algs)

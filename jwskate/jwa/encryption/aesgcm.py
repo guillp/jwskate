@@ -15,7 +15,7 @@ class BaseAESGCM(BaseAESEncryptionAlg):
     tag_size = 16
 
     def encrypt(
-        self, plaintext: bytes, iv: bytes, aad: Optional[bytes]
+        self, plaintext: bytes, *, iv: bytes, aad: Optional[bytes]
     ) -> Tuple[BinaPy, BinaPy]:
         """Encrypt a plaintext, with the given IV and Additional Authenticated Data.".
 
@@ -37,7 +37,7 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         return ciphertext, tag
 
     def decrypt(
-        self, ciphertext: bytes, auth_tag: bytes, iv: bytes, aad: Optional[bytes]
+        self, ciphertext: bytes, *, iv: bytes, auth_tag: bytes, aad: Optional[bytes]
     ) -> BinaPy:
         """Decrypt a ciphertext.
 

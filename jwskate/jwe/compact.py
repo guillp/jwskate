@@ -76,6 +76,7 @@ class JweCompact(BaseCompactToken):
     @classmethod
     def from_parts(
         cls,
+        *,
         headers: Mapping[str, Any],
         cek: bytes,
         iv: bytes,
@@ -145,6 +146,7 @@ class JweCompact(BaseCompactToken):
         cls,
         plaintext: bytes,
         jwk: Union[Jwk, Dict[str, Any]],
+        *,
         enc: str,
         alg: Optional[str] = None,
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -169,18 +171,18 @@ class JweCompact(BaseCompactToken):
         """
         jwk = Jwk(jwk)
         extra_headers = extra_headers or {}
-        cek_jwk, cek_headers, wrapped_cek = jwk.sender_key(
+        cek_jwk, wrapped_cek, cek_headers = jwk.sender_key(
             enc=enc, alg=alg, cek=cek, epk=epk, **extra_headers
         )
 
         headers = dict(extra_headers, **cek_headers, alg=alg, enc=enc)
         aad = BinaPy.serialize_to("json", headers).to("b64u")
 
-        ciphertext, tag, iv = cek_jwk.encrypt(
-            plaintext=plaintext, aad=aad, iv=iv, alg=enc
-        )
+        ciphertext, iv, tag = cek_jwk.encrypt(plaintext, aad=aad, iv=iv, alg=enc)
 
-        return cls.from_parts(headers, wrapped_cek, iv, ciphertext, tag)
+        return cls.from_parts(
+            headers=headers, cek=wrapped_cek, iv=iv, ciphertext=ciphertext, tag=tag
+        )
 
     PBES2_ALGORITHMS: Mapping[str, Type[BasePbes2]] = {
         alg.name: alg
@@ -234,6 +236,7 @@ class JweCompact(BaseCompactToken):
         cls,
         plaintext: bytes,
         password: Union[bytes, str],
+        *,
         alg: str,
         enc: str,
         salt: Optional[bytes] = None,
@@ -285,15 +288,17 @@ class JweCompact(BaseCompactToken):
         if count < 1000:
             warnings.warn("PBES2 iteration count should be > 1000")
 
-        wrapped_cek = wrapper.wrap_key(cek, salt, count)
+        wrapped_cek = wrapper.wrap_key(cek, salt=salt, count=count)
 
         headers = dict(alg=alg, enc=enc, p2s=BinaPy(salt).to("b64u").ascii(), p2c=count)
         aad = BinaPy.serialize_to("json", headers).to("b64u")
-        ciphertext, tag, iv = cek_jwk.encrypt(
+        ciphertext, iv, tag = cek_jwk.encrypt(
             plaintext=plaintext, aad=aad, alg=enc, iv=iv
         )
 
-        return cls.from_parts(headers, wrapped_cek, iv, ciphertext, tag)
+        return cls.from_parts(
+            headers=headers, cek=wrapped_cek, iv=iv, ciphertext=ciphertext, tag=tag
+        )
 
     def unwrap_cek_with_password(self, password: Union[bytes, str]) -> Jwk:
         """Unwrap a CEK using a password. Works only for password-encrypted JWE Tokens.
@@ -323,7 +328,7 @@ class JweCompact(BaseCompactToken):
         if not isinstance(p2c, int) or p2c < 1:
             raise AttributeError("Invalid value for p2c, must be a positive integer")
         wrapper = keyalg(password)
-        cek = wrapper.unwrap_key(self.wrapped_cek, salt, p2c)
+        cek = wrapper.unwrap_key(self.wrapped_cek, salt=salt, count=p2c)
         return SymmetricJwk.from_bytes(cek)
 
     def decrypt_with_password(self, password: Union[bytes, str]) -> bytes:

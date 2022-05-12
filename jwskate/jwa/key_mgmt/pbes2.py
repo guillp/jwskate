@@ -42,7 +42,7 @@ class BasePbes2(BaseKeyManagementAlg):
             raise ValueError("salts used for PBES2 must be at least 8 bytes long")
         return BinaPy.random(size)
 
-    def derive(self, salt: bytes, count: int) -> BinaPy:
+    def derive(self, *, salt: bytes, count: int) -> BinaPy:
         """Derive the encryption key based on the configured password, the given salt and the number of PBKDF iterations.
 
         Args:
@@ -61,7 +61,7 @@ class BasePbes2(BaseKeyManagementAlg):
         )
         return BinaPy(pbkdf.derive(self.password))
 
-    def wrap_key(self, plainkey: bytes, salt: bytes, count: int) -> BinaPy:
+    def wrap_key(self, plainkey: bytes, *, salt: bytes, count: int) -> BinaPy:
         """Wrap a key using this alg.
 
         Args:
@@ -72,10 +72,10 @@ class BasePbes2(BaseKeyManagementAlg):
         Returns:
             the wrapped key
         """
-        aes_key = self.derive(salt, count)
+        aes_key = self.derive(salt=salt, count=count)
         return BinaPy(self.kwalg(aes_key).wrap_key(plainkey))
 
-    def unwrap_key(self, cipherkey: bytes, salt: bytes, count: int) -> BinaPy:
+    def unwrap_key(self, cipherkey: bytes, *, salt: bytes, count: int) -> BinaPy:
         """Unwrap a key using this alg.
 
         Args:
@@ -86,7 +86,7 @@ class BasePbes2(BaseKeyManagementAlg):
         Returns:
             the unwrapped key
         """
-        aes_key = self.derive(salt, count)
+        aes_key = self.derive(salt=salt, count=count)
         return BinaPy(self.kwalg(aes_key).unwrap_key(cipherkey))
 
 

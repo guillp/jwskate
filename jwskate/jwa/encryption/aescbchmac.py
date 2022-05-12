@@ -40,7 +40,9 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         self.aes_key = self.key[self.mac_key_size // 8 :]
         self.padding = padding.PKCS7(algorithms.AES.block_size)
 
-    def mac(self, ciphertext: bytes, iv: bytes, aad: Optional[bytes] = None) -> BinaPy:
+    def mac(
+        self, ciphertext: bytes, *, iv: bytes, aad: Optional[bytes] = None
+    ) -> BinaPy:
         """Produce a Message Authentication Code for the given `ciphertext`, `iv` and `aad`.
 
         Args:
@@ -62,7 +64,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         return BinaPy(mac)
 
     def encrypt(
-        self, plaintext: bytes, iv: bytes, aad: Optional[bytes] = None
+        self, plaintext: bytes, *, iv: bytes, aad: Optional[bytes] = None
     ) -> Tuple[BinaPy, BinaPy]:
         """Encrypt and MAC the given `plaintext`, using the given Initialization Vector (`iv`) and optional Additional Authenticated Data (`aad`).
 
@@ -78,11 +80,11 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         padder = self.padding.padder()
         padded_text = padder.update(plaintext) + padder.finalize()
         ciphertext = cipher.update(padded_text) + cipher.finalize()
-        mac = self.mac(ciphertext, iv, aad)
+        mac = self.mac(ciphertext, iv=iv, aad=aad)
         return BinaPy(ciphertext), BinaPy(mac)
 
     def decrypt(
-        self, ciphertext: bytes, auth_tag: bytes, iv: bytes, aad: Optional[bytes]
+        self, ciphertext: bytes, *, iv: bytes, auth_tag: bytes, aad: Optional[bytes]
     ) -> BinaPy:
         """Decrypt and authenticate the given ciphertext with authentication tag (`ciphertext_with_tag`), as produced by `encrypt()`.
 
@@ -95,7 +97,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         Returns:
           the decrypted data
         """
-        mac = self.mac(ciphertext, iv, aad)
+        mac = self.mac(ciphertext, iv=iv, aad=aad)
         if not constant_time.bytes_eq(mac, auth_tag):
             raise exceptions.InvalidSignature()
 

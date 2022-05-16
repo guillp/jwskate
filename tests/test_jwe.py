@@ -2,9 +2,11 @@ from typing import Union
 
 import pytest
 
+import jwskate.jwa
 from jwskate import P_521, ECJwk, InvalidJwe, JweCompact, Jwk, RSAJwk, SymmetricJwk
 
 JWCRYPTO_UNSUPPORTED_ALGS = ["RSA-OAEP-384", "RSA-OAEP-512"]
+jwskate.jwa.RsaEsPcks1v1_5.read_only = False  # turn off read only for that alg
 
 
 def test_jwe() -> None:

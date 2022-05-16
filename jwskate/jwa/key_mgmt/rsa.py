@@ -45,6 +45,8 @@ class BaseRsaKeyWrap(
         Raises:
             PublicKeyRequired: if this algorithm is initialized with a private key instead of a public key
         """
+        if self.read_only:
+            raise NotImplementedError
         with self.public_key_required() as key:
             return BinaPy(key.encrypt(plainkey, self.padding))
 
@@ -68,6 +70,7 @@ class RsaEsPcks1v1_5(BaseRsaKeyWrap):  # noqa: D415
 
     name = "RSA1_5"
     description = __doc__
+    read_only = True
 
     padding = padding.PKCS1v15()
 

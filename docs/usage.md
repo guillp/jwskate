@@ -241,7 +241,24 @@ jwk = Jwk.generate_for_kty("oct", key_size=256)
 
 ciphertext, iv, tag = jwk.encrypt(data, alg=alg)
 
-assert jwk.decrypt(ciphertext, iv, tag, alg=alg) == data
+assert jwk.decrypt(ciphertext, iv=iv, alg=alg) == data
+```
+
+### Authenticated encryption
+
+You can include Additional Authenticated Data (`aad`) in the `encrypt()` and `decrypt()` operations:
+
+```python
+from jwskate import Jwk
+
+data = b"Authenticated Encryption is easy!"
+alg = "A256GCM"
+aad = b"This is my auth tag"
+jwk = Jwk.generate_for_kty("oct", key_size=256)
+
+ciphertext, iv, tag = jwk.encrypt(data, aad=aad, alg=alg)
+
+assert jwk.decrypt(ciphertext, iv=iv, aad=aad, alg=alg) == data
 ```
 
 ## Key Management
@@ -266,19 +283,34 @@ from jwskate import Jwk
 
 plaintext_message = b"Key Management is easy!"
 recipient_private_jwk = Jwk.generate_for_kty("EC", crv="P-256")
+# {'kty': 'EC',
+# 'crv': 'P-256',
+# 'x': '10QvcmuPmErnHHnrnQ7kVV-Mm_jA4QUG5W9t81jAVyE',
+# 'y': 'Vk3Y4_qH09pm8rCLl_htf321fK62qbz6jxLlk0Y3Qe4',
+# 'd': 'Y4vvC9He6beJi3lKYdVgvvUS9zUWz_YnV0xKT90-Z5E'}
+
 recipient_public_jwk = recipient_private_jwk.public_jwk()
+# {'kty': 'EC',
+# 'crv': 'P-256',
+# 'x': '10QvcmuPmErnHHnrnQ7kVV-Mm_jA4QUG5W9t81jAVyE',
+# 'y': 'Vk3Y4_qH09pm8rCLl_htf321fK62qbz6jxLlk0Y3Qe4'}
 
 enc_alg = "A256GCM"
 km_alg = "ECDH-ES"
 plaintext_cek, encrypted_cek, extra_headers = recipient_public_jwk.sender_key(
     enc=enc_alg, alg=km_alg
 )
-# ({'kty': 'oct', 'k': 'REsj-VE5spVuHa3QogfHO6a6vCrqMkVfyBKjGU4ZT2w'},
-#  b'',
-#  {'epk': {'kty': 'EC', 'crv': 'P-256', 'x': 'imX7QzIv0DWRS3KmCSLizb2z0TWSKWZYvl_rZXz1dFQ', 'y': 'ZZTjvzKgIMf_8q-hrKv2yLLYcHD-kdapjIcPBVwK_AY'}}
-# )
+# plaintext_cek: {'kty': 'oct', 'k': 'iUa0WAadkir02DrdapFGzPI-9q9xqP-JaU4M69euMvc'}
+# encrypted_cek: b''
+# extra_headers: {'epk': {'kty': 'EC',
+#  'crv': 'P-256',
+#  'x': '_26Ak6hccBPzFe2t2CYwFMH8jkKm-UWajOrci9KIPfg',
+#  'y': 'nVXtV6YcU1IsT8qL9zAbvMrvXvhdEvMoeVfDeF-bsRs'}}
 
 encrypted_message, iv, tag = plaintext_cek.encrypt(plaintext_message, alg=enc_alg)
+# encrypted_message: b'\xb5J\x16\x08\x82Xp\x0f,\x0eu\xe5\xd6\xa6y\xe0J\xae\xcbu\xf8B\xbd'
+# iv: b'K"H\xf3@\tt\\\xc78\xc2D'
+# tag: b'\xc4\xee\xcf`\xfa\\\x8e\x9dn\xc4>D\xd8\x1d\x8c\x1a'
 ```
 
 On recipient side, in order to decrypt the message, you will need to obtain the same symmetric CEK that was used to encrypt the message. That is done with `recipient_key()`.
@@ -288,13 +320,38 @@ the Key Management algorithm that is used to wrap the CEK, the Encryption algori
 You can then use that CEK to decrypt the received message.
 
 ```python
-# reusing the recipient_private_jwk, encrypted_message, encrypted_cek and extra_headers from above
+# reusing the variables from above
+enc_alg = "A256GCM"
+km_alg = "ECDH-ES"
+plaintext_cek = {"kty": "oct", "k": "iUa0WAadkir02DrdapFGzPI-9q9xqP-JaU4M69euMvc"}
+encrypted_cek = b""
+extra_headers = {
+    "epk": {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "_26Ak6hccBPzFe2t2CYwFMH8jkKm-UWajOrci9KIPfg",
+        "y": "nVXtV6YcU1IsT8qL9zAbvMrvXvhdEvMoeVfDeF-bsRs",
+    }
+}
+recipient_private_jwk = {
+    "kty": "EC",
+    "crv": "P-256",
+    "x": "10QvcmuPmErnHHnrnQ7kVV-Mm_jA4QUG5W9t81jAVyE",
+    "y": "Vk3Y4_qH09pm8rCLl_htf321fK62qbz6jxLlk0Y3Qe4",
+    "d": "Y4vvC9He6beJi3lKYdVgvvUS9zUWz_YnV0xKT90-Z5E",
+}
+
+encrypted_message = b"\xb5J\x16\x08\x82Xp\x0f,\x0eu\xe5\xd6\xa6y\xe0J\xae\xcbu\xf8B\xbd"
+iv = b'K"H\xf3@\tt\\\xc78\xc2D'
+tag = b"\xc4\xee\xcf`\xfa\\\x8e\x9dn\xc4>D\xd8\x1d\x8c\x1a"
+
+
+# obtain the same CEK than the sender, based on our private key, and public data provided by sender
 cek = recipient_private_jwk.recipient_key(
     encrypted_cek, enc="A256GCM", alg="ECDH-ES", **extra_headers
 )
-plaintext_message_received = cek.decrypt(encrypted_message)
+# and decrypt the message with that CEK (and the IV, Auth Tag and encryption alg identifier provided by sender)
+plaintext_message = cek.decrypt(encrypted_message, iv=iv, tag=tag, alg=enc_alg)
 
-assert plaintext_message_received == plaintext_message
+assert plaintext_message == b"Key Management is easy!"
 ```
-
-

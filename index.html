@@ -9,7 +9,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.9">
+      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.15">
     
     
       
@@ -17,10 +17,10 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.120efc48.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.c382b1dc.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.9647289d.min.css">
+        <link rel="stylesheet" href="assets/stylesheets/palette.cc9b2e1e.min.css">
         
           
           
@@ -325,6 +325,40 @@
     Features
   </a>
   
+    <nav class="md-nav" aria-label="Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supported-signature-algorithms" class="md-nav__link">
+    Supported Signature algorithms
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supported-key-management-algorithms" class="md-nav__link">
+    Supported Key Management algorithms
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supported-encryption-algorithms" class="md-nav__link">
+    Supported Encryption algorithms
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supported-elliptic-curves" class="md-nav__link">
+    Supported Elliptic Curves
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -485,6 +519,40 @@
     Features
   </a>
   
+    <nav class="md-nav" aria-label="Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supported-signature-algorithms" class="md-nav__link">
+    Supported Signature algorithms
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supported-key-management-algorithms" class="md-nav__link">
+    Supported Key Management algorithms
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supported-encryption-algorithms" class="md-nav__link">
+    Supported Encryption algorithms
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supported-elliptic-curves" class="md-nav__link">
+    Supported Elliptic Curves
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -562,22 +630,8 @@
 
 <!-- BEGIN INCLUDE ../README.md   -->
 <h2 id="jwskate">JwSkate<a class="headerlink" href="#jwskate" title="Permanent link">&para;</a></h2>
-<p align="center">
-<a href="https://pypi.python.org/pypi/jwskate">
-    <img src="https://img.shields.io/pypi/v/jwskate.svg"
-        alt = "Release Status">
-</a>
-
-<a href="https://github.com/guillp/jwskate/actions">
-    <img src="https://github.com/guillp/jwskate/actions/workflows/main.yml/badge.svg?branch=release" alt="CI Status">
-</a>
-
-<a href="https://jwskate.readthedocs.io/en/latest/?badge=latest">
-    <img src="https://readthedocs.org/projects/jwskate/badge/?version=latest" alt="Documentation Status">
-</a>
-
-</p>
-
+<p><a href="https://pypi.python.org/pypi/jwskate"><img alt="PyPi" src="https://img.shields.io/pypi/v/jwskate.svg" /></a>
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg" /></a></p>
 <p>A Pythonic implementation of Json Web Signature, Keys, Algorithms, Tokens and Encryption (RFC7514 to 7519), and their
 extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <ul>
@@ -585,7 +639,7 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <li>Documentation: <a href="https://guillp.github.io/jwskate/">https://guillp.github.io/jwskate/</a></li>
 </ul>
 <p>A quick usage example, generating an RSA private key, signing some data, then validating that signature:</p>
-<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -601,7 +655,7 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="normal">14</span>
 <span class="normal">15</span>
 <span class="normal">16</span>
-<span class="normal">17</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span>
+<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span>
 
 <span class="c1"># generate a RSA Jwk and sign a plaintext with it</span>
 <span class="n">rsa_private_jwk</span> <span class="o">=</span> <span class="n">Jwk</span><span class="o">.</span><span class="n">generate_for_kty</span><span class="p">(</span><span class="s2">&quot;RSA&quot;</span><span class="p">,</span> <span class="n">key_size</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span> <span class="n">kid</span><span class="o">=</span><span class="s2">&quot;my_key&quot;</span><span class="p">)</span>
@@ -618,10 +672,9 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rsa_private_jwk</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>  <span class="c1"># Jwk are dict</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">rsa_private_jwk</span><span class="p">)</span>
-</code></pre></div>
-</td></tr></table>
+</code></pre></div></td></tr></table></div>
 <p>The result of this print JWK will look like this:</p>
-<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -631,7 +684,7 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>{ &#39;kty&#39;: &#39;RSA&#39;,
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code>{ &#39;kty&#39;: &#39;RSA&#39;,
   &#39;n&#39;: &#39;...&#39;,
   &#39;e&#39;: &#39;AQAB&#39;,
   &#39;d&#39;: &#39;...&#39;,
@@ -642,10 +695,9 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
   &#39;qi&#39;: &#39;...&#39;,
   &#39;kid&#39;: &#39;my_key&#39;
 }
-</code></pre></div>
-</td></tr></table>
+</code></pre></div></td></tr></table></div>
 <p>Now let's sign a JWT containing arbitrary claims:</p>
-<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -660,7 +712,7 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="normal">13</span>
 <span class="normal">14</span>
 <span class="normal">15</span>
-<span class="normal">16</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span><span class="p">,</span> <span class="n">Jwt</span>
+<span class="normal">16</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span><span class="p">,</span> <span class="n">Jwt</span>
 
 <span class="n">private_jwk</span> <span class="o">=</span> <span class="n">Jwk</span><span class="o">.</span><span class="n">generate_for_kty</span><span class="p">(</span><span class="s2">&quot;EC&quot;</span><span class="p">,</span> <span class="n">kid</span><span class="o">=</span><span class="s2">&quot;my_key&quot;</span><span class="p">)</span>
 <span class="n">claims</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;sub&quot;</span><span class="p">:</span> <span class="s2">&quot;some_sub&quot;</span><span class="p">,</span> <span class="s2">&quot;claim1&quot;</span><span class="p">:</span> <span class="s2">&quot;value1&quot;</span><span class="p">}</span>
@@ -676,14 +728,12 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">verify_signature</span><span class="p">(</span><span class="n">private_jwk</span><span class="o">.</span><span class="n">public_jwk</span><span class="p">(),</span> <span class="n">sign_alg</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="p">)</span>
-</code></pre></div>
-</td></tr></table>
+</code></pre></div></td></tr></table></div>
 <p>This will output the full JWT compact representation. You can inspect it for example at <a href="https://jwt.io">https://jwt.io</a></p>
-<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>eyJhbGciOiJFUzI1NiIsImtpZCI6Im15a2V5In0.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.C1KcDyDT8qXwUqcWzPKkQD7f6xai-gCgaRFMdKPe80Vk7XeYNa8ovuLwvdXgGW4ZZ_lL73QIyncY7tHGXUthag
-</code></pre></div>
-</td></tr></table>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>eyJhbGciOiJFUzI1NiIsImtpZCI6Im15a2V5In0.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.C1KcDyDT8qXwUqcWzPKkQD7f6xai-gCgaRFMdKPe80Vk7XeYNa8ovuLwvdXgGW4ZZ_lL73QIyncY7tHGXUthag
+</code></pre></div></td></tr></table></div>
 <p>Or let's sign a JWT with the standardised lifetime, subject, audience and ID claims:</p>
-<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -693,7 +743,7 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span><span class="p">,</span> <span class="n">JwtSigner</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span><span class="p">,</span> <span class="n">JwtSigner</span>
 
 <span class="n">private_jwk</span> <span class="o">=</span> <span class="n">Jwk</span><span class="o">.</span><span class="n">generate_for_kty</span><span class="p">(</span><span class="s2">&quot;EC&quot;</span><span class="p">)</span>
 <span class="n">signer</span> <span class="o">=</span> <span class="n">JwtSigner</span><span class="p">(</span><span class="n">issuer</span><span class="o">=</span><span class="s2">&quot;https://myissuer.com&quot;</span><span class="p">,</span> <span class="n">jwk</span><span class="o">=</span><span class="n">private_jwk</span><span class="p">,</span> <span class="n">alg</span><span class="o">=</span><span class="s2">&quot;ES256&quot;</span><span class="p">)</span>
@@ -704,10 +754,9 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="o">.</span><span class="n">claims</span><span class="p">)</span>
-</code></pre></div>
-</td></tr></table>
+</code></pre></div></td></tr></table></div>
 <p>The generated JWT claims will include the standardised claims:</p>
-<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
@@ -715,7 +764,7 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="normal">6</span>
 <span class="normal">7</span>
 <span class="normal">8</span>
-<span class="normal">9</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>{&#39;custom_claim1&#39;: &#39;value1&#39;,
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code>{&#39;custom_claim1&#39;: &#39;value1&#39;,
  &#39;custom_claim2&#39;: &#39;value2&#39;,
  &#39;iss&#39;: &#39;https://myissuer.com&#39;,
  &#39;aud&#39;: &#39;some_aud&#39;,
@@ -724,8 +773,7 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
  &#39;exp&#39;: 1648823244,
  &#39;jti&#39;: &#39;3b400e27-c111-4013-84e0-714acd76bf3a&#39;
 }
-</code></pre></div>
-</td></tr></table>
+</code></pre></div></td></tr></table></div>
 <h3 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Simple, Clean, Pythonic interface</li>
@@ -740,6 +788,402 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <li>Relies on <a href="https://cryptography.io/..">cryptography</a> for all cryptographic operations</li>
 <li>Relies on <a href="https://guillp.github.io/binapy/">BinaPy</a> for binary data manipulations</li>
 </ul>
+<h4 id="supported-signature-algorithms">Supported Signature algorithms<a class="headerlink" href="#supported-signature-algorithms" title="Permanent link">&para;</a></h4>
+<p><code>jwskate</code> supports the following signature algorithms:</p>
+<table>
+<thead>
+<tr>
+<th>Signature Alg</th>
+<th>Description</th>
+<th>Key Type</th>
+<th>Reference</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HS256</td>
+<td>HMAC using SHA-256</td>
+<td>oct</td>
+<td>RFC7518, Section 3.2</td>
+<td></td>
+</tr>
+<tr>
+<td>HS384</td>
+<td>HMAC using SHA-384</td>
+<td>oct</td>
+<td>RFC7518, Section 3.2</td>
+<td></td>
+</tr>
+<tr>
+<td>HS512</td>
+<td>HMAC using SHA-512</td>
+<td>oct</td>
+<td>RFC7518, Section 3.2</td>
+<td></td>
+</tr>
+<tr>
+<td>RS256</td>
+<td>RSASSA-PKCS1-v1_5 using SHA-256</td>
+<td>RSA</td>
+<td>RFC7518, Section 3.3</td>
+<td></td>
+</tr>
+<tr>
+<td>RS384</td>
+<td>RSASSA-PKCS1-v1_5 using SHA-384</td>
+<td>RSA</td>
+<td>RFC7518, Section 3.3</td>
+<td></td>
+</tr>
+<tr>
+<td>RS512</td>
+<td>RSASSA-PKCS1-v1_5 using SHA-512</td>
+<td>RSA</td>
+<td>RFC7518, Section 3.3</td>
+<td></td>
+</tr>
+<tr>
+<td>ES256</td>
+<td>ECDSA using P-256 and SHA-256</td>
+<td>EC</td>
+<td>RFC7518, Section 3.4</td>
+<td></td>
+</tr>
+<tr>
+<td>ES384</td>
+<td>ECDSA using P-384 and SHA-384</td>
+<td>EC</td>
+<td>RFC7518, Section 3.4</td>
+<td></td>
+</tr>
+<tr>
+<td>ES512</td>
+<td>ECDSA using P-521 and SHA-512</td>
+<td>EC</td>
+<td>RFC7518, Section 3.4</td>
+<td></td>
+</tr>
+<tr>
+<td>PS256</td>
+<td>RSASSA-PSS using SHA-256 and MGF1 with SHA-256</td>
+<td>RSA</td>
+<td>RFC7518, Section 3.5</td>
+<td></td>
+</tr>
+<tr>
+<td>PS384</td>
+<td>RSASSA-PSS using SHA-384 and MGF1 with SHA-384</td>
+<td>RSA</td>
+<td>RFC7518, Section 3.5</td>
+<td></td>
+</tr>
+<tr>
+<td>PS512</td>
+<td>RSASSA-PSS using SHA-512 and MGF1 with SHA-512</td>
+<td>RSA</td>
+<td>RFC7518, Section 3.5</td>
+<td></td>
+</tr>
+<tr>
+<td>EdDSA</td>
+<td>EdDSA signature algorithms</td>
+<td>OKP</td>
+<td>RFC8037, Section 3.1</td>
+<td></td>
+</tr>
+<tr>
+<td>ES256K</td>
+<td>ECDSA using secp256k1 curve and SHA-256</td>
+<td>EC</td>
+<td>RFC8812, Section 3.2</td>
+<td></td>
+</tr>
+<tr>
+<td>HS1</td>
+<td>HMAC using SHA-1</td>
+<td>oct</td>
+<td>https://www.w3.org/TR/WebCryptoAPI</td>
+<td>Validation Only</td>
+</tr>
+<tr>
+<td>RS1</td>
+<td>RSASSA-PKCS1-v1_5 with SHA-1</td>
+<td>oct</td>
+<td>https://www.w3.org/TR/WebCryptoAPI</td>
+<td>Validation Only</td>
+</tr>
+<tr>
+<td>none</td>
+<td>No digital signature or MAC performed</td>
+<td></td>
+<td>RFC7518, Section 3.6</td>
+<td>Not usable by mistake</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-key-management-algorithms">Supported Key Management algorithms<a class="headerlink" href="#supported-key-management-algorithms" title="Permanent link">&para;</a></h4>
+<p><code>jwskate</code> supports the following key management algorithms:</p>
+<table>
+<thead>
+<tr>
+<th>Signature Alg</th>
+<th>Description</th>
+<th>Key Type</th>
+<th>Reference</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RSA1_5</td>
+<td>RSAES-PKCS1-v1_5</td>
+<td>RSA</td>
+<td>RFC7518, Section 4.2</td>
+<td>Unwrap Only</td>
+</tr>
+<tr>
+<td>RSA-OAEP</td>
+<td>RSAES OAEP using default parameters</td>
+<td>RSA</td>
+<td>RFC7518, Section 4.3</td>
+<td></td>
+</tr>
+<tr>
+<td>RSA-OAEP-256</td>
+<td>RSAES OAEP using SHA-256 and MGF1 with SHA-256</td>
+<td>RSA</td>
+<td>RFC7518, Section 4.3</td>
+<td></td>
+</tr>
+<tr>
+<td>RSA-OAEP-384</td>
+<td>RSA-OAEP using SHA-384 and MGF1 with SHA-384</td>
+<td>RSA</td>
+<td>https://www.w3.org/TR/WebCryptoAPI</td>
+<td></td>
+</tr>
+<tr>
+<td>RSA-OAEP-512</td>
+<td>RSA-OAEP using SHA-512 and MGF1 with SHA-512</td>
+<td>RSA</td>
+<td>https://www.w3.org/TR/WebCryptoAPI</td>
+<td></td>
+</tr>
+<tr>
+<td>A128KW</td>
+<td>AES Key Wrap using 128-bit key</td>
+<td>oct</td>
+<td>RFC7518, Section 4.4</td>
+<td></td>
+</tr>
+<tr>
+<td>A192KW</td>
+<td>AES Key Wrap using 192-bit key</td>
+<td>oct</td>
+<td>RFC7518, Section 4.4</td>
+<td></td>
+</tr>
+<tr>
+<td>A256KW</td>
+<td>AES Key Wrap using 256-bit key</td>
+<td>oct</td>
+<td>RFC7518, Section 4.4</td>
+<td></td>
+</tr>
+<tr>
+<td>dir</td>
+<td>Direct use of a shared symmetric key</td>
+<td>oct</td>
+<td>RFC7518, Section 4.5</td>
+<td></td>
+</tr>
+<tr>
+<td>ECDH-ES</td>
+<td>ECDH-ES using Concat KDF</td>
+<td>EC</td>
+<td>RFC7518, Section 4.6</td>
+<td></td>
+</tr>
+<tr>
+<td>ECDH-ES+A128KW</td>
+<td>ECDH-ES using Concat KDF and "A128KW" wrapping</td>
+<td>EC</td>
+<td>RFC7518, Section 4.6</td>
+<td></td>
+</tr>
+<tr>
+<td>ECDH-ES+A192KW</td>
+<td>ECDH-ES using Concat KDF and "A192KW" wrapping</td>
+<td>EC</td>
+<td>RFC7518, Section 4.6</td>
+<td></td>
+</tr>
+<tr>
+<td>ECDH-ES+A256KW</td>
+<td>ECDH-ES using Concat KDF and "A256KW" wrapping</td>
+<td>EC</td>
+<td>RFC7518, Section 4.6</td>
+<td></td>
+</tr>
+<tr>
+<td>A128GCMKW</td>
+<td>Key wrapping with AES GCM using 128-bit key</td>
+<td>oct</td>
+<td>RFC7518, Section 4.7</td>
+<td></td>
+</tr>
+<tr>
+<td>A192GCMKW</td>
+<td>Key wrapping with AES GCM using 192-bit key</td>
+<td>oct</td>
+<td>RFC7518, Section 4.7</td>
+<td></td>
+</tr>
+<tr>
+<td>A256GCMKW</td>
+<td>Key wrapping with AES GCM using 256-bit key</td>
+<td>oct</td>
+<td>RFC7518, Section 4.7</td>
+<td></td>
+</tr>
+<tr>
+<td>PBES2-HS256+A128KW</td>
+<td>PBES2 with HMAC SHA-256 and "A128KW" wrapping</td>
+<td>password</td>
+<td>RFC7518, Section 4.8</td>
+<td></td>
+</tr>
+<tr>
+<td>PBES2-HS384+A192KW</td>
+<td>PBES2 with HMAC SHA-384 and "A192KW" wrapping</td>
+<td>password</td>
+<td>RFC7518, Section 4.8</td>
+<td></td>
+</tr>
+<tr>
+<td>PBES2-HS512+A256KW</td>
+<td>PBES2 with HMAC SHA-512 and "A256KW" wrapping</td>
+<td>password</td>
+<td>RFC7518, Section 4.8</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-encryption-algorithms">Supported Encryption algorithms<a class="headerlink" href="#supported-encryption-algorithms" title="Permanent link">&para;</a></h4>
+<p><code>jwskate</code> supports the following encryption algorithms:</p>
+<table>
+<thead>
+<tr>
+<th>Signature Alg</th>
+<th>Description</th>
+<th>Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A128CBC-HS256</td>
+<td>AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm</td>
+<td>RFC7518, Section 5.2.3</td>
+</tr>
+<tr>
+<td>A192CBC-HS384</td>
+<td>AES_192_CBC_HMAC_SHA_384 authenticated encryption algorithm</td>
+<td>RFC7518, Section 5.2.4</td>
+</tr>
+<tr>
+<td>A256CBC-HS512</td>
+<td>AES_256_CBC_HMAC_SHA_512 authenticated encryption algorithm</td>
+<td>RFC7518, Section 5.2.5</td>
+</tr>
+<tr>
+<td>A128GCM</td>
+<td>AES GCM using 128-bit key</td>
+<td>RFC7518, Section 5.3</td>
+</tr>
+<tr>
+<td>A192GCM</td>
+<td>AES GCM using 192-bit key</td>
+<td>RFC7518, Section 5.3</td>
+</tr>
+<tr>
+<td>A256GCM</td>
+<td>AES GCM using 256-bit key</td>
+<td>RFC7518, Section 5.3</td>
+</tr>
+</tbody>
+</table>
+<h4 id="supported-elliptic-curves">Supported Elliptic Curves<a class="headerlink" href="#supported-elliptic-curves" title="Permanent link">&para;</a></h4>
+<p><code>jwskate</code> supports the following Elliptic Curves:</p>
+<table>
+<thead>
+<tr>
+<th>Curve</th>
+<th>Description</th>
+<th>Key Type</th>
+<th>Usage</th>
+<th>Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P-256</td>
+<td>P-256 Curve</td>
+<td>EC</td>
+<td>signature, encryption</td>
+<td>RFC7518, Section 6.2.1.1</td>
+</tr>
+<tr>
+<td>P-384</td>
+<td>P-384 Curve</td>
+<td>EC</td>
+<td>signature, encryption</td>
+<td>RFC7518, Section 6.2.1.1</td>
+</tr>
+<tr>
+<td>P-521</td>
+<td>P-521 Curve</td>
+<td>EC</td>
+<td>signature, encryption</td>
+<td>RFC7518, Section 6.2.1.1</td>
+</tr>
+<tr>
+<td>secp256k1</td>
+<td>SECG secp256k1 curve</td>
+<td>EC</td>
+<td>signature, encryption</td>
+<td>RFC8812, Section 3.1</td>
+</tr>
+<tr>
+<td>Ed25519</td>
+<td>Ed25519 signature algorithm key pairs</td>
+<td>OKP</td>
+<td>signature</td>
+<td>RFC8037, Section 3.1</td>
+</tr>
+<tr>
+<td>Ed448</td>
+<td>Ed448 signature algorithm key pairs</td>
+<td>OKP</td>
+<td>signature</td>
+<td>RFC8037, Section 3.1</td>
+</tr>
+<tr>
+<td>X25519</td>
+<td>X25519 function key pairs</td>
+<td>OKP</td>
+<td>encryption</td>
+<td>RFC8037, Section 3.2</td>
+</tr>
+<tr>
+<td>X448</td>
+<td>X448 function key pairs</td>
+<td>OKP</td>
+<td>encryption</td>
+<td>RFC8037, Section 3.2</td>
+</tr>
+</tbody>
+</table>
 <h3 id="why-a-new-lib-">Why a new lib ?<a class="headerlink" href="#why-a-new-lib-" title="Permanent link">&para;</a></h3>
 <p>There are already multiple implementations of JOSE and Json Web Crypto related specifications in Python. However, I have
 been dissatisfied by all of them so far, so I decided to come up with my own module.</p>
@@ -749,6 +1193,8 @@ been dissatisfied by all of them so far, so I decided to come up with my own mod
 <li><a href="https://python-jose.readthedocs.io/">Python-JOSE</a>: lacks easy support for JWT validation
   (checking the standard claims like iss, exp, etc.), lacks easy access to claims</li>
 </ul>
+<p>Not to say that those are <em>bad</em> libs (I actually use <code>jwcrypto</code> myself for <code>jwskate</code> unit tests), but they either don't
+support some important features, or they just don't feel easy-enough, Pythonic-enough to use.</p>
 <h3 id="design">Design<a class="headerlink" href="#design" title="Permanent link">&para;</a></h3>
 <h4 id="jwk-are-dicts">JWK are dicts<a class="headerlink" href="#jwk-are-dicts" title="Permanent link">&para;</a></h4>
 <p>JWK are specified as JSON objects, which are parsed as <code>dict</code> in Python. The <code>Jwk</code> class in <code>jwskate</code> is actually a
@@ -819,18 +1265,6 @@ appropriate <code>alg</code> member that define which algorithm is supposed to b
   
     
     
-    <a href="http://www.jieyu.ai" target="_blank" rel="noopener" title="Tweet" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
-    </a>
-  
-    
-    
-    <a href="http://www.jieyu.ai" target="_blank" rel="noopener" title="Facebook" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M504 256C504 119 393 8 256 8S8 119 8 256c0 123.78 90.69 226.38 209.25 245V327.69h-63V256h63v-54.64c0-62.15 37-96.48 93.67-96.48 27.14 0 55.52 4.84 55.52 4.84v61h-31.28c-30.8 0-40.41 19.12-40.41 38.73V256h68.78l-11 71.69h-57.78V501C413.31 482.38 504 379.78 504 256z"/></svg>
-    </a>
-  
-    
-    
     <a href="https://github.com/guillp/jwskate" target="_blank" rel="noopener" title="Github" class="md-social__link">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
     </a>
@@ -854,7 +1288,7 @@ appropriate <code>alg</code> member that define which algorithm is supposed to b
     <script id="__config" type="application/json">{"base": ".", "features": ["navigation.indexes", "navigation.tabs", "navigation.instant", "navigation.tabs.sticky"], "search": "assets/javascripts/workers/search.2a1c317c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.6e54b5cd.min.js"></script>
+      <script src="assets/javascripts/bundle.a6c66575.min.js"></script>
       
     
   </body>

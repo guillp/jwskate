@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from functools import cached_property
 from typing import Any, List, Mapping, Union
 
+from backports.cached_property import cached_property
 from binapy import BinaPy
 from cryptography.hazmat.primitives import asymmetric
 

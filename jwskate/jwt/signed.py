@@ -1,9 +1,9 @@
 """This modules contains classes and utilities to generate and validate signed JWT."""
 
 from datetime import datetime, timedelta, timezone
-from functools import cached_property
 from typing import Any, Dict, Iterable, List, Optional, Union
 
+from backports.cached_property import cached_property
 from binapy import BinaPy
 
 from jwskate import Jwk
@@ -112,7 +112,7 @@ class SignedJwt(Jwt):
         exp = self.expires_at
         if exp is None:
             return None
-        return exp < datetime.now(timezone.utc) + timedelta(seconds=leeway)
+        return exp < (datetime.now(timezone.utc) + timedelta(seconds=leeway))
 
     @cached_property
     def expires_at(self) -> Optional[datetime]:

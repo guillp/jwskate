@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from functools import cached_property
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -20,6 +19,7 @@ from typing import (
     Union,
 )
 
+from backports.cached_property import cached_property
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 

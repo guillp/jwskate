@@ -19,11 +19,11 @@ from jwskate.jwa import (
     Aes128CbcHmacSha256,
     Aes192CbcHmacSha384,
     Aes256CbcHmacSha512,
-    BaseAesKeyWrap,
+    BaseAESEncryptionAlg,
     DirectKeyUse,
 )
 
-from .alg import UnsupportedAlg, select_alg
+from .alg import select_alg
 from .base import Jwk, JwkParameter
 
 
@@ -199,7 +199,7 @@ class SymmetricJwk(Jwk):
         if iv is None:
             iv = encalg.generate_iv()
 
-        wrapper = encalg(self.cryptography_key)
+        wrapper: BaseAESEncryptionAlg = encalg(self.cryptography_key)
         ciphertext, tag = wrapper.encrypt(plaintext, iv=iv, aad=aad)
         return ciphertext, BinaPy(iv), tag
 
@@ -234,7 +234,7 @@ class SymmetricJwk(Jwk):
             the decrypted clear-text
         """
         encalg = select_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
-        decryptor = encalg(self.cryptography_key)
+        decryptor: BaseAESEncryptionAlg = encalg(self.cryptography_key)
         plaintext: bytes = decryptor.decrypt(ciphertext, auth_tag=tag, iv=iv, aad=aad)
 
         return BinaPy(plaintext)

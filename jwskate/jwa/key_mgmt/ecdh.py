@@ -22,12 +22,16 @@ class EcdhEs(
 
     name = "ECDH-ES"
     description = __doc__
-    public_key_class = Union[
-        ec.EllipticCurvePublicKey, x25519.X25519PublicKey, x448.X448PublicKey
-    ]
-    private_key_class = Union[
-        ec.EllipticCurvePrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey
-    ]
+    public_key_class = (
+        ec.EllipticCurvePublicKey,
+        x25519.X25519PublicKey,
+        x448.X448PublicKey,
+    )
+    private_key_class = (
+        ec.EllipticCurvePrivateKey,
+        x25519.X25519PrivateKey,
+        x448.X448PrivateKey,
+    )
 
     @classmethod
     def otherinfo(cls, alg: str, apu: bytes, apv: bytes, keysize: int) -> BinaPy:

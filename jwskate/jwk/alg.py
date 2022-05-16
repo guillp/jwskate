@@ -124,6 +124,110 @@ def select_algs(
     )
 
 
+KEY_PARAMS_FOR_ALG: Mapping[str, Mapping[str, Any]] = {
+    "HS256": {"kty": "oct", "key_size": 256, "use": "sig", "key_ops": ["sign"]},
+    "HS384": {"kty": "oct", "key_size": 384, "use": "sig", "key_ops": ["sign"]},
+    "HS512": {"kty": "oct", "key_size": 512, "use": "sig", "key_ops": ["sign"]},
+    "RS256": {"kty": "RSA", "key_size": 2048, "use": "sig", "key_ops": ["sign"]},
+    "RS384": {"kty": "RSA", "key_size": 3064, "use": "sig", "key_ops": ["sign"]},
+    "RS512": {"kty": "RSA", "key_size": 4096, "use": "sig", "key_ops": ["sign"]},
+    "PS256": {"kty": "RSA", "key_size": 2048, "use": "sig", "key_ops": ["sign"]},
+    "PS384": {"kty": "RSA", "key_size": 3064, "use": "sig", "key_ops": ["sign"]},
+    "PS512": {"kty": "RSA", "key_size": 4096, "use": "sig", "key_ops": ["sign"]},
+    "ES256": {"kty": "EC", "crv": "P-256", "use": "sig", "key_ops": ["sign"]},
+    "ES384": {"kty": "EC", "crv": "P-384", "use": "sig", "key_ops": ["sign"]},
+    "ES512": {"kty": "EC", "crv": "P-521", "use": "sig", "key_ops": ["sign"]},
+    "RSA1_5": {
+        "kty": "RSA",
+        "key_size": 2048,
+        "use": "enc",
+        "key_ops": ["wrapKey"],
+    },
+    "RSA-OAEP": {
+        "kty": "RSA",
+        "key_size": 3064,
+        "use": "enc",
+        "key_ops": ["wrapKey"],
+    },
+    "RSA-OAEP-256": {
+        "kty": "RSA",
+        "key_size": 4096,
+        "use": "enc",
+        "key_ops": ["wrapKey"],
+    },
+    "RSA-OAEP-384": {
+        "kty": "RSA",
+        "key_size": 4096,
+        "use": "enc",
+        "key_ops": ["wrapKey"],
+    },
+    "RSA-OAEP-512": {
+        "kty": "RSA",
+        "key_size": 4096,
+        "use": "enc",
+        "key_ops": ["wrapKey"],
+    },
+    "A128KW": {"kty": "oct", "key_size": 128, "use": "enc", "key_ops": ["wrapKey"]},
+    "A192KW": {"kty": "oct", "key_size": 192, "use": "enc", "key_ops": ["wrapKey"]},
+    "A256KW": {"kty": "oct", "key_size": 256, "use": "enc", "key_ops": ["wrapKey"]},
+    "A128GCMKW": {
+        "kty": "oct",
+        "key_size": 128,
+        "use": "enc",
+        "key_ops": ["wrapKey"],
+    },
+    "A192GCMKW": {
+        "kty": "oct",
+        "key_size": 192,
+        "use": "enc",
+        "key_ops": ["wrapKey"],
+    },
+    "A256GCMKW": {
+        "kty": "oct",
+        "key_size": 256,
+        "use": "enc",
+        "key_ops": ["wrapKey"],
+    },
+    "ECDH-ES": {"kty": "EC", "crv": "X25519", "use": "enc", "key_ops": ["wrapKey"]},
+    "A128CBC-HS256": {
+        "kty": "oct",
+        "key_size": 256,
+        "use": "enc",
+        "key_ops": ["encrypt"],
+    },
+    "A192CBC-HS384": {
+        "kty": "oct",
+        "key_size": 384,
+        "use": "enc",
+        "key_ops": ["encrypt"],
+    },
+    "A256CBC-HS512": {
+        "kty": "oct",
+        "key_size": 512,
+        "use": "enc",
+        "key_ops": ["encrypt"],
+    },
+    "A128GCM": {
+        "kty": "oct",
+        "key_size": 128,
+        "use": "enc",
+        "key_ops": ["encrypt"],
+    },
+    "A192GCM": {
+        "kty": "oct",
+        "key_size": 192,
+        "use": "enc",
+        "key_ops": ["encrypt"],
+    },
+    "A256GCM": {
+        "kty": "oct",
+        "key_size": 256,
+        "use": "enc",
+        "key_ops": ["encrypt"],
+    },
+}
+
+
 def get_kty_for_alg(alg: str) -> Mapping[str, Any]:
     """Given an alg identifier, return key parameters for a key that is suitable for use with that alg.
 
@@ -133,105 +237,4 @@ def get_kty_for_alg(alg: str) -> Mapping[str, Any]:
     Returns:
         a dict of key parameters
     """
-    return {
-        "HS256": {"kty": "oct", "key_size": 256, "use": "sig", "key_ops": ["sign"]},
-        "HS384": {"kty": "oct", "key_size": 384, "use": "sig", "key_ops": ["sign"]},
-        "HS512": {"kty": "oct", "key_size": 512, "use": "sig", "key_ops": ["sign"]},
-        "RS256": {"kty": "RSA", "key_size": 2048, "use": "sig", "key_ops": ["sign"]},
-        "RS384": {"kty": "RSA", "key_size": 3064, "use": "sig", "key_ops": ["sign"]},
-        "RS512": {"kty": "RSA", "key_size": 4096, "use": "sig", "key_ops": ["sign"]},
-        "PS256": {"kty": "RSA", "key_size": 2048, "use": "sig", "key_ops": ["sign"]},
-        "PS384": {"kty": "RSA", "key_size": 3064, "use": "sig", "key_ops": ["sign"]},
-        "PS512": {"kty": "RSA", "key_size": 4096, "use": "sig", "key_ops": ["sign"]},
-        "ES256": {"kty": "EC", "crv": "P-256", "use": "sig", "key_ops": ["sign"]},
-        "ES384": {"kty": "EC", "crv": "P-384", "use": "sig", "key_ops": ["sign"]},
-        "ES512": {"kty": "EC", "crv": "P-521", "use": "sig", "key_ops": ["sign"]},
-        "RSA1_5": {
-            "kty": "RSA",
-            "key_size": 2048,
-            "use": "enc",
-            "key_ops": ["wrapKey"],
-        },
-        "RSA-OAEP": {
-            "kty": "RSA",
-            "key_size": 3064,
-            "use": "enc",
-            "key_ops": ["wrapKey"],
-        },
-        "RSA-OAEP-256": {
-            "kty": "RSA",
-            "key_size": 4096,
-            "use": "enc",
-            "key_ops": ["wrapKey"],
-        },
-        "RSA-OAEP-384": {
-            "kty": "RSA",
-            "key_size": 4096,
-            "use": "enc",
-            "key_ops": ["wrapKey"],
-        },
-        "RSA-OAEP-512": {
-            "kty": "RSA",
-            "key_size": 4096,
-            "use": "enc",
-            "key_ops": ["wrapKey"],
-        },
-        "A128KW": {"kty": "oct", "key_size": 128, "use": "enc", "key_ops": ["wrapKey"]},
-        "A192KW": {"kty": "oct", "key_size": 192, "use": "enc", "key_ops": ["wrapKey"]},
-        "A256KW": {"kty": "oct", "key_size": 256, "use": "enc", "key_ops": ["wrapKey"]},
-        "A128GCMKW": {
-            "kty": "oct",
-            "key_size": 128,
-            "use": "enc",
-            "key_ops": ["wrapKey"],
-        },
-        "A192GCMKW": {
-            "kty": "oct",
-            "key_size": 192,
-            "use": "enc",
-            "key_ops": ["wrapKey"],
-        },
-        "A256GCMKW": {
-            "kty": "oct",
-            "key_size": 256,
-            "use": "enc",
-            "key_ops": ["wrapKey"],
-        },
-        "ECDH-ES": {"kty": "EC", "crv": "X25519", "use": "enc", "key_ops": ["wrapKey"]},
-        "A128CBC-HS256": {
-            "kty": "oct",
-            "key_size": 256,
-            "use": "enc",
-            "key_ops": ["encrypt"],
-        },
-        "A192CBC-HS384": {
-            "kty": "oct",
-            "key_size": 384,
-            "use": "enc",
-            "key_ops": ["encrypt"],
-        },
-        "A256CBC-HS512": {
-            "kty": "oct",
-            "key_size": 512,
-            "use": "enc",
-            "key_ops": ["encrypt"],
-        },
-        "A128GCM": {
-            "kty": "oct",
-            "key_size": 128,
-            "use": "enc",
-            "key_ops": ["encrypt"],
-        },
-        "A192GCM": {
-            "kty": "oct",
-            "key_size": 192,
-            "use": "enc",
-            "key_ops": ["encrypt"],
-        },
-        "A256GCM": {
-            "kty": "oct",
-            "key_size": 256,
-            "use": "enc",
-            "key_ops": ["encrypt"],
-        },
-    }
+    return KEY_PARAMS_FOR_ALG[alg]

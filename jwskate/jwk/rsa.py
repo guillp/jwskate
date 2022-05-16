@@ -22,9 +22,7 @@ from jwskate.jwa import (
     RsaEsPcks1v1_5,
 )
 
-from .alg import select_alg
 from .base import Jwk, JwkParameter
-from .oct import SymmetricJwk
 
 
 class RSAJwk(Jwk):

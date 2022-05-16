@@ -3,27 +3,26 @@
 from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import asymmetric, hashes
+from cryptography.hazmat.primitives.asymmetric import ec
 
 from ..base import BaseAsymmetricAlg, BaseSignatureAlg
 from ..ec import P_256, P_384, P_521, EllipticCurve, secp256k1
 
 
 class BaseECSignatureAlg(
-    BaseAsymmetricAlg[
-        asymmetric.ec.EllipticCurvePrivateKey, asymmetric.ec.EllipticCurvePublicKey
-    ],
+    BaseAsymmetricAlg[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey],
     BaseSignatureAlg,
 ):
     """Base class for Elliptic Curve signature algorithms."""
 
     curve: EllipticCurve
     hashing_alg: hashes.HashAlgorithm
-    public_key_class = asymmetric.ec.EllipticCurvePublicKey
-    private_key_class = asymmetric.ec.EllipticCurvePrivateKey
+    public_key_class = ec.EllipticCurvePublicKey
+    private_key_class = ec.EllipticCurvePrivateKey
 
     def sign(self, data: bytes) -> BinaPy:  # noqa: D102
         with self.private_key_required() as key:
-            dss_sig = key.sign(data, asymmetric.ec.ECDSA(self.hashing_alg))
+            dss_sig = key.sign(data, ec.ECDSA(self.hashing_alg))
             r, s = asymmetric.utils.decode_dss_signature(dss_sig)
             return BinaPy.from_int(r, self.curve.coordinate_size) + BinaPy.from_int(
                 s, self.curve.coordinate_size
@@ -48,7 +47,7 @@ class BaseECSignatureAlg(
                 key.verify(
                     dss_signature,
                     data,
-                    asymmetric.ec.ECDSA(self.hashing_alg),
+                    ec.ECDSA(self.hashing_alg),
                 )
                 return True
             except exceptions.InvalidSignature:

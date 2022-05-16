@@ -88,6 +88,7 @@ class EllipticCurve:
                 "A EllipticCurvePrivateKey or a EllipticCurvePublicKey is required."
             )
         crv = cls.get_curve(key)
+        public_numbers: ec.EllipticCurvePublicNumbers
         if isinstance(key, ec.EllipticCurvePrivateKey):
             public_numbers = key.public_key().public_numbers()
         elif isinstance(key, ec.EllipticCurvePublicKey):

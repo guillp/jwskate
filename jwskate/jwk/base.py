@@ -515,7 +515,7 @@ class Jwk(BaseJsonDict):
         cek_headers: Dict[str, Any] = {}
 
         if issubclass(keyalg, BaseRsaKeyWrap):
-            rsa = keyalg(self.public_jwk().cryptography_key)
+            rsa: BaseRsaKeyWrap = keyalg(self.public_jwk().cryptography_key)
             if cek:
                 encalg.check_key(cek)
             else:
@@ -564,7 +564,7 @@ class Jwk(BaseJsonDict):
             }
 
         elif issubclass(keyalg, DirectKeyUse):
-            dir = keyalg(self.key)
+            dir: DirectKeyUse = keyalg(self.key)
             cek = dir.direct_key(encalg)
             wrapped_cek = BinaPy(b"")
         else:

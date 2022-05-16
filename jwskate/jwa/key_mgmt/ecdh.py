@@ -1,9 +1,10 @@
 """This module implements Elliptic Curve Diffie-Hellman based Key Management algorithms."""
 
-from typing import Any, Type
+from typing import Any, Type, Union
 
 from binapy import BinaPy
-from cryptography.hazmat.primitives import asymmetric, hashes
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import ec, x448, x25519
 from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 
 from ..base import BaseAsymmetricAlg, BaseKeyManagementAlg
@@ -13,15 +14,20 @@ from .aeskw import A128KW, A192KW, A256KW, BaseAesKeyWrap
 class EcdhEs(
     BaseKeyManagementAlg,
     BaseAsymmetricAlg[
-        asymmetric.ec.EllipticCurvePrivateKey, asymmetric.ec.EllipticCurvePublicKey
+        Union[ec.EllipticCurvePrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey],
+        Union[ec.EllipticCurvePublicKey, x25519.X25519PublicKey, x448.X448PublicKey],
     ],
 ):
     """Elliptic Curve Diffie-Hellman Ephemeral Static key agreement using Concat KDF."""
 
     name = "ECDH-ES"
     description = __doc__
-    public_key_class = asymmetric.ec.EllipticCurvePublicKey
-    private_key_class = asymmetric.ec.EllipticCurvePrivateKey
+    public_key_class = Union[
+        ec.EllipticCurvePublicKey, x25519.X25519PublicKey, x448.X448PublicKey
+    ]
+    private_key_class = Union[
+        ec.EllipticCurvePrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey
+    ]
 
     @classmethod
     def otherinfo(cls, alg: str, apu: bytes, apv: bytes, keysize: int) -> BinaPy:
@@ -46,8 +52,12 @@ class EcdhEs(
     @classmethod
     def ecdh(
         cls,
-        private_key: asymmetric.ec.EllipticCurvePrivateKey,
-        public_key: asymmetric.ec.EllipticCurvePublicKey,
+        private_key: Union[
+            ec.EllipticCurvePrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey
+        ],
+        public_key: Union[
+            ec.EllipticCurvePublicKey, x25519.X25519PublicKey, x448.X448PublicKey
+        ],
     ) -> BinaPy:
         """This does an Elliptic Curve Diffie Hellman key exchange.
 
@@ -62,15 +72,36 @@ class EcdhEs(
         Returns:
           a shared key
         """
-        shared_key = private_key.exchange(asymmetric.ec.ECDH(), public_key)
+        if isinstance(private_key, ec.EllipticCurvePrivateKey) and isinstance(
+            public_key, ec.EllipticCurvePublicKey
+        ):
+            shared_key = private_key.exchange(ec.ECDH(), public_key)
+        elif isinstance(private_key, x25519.X25519PrivateKey) and isinstance(
+            public_key, x25519.X25519PublicKey
+        ):
+            shared_key = private_key.exchange(public_key)
+        elif isinstance(private_key, x448.X448PrivateKey) and isinstance(
+            public_key, x448.X448PublicKey
+        ):
+            shared_key = private_key.exchange(public_key)
+        else:
+            raise ValueError(
+                "Invalid or unsupported private/public key combination for ECDH",
+                private_key,
+                public_key,
+            )
         return BinaPy(shared_key)
 
     @classmethod
     def derive(
         cls,
         *,
-        private_key: asymmetric.ec.EllipticCurvePrivateKey,
-        public_key: asymmetric.ec.EllipticCurvePublicKey,
+        private_key: Union[
+            ec.EllipticCurvePrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey
+        ],
+        public_key: Union[
+            ec.EllipticCurvePublicKey, x25519.X25519PublicKey, x448.X448PublicKey
+        ],
         otherinfo: bytes,
         key_size: int,
     ) -> BinaPy:
@@ -91,17 +122,30 @@ class EcdhEs(
         )
         return BinaPy(ckdf.derive(shared_key))
 
-    def generate_ephemeral_key(self) -> asymmetric.ec.EllipticCurvePrivateKey:
+    def generate_ephemeral_key(
+        self,
+    ) -> Union[
+        ec.EllipticCurvePrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey
+    ]:
         """Generate an ephemeral key that is suitable for use with this algorithm.
 
         Returns:
             a generated EllipticCurvePrivateKey, on the same curve as this algorithm key
         """
-        return asymmetric.ec.generate_private_key(self.key.curve)
+        if isinstance(
+            self.key, (ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey)
+        ):
+            return ec.generate_private_key(self.key.curve)
+        elif isinstance(self.key, (x25519.X25519PrivateKey, x25519.X25519PublicKey)):
+            return x25519.X25519PrivateKey.generate()
+        elif isinstance(self.key, (x448.X448PublicKey, x448.X448PrivateKey)):
+            return x448.X448PrivateKey.generate()
 
     def sender_key(
         self,
-        ephemeral_private_key: asymmetric.ec.EllipticCurvePrivateKey,
+        ephemeral_private_key: Union[
+            ec.EllipticCurvePrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey
+        ],
         *,
         alg: str,
         key_size: int,
@@ -132,7 +176,9 @@ class EcdhEs(
 
     def recipient_key(
         self,
-        ephemeral_public_key: asymmetric.ec.EllipticCurvePublicKey,
+        ephemeral_public_key: Union[
+            ec.EllipticCurvePublicKey, x25519.X25519PublicKey, x448.X448PublicKey
+        ],
         *,
         alg: str,
         key_size: int,
@@ -170,7 +216,9 @@ class BaseEcdhEs_AesKw(EcdhEs):
     def wrap_key_with_epk(
         self,
         plainkey: bytes,
-        ephemeral_private_key: asymmetric.ec.EllipticCurvePrivateKey,
+        ephemeral_private_key: Union[
+            ec.EllipticCurvePrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey
+        ],
         **headers: Any,
     ) -> BinaPy:
         """Wraps a key for content encryption.
@@ -191,7 +239,9 @@ class BaseEcdhEs_AesKw(EcdhEs):
     def unwrap_key_with_epk(
         self,
         cipherkey: bytes,
-        ephemeral_public_key: asymmetric.ec.EllipticCurvePublicKey,
+        ephemeral_public_key: Union[
+            ec.EllipticCurvePublicKey, x25519.X25519PublicKey, x448.X448PublicKey
+        ],
         **headers: Any,
     ) -> BinaPy:
         """Unwrap a key for content decryption.

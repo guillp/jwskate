@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any, List, Mapping, Union
 
 from binapy import BinaPy
@@ -228,7 +229,7 @@ class ECJwk(Jwk):
             **params,
         )
 
-    @property
+    @cached_property
     def x_coordinate(self) -> int:
         """Return the x coordinate from this ECJwk.
 
@@ -237,7 +238,7 @@ class ECJwk(Jwk):
         """
         return BinaPy(self.x).decode_from("b64u").to_int()
 
-    @property
+    @cached_property
     def y_coordinate(self) -> int:
         """Return the y coordinate from this ECJwk.
 
@@ -246,7 +247,7 @@ class ECJwk(Jwk):
         """
         return BinaPy(self.y).decode_from("b64u").to_int()
 
-    @property
+    @cached_property
     def ecc_private_key(self) -> int:
         """Return the ECC private key from this ECJwk.
 

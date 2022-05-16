@@ -1,6 +1,7 @@
 """This modules contains classes and utilities to generate and validate signed JWT."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from functools import cached_property
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 from binapy import BinaPy
@@ -66,7 +67,7 @@ class SignedJwt(Jwt):
                 "Invalid JWT signature: it must be a Base64URL-encoded binary data (bytes)"
             )
 
-    @property
+    @cached_property
     def signed_part(self) -> bytes:
         """Return the actual signed data from this token.
 
@@ -99,8 +100,11 @@ class SignedJwt(Jwt):
             data=self.signed_part, signature=self.signature, alg=alg, algs=algs
         )
 
-    def is_expired(self) -> Optional[bool]:
+    def is_expired(self, leeway: int = 0) -> Optional[bool]:
         """Check if this token is expired, based on its `exp` claim.
+
+        Args:
+            leeway: additional number of seconds for leeway.
 
         Returns:
             `True` if the token is expired, `False` if it's not, `None` if there is no `exp` claim.
@@ -108,9 +112,9 @@ class SignedJwt(Jwt):
         exp = self.expires_at
         if exp is None:
             return None
-        return exp < datetime.now(timezone.utc)
+        return exp < datetime.now(timezone.utc) + timedelta(seconds=leeway)
 
-    @property
+    @cached_property
     def expires_at(self) -> Optional[datetime]:
         """Get the "Expires At" (exp) date from this token.
 
@@ -129,7 +133,7 @@ class SignedJwt(Jwt):
         except (TypeError, OSError):
             raise AttributeError("invalid `exp `claim", exp)
 
-    @property
+    @cached_property
     def issued_at(self) -> Optional[datetime]:
         """Get the "Issued At" (iat) date from this token.
 
@@ -148,7 +152,7 @@ class SignedJwt(Jwt):
         except (TypeError, OSError):
             raise AttributeError("invalid `iat `claim", iat)
 
-    @property
+    @cached_property
     def not_before(self) -> Optional[datetime]:
         """Get the "Not Before" (nbf) date from this token.
 
@@ -167,7 +171,7 @@ class SignedJwt(Jwt):
         except (TypeError, OSError):
             raise AttributeError("invalid `nbf `claim", nbf)
 
-    @property
+    @cached_property
     def issuer(self) -> Optional[str]:
         """Get the Issuer (iss) claim from this token.
 
@@ -182,7 +186,7 @@ class SignedJwt(Jwt):
             return iss
         raise AttributeError("iss has an unexpected type", type(iss))
 
-    @property
+    @cached_property
     def audiences(self) -> Optional[List[str]]:
         """Get the audience(s) (aud) claim from this token.
 
@@ -203,7 +207,7 @@ class SignedJwt(Jwt):
             return aud
         raise AttributeError("aud has an unexpected type", type(aud))
 
-    @property
+    @cached_property
     def subject(self) -> Optional[str]:
         """Get the Subject (sub) from this token claims.
 
@@ -218,7 +222,7 @@ class SignedJwt(Jwt):
             return sub
         raise AttributeError("sub has an unexpected type", type(sub))
 
-    @property
+    @cached_property
     def jwt_token_id(self) -> Optional[str]:
         """Get the JWT Token ID (jti) from this token claims.
 
@@ -233,7 +237,7 @@ class SignedJwt(Jwt):
             return jti
         raise AttributeError("jti has an unexpected type", type(jti))
 
-    @property
+    @cached_property
     def alg(self) -> Optional[str]:
         """Get the signature algorithm from the header.
 
@@ -248,7 +252,7 @@ class SignedJwt(Jwt):
             return alg
         raise AttributeError("alg has an unexpected type", type(alg))
 
-    @property
+    @cached_property
     def kid(self) -> Optional[str]:
         """Get the Key ID (kid) from the JWT header.
 
@@ -322,6 +326,7 @@ class SignedJwt(Jwt):
     def validate(
         self,
         jwk: Union[Jwk, Dict[str, Any]],
+        *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
         issuer: Optional[str] = None,
@@ -339,9 +344,10 @@ class SignedJwt(Jwt):
 
         Args:
           jwk: the signing key to use to verify the signature.
-          alg: the signing alg to use to verify the signature. (Default value = None)
-          issuer: the expected issuer for this token. (Default value = None)
-          audience: the expected audience for this token. (Default value = None)
+          alg: the signature alg to use to verify the signature.
+          algs: allowed signature algs, if several
+          issuer: the expected issuer for this token.
+          audience: the expected audience for this token.
           check_exp: ìf `True` (default), check that the token is not expired.
           **kwargs: additional claims to check
 

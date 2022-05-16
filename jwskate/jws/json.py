@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple, Union
 
 from binapy import BinaPy
@@ -15,7 +16,7 @@ from .signature import JwsSignature
 class JwsJsonFlat(JwsSignature):
     """Represent a JWS with a single signature in JSON flat format."""
 
-    @property
+    @cached_property
     def payload(self) -> bytes:
         """The JWS payload, decoded.
 
@@ -27,7 +28,7 @@ class JwsJsonFlat(JwsSignature):
             raise AttributeError("This Jws JSON does not contain a 'payload' member")
         return BinaPy(payload).decode_from("b64u")
 
-    @property
+    @cached_property
     def jws_signature(self) -> JwsSignature:
         """The JWS signature.
 
@@ -129,7 +130,7 @@ class JwsJsonFlat(JwsSignature):
 class JwsJsonGeneral(BaseJsonDict):
     """Represents a JWS in JSON general format (possibly with multiple signatures)."""
 
-    @property
+    @cached_property
     def payload(self) -> bytes:
         """The raw signed data.
 
@@ -183,7 +184,7 @@ class JwsJsonGeneral(BaseJsonDict):
             jws.add_signature(*parameters)
         return jws
 
-    @property
+    @cached_property
     def signatures(self) -> List[JwsSignature]:
         """The list of `JwsSignature` from this JWS.
 

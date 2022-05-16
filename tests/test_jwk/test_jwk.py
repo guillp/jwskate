@@ -110,6 +110,12 @@ def test_getattr() -> None:
         jwk.foo
 
 
+def test_setattr() -> None:
+    jwk = Jwk.generate_for_kty("oct")
+    with pytest.raises(RuntimeError):
+        jwk["k"] = "foo"
+
+
 def test_invalid_alg() -> None:
     jwk = Jwk({"kty": "oct", "k": "foobar", "alg": 1.34})
     with pytest.raises(TypeError):

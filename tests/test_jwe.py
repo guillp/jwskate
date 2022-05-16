@@ -257,6 +257,16 @@ def ec_p256_private_jwk() -> Jwk:
 
 
 @pytest.fixture(scope="module")
+def okp_x25519_private_jwk() -> Jwk:
+    return Jwk.generate_for_kty("OKP", crv="X25519")
+
+
+@pytest.fixture(scope="module")
+def okp_x448_private_jwk() -> Jwk:
+    return Jwk.generate_for_kty("OKP", crv="X448")
+
+
+@pytest.fixture(scope="module")
 def rsa_private_jwk() -> Jwk:
     """This is the key from [https://datatracker.ietf.org/doc/html/rfc7520#section-3.4]."""
     jwk = Jwk(RSA_PRIVATE_KEY)
@@ -299,12 +309,12 @@ def rsa_private_jwk() -> Jwk:
 
 @pytest.fixture(scope="module")
 def symmetric_128_encryption_jwk() -> Jwk:
-    return Jwk.generate_for_kty("oct", size=128)
+    return Jwk.generate_for_kty("oct", key_size=128)
 
 
 @pytest.fixture(scope="module")
 def symmetric_192_encryption_jwk() -> Jwk:
-    return Jwk.generate_for_kty("oct", size=192)
+    return Jwk.generate_for_kty("oct", key_size=192)
 
 
 @pytest.fixture(scope="module")
@@ -327,12 +337,12 @@ def symmetric_256_encryption_jwk() -> Jwk:
 
 @pytest.fixture(scope="module")
 def symmetric_384_encryption_jwk() -> Jwk:
-    return Jwk.generate_for_kty("oct", size=384)
+    return Jwk.generate_for_kty("oct", key_size=384)
 
 
 @pytest.fixture(scope="module")
 def symmetric_512_encryption_jwk() -> Jwk:
-    return Jwk.generate_for_kty("oct", size=512)
+    return Jwk.generate_for_kty("oct", key_size=512)
 
 
 @pytest.fixture(scope="module")
@@ -409,6 +419,8 @@ def decryption_jwk(
     ec_p256_private_jwk: Jwk,
     ec_p384_private_jwk: Jwk,
     ec_p521_private_jwk: Jwk,
+    okp_x25519_private_jwk: Jwk,
+    okp_x448_private_jwk: Jwk,
     symmetric_128_encryption_jwk: Jwk,
     symmetric_192_encryption_jwk: Jwk,
     symmetric_256_encryption_jwk: Jwk,
@@ -438,6 +450,8 @@ def decryption_jwk(
             ec_p521_private_jwk,
             ec_p384_private_jwk,
             ec_p256_private_jwk,
+            okp_x25519_private_jwk,
+            okp_x448_private_jwk,
             symmetric_128_encryption_jwk,
             symmetric_192_encryption_jwk,
             symmetric_256_encryption_jwk,
@@ -445,7 +459,7 @@ def decryption_jwk(
             if key_management_alg in key.supported_key_management_algorithms():
                 return key
 
-    pytest.skip(f"No key supports this Key Management alg: {key_management_alg}")
+    assert False, f"No key supports this Key Management alg: {key_management_alg}"
 
 
 @pytest.fixture(scope="module")

@@ -21,6 +21,10 @@ def test_jwks() -> None:
 
     jwks.remove_jwk(jwk.kid)
 
+    jwks.remove_jwk("foo")
+
+    assert jwks.is_private
+
     assert not jwks.verify(data, signature, "ES256")
 
 

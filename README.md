@@ -122,64 +122,79 @@ The generated JWT claims will include the standardised claims:
 
 `jwskate` supports the following signature algorithms:
 
-| Signature Alg      | Description                                                 | Key Type | Reference                            | Note                  |
-|--------------------|-------------------------------------------------------------|----------|--------------------------------------|-----------------------|
-| HS256              | HMAC using SHA-256                                          | oct      | \[RFC7518, Section 3.2\]               |                       |
-| HS384              | HMAC using SHA-384                                          | oct      | \[RFC7518, Section 3.2\]               |                       |
-| HS512              | HMAC using SHA-512                                          | oct      | \[RFC7518, Section 3.2\]               |                       |
-| RS256              | RSASSA-PKCS1-v1_5 using SHA-256                             | RSA      | \[RFC7518, Section 3.3\]               |                       |
-| RS384              | RSASSA-PKCS1-v1_5 using SHA-384                             | RSA      | \[RFC7518, Section 3.3\]               |                       |
-| RS512              | RSASSA-PKCS1-v1_5 using SHA-512                             | RSA      | \[RFC7518, Section 3.3\]               |                       |
-| ES256              | ECDSA using P-256 and SHA-256                               | EC       | \[RFC7518, Section 3.4\]               |                       |
-| ES384              | ECDSA using P-384 and SHA-384                               | EC       | \[RFC7518, Section 3.4\]               |                       |
-| ES512              | ECDSA using P-521 and SHA-512                               | EC       | \[RFC7518, Section 3.4\]               |                       |
-| PS256              | RSASSA-PSS using SHA-256 and MGF1 with SHA-256              | RSA      | \[RFC7518, Section 3.5\]               |                       |
-| PS384              | RSASSA-PSS using SHA-384 and MGF1 with SHA-384              | RSA      | \[RFC7518, Section 3.5\]               |                       |
-| PS512              | RSASSA-PSS using SHA-512 and MGF1 with SHA-512              | RSA      | \[RFC7518, Section 3.5\]               |                       |
-| EdDSA              | EdDSA signature algorithms                                  | OKP      | \[RFC8037, Section 3.1\]               |                       |
-| ES256K             | ECDSA using secp256k1 curve and SHA-256                     | EC       | \[RFC8812, Section 3.2\]               |                       |
-| HS1                | HMAC using SHA-1                                            | oct      | \[https://www.w3.org/TR/WebCryptoAPI\] | Validation Only       |
-| RS1                | RSASSA-PKCS1-v1_5 with SHA-1                                | oct      | \[https://www.w3.org/TR/WebCryptoAPI\] | Validation Only       |
-| none               | No digital signature or MAC performed                       |          | \[RFC7518, Section 3.6\]               | Not usable by mistake |
+| Signature Alg | Description                                    | Key Type | Reference                          | Note                  |
+|---------------|------------------------------------------------|----------|------------------------------------|-----------------------|
+| HS256         | HMAC using SHA-256                             | oct      | RFC7518, Section 3.2               |                       |
+| HS384         | HMAC using SHA-384                             | oct      | RFC7518, Section 3.2               |                       |
+| HS512         | HMAC using SHA-512                             | oct      | RFC7518, Section 3.2               |                       |
+| RS256         | RSASSA-PKCS1-v1_5 using SHA-256                | RSA      | RFC7518, Section 3.3               |                       |
+| RS384         | RSASSA-PKCS1-v1_5 using SHA-384                | RSA      | RFC7518, Section 3.3               |                       |
+| RS512         | RSASSA-PKCS1-v1_5 using SHA-512                | RSA      | RFC7518, Section 3.3               |                       |
+| ES256         | ECDSA using P-256 and SHA-256                  | EC       | RFC7518, Section 3.4               |                       |
+| ES384         | ECDSA using P-384 and SHA-384                  | EC       | RFC7518, Section 3.4               |                       |
+| ES512         | ECDSA using P-521 and SHA-512                  | EC       | RFC7518, Section 3.4               |                       |
+| PS256         | RSASSA-PSS using SHA-256 and MGF1 with SHA-256 | RSA      | RFC7518, Section 3.5               |                       |
+| PS384         | RSASSA-PSS using SHA-384 and MGF1 with SHA-384 | RSA      | RFC7518, Section 3.5               |                       |
+| PS512         | RSASSA-PSS using SHA-512 and MGF1 with SHA-512 | RSA      | RFC7518, Section 3.5               |                       |
+| EdDSA         | EdDSA signature algorithms                     | OKP      | RFC8037, Section 3.1               |                       |
+| ES256K        | ECDSA using secp256k1 curve and SHA-256        | EC       | RFC8812, Section 3.2               |                       |
+| HS1           | HMAC using SHA-1                               | oct      | https://www.w3.org/TR/WebCryptoAPI | Validation Only       |
+| RS1           | RSASSA-PKCS1-v1_5 with SHA-1                   | oct      | https://www.w3.org/TR/WebCryptoAPI | Validation Only       |
+| none          | No digital signature or MAC performed          |          | RFC7518, Section 3.6               | Not usable by mistake |
 
 ### Supported Key Management algorithms
 
 `jwskate` supports the following key management algorithms:
 
-| Signature Alg      | Description                                                 | Key Type | Reference                            | Note        |
-|--------------------|-------------------------------------------------------------|----------|--------------------------------------|-------------|
-| RSA1_5             | RSAES-PKCS1-v1_5                                            | RSA      | \[RFC7518, Section 4.2\]               | Unwrap Only |
-| RSA-OAEP           | RSAES OAEP using default parameters                         | RSA      | \[RFC7518, Section 4.3\]               |             |
-| RSA-OAEP-256       | RSAES OAEP using SHA-256 and MGF1 with SHA-256              | RSA      | \[RFC7518, Section 4.3\]               |             |
-| RSA-OAEP-384       | RSA-OAEP using SHA-384 and MGF1 with SHA-384                | RSA      | \[https://www.w3.org/TR/WebCryptoAPI\] |             |
-| RSA-OAEP-512       | RSA-OAEP using SHA-512 and MGF1 with SHA-512                | RSA      | \[https://www.w3.org/TR/WebCryptoAPI\] |             |
-| A128KW             | AES Key Wrap using 128-bit key                              | oct      | \[RFC7518, Section 4.4\]               |             |
-| A192KW             | AES Key Wrap using 192-bit key                              | oct      | \[RFC7518, Section 4.4\]               |             |
-| A256KW             | AES Key Wrap using 256-bit key                              | oct      | \[RFC7518, Section 4.4\]               |             |
-| dir                | Direct use of a shared symmetric key                        | oct      | \[RFC7518, Section 4.5\]               |             |
-| ECDH-ES            | ECDH-ES using Concat KDF                                    | EC       | \[RFC7518, Section 4.6\]               |             |
-| ECDH-ES+A128KW     | ECDH-ES using Concat KDF and "A128KW" wrapping              | EC       | \[RFC7518, Section 4.6\]               |             |
-| ECDH-ES+A192KW     | ECDH-ES using Concat KDF and "A192KW" wrapping              | EC       | \[RFC7518, Section 4.6\]               |             |
-| ECDH-ES+A256KW     | ECDH-ES using Concat KDF and "A256KW" wrapping              | EC       | \[RFC7518, Section 4.6\]               |             |
-| A128GCMKW          | Key wrapping with AES GCM using 128-bit key                 | oct      | \[RFC7518, Section 4.7\]               |             |
-| A192GCMKW          | Key wrapping with AES GCM using 192-bit key                 | oct      | \[RFC7518, Section 4.7\]               |             |
-| A256GCMKW          | Key wrapping with AES GCM using 256-bit key                 | oct      | \[RFC7518, Section 4.7\]               |             |
-| PBES2-HS256+A128KW | PBES2 with HMAC SHA-256 and "A128KW" wrapping               | password | \[RFC7518, Section 4.8\]               |             |
-| PBES2-HS384+A192KW | PBES2 with HMAC SHA-384 and "A192KW" wrapping               | password | \[RFC7518, Section 4.8\]               |             |
-| PBES2-HS512+A256KW | PBES2 with HMAC SHA-512 and "A256KW" wrapping               | password | \[RFC7518, Section 4.8\]               |             |
+| Signature Alg      | Description                                     | Key Type | Reference                          | Note        |
+|--------------------|-------------------------------------------------|----------|------------------------------------|-------------|
+| RSA1_5             | RSAES-PKCS1-v1_5                                | RSA      | RFC7518, Section 4.2               | Unwrap Only |
+| RSA-OAEP           | RSAES OAEP using default parameters             | RSA      | RFC7518, Section 4.3               |             |
+| RSA-OAEP-256       | RSAES OAEP using SHA-256 and MGF1 with SHA-256  | RSA      | RFC7518, Section 4.3               |             |
+| RSA-OAEP-384       | RSA-OAEP using SHA-384 and MGF1 with SHA-384    | RSA      | https://www.w3.org/TR/WebCryptoAPI |             |
+| RSA-OAEP-512       | RSA-OAEP using SHA-512 and MGF1 with SHA-512    | RSA      | https://www.w3.org/TR/WebCryptoAPI |             |
+| A128KW             | AES Key Wrap using 128-bit key                  | oct      | RFC7518, Section 4.4               |             |
+| A192KW             | AES Key Wrap using 192-bit key                  | oct      | RFC7518, Section 4.4               |             |
+| A256KW             | AES Key Wrap using 256-bit key                  | oct      | RFC7518, Section 4.4               |             |
+| dir                | Direct use of a shared symmetric key            | oct      | RFC7518, Section 4.5               |             |
+| ECDH-ES            | ECDH-ES using Concat KDF                        | EC       | RFC7518, Section 4.6               |             |
+| ECDH-ES+A128KW     | ECDH-ES using Concat KDF and "A128KW" wrapping  | EC       | RFC7518, Section 4.6               |             |
+| ECDH-ES+A192KW     | ECDH-ES using Concat KDF and "A192KW" wrapping  | EC       | RFC7518, Section 4.6               |             |
+| ECDH-ES+A256KW     | ECDH-ES using Concat KDF and "A256KW" wrapping  | EC       | RFC7518, Section 4.6               |             |
+| A128GCMKW          | Key wrapping with AES GCM using 128-bit key     | oct      | RFC7518, Section 4.7               |             |
+| A192GCMKW          | Key wrapping with AES GCM using 192-bit key     | oct      | RFC7518, Section 4.7               |             |
+| A256GCMKW          | Key wrapping with AES GCM using 256-bit key     | oct      | RFC7518, Section 4.7               |             |
+| PBES2-HS256+A128KW | PBES2 with HMAC SHA-256 and "A128KW" wrapping   | password | RFC7518, Section 4.8               |             |
+| PBES2-HS384+A192KW | PBES2 with HMAC SHA-384 and "A192KW" wrapping   | password | RFC7518, Section 4.8               |             |
+| PBES2-HS512+A256KW | PBES2 with HMAC SHA-512 and "A256KW" wrapping   | password | RFC7518, Section 4.8               |             |
 
 ### Supported Encryption algorithms
 
 `jwskate` supports the following encryption algorithms:
 
-| Signature Alg      | Description                                                 | Reference                            |
-|--------------------|-------------------------------------------------------------|--------------------------------------|
-| A128CBC-HS256      | AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm | \[RFC7518, Section 5.2.3\]             |
-| A192CBC-HS384      | AES_192_CBC_HMAC_SHA_384 authenticated encryption algorithm | \[RFC7518, Section 5.2.4\]             |
-| A256CBC-HS512      | AES_256_CBC_HMAC_SHA_512 authenticated encryption algorithm | \[RFC7518, Section 5.2.5\]             |
-| A128GCM            | AES GCM using 128-bit key                                   | \[RFC7518, Section 5.3\]               |
-| A192GCM            | AES GCM using 192-bit key                                   | \[RFC7518, Section 5.3\]               |
-| A256GCM            | AES GCM using 256-bit key                                   | \[RFC7518, Section 5.3\]               |
+| Signature Alg  | Description                                                 | Reference               |
+|----------------|-------------------------------------------------------------|-------------------------|
+| A128CBC-HS256  | AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm | RFC7518, Section 5.2.3  |
+| A192CBC-HS384  | AES_192_CBC_HMAC_SHA_384 authenticated encryption algorithm | RFC7518, Section 5.2.4  |
+| A256CBC-HS512  | AES_256_CBC_HMAC_SHA_512 authenticated encryption algorithm | RFC7518, Section 5.2.5  |
+| A128GCM        | AES GCM using 128-bit key                                   | RFC7518, Section 5.3    |
+| A192GCM        | AES GCM using 192-bit key                                   | RFC7518, Section 5.3    |
+| A256GCM        | AES GCM using 256-bit key                                   | RFC7518, Section 5.3    |
+
+### Supported Elliptic Curves
+
+`jwskate` supports the following Elliptic Curves:
+
+| Curve     | Description                           | Key Type | Usage                 | Reference                |
+|-----------|---------------------------------------|----------|-----------------------|--------------------------|
+| P-256     | P-256 Curve                           | EC       | signature, encryption | RFC7518, Section 6.2.1.1 |
+| P-384     | P-384 Curve                           | EC       | signature, encryption | RFC7518, Section 6.2.1.1 |
+| P-521     | P-521 Curve                           | EC       | signature, encryption | RFC7518, Section 6.2.1.1 |
+| secp256k1 | SECG secp256k1 curve                  | EC       | signature, encryption | RFC8812, Section 3.1     |
+| Ed25519   | Ed25519 signature algorithm key pairs | OKP      | signature             | RFC8037, Section 3.1     |
+| Ed448     | Ed448 signature algorithm key pairs   | OKP      | signature             | RFC8037, Section 3.1     |
+| X25519    | X25519 function key pairs             | OKP      | encryption            | RFC8037, Section 3.2     |
+| X448      | X448 function key pairs               | OKP      | encryption            | RFC8037, Section 3.2     |
 
 ## Why a new lib ?
 

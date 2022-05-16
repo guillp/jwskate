@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
+from functools import cached_property
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -227,7 +228,7 @@ class Jwk(BaseJsonDict):
         """
         return self.KTY
 
-    @property
+    @cached_property
     def alg(self) -> Optional[str]:
         """Return the configured key alg, if any.
 
@@ -742,3 +743,15 @@ class Jwk(BaseJsonDict):
         if jwk_class is None:
             raise UnsupportedKeyType("Unsupported Key Type:", kty)
         return jwk_class.generate(**kwargs)
+
+    @classmethod
+    def generate_for_alg(cls, alg: str, **kwargs: Any) -> Jwk:
+        """Generate a key for usage with a specific alg and return the resuting Jwk.
+
+        Args:
+            alg: a signature or key management alg
+            **kwargs: specific parameters depending on the key type, or additional members to include in the Jwk
+
+        Returns:
+            the resulting Jwk
+        """

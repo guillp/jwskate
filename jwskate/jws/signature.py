@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any, Dict, Iterable, Mapping, Optional, Type, TypeVar, Union
 
 from binapy import BinaPy
@@ -50,7 +51,7 @@ class JwsSignature(BaseJsonDict):
             content["header"] = header
         return cls(content)
 
-    @property
+    @cached_property
     def protected(self) -> Dict[str, Any]:
         """The protected header.
 
@@ -74,7 +75,7 @@ class JwsSignature(BaseJsonDict):
         """
         return self.get("header")
 
-    @property
+    @cached_property
     def signature(self) -> bytes:
         """The raw signature.
 

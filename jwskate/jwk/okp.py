@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any, Mapping
 
 from binapy import BinaPy
@@ -15,6 +16,7 @@ from cryptography.hazmat.primitives.serialization import (
 
 from jwskate.jwa import X448, X25519, Ed448, Ed25519, EdDsa, OKPCurve
 
+from .. import EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW
 from .base import Jwk, JwkParameter
 
 
@@ -54,6 +56,11 @@ class OKPJwk(Jwk):
 
     SIGNATURE_ALGORITHMS = {alg.name: alg for alg in (EdDsa,)}
 
+    KEY_MANAGEMENT_ALGORITHMS = {
+        keyalg.name: keyalg
+        for keyalg in [EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW]
+    }
+
     @property
     def is_private(self) -> bool:  # noqa: D102
         return "d" in self
@@ -90,7 +97,7 @@ class OKPJwk(Jwk):
         """
         return self.get_curve(self.crv)
 
-    @property
+    @cached_property
     def public_key(self) -> bytes:
         """Get the public key from this Jwk.
 
@@ -99,7 +106,7 @@ class OKPJwk(Jwk):
         """
         return BinaPy(self.x).decode_from("b64u")
 
-    @property
+    @cached_property
     def private_key(self) -> bytes:
         """Get the private key from this Jwk.
 

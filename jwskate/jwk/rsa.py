@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any, Optional, Union
 
 from binapy import BinaPy
@@ -225,7 +226,7 @@ class RSAJwk(Jwk):
             **params,
         )
 
-    @property
+    @cached_property
     def modulus(self) -> int:
         """Returns the modulus from this Jwk.
 
@@ -234,7 +235,7 @@ class RSAJwk(Jwk):
         """
         return BinaPy(self.n).decode_from("b64u").to_int()
 
-    @property
+    @cached_property
     def exponent(self) -> int:
         """Returns the exponent from this Jwk.
 
@@ -243,7 +244,7 @@ class RSAJwk(Jwk):
         """
         return BinaPy(self.e).decode_from("b64u").to_int()
 
-    @property
+    @cached_property
     def private_exponent(self) -> int:
         """Returns the private exponent from this Jwk.
 
@@ -252,7 +253,7 @@ class RSAJwk(Jwk):
         """
         return BinaPy(self.d).decode_from("b64u").to_int()
 
-    @property
+    @cached_property
     def first_prime_factor(self) -> int:
         """Returns the first prime factor from this Jwk.
 
@@ -261,7 +262,7 @@ class RSAJwk(Jwk):
         """
         return BinaPy(self.p).decode_from("b64u").to_int()
 
-    @property
+    @cached_property
     def second_prime_factor(self) -> int:
         """Returns the second prime factor from this Jwk.
 
@@ -270,7 +271,7 @@ class RSAJwk(Jwk):
         """
         return BinaPy(self.q).decode_from("b64u").to_int()
 
-    @property
+    @cached_property
     def first_factor_crt_exponent(self) -> int:
         """Returns the first factor CRT exponent from this Jwk.
 
@@ -279,7 +280,7 @@ class RSAJwk(Jwk):
         """
         return BinaPy(self.dp).decode_from("b64u").to_int()
 
-    @property
+    @cached_property
     def second_factor_crt_exponent(self) -> int:
         """Returns the second factor CRT exponent from this Jwk.
 
@@ -288,7 +289,7 @@ class RSAJwk(Jwk):
         """
         return BinaPy(self.dq).decode_from("b64u").to_int()
 
-    @property
+    @cached_property
     def first_crt_coefficient(self) -> int:
         """Returns the first CRT coefficient from this Jwk.
 

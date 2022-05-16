@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Tuple, Union
 
 from binapy import BinaPy
@@ -124,7 +125,7 @@ class JwsCompact(BaseCompactToken):
 
         return cls(b".".join((signed_part, BinaPy(signature).to("b64u"))))
 
-    @property
+    @cached_property
     def signed_part(self) -> bytes:
         """Returns the signed part (header + payload) from this JwsCompact.
 
@@ -133,7 +134,7 @@ class JwsCompact(BaseCompactToken):
         """
         return b".".join(self.value.split(b".", 2)[:2])
 
-    @property
+    @cached_property
     def alg(self) -> str:
         """Get the signature algorithm (alg) from this token headers.
 

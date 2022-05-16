@@ -1,6 +1,7 @@
 """This module implements the JWE Compact format."""
 
 import warnings
+from functools import cached_property
 from typing import Any, Dict, Mapping, Optional, Type, Union
 
 from binapy import BinaPy
@@ -107,7 +108,7 @@ class JweCompact(BaseCompactToken):
             )
         )
 
-    @property
+    @cached_property
     def alg(self) -> str:
         """Return the alg from the JWE header.
 
@@ -124,7 +125,7 @@ class JweCompact(BaseCompactToken):
             raise AttributeError("This JWE doesn't have a valid 'alg' header")
         return alg
 
-    @property
+    @cached_property
     def enc(self) -> str:
         """Return the `enc` from the JWE header.
 

@@ -19,7 +19,6 @@ from typing import (
     Union,
 )
 
-from backports.cached_property import cached_property
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 
@@ -228,7 +227,7 @@ class Jwk(BaseJsonDict):
         """
         return self.KTY
 
-    @cached_property
+    @property
     def alg(self) -> Optional[str]:
         """Return the configured key alg, if any.
 

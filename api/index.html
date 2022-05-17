@@ -41842,8 +41842,8 @@ if the user specified alg is different from the <code>jwk_alg</code>.</p>
 
           <details class="quote">
             <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">51</span>
-<span class="normal">52</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">InvalidJwk</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">50</span>
+<span class="normal">51</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">InvalidJwk</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Raised when an invalid JWK is encountered.&quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
           </details>
@@ -41885,7 +41885,8 @@ interface.</p>
 
           <details class="quote">
             <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 63</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 62</span>
+<span class="normal"> 63</span>
 <span class="normal"> 64</span>
 <span class="normal"> 65</span>
 <span class="normal"> 66</span>
@@ -42578,8 +42579,7 @@ interface.</p>
 <span class="normal">753</span>
 <span class="normal">754</span>
 <span class="normal">755</span>
-<span class="normal">756</span>
-<span class="normal">757</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Jwk</span><span class="p">(</span><span class="n">BaseJsonDict</span><span class="p">):</span>
+<span class="normal">756</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Jwk</span><span class="p">(</span><span class="n">BaseJsonDict</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Represents a Json Web Key (JWK), as specified in RFC7517.</span>
 
 <span class="sd">    A JWK is a JSON object that represents a cryptographic key.  The</span>
@@ -42747,7 +42747,7 @@ interface.</p>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">KTY</span>
 
-    <span class="nd">@cached_property</span>
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">alg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Return the configured key alg, if any.</span>
 
@@ -43448,7 +43448,8 @@ interface.</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">170</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">169</span>
+<span class="normal">170</span>
 <span class="normal">171</span>
 <span class="normal">172</span>
 <span class="normal">173</span>
@@ -43462,8 +43463,7 @@ interface.</p>
 <span class="normal">181</span>
 <span class="normal">182</span>
 <span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="normal">184</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Allows access to key parameters as attributes, like `jwk.kid`, `jwk.kty`, instead of `jwk[&#39;kid&#39;]`, `jwk[&#39;kty&#39;]`, etc.</span>
 
 <span class="sd">    Args:</span>
@@ -43539,7 +43539,8 @@ interface.</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">135</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">134</span>
+<span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
@@ -43562,8 +43563,7 @@ interface.</p>
 <span class="normal">155</span>
 <span class="normal">156</span>
 <span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span> <span class="n">include_kid_thumbprint</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Initialize a Jwk.</span>
@@ -43615,15 +43615,15 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 94</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 93</span>
+<span class="normal"> 94</span>
 <span class="normal"> 95</span>
 <span class="normal"> 96</span>
 <span class="normal"> 97</span>
 <span class="normal"> 98</span>
 <span class="normal"> 99</span>
 <span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">101</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Automatically add subclasses to the registry.</span>
 
 <span class="sd">    This allows __new__ to pick the appropriate subclass when</span>
@@ -43699,7 +43699,8 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">104</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">103</span>
+<span class="normal">104</span>
 <span class="normal">105</span>
 <span class="normal">106</span>
 <span class="normal">107</span>
@@ -43727,8 +43728,7 @@ creating a Jwk</p>
 <span class="normal">129</span>
 <span class="normal">130</span>
 <span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Jwk</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
+<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Jwk</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Overridden `__new__` to make the Jwk constructor smarter.</span>
 
 <span class="sd">    The Jwk constructor will accept:</span>
@@ -43835,7 +43835,8 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">187</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">186</span>
+<span class="normal">187</span>
 <span class="normal">188</span>
 <span class="normal">189</span>
 <span class="normal">190</span>
@@ -43847,8 +43848,7 @@ creating a Jwk</p>
 <span class="normal">196</span>
 <span class="normal">197</span>
 <span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">199</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Override base method to avoid modifying cryptographic key attributes.</span>
 
 <span class="sd">    Args:</span>
@@ -43906,15 +43906,15 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">665</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">664</span>
+<span class="normal">665</span>
 <span class="normal">666</span>
 <span class="normal">667</span>
 <span class="normal">668</span>
 <span class="normal">669</span>
 <span class="normal">670</span>
 <span class="normal">671</span>
-<span class="normal">672</span>
-<span class="normal">673</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">_to_cryptography_key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="normal">672</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">_to_cryptography_key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Return a key from the `cryptography` library that matches this Jwk.</span>
 
 <span class="sd">    This is implemented by subclasses.</span>
@@ -43972,7 +43972,8 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">243</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">242</span>
+<span class="normal">243</span>
 <span class="normal">244</span>
 <span class="normal">245</span>
 <span class="normal">246</span>
@@ -44029,8 +44030,7 @@ creating a Jwk</p>
 <span class="normal">297</span>
 <span class="normal">298</span>
 <span class="normal">299</span>
-<span class="normal">300</span>
-<span class="normal">301</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">300</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Internal method used to validate a Jwk. It checks that all required parameters are present and well-formed. If the key is private, it sets the `is_private` flag to `True`.</span>
 
 <span class="sd">    Raises:</span>
@@ -44104,6 +44104,9 @@ creating a Jwk</p>
 <h5 id="jwskate.jwk.base.Jwk.alg" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">alg</span><span class="p">()</span></code>
 
+  <span class="doc doc-properties">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
 
 <a href="#jwskate.jwk.base.Jwk.alg" class="headerlink" title="Permanent link">&para;</a></h5>
 
@@ -44132,7 +44135,8 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">231</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">230</span>
+<span class="normal">231</span>
 <span class="normal">232</span>
 <span class="normal">233</span>
 <span class="normal">234</span>
@@ -44141,8 +44145,7 @@ creating a Jwk</p>
 <span class="normal">237</span>
 <span class="normal">238</span>
 <span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@cached_property</span>
+<span class="normal">240</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@property</span>
 <span class="k">def</span> <span class="nf">alg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Return the configured key alg, if any.</span>
 
@@ -44196,15 +44199,15 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">365</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">364</span>
+<span class="normal">365</span>
 <span class="normal">366</span>
 <span class="normal">367</span>
 <span class="normal">368</span>
 <span class="normal">369</span>
 <span class="normal">370</span>
 <span class="normal">371</span>
-<span class="normal">372</span>
-<span class="normal">373</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">as_jwks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JwkSet</span><span class="p">:</span>
+<span class="normal">372</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">as_jwks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JwkSet</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Return a JwkSet with this key as single element.</span>
 
 <span class="sd">    Returns:</span>
@@ -44321,7 +44324,8 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">450</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">449</span>
+<span class="normal">450</span>
 <span class="normal">451</span>
 <span class="normal">452</span>
 <span class="normal">453</span>
@@ -44343,8 +44347,7 @@ creating a Jwk</p>
 <span class="normal">469</span>
 <span class="normal">470</span>
 <span class="normal">471</span>
-<span class="normal">472</span>
-<span class="normal">473</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">decrypt</span><span class="p">(</span>
+<span class="normal">472</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">decrypt</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">ciphertext</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -44466,7 +44469,8 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">428</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">427</span>
+<span class="normal">428</span>
 <span class="normal">429</span>
 <span class="normal">430</span>
 <span class="normal">431</span>
@@ -44485,8 +44489,7 @@ creating a Jwk</p>
 <span class="normal">444</span>
 <span class="normal">445</span>
 <span class="normal">446</span>
-<span class="normal">447</span>
-<span class="normal">448</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">encrypt</span><span class="p">(</span>
+<span class="normal">447</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">encrypt</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">plaintext</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -44606,7 +44609,8 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">642</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">641</span>
+<span class="normal">642</span>
 <span class="normal">643</span>
 <span class="normal">644</span>
 <span class="normal">645</span>
@@ -44626,8 +44630,7 @@ creating a Jwk</p>
 <span class="normal">659</span>
 <span class="normal">660</span>
 <span class="normal">661</span>
-<span class="normal">662</span>
-<span class="normal">663</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">662</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">from_cryptography_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cryptography_key</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Jwk</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Initialize a Jwk from a key from the `cryptography` library.</span>
 
@@ -44729,7 +44732,8 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">675</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">674</span>
+<span class="normal">675</span>
 <span class="normal">676</span>
 <span class="normal">677</span>
 <span class="normal">678</span>
@@ -44754,8 +44758,7 @@ creating a Jwk</p>
 <span class="normal">697</span>
 <span class="normal">698</span>
 <span class="normal">699</span>
-<span class="normal">700</span>
-<span class="normal">701</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">700</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">from_pem_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Jwk</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Load a Jwk from a PEM encoded private or public key.</span>
 
@@ -44852,7 +44855,8 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">716</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">715</span>
+<span class="normal">716</span>
 <span class="normal">717</span>
 <span class="normal">718</span>
 <span class="normal">719</span>
@@ -44861,8 +44865,7 @@ creating a Jwk</p>
 <span class="normal">722</span>
 <span class="normal">723</span>
 <span class="normal">724</span>
-<span class="normal">725</span>
-<span class="normal">726</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">725</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Jwk</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Generates a Private Key. This method is implemented by subclasses for specific Key Types and returns an instance of that specific subclass.</span>
 
@@ -44953,7 +44956,8 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">747</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">746</span>
+<span class="normal">747</span>
 <span class="normal">748</span>
 <span class="normal">749</span>
 <span class="normal">750</span>
@@ -44962,8 +44966,7 @@ creating a Jwk</p>
 <span class="normal">753</span>
 <span class="normal">754</span>
 <span class="normal">755</span>
-<span class="normal">756</span>
-<span class="normal">757</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">756</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">generate_for_alg</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">alg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Jwk</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Generate a key for usage with a specific alg and return the resuting Jwk.</span>
 
@@ -45072,7 +45075,8 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">728</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">727</span>
+<span class="normal">728</span>
 <span class="normal">729</span>
 <span class="normal">730</span>
 <span class="normal">731</span>
@@ -45088,8 +45092,7 @@ creating a Jwk</p>
 <span class="normal">741</span>
 <span class="normal">742</span>
 <span class="normal">743</span>
-<span class="normal">744</span>
-<span class="normal">745</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">744</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">generate_for_kty</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kty</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Jwk</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Generate a key with a specific type and return the resulting Jwk.</span>
 
@@ -45153,14 +45156,14 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">161</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">160</span>
+<span class="normal">161</span>
 <span class="normal">162</span>
 <span class="normal">163</span>
 <span class="normal">164</span>
 <span class="normal">165</span>
 <span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@property</span>
+<span class="normal">167</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@property</span>
 <span class="k">def</span> <span class="nf">is_private</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Return `True` if the key is private, `False` otherwise.</span>
 
@@ -45214,14 +45217,14 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">222</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">221</span>
+<span class="normal">222</span>
 <span class="normal">223</span>
 <span class="normal">224</span>
 <span class="normal">225</span>
 <span class="normal">226</span>
 <span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@property</span>
+<span class="normal">228</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@property</span>
 <span class="k">def</span> <span class="nf">kty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Return the Key Type.</span>
 
@@ -45272,7 +45275,8 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">327</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">326</span>
+<span class="normal">327</span>
 <span class="normal">328</span>
 <span class="normal">329</span>
 <span class="normal">330</span>
@@ -45307,8 +45311,7 @@ creating a Jwk</p>
 <span class="normal">359</span>
 <span class="normal">360</span>
 <span class="normal">361</span>
-<span class="normal">362</span>
-<span class="normal">363</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">public_jwk</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Jwk</span><span class="p">:</span>
+<span class="normal">362</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">public_jwk</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Jwk</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Return the public Jwk associated with this key.</span>
 
 <span class="sd">    Returns:</span>
@@ -45460,7 +45463,8 @@ creating a Jwk</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">575</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">574</span>
+<span class="normal">575</span>
 <span class="normal">576</span>
 <span class="normal">577</span>
 <span class="normal">578</span>
@@ -45524,8 +45528,7 @@ creating a Jwk</p>
 <span class="normal">636</span>
 <span class="normal">637</span>
 <span class="normal">638</span>
-<span class="normal">639</span>
-<span class="normal">640</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">recipient_key</span><span class="p">(</span>
+<span class="normal">639</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">recipient_key</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">wrapped_cek</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">alg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">enc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">headers</span><span class="p">:</span> <span class="n">Any</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Jwk</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;For DH-based algs. As a token recipient, derive the same CEK that was used for encryption, based on the recipient private key and the sender ephemeral public key.</span>
@@ -45726,7 +45729,8 @@ Only use this if you know what you are doing!</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">475</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">474</span>
+<span class="normal">475</span>
 <span class="normal">476</span>
 <span class="normal">477</span>
 <span class="normal">478</span>
@@ -45823,8 +45827,7 @@ Only use this if you know what you are doing!</p>
 <span class="normal">569</span>
 <span class="normal">570</span>
 <span class="normal">571</span>
-<span class="normal">572</span>
-<span class="normal">573</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">sender_key</span><span class="p">(</span>
+<span class="normal">572</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">sender_key</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">enc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -46000,7 +46003,8 @@ Only use this if you know what you are doing!</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">375</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">374</span>
+<span class="normal">375</span>
 <span class="normal">376</span>
 <span class="normal">377</span>
 <span class="normal">378</span>
@@ -46018,8 +46022,7 @@ Only use this if you know what you are doing!</p>
 <span class="normal">390</span>
 <span class="normal">391</span>
 <span class="normal">392</span>
-<span class="normal">393</span>
-<span class="normal">394</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">sign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">alg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BinaPy</span><span class="p">:</span>
+<span class="normal">393</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">sign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">alg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BinaPy</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Sign a data using this Jwk, and return the generated signature.</span>
 
 <span class="sd">    Args:</span>
@@ -46082,13 +46085,13 @@ Only use this if you know what you are doing!</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">319</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">318</span>
+<span class="normal">319</span>
 <span class="normal">320</span>
 <span class="normal">321</span>
 <span class="normal">322</span>
 <span class="normal">323</span>
-<span class="normal">324</span>
-<span class="normal">325</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">supported_encryption_algorithms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="normal">324</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">supported_encryption_algorithms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Return the list of Encryption algorithms that can be used with this key.</span>
 
 <span class="sd">    Returns:</span>
@@ -46138,13 +46141,13 @@ Only use this if you know what you are doing!</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">311</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">310</span>
+<span class="normal">311</span>
 <span class="normal">312</span>
 <span class="normal">313</span>
 <span class="normal">314</span>
 <span class="normal">315</span>
-<span class="normal">316</span>
-<span class="normal">317</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">supported_key_management_algorithms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="normal">316</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">supported_key_management_algorithms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Return the list of Key Management algorithms that can be used with this key.</span>
 
 <span class="sd">    Returns:</span>
@@ -46194,13 +46197,13 @@ Only use this if you know what you are doing!</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">303</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">302</span>
+<span class="normal">303</span>
 <span class="normal">304</span>
 <span class="normal">305</span>
 <span class="normal">306</span>
 <span class="normal">307</span>
-<span class="normal">308</span>
-<span class="normal">309</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">supported_signing_algorithms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="normal">308</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">supported_signing_algorithms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Return the list of Signature algorithms that can be used with this key.</span>
 
 <span class="sd">    Returns:</span>
@@ -46274,7 +46277,8 @@ Only use this if you know what you are doing!</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">202</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">201</span>
+<span class="normal">202</span>
 <span class="normal">203</span>
 <span class="normal">204</span>
 <span class="normal">205</span>
@@ -46291,8 +46295,7 @@ Only use this if you know what you are doing!</p>
 <span class="normal">216</span>
 <span class="normal">217</span>
 <span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">thumbprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashalg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;SHA256&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">219</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">thumbprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashalg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;SHA256&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Return the key thumbprint as specified by RFC 7638.</span>
 
 <span class="sd">    Args:</span>
@@ -46379,7 +46382,8 @@ Only use this if you know what you are doing!</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">703</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">702</span>
+<span class="normal">703</span>
 <span class="normal">704</span>
 <span class="normal">705</span>
 <span class="normal">706</span>
@@ -46389,8 +46393,7 @@ Only use this if you know what you are doing!</p>
 <span class="normal">710</span>
 <span class="normal">711</span>
 <span class="normal">712</span>
-<span class="normal">713</span>
-<span class="normal">714</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">to_pem_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">713</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">to_pem_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Serialize this key to PEM format.</span>
 
 <span class="sd">    For private keys, you can provide a password for encryption.</span>
@@ -46499,7 +46502,8 @@ Only use this if you know what you are doing!</p>
 
         <details class="quote">
           <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">396</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">395</span>
+<span class="normal">396</span>
 <span class="normal">397</span>
 <span class="normal">398</span>
 <span class="normal">399</span>
@@ -46528,8 +46532,7 @@ Only use this if you know what you are doing!</p>
 <span class="normal">422</span>
 <span class="normal">423</span>
 <span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">verify</span><span class="p">(</span>
+<span class="normal">425</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">verify</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
     <span class="n">signature</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
@@ -46601,8 +46604,8 @@ Only use this if you know what you are doing!</p>
 
           <details class="quote">
             <summary>Source code in <code>jwskate/jwk/base.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">47</span>
-<span class="normal">48</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">UnsupportedKeyType</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">46</span>
+<span class="normal">47</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">UnsupportedKeyType</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Raised when an unsupported Key Type is requested.&quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
           </details>

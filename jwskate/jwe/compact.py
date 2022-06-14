@@ -109,23 +109,6 @@ class JweCompact(BaseCompactToken):
         )
 
     @cached_property
-    def alg(self) -> str:
-        """Return the alg from the JWE header.
-
-        The `alg` header contains the Key Management algorithm used to wrap or derive the CEK.
-
-        Returns:
-            the alg value
-
-        Raises:
-            AttributeError: if there is no alg header or it is not a str
-        """
-        alg = self.get_header("alg")
-        if alg is None or not isinstance(alg, str):
-            raise AttributeError("This JWE doesn't have a valid 'alg' header")
-        return alg
-
-    @cached_property
     def enc(self) -> str:
         """Return the `enc` from the JWE header.
 

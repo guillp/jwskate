@@ -2,6 +2,8 @@
 import json
 from typing import Any, Dict, Type, TypeVar, Union
 
+from backports.cached_property import cached_property
+
 
 class BaseCompactToken:
     """Base class for all tokens in Compact representation.
@@ -59,6 +61,34 @@ class BaseCompactToken:
             the header value
         """
         return self.headers.get(name)
+
+    @cached_property
+    def alg(self) -> str:
+        """Get the signature algorithm (alg) from this token headers.
+
+        Returns:
+            the `alg` value
+        Raises:
+            AttributeError: if the `alg` header value is not a string
+        """
+        alg = self.get_header("alg")
+        if alg is None or not isinstance(alg, str):
+            raise AttributeError("This JWS doesn't have a valid 'alg' header")
+        return alg
+
+    @cached_property
+    def kid(self) -> str:
+        """Get the key id (kid) from this token headers.
+
+        Returns:
+            the `kid` value
+        Raises:
+            AttributeError: if the `kid` header value is not a string
+        """
+        kid = self.get_header("kid")
+        if kid is None or not isinstance(kid, str):
+            raise AttributeError("This JWS doesn't have a valid 'kid' header")
+        return kid
 
     def __repr__(self) -> str:
         """Returns the `str` representation of this token."""

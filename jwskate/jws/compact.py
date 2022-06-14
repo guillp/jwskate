@@ -134,20 +134,6 @@ class JwsCompact(BaseCompactToken):
         """
         return b".".join(self.value.split(b".", 2)[:2])
 
-    @cached_property
-    def alg(self) -> str:
-        """Get the signature algorithm (alg) from this token headers.
-
-        Returns:
-            the `alg` value
-        Raises:
-            AttributeError: if the `alg` header value is not a string
-        """
-        alg = self.get_header("alg")
-        if alg is None or not isinstance(alg, str):
-            raise AttributeError("This JWS doesn't have a valid 'alg' header")
-        return alg
-
     def verify_signature(
         self,
         jwk: Union[Jwk, Dict[str, Any]],

@@ -28,6 +28,15 @@ class JwtSigner:
     subject, audience and custom claims when calling `JwtSigner.sign()`.
     This can be used as an alternative to `Jwt.sign()` when a single
     issuer issues multiple tokens.
+
+    Args:
+            issuer: the issuer string to use as `ìss` claim for signed tokens.
+            jwk: the private Jwk to use to sign tokens.
+            alg: the signing alg to use to sign tokens.
+            default_lifetime: the default lifetime, in seconds, to use for claim `exp`. This can be overridden
+                when calling `.sign()`
+            default_leeway: the default leeway, in seconds, to use for claim `nbf`. If None, no `nbf` claim is
+                included. This can be overridden when calling `.sign()`
     """
 
     def __init__(
@@ -38,17 +47,6 @@ class JwtSigner:
         default_lifetime: int = 60,
         default_leeway: Optional[int] = None,
     ):
-        """Initialize a `JwtSigner`.
-
-        Args:
-            issuer: the issuer string to use as `ìss` claim for signed tokens.
-            jwk: the private Jwk to use to sign tokens.
-            alg: the signing alg to use to sign tokens.
-            default_lifetime: the default lifetime, in seconds, to use for claim `exp`. This can be overridden
-        when calling `.sign()`
-            default_leeway: the default leeway, in seconds, to use for claim `nbf`. If None, no `nbf` claim is
-        included. This can be overridden when calling `.sign()`
-        """
         self.issuer = issuer
         self.jwk = jwk
         self.alg = jwk.alg or alg

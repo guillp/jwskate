@@ -26,9 +26,9 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.7,<4.0"
 cryptography = ">=3.4"
-binapy = ">=0.5"
 typing-extensions = "^4.2.0"
 "backports.cached-property" = "^1.0.1"
+binapy = "^0.6.0"
 
 [tool.poetry.dev-dependencies]
 black  = ">=22"

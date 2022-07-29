@@ -29,14 +29,12 @@ class SignedJwt(Jwt):
     A signed JWT contains a JSON object as payload, which represents claims.
 
     To sign a JWT, use [Jwt.sign][jwskate.jwt.Jwt.sign].
+
+    Args:
+        value: the token value.
     """
 
     def __init__(self, value: Union[bytes, str]) -> None:
-        """Initialize a `SignedJwt`, from its compact serialized value.
-
-        Args:
-            value: the token value.
-        """
         super().__init__(value)
 
         if self.value.count(b".") != 2:

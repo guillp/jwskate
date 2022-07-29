@@ -7,16 +7,14 @@ class BaseCompactToken:
     """Base class for all tokens in Compact representation.
 
     This includes JWS, JWE, and JWT tokens.
+
+    Args:
+        value: the string or bytes representation of this JWS/JWE/JWT
+        max_size: if the JWT length is larger than this value, raise a `ValueError`.
+            This is to avoid JSON deserialization vulnerabilities.
     """
 
     def __init__(self, value: Union[bytes, str], max_size: int = 16 * 1024):
-        """Initialize a JW{S,E,T} from its string representation.
-
-        Args:
-            value: the string or bytes representation of this Jwt
-            max_size: if the JWT length is larger than this value, raise a `ValueError`.
-                This is to avoid JSON deserialization vulnerabilities.
-        """
         if len(value) > max_size:
             raise ValueError(
                 f"This JWT size exceeds {max_size} bytes, which is abnormally big. "

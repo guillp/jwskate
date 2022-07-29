@@ -13,6 +13,14 @@ class JwkSet(BaseJsonDict):
     that you can do with a dict. In addition, it provides a few helpers
     methods to get the keys, add or remove keys, and verify signatures
     using keys from this set.
+
+    - a `dict` from the parsed JSON object representing this JwkSet (in paramter `jwks`)
+    - a list of `Jwk` (in parameter `keys`
+    - nothing, to initialize an empty JwkSet
+
+    Args:
+        jwks: a dict, containing the JwkSet, parsed as a JSON object.
+        keys: a list of `Jwk`, that will be added to this JwkSet
     """
 
     def __init__(
@@ -20,16 +28,6 @@ class JwkSet(BaseJsonDict):
         jwks: Optional[Dict[str, Any]] = None,
         keys: Optional[Iterable[Jwk]] = None,
     ):
-        """Initialize a JwkSet. Multiple inputs can be provided.
-
-        - a `dict` from the parsed JSON object representing this JwkSet (in paramter `jwks`)
-        - a list of `Jwk` (in parameter `keys`
-        - nothing, to initialize an empty JwkSet
-
-        Args:
-            jwks: a dict, containing the JwkSet, parsed as a JSON object.
-            keys: a list of Jwk, that will be added to this JwkSet
-        """
         if jwks is None and keys is None:
             keys = []
 

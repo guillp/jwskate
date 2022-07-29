@@ -11,17 +11,18 @@ from .aeskw import A128KW, A192KW, A256KW, BaseAesKeyWrap
 
 
 class BasePbes2(BaseKeyManagementAlg):
-    """Base class for PBES2 based algorithms."""
+    """Base class for PBES2 based algorithms.
+
+    PBES2 derives a cryptographic key from a human-provided password.
+
+    Args:
+        password: the encryption/decryption password to use
+    """
 
     kwalg: Type[BaseAesKeyWrap]
     hash_alg: hashes.HashAlgorithm
 
     def __init__(self, password: Union[bytes, str]):
-        """Initialize this alg with the given password.
-
-        Args:
-            password: the encryption/decryption password to use
-        """
         if isinstance(password, str):
             password = password.encode("utf-8")
         self.password = password

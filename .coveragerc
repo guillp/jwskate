@@ -1,6 +1,6 @@
 [run]
 # uncomment the following to omit files during running
-omit = jwskate/utils.py
+omit = tests/
 [report]
 exclude_lines =
     pragma: no cover

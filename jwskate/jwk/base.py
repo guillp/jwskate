@@ -695,16 +695,28 @@ class Jwk(BaseJsonDict):
         raise NotImplementedError
 
     @classmethod
-    def from_pem_key(cls, data: bytes, password: Optional[bytes] = None) -> Jwk:
+    def from_pem_key(
+        cls,
+        data: Union[bytes, str],
+        password: Union[bytes, str, None] = None,
+        **kwargs: Any,
+    ) -> Jwk:
         """Load a Jwk from a PEM encoded private or public key.
 
         Args:
           data: the PEM encoded data to load
           password: the password to decrypt the PEM, if required
+          **kwargs: additional members to include in the Jwk (e.g. kid, use)
 
         Returns:
             a Jwk instance from the loaded key
         """
+        if isinstance(data, str):
+            data = data.encode()
+
+        if isinstance(password, str):
+            password = password.encode()
+
         try:
             cryptography_key = serialization.load_pem_private_key(data, password)
         except Exception:
@@ -720,7 +732,7 @@ class Jwk(BaseJsonDict):
                     "The provided data is not a private or a public PEM encoded key."
                 )
 
-        return cls.from_cryptography_key(cryptography_key)
+        return cls.from_cryptography_key(cryptography_key, **kwargs)
 
     def to_pem_key(self, password: Optional[bytes] = None) -> str:
         """Serialize this key to PEM format.

@@ -22,14 +22,13 @@ class InvalidJwe(ValueError):
 
 
 class JweCompact(BaseCompactToken):
-    """Represents a Json Web Encryption object, as defined in RFC7516."""
+    """Represents a Json Web Encryption object, in compact representation, as defined in RFC7516.
+
+    Args:
+        value: the compact representation for this Jwe
+    """
 
     def __init__(self, value: Union[bytes, str]):
-        """Initialize a Jwe based on its compact representation.
-
-        Args:
-            value: the compact representation for this Jwe
-        """
         super().__init__(value)
 
         if self.value.count(b".") != 4:

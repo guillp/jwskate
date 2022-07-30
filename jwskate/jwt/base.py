@@ -73,7 +73,8 @@ class Jwt(BaseCompactToken):
         if alg is None:
             raise ValueError("a signing alg is required")
 
-        headers = dict(extra_headers or {}, alg=alg)
+        extra_headers = extra_headers or {}
+        headers = dict(alg=alg, **extra_headers)
         if kid:
             headers["kid"] = kid
 

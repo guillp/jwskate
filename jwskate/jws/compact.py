@@ -21,14 +21,13 @@ class InvalidJws(ValueError):
 
 
 class JwsCompact(BaseCompactToken):
-    """Represents a Json Web Signature (JWS), using compact serialization, as defined in RFC7515."""
+    """Represents a Json Web Signature (JWS), using compact serialization, as defined in RFC7515.
+
+    Args:
+        value: the JWS token value
+    """
 
     def __init__(self, value: Union[bytes, str]):
-        """Initialize a Jws, from its compact representation.
-
-        Args:
-            value: the JWS token value
-        """
         super().__init__(value)
 
         header, payload, signature = self.split(self.value)

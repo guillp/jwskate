@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
@@ -70,6 +68,10 @@ class Jwk(BaseJsonDict):
     subclasses of `Jwk` for each specific Key Type, but you shouldn't
     have to use the subclasses directly since they all present a common
     interface.
+
+    Args:
+        params: a dict with the parsed Jwk parameters, or a `cryptography key`, or another `Jwk`
+        include_kid_thumbprint: if `True` (default), and there is no kid in the provided params, generate a kid based on the key thumbprint
     """
 
     subclasses: Dict[str, Type[Jwk]] = {}
@@ -89,6 +91,17 @@ class Jwk(BaseJsonDict):
     SIGNATURE_ALGORITHMS: Mapping[str, Type[BaseSignatureAlg]] = {}
     KEY_MANAGEMENT_ALGORITHMS: Mapping[str, Type[BaseKeyManagementAlg]] = {}
     ENCRYPTION_ALGORITHMS: Mapping[str, Type[BaseAESEncryptionAlg]] = {}
+
+    IANA_HASH_FUNCTION_NAMES: Mapping[str, str] = {
+        # IANA registered names to binapy hash name
+        "sha-1": "sha1",
+        "sha-224": "sha224",
+        "sha-256": "sha256",
+        "sha-384": "sha384",
+        "sha-512": "sha512",
+        "shake128": "shake128",
+        "shake256": "shake256",
+    }
 
     def __init_subclass__(cls) -> None:
         """Automatically add subclasses to the registry.
@@ -134,14 +147,6 @@ class Jwk(BaseJsonDict):
     def __init__(
         self, params: Union[Dict[str, Any], Any], include_kid_thumbprint: bool = False
     ):
-        """Initialize a Jwk.
-
-        This accepts a `dict` with the parsed Jwk contents, and an optional kid if it isn't already part of the dict. If no `kid` is supplied and `include_kid_thumbprint`, a default kid is generated based on the key thumbprint (defined in RFC7638).
-
-        Args:
-            params: a dict with the parsed Jwk parameters
-            include_kid_thumbprint: if `True` (default), and there is no kid in the provided params, generate a kid based on the key thumbprint
-        """
         if isinstance(
             params, dict
         ):  # this is to avoid double init due to the __new__ above
@@ -198,7 +203,7 @@ class Jwk(BaseJsonDict):
             raise RuntimeError("JWK key attributes cannot be modified.")
         super().__setitem__(key, value)
 
-    def thumbprint(self, hashalg: str = "SHA256") -> str:
+    def thumbprint(self, hashalg: str = "sha-256") -> str:
         """Return the key thumbprint as specified by RFC 7638.
 
         Args:
@@ -207,16 +212,34 @@ class Jwk(BaseJsonDict):
         Returns:
             the calculated thumbprint
         """
-        digest = hashlib.new(hashalg)
+        alg = self.IANA_HASH_FUNCTION_NAMES.get(hashalg)
+        if not alg:
+            raise ValueError(f"Unsupported hash alg {hashalg}")
 
         t = {"kty": self.get("kty")}
         for name, param in self.PARAMS.items():
             if param.is_required and not param.is_private:
                 t[name] = self.get(name)
 
-        intermediary = json.dumps(t, separators=(",", ":"), sort_keys=True)
-        digest.update(intermediary.encode("utf8"))
-        return BinaPy(digest.digest()).to("b64u").ascii()
+        return (
+            BinaPy.serialize_to("json", t, separators=(",", ":"), sort_keys=True)
+            .to(alg)
+            .to("b64u")
+            .ascii()
+        )
+
+    def thumbprint_uri(self, hashalg: str = "sha-256") -> str:
+        """Returns the JWK thumbprint URI for this key.
+
+        Args:
+            hashalg: the IANA registered name for the hash alg to use
+
+        Returns:
+             the JWK thumbprint uri for this Jwk
+        """
+        return (
+            f"urn:ietf:params:oauth:jwk-thumbprint:{hashalg}:{self.thumbprint(hashalg)}"
+        )
 
     @property
     def kty(self) -> str:

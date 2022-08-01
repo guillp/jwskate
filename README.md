@@ -34,7 +34,6 @@ The result of this print JWK will look like this:
 
 ```
 { 'kty': 'RSA',
-  'alg': 'RS256',
   'n': '...',
   'e': 'AQAB',
   'd': '...',
@@ -43,7 +42,8 @@ The result of this print JWK will look like this:
   'dp': '...',
   'dq': '...',
   'qi': '...',
-  'kid': 'my_key'
+  'kid': 'my_key',
+  'alg': 'RS256',
 }
 ```
 

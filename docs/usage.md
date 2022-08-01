@@ -1,6 +1,6 @@
 # Usage
 
-To use `jwskate` in a project
+To use `jwskate` in a project, you can import all exposed objects from the root module:
 
 ```
 from jwskate import *
@@ -265,7 +265,7 @@ assert not jwk.verify(
 
 ## Encrypting and Decrypting data
 
-Encryption or decryption require a symmetric key, which translates to an instance of `SymmetricJwk`, with kty
+Encryption or decryption require a symmetric key, which translates to an instance of `SymmetricJwk`, with `kty='oct'`.
 You can encrypt and decrypt arbitrary data with a Jwk instance, using the `encrypt()` and `decrypt()` methods:
 
 ```python
@@ -273,11 +273,11 @@ from jwskate import Jwk
 
 data = b"Encryption is easy!"
 alg = "A256GCM"
-jwk = Jwk.generate_for_kty("oct", key_size=256)
+jwk = Jwk.generate_for_kty("oct", key_size=256, alg=alg)
 
-ciphertext, iv, tag = jwk.encrypt(data, alg=alg)
+ciphertext, iv, tag = jwk.encrypt(data)
 
-assert jwk.decrypt(ciphertext, iv=iv, alg=alg) == data
+assert jwk.decrypt(ciphertext, iv=iv, tag=tag) == data
 ```
 
 ### Authenticated encryption
@@ -290,11 +290,11 @@ from jwskate import Jwk
 data = b"Authenticated Encryption is easy!"
 alg = "A256GCM"
 aad = b"This is my auth tag"
-jwk = Jwk.generate_for_kty("oct", key_size=256)
+jwk = Jwk.generate_for_kty("oct", key_size=256, alg=alg)
 
-ciphertext, iv, tag = jwk.encrypt(data, aad=aad, alg=alg)
+ciphertext, iv, tag = jwk.encrypt(data, aad=aad)
 
-assert jwk.decrypt(ciphertext, iv=iv, aad=aad, alg=alg) == data
+assert jwk.decrypt(ciphertext, iv=iv, tag=tag, aad=aad) == data
 ```
 
 ## Key Management
@@ -365,6 +365,8 @@ message, and the eventual extra headers depending on the Key Management algorith
 You can then use that CEK to decrypt the received message.
 
 ```python
+from jwskate import Jwk
+
 # reusing the variables from above
 enc_alg = "A256GCM"
 km_alg = "ECDH-ES"
@@ -378,13 +380,15 @@ extra_headers = {
         "y": "nVXtV6YcU1IsT8qL9zAbvMrvXvhdEvMoeVfDeF-bsRs",
     }
 }
-recipient_private_jwk = {
-    "kty": "EC",
-    "crv": "P-256",
-    "x": "10QvcmuPmErnHHnrnQ7kVV-Mm_jA4QUG5W9t81jAVyE",
-    "y": "Vk3Y4_qH09pm8rCLl_htf321fK62qbz6jxLlk0Y3Qe4",
-    "d": "Y4vvC9He6beJi3lKYdVgvvUS9zUWz_YnV0xKT90-Z5E",
-}
+recipient_private_jwk = Jwk(
+    {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "10QvcmuPmErnHHnrnQ7kVV-Mm_jA4QUG5W9t81jAVyE",
+        "y": "Vk3Y4_qH09pm8rCLl_htf321fK62qbz6jxLlk0Y3Qe4",
+        "d": "Y4vvC9He6beJi3lKYdVgvvUS9zUWz_YnV0xKT90-Z5E",
+    }
+)
 
 encrypted_message = b"\xb5J\x16\x08\x82Xp\x0f,\x0eu\xe5\xd6\xa6y\xe0J\xae\xcbu\xf8B\xbd"
 iv = b'K"H\xf3@\tt\\\xc78\xc2D'
@@ -439,7 +443,17 @@ jws.signature
 To verify a Jws signature, you need the matching public key:
 
 ```python
-jws = "<same value as above>"
+from jwskate import JwsCompact
+
+jws = JwsCompact(
+    "eyJhbGciOiJSUzI1NiIsImtpZCI6IkpXSy1BQkNEIn0."
+    "SGVsbG8gV29ybGQh."
+    "1eucS9ZaTnAJyfVNhxLJ_phFN1rexm0l-nIXWBjUImdS29z55BuxH6NjGpltSXKrgYxYQxqGCs"
+    "GIxlSVoIEhKVdhE1Vd9NPJRyw7I4zBRdwVvcqMRODMqDxCiqbDQ_5bI5jAqFEJAFCXZo2T4ixl"
+    "xs-2eXtmSEp6vX51Tg1pvicM5_YrKfS8Jn3lt9xW5RaNKUJ94KVLlov_IncFsh2bg5jdo1SEoU"
+    "xlB2II0JdlfCsgHohJd58eWjFToeNtH1eiXGeZOHblMLz5a5AhY8jY3C424-tggj6BK6fwpedd"
+    "dFD3mtFFTNw6KT-2EgTeOlEA09pQqW5hosCj2duAlR-FQQ"
+)
 public_jwk = {
     "kty": "RSA",
     "kid": "JWK-ABCD",

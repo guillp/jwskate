@@ -3,7 +3,16 @@ from typing import Union
 import pytest
 
 import jwskate.jwa
-from jwskate import P_521, ECJwk, InvalidJwe, JweCompact, Jwk, RSAJwk, SymmetricJwk
+from jwskate import (
+    P_521,
+    ECJwk,
+    InvalidJwe,
+    JweCompact,
+    Jwk,
+    RSAJwk,
+    SymmetricJwk,
+    UnsupportedAlg,
+)
 
 JWCRYPTO_UNSUPPORTED_ALGS = ["RSA-OAEP-384", "RSA-OAEP-512"]
 jwskate.jwa.RsaEsPcks1v1_5.read_only = False  # turn off read only for that alg
@@ -642,3 +651,78 @@ def test_invalid_enc_header() -> None:
         JweCompact(
             """eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6eyJmb28iOiJiYXIifX0.OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGeipsEdY3mx_etLbbWSrFr05kLzcSr4qKAq7YN7e9jwQRb23nfa6c9d-StnImGyFDbSv04uVuxIp5Zms1gNxKKK2Da14B8S4rzVRltdYwam_lDp5XnZAYpQdb76FdIKLaVmqgfwX7XWRxv2322i-vDxRfqNzo_tETKzpVLzfiwQyeyPGLBIO56YJ7eObdv0je81860ppamavo35UgoRdbYaBcoh9QcfylQr66oc6vFWXRcZ_ZT2LawVCWTIy3brGPi6UklfCpIMfIjf7iGdXKHzg.48V1_ALb6US04U3b.5eym8TW_c8SuK0ltJ3rpYIzOeDQz7TALvtu6UG9oMo4vpzs9tX_EFShS8iB7j6jiSdiwkIr3ajwQzaBtQD_A.XFBoMYUZodetZdvTiFvSkQ"""
         )
+
+
+def test_invalid_password_encryption() -> None:
+    with pytest.raises(
+        UnsupportedAlg,
+        match=r"^Unsupported password-based encryption algorithm 'foo'\. Value must be one of \[.*\]\.$",
+    ):
+        JweCompact.encrypt_with_password(
+            b"payload", "password", alg="foo", enc="A128GCM"
+        )
+
+    with pytest.raises(ValueError, match="must be a positive integer"):
+        JweCompact.encrypt_with_password(
+            b"payload", "password", alg="PBES2-HS256+A128KW", enc="A128GCM", count=-1
+        )
+
+    with pytest.warns(match="PBES2 iteration count should be > 1000"):
+        assert isinstance(
+            JweCompact.encrypt_with_password(
+                b"payload",
+                "password",
+                alg="PBES2-HS256+A128KW",
+                enc="A128GCM",
+                count=50,
+            ),
+            JweCompact,
+        )
+
+    with pytest.raises(ValueError, match="key size"):
+        JweCompact.encrypt_with_password(
+            b"payload",
+            "password",
+            alg="PBES2-HS256+A128KW",
+            enc="A128GCM",
+            count=50,
+            cek=b"foo" * 8,
+        )
+
+    jwe_invalid_alg = JweCompact(
+        "eyJhbGciOiJmb28iLCJlbmMiOiJBMTI4R0NNIiwicDJzIjoiZHR0Nlk0SE1DeC1DYWlFMyIsInAyYyI6NTB9.KB5nuVzZJ_DAw5VhvDjuvXMYe-tVDZC_.fQbPcHuNP68owByZ.ca5JnpoJVg.G1atlPo0sDP7E4VOR3dD5w"
+    )
+    assert jwe_invalid_alg.alg == "foo"
+    with pytest.raises(
+        UnsupportedAlg,
+        match=r"^Unsupported password-based encryption algorithm 'foo'\. Value must be one of \[.*\]\.$",
+    ):
+        jwe_invalid_alg.decrypt_with_password("password")
+
+    jwe_missing_p2s = JweCompact(
+        "eyJhbGciOiJQQkVTMi1IUzI1NitBMTI4S1ciLCJlbmMiOiJBMTI4R0NNIiwicDJjIjo1MH0.KB5nuVzZJ_DAw5VhvDjuvXMYe-tVDZC_.fQbPcHuNP68owByZ.ca5JnpoJVg.G1atlPo0sDP7E4VOR3dD5w"
+    )
+    assert jwe_missing_p2s.headers.get("p2s") is None
+    with pytest.raises(
+        InvalidJwe, match=r"Invalid JWE: a required 'p2s' header is missing."
+    ):
+        jwe_missing_p2s.decrypt_with_password("password")
+
+    jwe_missing_p2c = JweCompact(
+        "eyJhbGciOiJQQkVTMi1IUzI1NitBMTI4S1ciLCJlbmMiOiJBMTI4R0NNIiwicDJzIjoiZHR0Nlk0SE1DeC1DYWlFMyJ9.KB5nuVzZJ_DAw5VhvDjuvXMYe-tVDZC_.fQbPcHuNP68owByZ.ca5JnpoJVg.G1atlPo0sDP7E4VOR3dD5w"
+    )
+    assert jwe_missing_p2c.headers.get("p2c") is None
+    with pytest.raises(
+        InvalidJwe, match=r"Invalid JWE: a required 'p2c' header is missing."
+    ):
+        jwe_missing_p2c.decrypt_with_password("password")
+
+    jwe_invalid_p2c = JweCompact(
+        "eyJhbGciOiJQQkVTMi1IUzI1NitBMTI4S1ciLCJlbmMiOiJBMTI4R0NNIiwicDJzIjoiZHR0Nlk0SE1DeC1DYWlFMyIsInAyYyI6ImZvbyJ9.KB5nuVzZJ_DAw5VhvDjuvXMYe-tVDZC_.fQbPcHuNP68owByZ.ca5JnpoJVg.G1atlPo0sDP7E4VOR3dD5w"
+    )
+    assert jwe_invalid_p2c.headers.get("p2c") == "foo"
+    with pytest.raises(
+        InvalidJwe,
+        match=r"Invalid JWE: invalid value for the 'p2c' header, must be a positive integer.",
+    ):
+        jwe_invalid_p2c.decrypt_with_password("password")

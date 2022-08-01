@@ -125,13 +125,13 @@ def test_jwe_decrypt() -> None:
 
 
 def test_invalid_jwe() -> None:
-    with pytest.raises(InvalidJwe):
+    with pytest.raises(InvalidJwe, match="Invalid JWE: .*$"):
         JweCompact("foo")
-    with pytest.raises(InvalidJwe):
-        JweCompact("foo!.foo!.foo!.foo!")
-    with pytest.raises(InvalidJwe):
-        JweCompact("eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ.foo!.foo!.foo!")
-    with pytest.raises(InvalidJwe):
+    with pytest.raises(InvalidJwe, match="Invalid JWE header: .*$"):
+        JweCompact("foo!.foo!.foo!.foo!.foo!")
+    with pytest.raises(InvalidJwe, match="Invalid JWE CEK: .*$"):
+        JweCompact("eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ.foo!.foo!.foo!.foo!")
+    with pytest.raises(InvalidJwe, match="Invalid JWE IV: .*$"):
         JweCompact(
             "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ."
             "OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGe"
@@ -140,9 +140,22 @@ def test_invalid_jwe() -> None:
             "mqgfwX7XWRxv2322i-vDxRfqNzo_tETKzpVLzfiwQyeyPGLBIO56YJ7eObdv0je8"
             "1860ppamavo35UgoRdbYaBcoh9QcfylQr66oc6vFWXRcZ_ZT2LawVCWTIy3brGPi"
             "6UklfCpIMfIjf7iGdXKHzg."
-            "foo!.foo!"
+            "foo!.foo!.foo!"
         )
-    with pytest.raises(InvalidJwe):
+    with pytest.raises(InvalidJwe, match="Invalid JWE ciphertext: .*$"):
+        JweCompact(
+            "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ."
+            "OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGe"
+            "ipsEdY3mx_etLbbWSrFr05kLzcSr4qKAq7YN7e9jwQRb23nfa6c9d-StnImGyFDb"
+            "Sv04uVuxIp5Zms1gNxKKK2Da14B8S4rzVRltdYwam_lDp5XnZAYpQdb76FdIKLaV"
+            "mqgfwX7XWRxv2322i-vDxRfqNzo_tETKzpVLzfiwQyeyPGLBIO56YJ7eObdv0je8"
+            "1860ppamavo35UgoRdbYaBcoh9QcfylQr66oc6vFWXRcZ_ZT2LawVCWTIy3brGPi"
+            "6UklfCpIMfIjf7iGdXKHzg."
+            "48V1_ALb6US04U3b."
+            "foo!."
+            "foo!"
+        )
+    with pytest.raises(InvalidJwe, match="Invalid JWE authentication tag: .*$"):
         JweCompact(
             "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ."
             "OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGe"
@@ -154,7 +167,7 @@ def test_invalid_jwe() -> None:
             "48V1_ALb6US04U3b."
             "5eym8TW_c8SuK0ltJ3rpYIzOeDQz7TALvtu6UG9oMo4vpzs9tX_EFShS8iB7j6ji"
             "SdiwkIr3ajwQzaBtQD_A."
-            ".foo!"
+            "foo!"
         )
 
 
@@ -496,6 +509,7 @@ def encrypted_jwe(
     else:
         assert False, "Unsupported encryption key type"
     assert isinstance(jwe, JweCompact)
+    assert jwe.enc == encryption_alg
     return jwe
 
 
@@ -621,3 +635,10 @@ def test_decrypt_from_jwcrypto(
         assert (
             False
         ), f"Decryption by JWSkate failed for {jwcrypto_encrypted_jwe}, CEK={cek}"
+
+
+def test_invalid_enc_header() -> None:
+    with pytest.raises(InvalidJwe, match="Invalid JWE header: .*enc.*$"):
+        JweCompact(
+            """eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6eyJmb28iOiJiYXIifX0.OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGeipsEdY3mx_etLbbWSrFr05kLzcSr4qKAq7YN7e9jwQRb23nfa6c9d-StnImGyFDbSv04uVuxIp5Zms1gNxKKK2Da14B8S4rzVRltdYwam_lDp5XnZAYpQdb76FdIKLaVmqgfwX7XWRxv2322i-vDxRfqNzo_tETKzpVLzfiwQyeyPGLBIO56YJ7eObdv0je81860ppamavo35UgoRdbYaBcoh9QcfylQr66oc6vFWXRcZ_ZT2LawVCWTIy3brGPi6UklfCpIMfIjf7iGdXKHzg.48V1_ALb6US04U3b.5eym8TW_c8SuK0ltJ3rpYIzOeDQz7TALvtu6UG9oMo4vpzs9tX_EFShS8iB7j6jiSdiwkIr3ajwQzaBtQD_A.XFBoMYUZodetZdvTiFvSkQ"""
+        )

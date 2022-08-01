@@ -33,30 +33,36 @@ class JweCompact(BaseCompactToken):
 
         if self.value.count(b".") != 4:
             raise InvalidJwe(
-                "A JWE must contain a header, an encrypted key, an IV, a ciphertext and an authentication tag, separated by dots"
+                "Invalid JWE: a JWE must contain a header, an encrypted key, an IV, a ciphertext and an authentication tag, separated by dots."
             )
 
         header, cek, iv, ciphertext, auth_tag = self.value.split(b".")
         try:
-            self.headers = BinaPy(header).decode_from("b64u").parse_from("json")
+            headers = BinaPy(header).decode_from("b64u").parse_from("json")
+            enc = headers.get("enc")
+            if enc is None or not isinstance(enc, str):
+                raise InvalidJwe(
+                    "Invalid JWE header: this JWE doesn't have a valid 'enc' header."
+                )
+            self.headers = headers
             self.additional_authenticated_data = header
         except ValueError:
             raise InvalidJwe(
-                "Invalid JWE header: it must be a Base64URL-encoded JSON object"
+                "Invalid JWE header: it must be a Base64URL-encoded JSON object."
             )
 
         try:
             self.wrapped_cek = BinaPy(cek).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
-                "Invalid JWE cek: it must be a Base64URL-encoded binary data (bytes)"
+                "Invalid JWE CEK: it must be a Base64URL-encoded binary data (bytes)."
             )
 
         try:
             self.initialization_vector = BinaPy(iv).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
-                "Invalid JWE iv: it must be a Base64URL-encoded binary data (bytes)"
+                "Invalid JWE IV: it must be a Base64URL-encoded binary data (bytes)"
             )
 
         try:
@@ -119,10 +125,8 @@ class JweCompact(BaseCompactToken):
         Raises:
             AttributeError: if there is no enc header or it is not a string
         """
-        enc = self.get_header("enc")
-        if enc is None or not isinstance(enc, str):
-            raise AttributeError("This JWE doesn't have a valid 'enc' header")
-        return enc
+        return self.get_header("enc")  # type: ignore[no-any-return]
+        # header has been checked at init time
 
     @classmethod
     def encrypt(

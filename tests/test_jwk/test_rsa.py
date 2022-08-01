@@ -1,6 +1,7 @@
 import pytest
+from binapy import BinaPy
 
-from jwskate import Jwk, RSAJwk
+from jwskate import InvalidJwk, Jwk, RSAJwk
 
 
 @pytest.fixture(scope="session")
@@ -107,3 +108,18 @@ def test_generate() -> None:
     assert "dp" not in public_jwk
     assert "dq" not in public_jwk
     assert "qi" not in public_jwk
+
+
+def test_invalid_rsa_jwk(rsa_private_jwk: Jwk) -> None:
+    invalid_jwk = dict(rsa_private_jwk)
+    invalid_jwk["d"] = BinaPy.from_int(rsa_private_jwk.private_exponent + 1).to("b64u")
+    with pytest.raises(InvalidJwk):
+        Jwk(invalid_jwk)
+
+
+def test_thumbprint(rsa_private_jwk: Jwk) -> None:
+    assert rsa_private_jwk.thumbprint() == "Qfq9DOLKNRyptzTJBhCFlzccbA0ac7Ag9GVFL11GAfM"
+    assert (
+        rsa_private_jwk.thumbprint_uri()
+        == "urn:ietf:params:oauth:jwk-thumbprint:sha-256:Qfq9DOLKNRyptzTJBhCFlzccbA0ac7Ag9GVFL11GAfM"
+    )

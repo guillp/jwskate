@@ -1,5 +1,7 @@
 """This module implement base classes used by Signature, Encryption and Key Management JWA algorithms."""
 
+from __future__ import annotations
+
 from contextlib import contextmanager
 from typing import Generic, Iterator, Optional, Tuple, Type, TypeVar, Union
 
@@ -33,14 +35,13 @@ class BaseAlg:
 
 
 class BaseSymmetricAlg(BaseAlg):
-    """Base class for Symmetric algorithms (using a raw bytes key)."""
+    """Base class for Symmetric algorithms (using a raw bytes key).
+
+    Args:
+        key: the key to use for cryptographic operations
+    """
 
     def __init__(self, key: bytes):
-        """Initialize a Symmetric alg with a given key.
-
-        Args:
-            key: the key to use for cryptographic operations
-        """
         self.check_key(key)
         self.key = key
 
@@ -87,17 +88,15 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
     The available cryptographic operations will depend on the alg and
     the provided key type.
+
+    Args:
+        key: the key to use.
     """
 
     private_key_class: Union[Type[Kpriv], Tuple[Type[Kpriv], ...]]
     public_key_class: Union[Type[Kpub], Tuple[Type[Kpub], ...]]
 
     def __init__(self, key: Union[Kpriv, Kpub]):
-        """Initialise an Asymmetric alg with either a private or a public key from the `cryptography` lib.
-
-        Args:
-            key: the key to use.
-        """
         self.check_key(key)
         self.key = key
 
@@ -261,6 +260,15 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
           the deciphered data
         """
         raise NotImplementedError
+
+    @classmethod
+    def init_random_key(cls) -> BaseAESEncryptionAlg:
+        """Initialize this alg with a random key.
+
+        Returns:
+            a subclass of BaseAESEncryptionAlg initialized with a randomly generated key
+        """
+        return cls(cls.generate_key())
 
 
 class BaseKeyManagementAlg(BaseAlg):

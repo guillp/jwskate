@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
@@ -70,6 +68,10 @@ class Jwk(BaseJsonDict):
     subclasses of `Jwk` for each specific Key Type, but you shouldn't
     have to use the subclasses directly since they all present a common
     interface.
+
+    Args:
+        params: a dict with the parsed Jwk parameters, or a `cryptography key`, or another `Jwk`
+        include_kid_thumbprint: if `True` (default), and there is no kid in the provided params, generate a kid based on the key thumbprint
     """
 
     subclasses: Dict[str, Type[Jwk]] = {}
@@ -89,6 +91,17 @@ class Jwk(BaseJsonDict):
     SIGNATURE_ALGORITHMS: Mapping[str, Type[BaseSignatureAlg]] = {}
     KEY_MANAGEMENT_ALGORITHMS: Mapping[str, Type[BaseKeyManagementAlg]] = {}
     ENCRYPTION_ALGORITHMS: Mapping[str, Type[BaseAESEncryptionAlg]] = {}
+
+    IANA_HASH_FUNCTION_NAMES: Mapping[str, str] = {
+        # IANA registered names to binapy hash name
+        "sha-1": "sha1",
+        "sha-224": "sha224",
+        "sha-256": "sha256",
+        "sha-384": "sha384",
+        "sha-512": "sha512",
+        "shake128": "shake128",
+        "shake256": "shake256",
+    }
 
     def __init_subclass__(cls) -> None:
         """Automatically add subclasses to the registry.
@@ -119,11 +132,11 @@ class Jwk(BaseJsonDict):
             if isinstance(key, dict):
                 kty: Optional[str] = key.get("kty")
                 if kty is None:
-                    raise ValueError("A Json Web Key must have a Key Type (kty)")
+                    raise InvalidJwk("A Json Web Key must have a Key Type (kty)")
 
                 subclass = Jwk.subclasses.get(kty)
                 if subclass is None:
-                    raise ValueError("Unsupported Key Type", kty)
+                    raise InvalidJwk("Unsupported Key Type", kty)
                 return super().__new__(subclass)
             elif isinstance(key, str):
                 return cls.from_json(key)
@@ -134,14 +147,6 @@ class Jwk(BaseJsonDict):
     def __init__(
         self, params: Union[Dict[str, Any], Any], include_kid_thumbprint: bool = False
     ):
-        """Initialize a Jwk.
-
-        This accepts a `dict` with the parsed Jwk contents, and an optional kid if it isn't already part of the dict. If no `kid` is supplied and `include_kid_thumbprint`, a default kid is generated based on the key thumbprint (defined in RFC7638).
-
-        Args:
-            params: a dict with the parsed Jwk parameters
-            include_kid_thumbprint: if `True` (default), and there is no kid in the provided params, generate a kid based on the key thumbprint
-        """
         if isinstance(
             params, dict
         ):  # this is to avoid double init due to the __new__ above
@@ -198,7 +203,7 @@ class Jwk(BaseJsonDict):
             raise RuntimeError("JWK key attributes cannot be modified.")
         super().__setitem__(key, value)
 
-    def thumbprint(self, hashalg: str = "SHA256") -> str:
+    def thumbprint(self, hashalg: str = "sha-256") -> str:
         """Return the key thumbprint as specified by RFC 7638.
 
         Args:
@@ -207,16 +212,34 @@ class Jwk(BaseJsonDict):
         Returns:
             the calculated thumbprint
         """
-        digest = hashlib.new(hashalg)
+        alg = self.IANA_HASH_FUNCTION_NAMES.get(hashalg)
+        if not alg:
+            raise ValueError(f"Unsupported hash alg {hashalg}")
 
         t = {"kty": self.get("kty")}
         for name, param in self.PARAMS.items():
             if param.is_required and not param.is_private:
                 t[name] = self.get(name)
 
-        intermediary = json.dumps(t, separators=(",", ":"), sort_keys=True)
-        digest.update(intermediary.encode("utf8"))
-        return BinaPy(digest.digest()).to("b64u").ascii()
+        return (
+            BinaPy.serialize_to("json", t, separators=(",", ":"), sort_keys=True)
+            .to(alg)
+            .to("b64u")
+            .ascii()
+        )
+
+    def thumbprint_uri(self, hashalg: str = "sha-256") -> str:
+        """Returns the JWK thumbprint URI for this key.
+
+        Args:
+            hashalg: the IANA registered name for the hash alg to use
+
+        Returns:
+             the JWK thumbprint uri for this Jwk
+        """
+        return (
+            f"urn:ietf:params:oauth:jwk-thumbprint:{hashalg}:{self.thumbprint(hashalg)}"
+        )
 
     @property
     def kty(self) -> str:
@@ -276,7 +299,7 @@ class Jwk(BaseJsonDict):
                         f"Parameter {param.description} ({name}) must be a Base64URL-encoded value"
                     )
             elif param.kind == "unsupported":
-                if value is not None:
+                if value is not None:  # pragma: no cover
                     raise InvalidJwk(f"Unsupported JWK param '{name}'")
             elif param.kind == "name":
                 pass
@@ -473,9 +496,9 @@ class Jwk(BaseJsonDict):
 
     def sender_key(
         self,
-        *,
         enc: str,
-        alg: Optional[str],
+        *,
+        alg: Optional[str] = None,
         cek: Optional[bytes] = None,
         epk: Optional[Jwk] = None,
         **headers: Any,
@@ -519,6 +542,7 @@ class Jwk(BaseJsonDict):
                 encalg.check_key(cek)
             else:
                 cek = encalg.generate_key()
+            assert cek
             wrapped_cek = rsa.wrap_key(cek)
 
         elif issubclass(keyalg, EcdhEs):
@@ -530,8 +554,9 @@ class Jwk(BaseJsonDict):
                     encalg.check_key(cek)
                 else:
                     cek = encalg.generate_key()
+                assert cek
                 wrapped_cek = ecdh.wrap_key_with_epk(
-                    cek, epk.cryptography_key, alg=alg, **headers
+                    cek, epk.cryptography_key, alg=keyalg.name, **headers
                 )
             else:
                 cek = ecdh.sender_key(
@@ -547,6 +572,7 @@ class Jwk(BaseJsonDict):
                 encalg.check_key(cek)
             else:
                 cek = encalg.generate_key()
+            assert cek
             wrapped_cek = aes.wrap_key(cek)
 
         elif issubclass(keyalg, BaseAesGcmKeyWrap):
@@ -555,6 +581,7 @@ class Jwk(BaseJsonDict):
                 encalg.check_key(cek)
             else:
                 cek = encalg.generate_key()
+            assert cek
             iv = aesgcm.generate_iv()
             wrapped_cek, tag = aesgcm.wrap_key(cek, iv=iv)
             cek_headers = {
@@ -572,15 +599,15 @@ class Jwk(BaseJsonDict):
         return SymmetricJwk.from_bytes(cek), wrapped_cek, cek_headers
 
     def recipient_key(
-        self, wrapped_cek: bytes, *, alg: str, enc: str, **headers: Any
+        self, wrapped_cek: bytes, enc: str, *, alg: Optional[str] = None, **headers: Any
     ) -> Jwk:
         """For DH-based algs. As a token recipient, derive the same CEK that was used for encryption, based on the recipient private key and the sender ephemeral public key.
 
         Args:
           wrapped_cek: the wrapped CEK
-          alg: the Key Management algorithm to use to unwrap the CEK
           enc: the encryption algorithm to use with the CEK
-          **headers:
+          alg: the Key Management algorithm to use to unwrap the CEK
+          **headers: additional headers used to decrypt the CEK (e.g. "epk" for ECDH algs, "iv", "tag" for AES-GCM algs)
 
         Returns:
           the clear-text CEK, as a SymmetricJwk instance
@@ -608,7 +635,7 @@ class Jwk(BaseJsonDict):
             epk = epk_jwk.cryptography_key
             encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
             if isinstance(ecdh, BaseEcdhEs_AesKw):
-                cek = ecdh.unwrap_key_with_epk(wrapped_cek, epk, alg=alg)
+                cek = ecdh.unwrap_key_with_epk(wrapped_cek, epk, alg=keyalg.name)
             else:
                 cek = ecdh.recipient_key(
                     epk, alg=encalg.name, key_size=encalg.key_size, **headers
@@ -672,19 +699,31 @@ class Jwk(BaseJsonDict):
         raise NotImplementedError
 
     @classmethod
-    def from_pem_key(cls, data: bytes, password: Optional[bytes] = None) -> Jwk:
+    def from_pem_key(
+        cls,
+        data: Union[bytes, str],
+        password: Union[bytes, str, None] = None,
+        **kwargs: Any,
+    ) -> Jwk:
         """Load a Jwk from a PEM encoded private or public key.
 
         Args:
           data: the PEM encoded data to load
           password: the password to decrypt the PEM, if required
+          **kwargs: additional members to include in the Jwk (e.g. kid, use)
 
         Returns:
             a Jwk instance from the loaded key
         """
+        if isinstance(data, str):
+            data = data.encode()
+
+        if isinstance(password, str):
+            password = password.encode()
+
         try:
             cryptography_key = serialization.load_pem_private_key(data, password)
-        except Exception:
+        except Exception as private_exc:
             try:
                 cryptography_key = serialization.load_pem_public_key(data)
                 if password is not None:
@@ -695,11 +734,11 @@ class Jwk(BaseJsonDict):
             except Exception:
                 raise ValueError(
                     "The provided data is not a private or a public PEM encoded key."
-                )
+                ) from private_exc
 
-        return cls.from_cryptography_key(cryptography_key)
+        return cls.from_cryptography_key(cryptography_key, **kwargs)
 
-    def to_pem_key(self, password: Optional[bytes] = None) -> str:
+    def to_pem_key(self, password: Optional[bytes] = None) -> bytes:
         """Serialize this key to PEM format.
 
         For private keys, you can provide a password for encryption.
@@ -708,7 +747,7 @@ class Jwk(BaseJsonDict):
           password: password to use to encrypt the PEM
 
         Returns:
-            the PEM encrypted key, as
+            the PEM serialized key
         """
         raise NotImplementedError
 
@@ -754,3 +793,30 @@ class Jwk(BaseJsonDict):
         Returns:
             the resulting Jwk
         """
+        raise NotImplementedError
+
+    def copy(self) -> Jwk:
+        """Creates a copy of this key.
+
+        Returns:
+            a copy of this key, with the same value
+        """
+        return Jwk(super().copy())
+
+    def include_kid_thumbprint(self, force: bool = False) -> Jwk:
+        """Includes the JWK thumbprint as "kid".
+
+        If key already has a "kid":
+        - if `force` is `True`, this erases the previous "kid".
+        - if `force` is `False` (default), do nothing.
+
+        Args:
+            force: whether to overwrite a previously existing kid
+
+        Returns:
+            a copy of this key with a "kid" (either the previous one or the existing one, depending on `force`).
+        """
+        jwk = self.copy()
+        if self.kid is None or force:
+            jwk["kid"] = self.thumbprint()
+        return jwk

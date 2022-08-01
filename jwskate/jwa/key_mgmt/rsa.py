@@ -13,12 +13,16 @@ class BaseRsaKeyWrap(
     BaseKeyManagementAlg,
     BaseAsymmetricAlg[asymmetric.rsa.RSAPrivateKey, asymmetric.rsa.RSAPublicKey],
 ):
-    """Base class for RSA Key Wrapping algorithms."""
+    """Base class for RSA Key Wrapping algorithms.
+
+    Args:
+        key: the private or public key to use
+    """
 
     padding: Any
 
-    name = "RSA1_5"
-    description = "RSAES-PKCS1-v1_5"
+    name: str
+    description: str
 
     private_key_class = asymmetric.rsa.RSAPrivateKey
     public_key_class = asymmetric.rsa.RSAPublicKey
@@ -26,11 +30,6 @@ class BaseRsaKeyWrap(
     def __init__(
         self, key: Union[asymmetric.rsa.RSAPublicKey, asymmetric.rsa.RSAPrivateKey]
     ):
-        """Initialize an alg with a given RSA key.
-
-        Args:
-            key: the private or public key to use
-        """
         self.key = key
 
     def wrap_key(self, plainkey: bytes) -> BinaPy:

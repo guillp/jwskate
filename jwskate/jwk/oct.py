@@ -1,4 +1,7 @@
 """This module implements JWK representing Symmetric keys."""
+
+from __future__ import annotations
+
 from typing import Any, List, Optional, Tuple, Union
 
 from binapy import BinaPy
@@ -64,7 +67,7 @@ class SymmetricJwk(Jwk):
         ]
     }
 
-    def public_jwk(self) -> "Jwk":
+    def public_jwk(self) -> Jwk:
         """This always raises a ValueError since SymmetricKeys are always private.
 
         Raises:
@@ -73,7 +76,7 @@ class SymmetricJwk(Jwk):
         raise ValueError("Symmetric keys don't have a public key")
 
     @classmethod
-    def from_bytes(cls, k: Union[bytes, str], **params: Any) -> "SymmetricJwk":
+    def from_bytes(cls, k: Union[bytes, str], **params: Any) -> SymmetricJwk:
         """Initializes a SymmetricJwk from a raw secret key. The provided secret key is encoded and used as the `k` parameter for the returned SymetricKey.
 
         Args:
@@ -88,7 +91,7 @@ class SymmetricJwk(Jwk):
     @classmethod
     def from_cryptography_key(
         cls, cryptography_key: Any, **kwargs: Any
-    ) -> "SymmetricJwk":
+    ) -> SymmetricJwk:
         """Alias for `from_bytes()` since symmetric keys are simply bytes.
 
         Args:
@@ -101,7 +104,7 @@ class SymmetricJwk(Jwk):
         return cls.from_bytes(cryptography_key, **kwargs)
 
     @classmethod
-    def generate(cls, key_size: int = 128, **params: str) -> "SymmetricJwk":
+    def generate(cls, key_size: int = 128, **params: str) -> SymmetricJwk:
         """Generate a random SymmetricJwk, with a given key size.
 
         Args:
@@ -115,7 +118,7 @@ class SymmetricJwk(Jwk):
         return cls.from_bytes(key, **params)
 
     @classmethod
-    def generate_for_alg(cls, alg: str, **params: str) -> "SymmetricJwk":
+    def generate_for_alg(cls, alg: str, **params: str) -> SymmetricJwk:
         """Generate a SymmetricJwk that is suitable for use with the given alg.
 
         Args:

@@ -15,15 +15,14 @@ A quick usage example, generating an RSA private key, signing some data, then va
 from jwskate import Jwk
 
 # generate a RSA Jwk and sign a plaintext with it
-rsa_private_jwk = Jwk.generate_for_kty("RSA", key_size=2048, kid="my_key")
+rsa_private_jwk = Jwk.generate_for_kty("RSA", key_size=2048, kid="my_key", alg="RS256")
 
 data = b"Signing is easy!"
-alg = "RS256"
-signature = rsa_private_jwk.sign(data, alg)
+signature = rsa_private_jwk.sign(data)
 
 # extract the public key, and verify the signature with it
 rsa_public_jwk = rsa_private_jwk.public_jwk()
-assert rsa_public_jwk.verify(data, signature, alg)
+assert rsa_public_jwk.verify(data, signature)
 
 # let's see what a Jwk looks like:
 assert isinstance(rsa_private_jwk, dict)  # Jwk are dict
@@ -35,6 +34,7 @@ The result of this print JWK will look like this:
 
 ```
 { 'kty': 'RSA',
+  'alg': 'RS256',
   'n': '...',
   'e': 'AQAB',
   'd': '...',

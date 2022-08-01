@@ -22,42 +22,47 @@ class InvalidJwe(ValueError):
 
 
 class JweCompact(BaseCompactToken):
-    """Represents a Json Web Encryption object, as defined in RFC7516."""
+    """Represents a Json Web Encryption object, in compact representation, as defined in RFC7516.
+
+    Args:
+        value: the compact representation for this Jwe
+    """
 
     def __init__(self, value: Union[bytes, str]):
-        """Initialize a Jwe based on its compact representation.
-
-        Args:
-            value: the compact representation for this Jwe
-        """
         super().__init__(value)
 
         if self.value.count(b".") != 4:
             raise InvalidJwe(
-                "A JWE must contain a header, an encrypted key, an IV, a ciphertext and an authentication tag, separated by dots"
+                "Invalid JWE: a JWE must contain a header, an encrypted key, an IV, a ciphertext and an authentication tag, separated by dots."
             )
 
         header, cek, iv, ciphertext, auth_tag = self.value.split(b".")
         try:
-            self.headers = BinaPy(header).decode_from("b64u").parse_from("json")
+            headers = BinaPy(header).decode_from("b64u").parse_from("json")
+            enc = headers.get("enc")
+            if enc is None or not isinstance(enc, str):
+                raise InvalidJwe(
+                    "Invalid JWE header: this JWE doesn't have a valid 'enc' header."
+                )
+            self.headers = headers
             self.additional_authenticated_data = header
         except ValueError:
             raise InvalidJwe(
-                "Invalid JWE header: it must be a Base64URL-encoded JSON object"
+                "Invalid JWE header: it must be a Base64URL-encoded JSON object."
             )
 
         try:
             self.wrapped_cek = BinaPy(cek).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
-                "Invalid JWE cek: it must be a Base64URL-encoded binary data (bytes)"
+                "Invalid JWE CEK: it must be a Base64URL-encoded binary data (bytes)."
             )
 
         try:
             self.initialization_vector = BinaPy(iv).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
-                "Invalid JWE iv: it must be a Base64URL-encoded binary data (bytes)"
+                "Invalid JWE IV: it must be a Base64URL-encoded binary data (bytes)"
             )
 
         try:
@@ -109,23 +114,6 @@ class JweCompact(BaseCompactToken):
         )
 
     @cached_property
-    def alg(self) -> str:
-        """Return the alg from the JWE header.
-
-        The `alg` header contains the Key Management algorithm used to wrap or derive the CEK.
-
-        Returns:
-            the alg value
-
-        Raises:
-            AttributeError: if there is no alg header or it is not a str
-        """
-        alg = self.get_header("alg")
-        if alg is None or not isinstance(alg, str):
-            raise AttributeError("This JWE doesn't have a valid 'alg' header")
-        return alg
-
-    @cached_property
     def enc(self) -> str:
         """Return the `enc` from the JWE header.
 
@@ -137,10 +125,8 @@ class JweCompact(BaseCompactToken):
         Raises:
             AttributeError: if there is no enc header or it is not a string
         """
-        enc = self.get_header("enc")
-        if enc is None or not isinstance(enc, str):
-            raise AttributeError("This JWE doesn't have a valid 'enc' header")
-        return enc
+        return self.get_header("enc")  # type: ignore[no-any-return]
+        # header has been checked at init time
 
     @classmethod
     def encrypt(
@@ -269,7 +255,8 @@ class JweCompact(BaseCompactToken):
         keyalg = cls.PBES2_ALGORITHMS.get(alg)
         if keyalg is None:
             raise UnsupportedAlg(
-                f"Unsupported password-based encryption algorithm '{alg}'"
+                f"Unsupported password-based encryption algorithm '{alg}'. "
+                f"Value must be one of {list(cls.PBES2_ALGORITHMS.keys())}."
             )
 
         if cek is None:
@@ -284,10 +271,10 @@ class JweCompact(BaseCompactToken):
 
         if count < 1:
             raise ValueError(
-                "PBES2 iteration count must be a positive integer, with a minimum recommended value of 1000"
+                "PBES2 iteration count must be a positive integer, with a minimum recommended value of 1000."
             )
         if count < 1000:
-            warnings.warn("PBES2 iteration count should be > 1000")
+            warnings.warn("PBES2 iteration count should be > 1000.")
 
         wrapped_cek = wrapper.wrap_key(cek, salt=salt, count=count)
 
@@ -317,17 +304,20 @@ class JweCompact(BaseCompactToken):
         keyalg = self.PBES2_ALGORITHMS.get(self.alg)
         if keyalg is None:
             raise UnsupportedAlg(
-                f"Unsupported password-based encryption algorithm '{self.alg}'"
+                f"Unsupported password-based encryption algorithm '{self.alg}'. "
+                f"Value must be one of {list(self.PBES2_ALGORITHMS.keys())}."
             )
         p2s = self.headers.get("p2s")
         if p2s is None:
-            raise AttributeError("No 'p2s' in headers!")
+            raise InvalidJwe("Invalid JWE: a required 'p2s' header is missing.")
         salt = BinaPy(p2s).decode_from("b64u")
         p2c = self.headers.get("p2c")
         if p2c is None:
-            raise AttributeError("No 'p2c' in headers!")
+            raise InvalidJwe("Invalid JWE: a required 'p2c' header is missing.")
         if not isinstance(p2c, int) or p2c < 1:
-            raise AttributeError("Invalid value for p2c, must be a positive integer")
+            raise InvalidJwe(
+                "Invalid JWE: invalid value for the 'p2c' header, must be a positive integer."
+            )
         wrapper = keyalg(password)
         cek = wrapper.unwrap_key(self.wrapped_cek, salt=salt, count=p2c)
         return SymmetricJwk.from_bytes(cek)

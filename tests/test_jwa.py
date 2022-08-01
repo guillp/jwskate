@@ -1,3 +1,5 @@
+"""Tests for the jwkskate.jwa submodule."""
+
 from binapy import BinaPy
 
 from jwskate import Jwk
@@ -5,7 +7,7 @@ from jwskate.jwa import Aes128CbcHmacSha256, Aes192CbcHmacSha384, EcdhEs
 
 
 def test_aes_128_hmac_sha256() -> None:
-    # https://datatracker.ietf.org/doc/html/rfc7518#appendix-B.1
+    """Test derived from [RFC7518](https://datatracker.ietf.org/doc/html/rfc7518#appendix-B.1)."""
     key = bytes.fromhex(
         (
             "00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f"
@@ -75,7 +77,7 @@ def test_aes_128_hmac_sha256() -> None:
 
 
 def test_aes_192_hmac_sha384() -> None:
-    # https://datatracker.ietf.org/doc/html/rfc7518#appendix-B.2
+    """Test derived from [RFC7518](https://datatracker.ietf.org/doc/html/rfc7518#appendix-B.2)."""
     key = bytes.fromhex(
         (
             "00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f"
@@ -153,7 +155,7 @@ def test_aes_192_hmac_sha384() -> None:
 
 
 def test_ecdhes() -> None:
-    """See [https://datatracker.ietf.org/doc/html/rfc7518#appendix-C]."""
+    """Test derived from [RFC7518](https://datatracker.ietf.org/doc/html/rfc7518#appendix-C)."""
     alice_ephemeral_key = Jwk(
         {
             "kty": "EC",

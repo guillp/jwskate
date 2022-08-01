@@ -21,14 +21,13 @@ class InvalidJws(ValueError):
 
 
 class JwsCompact(BaseCompactToken):
-    """Represents a Json Web Signature (JWS), using compact serialization, as defined in RFC7515."""
+    """Represents a Json Web Signature (JWS), using compact serialization, as defined in RFC7515.
+
+    Args:
+        value: the JWS token value
+    """
 
     def __init__(self, value: Union[bytes, str]):
-        """Initialize a Jws, from its compact representation.
-
-        Args:
-            value: the JWS token value
-        """
         super().__init__(value)
 
         header, payload, signature = self.split(self.value)
@@ -133,20 +132,6 @@ class JwsCompact(BaseCompactToken):
             the signed part
         """
         return b".".join(self.value.split(b".", 2)[:2])
-
-    @cached_property
-    def alg(self) -> str:
-        """Get the signature algorithm (alg) from this token headers.
-
-        Returns:
-            the `alg` value
-        Raises:
-            AttributeError: if the `alg` header value is not a string
-        """
-        alg = self.get_header("alg")
-        if alg is None or not isinstance(alg, str):
-            raise AttributeError("This JWS doesn't have a valid 'alg' header")
-        return alg
 
     def verify_signature(
         self,

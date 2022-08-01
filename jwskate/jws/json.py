@@ -7,8 +7,9 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 from backports.cached_property import cached_property
 from binapy import BinaPy
 
-from jwskate.jwk.base import BaseJsonDict, Jwk
+from jwskate.jwk.base import Jwk
 
+from ..token import BaseJsonDict
 from .compact import JwsCompact
 from .signature import JwsSignature
 

@@ -7,3 +7,17 @@ from .jwks import JwkSet
 from .oct import SymmetricJwk
 from .okp import OKPJwk, UnsupportedOKPCurve
 from .rsa import RSAJwk
+
+__all__ = [
+    "ExpectedAlgRequired",
+    "UnsupportedAlg",
+    "InvalidJwk",
+    "Jwk",
+    "ECJwk",
+    "UnsupportedEllipticCurve",
+    "JwkSet",
+    "SymmetricJwk",
+    "OKPJwk",
+    "UnsupportedOKPCurve",
+    "RSAJwk",
+]

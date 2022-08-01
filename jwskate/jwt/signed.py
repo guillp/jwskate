@@ -29,14 +29,12 @@ class SignedJwt(Jwt):
     A signed JWT contains a JSON object as payload, which represents claims.
 
     To sign a JWT, use [Jwt.sign][jwskate.jwt.Jwt.sign].
+
+    Args:
+        value: the token value.
     """
 
     def __init__(self, value: Union[bytes, str]) -> None:
-        """Initialize a `SignedJwt`, from its compact serialized value.
-
-        Args:
-            value: the token value.
-        """
         super().__init__(value)
 
         if self.value.count(b".") != 2:
@@ -236,36 +234,6 @@ class SignedJwt(Jwt):
         if jti is None or isinstance(jti, str):
             return jti
         raise AttributeError("jti has an unexpected type", type(jti))
-
-    @cached_property
-    def alg(self) -> Optional[str]:
-        """Get the signature algorithm from the header.
-
-        Returns:
-          the token signing alg, from the `alg` header
-
-        Raises:
-            AttributeError: if the alg is not a string
-        """
-        alg = self.get_header("alg")
-        if alg is None or isinstance(alg, str):
-            return alg
-        raise AttributeError("alg has an unexpected type", type(alg))
-
-    @cached_property
-    def kid(self) -> Optional[str]:
-        """Get the Key ID (kid) from the JWT header.
-
-        Returns:
-          the token signing key id, from the `kid` header
-
-        Raises:
-            AttributeError: if the kid is present but is not a string
-        """
-        kid = self.get_header("kid")
-        if kid is None or isinstance(kid, str):
-            return kid
-        raise AttributeError("kid has an unexpected type", type(kid))
 
     def get_claim(self, key: str, default: Any = None) -> Any:
         """Get a claim from this Jwt.

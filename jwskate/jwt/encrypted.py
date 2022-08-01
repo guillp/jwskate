@@ -6,8 +6,11 @@ from .base import Jwt
 
 
 class EncryptedJwt(Jwt):
-    """Represent an encrypted JWT."""
+    """Represent an encrypted JWT.
+
+    Args:
+        value: the serialized JWT value
+    """
 
     def __init__(self, value: Union[bytes, str]):
-        """Initialize an EncryptedJwt based on its serialized value."""
         raise NotImplementedError

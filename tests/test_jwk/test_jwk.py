@@ -2,6 +2,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 from jwskate import InvalidJwk, Jwk, RSAJwk
+from jwskate.jwk.base import UnsupportedKeyType
 
 
 def test_jwk_copy() -> None:
@@ -11,16 +12,17 @@ def test_jwk_copy() -> None:
     assert jwk1 is not jwk2
 
     jwk3 = jwk1.copy()
+    assert isinstance(jwk3, Jwk)
     assert jwk1 == jwk3
     assert jwk1 is not jwk3
 
 
 def test_invalid_jwk() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidJwk):
         # kty is not str
         Jwk({"kty": 1.5})
 
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidJwk):
         # kty is unknown
         Jwk({"kty": "caesar13"})
 
@@ -95,7 +97,7 @@ def test_init_from_json() -> None:
 
 
 def test_missing_kty() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidJwk):
         Jwk({"foo": "kty_is_missing"})
 
 
@@ -140,3 +142,50 @@ def test_key_ops(private_key_ops: str, public_key_ops: str) -> None:
     public_jwk = private_jwk.public_jwk()
     assert public_key_ops in public_jwk.key_ops
     assert private_key_ops not in public_jwk.key_ops
+
+
+def test_thumbprint() -> None:
+    # key from https://www.rfc-editor.org/rfc/rfc7638.html#section-3.1
+    jwk = Jwk(
+        {
+            "kty": "RSA",
+            "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAt"
+            "VT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn6"
+            "4tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FD"
+            "W2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n9"
+            "1CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINH"
+            "aQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw",
+            "e": "AQAB",
+            "alg": "RS256",
+            "kid": "2011-04-29",
+        }
+    )
+
+    assert jwk.thumbprint() == "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"
+    assert (
+        jwk.thumbprint_uri()
+        == "urn:ietf:params:oauth:jwk-thumbprint:sha-256:NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"
+    )
+
+    jwk_with_thumbprint_kid = jwk.include_kid_thumbprint(force=True)
+    assert jwk_with_thumbprint_kid.kid == "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"
+    assert isinstance(jwk_with_thumbprint_kid, Jwk)
+    assert jwk_with_thumbprint_kid is not jwk
+    assert jwk_with_thumbprint_kid.n == jwk.n
+
+    jwk_with_initial_kid = jwk.include_kid_thumbprint(force=False)
+    assert jwk_with_initial_kid.kid == "2011-04-29"
+    assert isinstance(jwk_with_initial_kid, Jwk)
+    assert jwk_with_initial_kid is not jwk
+    assert jwk_with_initial_kid.n == jwk.n
+
+
+def test_invalid_thumbprint_hash() -> None:
+    jwk = Jwk.generate_for_kty("EC")
+    with pytest.raises(ValueError):
+        jwk.thumbprint("foo")
+
+
+def test_generate_invalid_kty() -> None:
+    with pytest.raises(UnsupportedKeyType):
+        Jwk.generate_for_kty("foobar")

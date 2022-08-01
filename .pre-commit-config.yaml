@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.2.0
+    rev: v1.3.0
     hooks:
     -   id: forbid-crlf
     -   id: remove-crlf
@@ -23,7 +23,7 @@ repos:
     additional_dependencies:
     - mdformat-black
 -   repo: https://github.com/hadialqattan/pycln
-    rev: v1.3.3
+    rev: v2.1.1
     hooks:
     -   id: pycln
         args: [--config=pyproject.toml]
@@ -32,7 +32,7 @@ repos:
     hooks:
     - id: isort
 -   repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 22.6.0
     hooks:
     - id: black
 -   repo: https://gitlab.com/pycqa/flake8
@@ -53,14 +53,14 @@ repos:
         args:
             - --add-ignore=D107
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.961
+    rev: v0.971
     hooks:
     -   id: mypy
-        args: [--strict, --implicit-reexport]
+        args: [--strict]
         additional_dependencies:
-            - types-cryptography
-            - types-requests
-            - types-backports
-            - backports.cached_property
-            - pytest-mypy
-            - binapy==0.5.0
+            - types-cryptography==3.3.21
+            - types-requests==2.28.5
+            - types-backports==0.1.3
+            - backports.cached_property==1.0.2
+            - pytest-mypy==0.9.1
+            - binapy==0.6.0

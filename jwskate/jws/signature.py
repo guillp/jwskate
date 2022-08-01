@@ -7,7 +7,8 @@ from typing import Any, Dict, Iterable, Mapping, Optional, Type, TypeVar, Union
 from backports.cached_property import cached_property
 from binapy import BinaPy
 
-from jwskate.jwk.base import BaseJsonDict, Jwk
+from jwskate.jwk.base import Jwk
+from jwskate.token import BaseJsonDict
 
 S = TypeVar("S", bound="JwsSignature")
 

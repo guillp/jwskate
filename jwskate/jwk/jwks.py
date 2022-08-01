@@ -2,8 +2,9 @@
 
 from typing import Any, Dict, Iterable, List, Optional, Union
 
+from ..token import BaseJsonDict
 from .alg import UnsupportedAlg
-from .base import BaseJsonDict, Jwk
+from .base import Jwk
 
 
 class JwkSet(BaseJsonDict):

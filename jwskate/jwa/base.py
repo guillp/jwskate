@@ -1,5 +1,7 @@
 """This module implement base classes used by Signature, Encryption and Key Management JWA algorithms."""
 
+from __future__ import annotations
+
 from contextlib import contextmanager
 from typing import Generic, Iterator, Optional, Tuple, Type, TypeVar, Union
 
@@ -258,6 +260,15 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
           the deciphered data
         """
         raise NotImplementedError
+
+    @classmethod
+    def init_random_key(cls) -> BaseAESEncryptionAlg:
+        """Initialize this alg with a random key.
+
+        Returns:
+            a subclass of BaseAESEncryptionAlg initialized with a randomly generated key
+        """
+        return cls(cls.generate_key())
 
 
 class BaseKeyManagementAlg(BaseAlg):

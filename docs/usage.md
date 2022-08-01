@@ -51,6 +51,33 @@ key = ec.generate_private_key(ec.SECP256R1)
 jwk = Jwk(key)
 ```
 
+- a public or private key in PEM format, optionally protected by a password:
+
+```python
+from jwskate import Jwk
+
+public_jwk = Jwk.from_pem_key(
+    b"""-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsjtGIk8SxD+OEiBpP2/T
+JUAF0upwuKGMk6wH8Rwov88VvzJrVm2NCticTk5FUg+UG5r8JArrV4tJPRHQyvqK
+wF4NiksuvOjv3HyIf4oaOhZjT8hDne1Bfv+cFqZJ61Gk0MjANh/T5q9vxER/7TdU
+NHKpoRV+NVlKN5bEU/NQ5FQjVXicfswxh6Y6fl2PIFqT2CfjD+FkBPU1iT9qyJYH
+A38IRvwNtcitFgCeZwdGPoxiPPh1WHY8VxpUVBv/2JsUtrB/rAIbGqZoxAIWvijJ
+Pe9o1TY3VlOzk9ASZ1AeatvOir+iDVJ5OpKmLnzc46QgGPUsjIyo6Sje9dxpGtoG
+QQIDAQAB
+-----END PUBLIC KEY-----"""
+)
+
+private_jwk = Jwk.from_pem_key(
+    b"""-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEAywYF71cKSo3xyi7/0S7N1blFCmBX4eZz0gXf+zyBfomuqhwr
+....
+daBAqhoDEr4SoKju8pagw6lqm65XeARyWkxqFqAZbb2K3bWY3x9qZT6oubLrCDGD
+-----END RSA PRIVATE KEY-----""",
+    "P@ssw0rd",
+)
+```
+
 ## Getting key parameters
 
 Once you have a `Jwk` instance, you can get its parameters either with subscription or attribute access:
@@ -73,8 +100,8 @@ assert jwk.x == "WtjnvHG9b_IKBLn4QYTHz-AdoAiO_ork5LH1BL_5tyI"
 assert jwk["x"] == jwk.x
 ```
 
-Those will return the exact (usually base64url-encoded) value from the JWK.
-You can also get the raw, decoded parameters with some special attributes:
+Those will return the exact (usually base64url-encoded) value exactly as expressed in the JWK.
+You can also get the real, decoded parameters with some special attributes:
 
 ```python
 from jwskate import Jwk
@@ -102,9 +129,11 @@ assert (
 )
 ```
 
+The available special attributes vary depending on the key type.
+
 ## Generating keys
 
-You can generate a Jwk with the class method `Jwk.generate_for_kty()`. It needs the key type as parameter, and
+You can generate a `Jwk` with the class method `Jwk.generate_for_kty()`. It needs the key type as parameter, and
 type-specific parameters:
 
 ```python
@@ -121,7 +150,9 @@ generated key:
 ```python
 from jwskate import Jwk
 
-jwk = Jwk.generate_for_kty("EC", crv="P-256", use="")
+jwk = Jwk.generate_for_kty("EC", crv="P-256", use="sig")
+
+assert jwk.use == "sig"
 ```
 
 ## Private and Public Keys
@@ -159,7 +190,7 @@ jwk = Jwk(
     }
 )
 public_jwk = jwk.public_jwk()
-assert "d" not in public_jwk
+assert "d" not in public_jwk  # "d" would contain the private key
 assert not public_jwk.is_private
 ```
 
@@ -191,7 +222,7 @@ jwk.to_json()
 
 ### to `cryptography` keys
 
-You can access the `cryptography_key` attribute to get a `cryptography` key instance that matches a Jwk:
+You can access the `cryptography_key` attribute to get a `cryptography` key instance that matches a `Jwk`:
 
 ```python
 from jwskate import Jwk
@@ -700,9 +731,3 @@ print(jwt)
 print(jwt.headers)
 # {'header1': 'value1', 'alg': 'ES256'}
 ```
-
-Just like for JWS tokens, you can add extra headers by using the `extra_headers` parameter to sign.
-
-# Token formats
-
-You can convert a token format from compact to JSON flat or general

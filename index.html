@@ -9,7 +9,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.15">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.3.9">
     
     
       
@@ -17,15 +17,16 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.c382b1dc.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.1d29e8d0.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.cc9b2e1e.min.css">
+        <link rel="stylesheet" href="assets/stylesheets/palette.cbb835fc.min.css">
         
           
           
           <meta name="theme-color" content="#02a6f2">
         
+      
       
     
     
@@ -628,7 +629,7 @@
 
   <h1>home</h1>
 
-<!-- BEGIN INCLUDE ../README.md   -->
+<!-- BEGIN INCLUDE ../README.md -->
 <h2 id="jwskate">JwSkate<a class="headerlink" href="#jwskate" title="Permanent link">&para;</a></h2>
 <p><a href="https://pypi.python.org/pypi/jwskate"><img alt="PyPi" src="https://img.shields.io/pypi/v/jwskate.svg" /></a>
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg" /></a></p>
@@ -654,19 +655,17 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="normal">13</span>
 <span class="normal">14</span>
 <span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span>
+<span class="normal">16</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span>
 
 <span class="c1"># generate a RSA Jwk and sign a plaintext with it</span>
-<span class="n">rsa_private_jwk</span> <span class="o">=</span> <span class="n">Jwk</span><span class="o">.</span><span class="n">generate_for_kty</span><span class="p">(</span><span class="s2">&quot;RSA&quot;</span><span class="p">,</span> <span class="n">key_size</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span> <span class="n">kid</span><span class="o">=</span><span class="s2">&quot;my_key&quot;</span><span class="p">)</span>
+<span class="n">rsa_private_jwk</span> <span class="o">=</span> <span class="n">Jwk</span><span class="o">.</span><span class="n">generate_for_kty</span><span class="p">(</span><span class="s2">&quot;RSA&quot;</span><span class="p">,</span> <span class="n">key_size</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span> <span class="n">kid</span><span class="o">=</span><span class="s2">&quot;my_key&quot;</span><span class="p">,</span> <span class="n">alg</span><span class="o">=</span><span class="s2">&quot;RS256&quot;</span><span class="p">)</span>
 
 <span class="n">data</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;Signing is easy!&quot;</span>
-<span class="n">alg</span> <span class="o">=</span> <span class="s2">&quot;RS256&quot;</span>
-<span class="n">signature</span> <span class="o">=</span> <span class="n">rsa_private_jwk</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">alg</span><span class="p">)</span>
+<span class="n">signature</span> <span class="o">=</span> <span class="n">rsa_private_jwk</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
 <span class="c1"># extract the public key, and verify the signature with it</span>
 <span class="n">rsa_public_jwk</span> <span class="o">=</span> <span class="n">rsa_private_jwk</span><span class="o">.</span><span class="n">public_jwk</span><span class="p">()</span>
-<span class="k">assert</span> <span class="n">rsa_public_jwk</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">signature</span><span class="p">,</span> <span class="n">alg</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">rsa_public_jwk</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">signature</span><span class="p">)</span>
 
 <span class="c1"># let&#39;s see what a Jwk looks like:</span>
 <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rsa_private_jwk</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>  <span class="c1"># Jwk are dict</span>
@@ -684,7 +683,8 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code>{ &#39;kty&#39;: &#39;RSA&#39;,
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code>{ &#39;kty&#39;: &#39;RSA&#39;,
   &#39;n&#39;: &#39;...&#39;,
   &#39;e&#39;: &#39;AQAB&#39;,
   &#39;d&#39;: &#39;...&#39;,
@@ -693,7 +693,8 @@ extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).</p>
   &#39;dp&#39;: &#39;...&#39;,
   &#39;dq&#39;: &#39;...&#39;,
   &#39;qi&#39;: &#39;...&#39;,
-  &#39;kid&#39;: &#39;my_key&#39;
+  &#39;kid&#39;: &#39;my_key&#39;,
+  &#39;alg&#39;: &#39;RS256&#39;,
 }
 </code></pre></div></td></tr></table></div>
 <p>Now let's sign a JWT containing arbitrary claims:</p>
@@ -1222,6 +1223,7 @@ appropriate <code>alg</code> member that define which algorithm is supposed to b
 
               
             </article>
+            
           </div>
         </div>
         
@@ -1229,7 +1231,8 @@ appropriate <code>alg</code> member that define which algorithm is supposed to b
       
         <footer class="md-footer">
   
-    <nav class="md-footer__inner md-grid" aria-label="Footer">
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
       
       
         
@@ -1285,10 +1288,10 @@ appropriate <code>alg</code> member that define which algorithm is supposed to b
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.indexes", "navigation.tabs", "navigation.instant", "navigation.tabs.sticky"], "search": "assets/javascripts/workers/search.2a1c317c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.indexes", "navigation.tabs", "navigation.instant", "navigation.tabs.sticky"], "search": "assets/javascripts/workers/search.b97dbffb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.a6c66575.min.js"></script>
+      <script src="assets/javascripts/bundle.6c7ad80a.min.js"></script>
       
     
   </body>

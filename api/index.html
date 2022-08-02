@@ -23955,7 +23955,8 @@ issuer issues multiple tokens.</p>
           <td>
                 <code>int</code>
           </td>
-          <td><p>the default lifetime, in seconds, to use for claim <code>exp</code>. This can be overridden</p></td>
+          <td><p>the default lifetime, in seconds, to use for claim <code>exp</code>. This can be overridden
+when calling <code>.sign()</code></p></td>
           <td>
                 <code>60</code>
           </td>
@@ -23965,7 +23966,8 @@ issuer issues multiple tokens.</p>
           <td>
                 <code><span title="typing.Optional">Optional</span>[int]</code>
           </td>
-          <td><p>the default leeway, in seconds, to use for claim <code>nbf</code>. If None, no <code>nbf</code> claim is</p></td>
+          <td><p>the default leeway, in seconds, to use for claim <code>nbf</code>. If None, no <code>nbf</code> claim is
+included. This can be overridden when calling <code>.sign()</code></p></td>
           <td>
                 <code>None</code>
           </td>
@@ -24100,9 +24102,9 @@ issuer issues multiple tokens.</p>
 <span class="sd">        jwk: the private Jwk to use to sign tokens.</span>
 <span class="sd">        alg: the signing alg to use to sign tokens.</span>
 <span class="sd">        default_lifetime: the default lifetime, in seconds, to use for claim `exp`. This can be overridden</span>
-<span class="sd">        when calling `.sign()`</span>
+<span class="sd">            when calling `.sign()`</span>
 <span class="sd">        default_leeway: the default leeway, in seconds, to use for claim `nbf`. If None, no `nbf` claim is</span>
-<span class="sd">        included. This can be overridden when calling `.sign()`</span>
+<span class="sd">            included. This can be overridden when calling `.sign()`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>

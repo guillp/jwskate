@@ -8,7 +8,7 @@ def test_jwks() -> None:
     jwks = JwkSet(keys=keys)
     assert jwks.jwks == keys
 
-    jwk = Jwk.generate_for_kty("EC")
+    jwk = Jwk.generate_for_kty("EC", crv="P-256")
     keys.append(jwk)
     kid = jwks.add_jwk(jwk)
     assert kid == jwk.kid

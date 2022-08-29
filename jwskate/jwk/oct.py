@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, SupportsBytes, Tuple, Union
 
 from binapy import BinaPy
 
@@ -178,7 +178,7 @@ class SymmetricJwk(Jwk):
 
     def encrypt(
         self,
-        plaintext: bytes,
+        plaintext: Union[bytes, SupportsBytes],
         *,
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,

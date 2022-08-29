@@ -138,7 +138,7 @@ def test_invalid_class_for_kty() -> None:
     ],
 )
 def test_key_ops(private_key_ops: str, public_key_ops: str) -> None:
-    private_jwk = Jwk.generate_for_kty("EC", key_ops=[private_key_ops])
+    private_jwk = Jwk.generate_for_kty("EC", crv="P-256", key_ops=[private_key_ops])
     public_jwk = private_jwk.public_jwk()
     assert public_key_ops in public_jwk.key_ops
     assert private_key_ops not in public_jwk.key_ops
@@ -181,7 +181,7 @@ def test_thumbprint() -> None:
 
 
 def test_invalid_thumbprint_hash() -> None:
-    jwk = Jwk.generate_for_kty("EC")
+    jwk = Jwk.generate_for_kty("EC", crv="P-256")
     with pytest.raises(ValueError):
         jwk.thumbprint("foo")
 
@@ -189,3 +189,10 @@ def test_invalid_thumbprint_hash() -> None:
 def test_generate_invalid_kty() -> None:
     with pytest.raises(UnsupportedKeyType):
         Jwk.generate_for_kty("foobar")
+
+
+def test_generate_for_alg() -> None:
+    rsa15_jwk = Jwk.generate_for_alg("RSA1_5")
+    assert isinstance(rsa15_jwk, RSAJwk)
+    assert rsa15_jwk.alg == "RSA1_5"
+    assert rsa15_jwk.use == "enc"

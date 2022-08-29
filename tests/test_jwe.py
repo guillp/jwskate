@@ -1,4 +1,4 @@
-from typing import Union
+from typing import SupportsBytes, Union
 
 import pytest
 
@@ -496,8 +496,8 @@ def encryption_jwk(decryption_jwk: Union[Jwk, bytes]) -> Union[Jwk, bytes]:
 
 @pytest.fixture(scope="module")
 def encrypted_jwe(
-    encryption_plaintext: bytes,
-    encryption_jwk: Union[Jwk, bytes],
+    encryption_plaintext: SupportsBytes,
+    encryption_jwk: Union[Jwk, SupportsBytes],
     key_management_alg: str,
     encryption_alg: str,
 ) -> JweCompact:
@@ -508,15 +508,14 @@ def encrypted_jwe(
             alg=key_management_alg,
             enc=encryption_alg,
         )
-    elif isinstance(encryption_jwk, bytes):
+    else:
+        password = bytes(encryption_jwk)
         jwe = JweCompact.encrypt_with_password(
             plaintext=encryption_plaintext,
-            password=encryption_jwk,
+            password=password,
             alg=key_management_alg,
             enc=encryption_alg,
         )
-    else:
-        assert False, "Unsupported encryption key type"
     assert isinstance(jwe, JweCompact)
     assert jwe.enc == encryption_alg
     return jwe

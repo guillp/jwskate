@@ -6,12 +6,13 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from binapy import BinaPy
 
+from jwskate.jwe import JweCompact
 from jwskate.jwk import Jwk
 
 from ..token import BaseCompactToken
 
 if TYPE_CHECKING:
-    from jwskate import EncryptedJwt, SignedJwt  # pragma: no cover
+    from jwskate import SignedJwt  # pragma: no cover
 
 
 class InvalidJwt(ValueError):
@@ -35,10 +36,10 @@ class Jwt(BaseCompactToken):
                 from .signed import SignedJwt
 
                 return super().__new__(SignedJwt)
-            elif value.count(b".") == 3:
-                from .encrypted import EncryptedJwt
+            elif value.count(b".") == 4:
+                from ..jwe import JweCompact
 
-                return super().__new__(EncryptedJwt)
+                return JweCompact(value)
         return super().__new__(cls)
 
     @classmethod
@@ -68,15 +69,14 @@ class Jwt(BaseCompactToken):
         jwk = Jwk(jwk)
 
         alg = alg or jwk.get("alg")
-        kid = jwk.get("kid")
 
         if alg is None:
             raise ValueError("a signing alg is required")
 
         extra_headers = extra_headers or {}
         headers = dict(alg=alg, **extra_headers)
-        if kid:
-            headers["kid"] = kid
+        if jwk.kid:
+            headers["kid"] = jwk.kid
 
         headers_part = BinaPy.serialize_to("json", headers).to("b64u")
         claims_part = BinaPy.serialize_to("json", claims).to("b64u")
@@ -114,24 +114,59 @@ class Jwt(BaseCompactToken):
         cls,
         claims: Dict[str, Any],
         sign_jwk: Union[Jwk, Dict[str, Any]],
-        sign_alg: Optional[str],
         enc_jwk: Union[Jwk, Dict[str, Any]],
-        enc_alg: Optional[str],
-        enc: Optional[str],
-    ) -> "EncryptedJwt":
-        """Sign then encrypt a payload with a `Jwk` and returns the resulting `EncryptedJwt`.
+        enc: str,
+        *,
+        sign_alg: Optional[str] = None,
+        enc_alg: Optional[str] = None,
+        sign_extra_headers: Optional[Dict[str, Any]] = None,
+        enc_extra_headers: Optional[Dict[str, Any]] = None,
+    ) -> JweCompact:
+        """Sign a JWT, then encrypt it as JWE payload.
 
-        NOT IMPLEMENTED YET.
+        This is a convenience method to do both the signing and encryption, in appropriate order.
 
         Args:
           claims: the payload to encrypt
           sign_jwk: the Jwk to use for signature
           sign_alg: the alg to use for signature
+          sign_extra_headers: additional headers for the inner signed JWT
           enc_jwk: the Jwk to use for encryption
           enc_alg: the alg to use for CEK encryption
           enc: the alg to use for payload encryption
+          enc_extra_headers: additional headers for the outer encrypted JWE
 
         Returns:
-          the resulting JWE token, with signed JWT as payload
+          the resulting JWE token, with the signed JWT as payload
         """
-        raise NotImplementedError
+        enc_extra_headers = enc_extra_headers or {}
+        enc_extra_headers.setdefault("cty", "JWT")
+
+        inner_jwt = cls.sign(
+            claims, jwk=sign_jwk, alg=sign_alg, extra_headers=sign_extra_headers
+        )
+        jwe = JweCompact.encrypt(
+            inner_jwt, enc_jwk, enc=enc, alg=enc_alg, extra_headers=enc_extra_headers
+        )
+        return jwe
+
+    @classmethod
+    def decrypt_nested_jwt(
+        cls, nested_jwt: str, enc_jwk: Union[Jwk, Dict[str, Any]]
+    ) -> Jwt:
+        """Convenience method to decrypt a nested JWT.
+
+        This can only be used with signed then encrypted Jwt, such as those produce by `Jwt.sign_and_encrypt()`.
+
+        Args:
+            enc_jwk: the decryption key
+
+        Returns:
+            the inner signed token
+
+        Raises:
+            InvalidJwt: if the inner JWT is not valid
+        """
+        jwe = JweCompact(nested_jwt)
+        cleartext = jwe.decrypt(enc_jwk)
+        return Jwt(cleartext)

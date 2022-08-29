@@ -124,7 +124,7 @@ class ECJwk(Jwk):
                 crv=crv,
                 x=BinaPy.from_int(x, length=coord_size).to("b64u"),
                 y=BinaPy.from_int(y, length=coord_size).to("b64u"),
-                **params,
+                **{k: v for k, v in params.items() if v is not None},
             )
         )
 
@@ -150,7 +150,7 @@ class ECJwk(Jwk):
                 x=BinaPy.from_int(x, coord_size).to("b64u").ascii(),
                 y=BinaPy.from_int(y, coord_size).to("b64u").ascii(),
                 d=BinaPy.from_int(d, coord_size).to("b64u").ascii(),
-                **params,
+                **{k: v for k, v in params.items() if v is not None},
             )
         )
 
@@ -205,10 +205,13 @@ class ECJwk(Jwk):
             ).public_key()
 
     @classmethod
-    def generate(cls, crv: str = "P-256", **params: str) -> "ECJwk":
-        """Generates a random ECJwk.
+    def generate(
+        cls, crv: Optional[str] = None, alg: Optional[str] = None, **params: str
+    ) -> "ECJwk":
+        """Generate a random ECJwk.
 
         Args:
+          alg: the alg
           crv: the curve to use
           **params:
 
@@ -218,12 +221,24 @@ class ECJwk(Jwk):
         Raises:
             UnsupportedEllipticCurve: if the provided curve identifier is not supported.
         """
-        curve = cls.get_curve(crv)
+        if crv is None and alg is None:
+            raise ValueError(
+                "You must supply at least a Curve identifier (crv) or an Algorithm identifier (alg) "
+                "in order to generate an Elliptic Curve JWK."
+            )
+        curve: Optional[EllipticCurve] = None
+        if crv:
+            curve = cls.get_curve(crv)
+        elif alg and alg in cls.SIGNATURE_ALGORITHMS:
+            curve = cls.SIGNATURE_ALGORITHMS[alg].curve
+
         if curve is None:
             raise UnsupportedEllipticCurve(crv)
+
         x, y, d = curve.generate()
         return cls.private(
-            crv=crv,
+            crv=curve.name,
+            alg=alg,
             x=x,
             y=y,
             d=d,

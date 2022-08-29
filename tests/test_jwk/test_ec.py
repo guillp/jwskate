@@ -4,7 +4,7 @@ from jwskate import Aes128CbcHmacSha256, EcdhEs, ECJwk, Jwk
 
 
 def test_jwk_ec_generate() -> None:
-    jwk = ECJwk.generate(kid="myeckey")
+    jwk = ECJwk.generate(crv="P-256", kid="myeckey")
     assert jwk.kty == "EC"
     assert jwk.kid == "myeckey"
     assert jwk.crv == "P-256"
@@ -25,7 +25,7 @@ def test_jwk_ec_generate() -> None:
 def test_ecdh_es() -> None:
     alg = "ECDH-ES+A128KW"
     enc = "A128CBC-HS256"
-    private_jwk = ECJwk.generate(alg=alg)
+    private_jwk = ECJwk.generate(crv="P-256", alg=alg)
     public_jwk = private_jwk.public_jwk()
     sender_cek, wrapped_cek, headers = public_jwk.sender_key(enc)
     assert sender_cek
@@ -62,7 +62,7 @@ def test_ecdh_es_with_controlled_cek_and_epk() -> None:
 
 
 def test_pem_key() -> None:
-    private_jwk = ECJwk.generate()
+    private_jwk = ECJwk.generate(crv="P-256")
     private_pem = private_jwk.to_pem_key()
     assert Jwk.from_pem_key(private_pem) == private_jwk
 

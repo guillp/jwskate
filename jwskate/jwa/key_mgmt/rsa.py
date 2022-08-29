@@ -45,7 +45,9 @@ class BaseRsaKeyWrap(
             PublicKeyRequired: if this algorithm is initialized with a private key instead of a public key
         """
         if self.read_only:
-            raise NotImplementedError
+            raise NotImplementedError(
+                "Due to security reasons, this algorithm is only usable for decryption."
+            )
         with self.public_key_required() as key:
             return BinaPy(key.encrypt(plainkey, self.padding))
 

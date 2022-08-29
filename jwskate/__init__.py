@@ -91,7 +91,6 @@ from .jwk import (
 )
 from .jws import InvalidJws, JwsCompact
 from .jwt import (
-    EncryptedJwt,
     ExpiredJwt,
     InvalidClaim,
     InvalidJwt,
@@ -180,7 +179,6 @@ __all__ = [
     "UnsupportedOKPCurve",
     "InvalidJws",
     "JwsCompact",
-    "EncryptedJwt",
     "ExpiredJwt",
     "InvalidClaim",
     "InvalidJwt",

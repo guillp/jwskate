@@ -1,4 +1,5 @@
 """This module implements RSA signature algorithms."""
+from typing import SupportsBytes, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
@@ -21,7 +22,7 @@ class BaseRSASigAlg(
     private_key_class = asymmetric.rsa.RSAPrivateKey
     public_key_class = asymmetric.rsa.RSAPublicKey
 
-    def sign(self, data: bytes) -> BinaPy:
+    def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:
         """Sign arbitrary data.
 
         Args:
@@ -36,10 +37,14 @@ class BaseRSASigAlg(
         """
         if self.read_only:
             raise NotImplementedError
+
+        if not isinstance(data, bytes):
+            data = bytes(data)
+
         with self.private_key_required() as key:
             return BinaPy(key.sign(data, self.padding_alg, self.hashing_alg))
 
-    def verify(self, data: bytes, signature: bytes) -> bool:
+    def verify(self, data: Union[bytes, SupportsBytes], signature: bytes) -> bool:
         """Verify a signature against some data.
 
         Args:
@@ -49,6 +54,9 @@ class BaseRSASigAlg(
         Returns:
             `True` if the signature is valid, `False` otherwise
         """
+        if not isinstance(data, bytes):
+            data = bytes(data)
+
         with self.public_key_required() as key:
             try:
                 key.verify(

@@ -1,4 +1,5 @@
 """This module implement Elliptic Curve signature algorithms."""
+from typing import SupportsBytes, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
@@ -20,7 +21,10 @@ class BaseECSignatureAlg(
     public_key_class = ec.EllipticCurvePublicKey
     private_key_class = ec.EllipticCurvePrivateKey
 
-    def sign(self, data: bytes) -> BinaPy:  # noqa: D102
+    def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:  # noqa: D102
+        if not isinstance(data, bytes):
+            data = bytes(data)
+
         with self.private_key_required() as key:
             dss_sig = key.sign(data, ec.ECDSA(self.hashing_alg))
             r, s = asymmetric.utils.decode_dss_signature(dss_sig)
@@ -28,7 +32,12 @@ class BaseECSignatureAlg(
                 s, self.curve.coordinate_size
             )
 
-    def verify(self, data: bytes, signature: bytes) -> bool:  # noqa: D102
+    def verify(
+        self, data: Union[bytes, SupportsBytes], signature: bytes
+    ) -> bool:  # noqa: D102
+        if not isinstance(data, bytes):
+            data = bytes(data)
+
         with self.public_key_required() as key:
             if len(signature) != self.curve.coordinate_size * 2:
                 raise ValueError(

@@ -12,6 +12,7 @@ from typing import (
     List,
     Mapping,
     Optional,
+    SupportsBytes,
     Tuple,
     Type,
     Union,
@@ -259,8 +260,16 @@ class Jwk(BaseJsonDict):
         """
         alg = self.get("alg")
         if alg is not None and not isinstance(alg, str):
-            raise TypeError(f"Invalid alg type {type(str)}", alg)
+            raise TypeError(f"Invalid alg type {type(alg)}", alg)
         return alg
+
+    @property
+    def kid(self) -> Optional[str]:
+        """Return the JWK key ID (kid), if present."""
+        kid = self.get("kid")
+        if kid is not None and not isinstance(kid, str):
+            raise TypeError(f"invalid kid type {type(kid)}", kid)
+        return kid
 
     def _validate(self) -> None:
         """Internal method used to validate a Jwk. It checks that all required parameters are present and well-formed. If the key is private, it sets the `is_private` flag to `True`.
@@ -449,7 +458,7 @@ class Jwk(BaseJsonDict):
 
     def encrypt(
         self,
-        plaintext: bytes,
+        plaintext: Union[bytes, SupportsBytes],
         *,
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
@@ -784,7 +793,7 @@ class Jwk(BaseJsonDict):
 
     @classmethod
     def generate_for_alg(cls, alg: str, **kwargs: Any) -> Jwk:
-        """Generate a key for usage with a specific alg and return the resuting Jwk.
+        """Generate a key for usage with a specific alg and return the resulting Jwk.
 
         Args:
             alg: a signature or key management alg
@@ -793,7 +802,13 @@ class Jwk(BaseJsonDict):
         Returns:
             the resulting Jwk
         """
-        raise NotImplementedError
+        for kty, jwk_class in cls.subclasses.items():
+            if alg in jwk_class.SIGNATURE_ALGORITHMS:
+                return jwk_class.generate(alg=alg, use="sign", **kwargs)
+            elif alg in jwk_class.KEY_MANAGEMENT_ALGORITHMS:
+                return jwk_class.generate(alg=alg, use="enc", **kwargs)
+
+        raise ValueError("No key type supports this alg:", alg)
 
     def copy(self) -> Jwk:
         """Creates a copy of this key.
@@ -817,6 +832,6 @@ class Jwk(BaseJsonDict):
             a copy of this key with a "kid" (either the previous one or the existing one, depending on `force`).
         """
         jwk = self.copy()
-        if self.kid is None or force:
+        if self.get("kid") is None or force:
             jwk["kid"] = self.thumbprint()
         return jwk

@@ -201,7 +201,7 @@ class RSAJwk(Jwk):
 
     @classmethod
     def generate(cls, key_size: int = 4096, **params: Any) -> RSAJwk:
-        """Generates a new random private RSAJwk.
+        """Generate a new random private RSAJwk.
 
         Args:
           key_size: the key size to use for the generated key, in bits

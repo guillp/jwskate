@@ -3,7 +3,16 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Generic, Iterator, Optional, Tuple, Type, TypeVar, Union
+from typing import (
+    Generic,
+    Iterator,
+    Optional,
+    SupportsBytes,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from binapy import BinaPy
 
@@ -166,7 +175,7 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 class BaseSignatureAlg(BaseAlg):
     """Base class for signature algorithms."""
 
-    def sign(self, data: bytes) -> BinaPy:
+    def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:
         """Sign arbitrary data, return the signature.
 
         Args:
@@ -177,7 +186,7 @@ class BaseSignatureAlg(BaseAlg):
         """
         raise NotImplementedError
 
-    def verify(self, data: bytes, signature: bytes) -> bool:
+    def verify(self, data: Union[bytes, SupportsBytes], signature: bytes) -> bool:
         """Verify a signature against some data.
 
         Args:
@@ -231,7 +240,7 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         return BinaPy.random_bits(cls.iv_size)
 
     def encrypt(
-        self, plaintext: bytes, *, iv: bytes, aad: Optional[bytes]
+        self, plaintext: Union[bytes, SupportsBytes], *, iv: bytes, aad: Optional[bytes]
     ) -> Tuple[BinaPy, BinaPy]:
         """Encrypt arbitrary data (`plaintext`) with the given Initialisation Vector (`iv`) and optional Additional Authentication Data (`aad`), return the ciphered text and authentication tag.
 
@@ -246,7 +255,12 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         raise NotImplementedError
 
     def decrypt(
-        self, ciphertext: bytes, *, iv: bytes, auth_tag: bytes, aad: Optional[bytes]
+        self,
+        ciphertext: Union[bytes, SupportsBytes],
+        *,
+        iv: bytes,
+        auth_tag: bytes,
+        aad: Optional[bytes],
     ) -> BinaPy:
         """Decrypt a ciphertext with a given Initialisation Vector (iv) and optional Additional Authentication Data (aad), returns the resulting clear text.
 

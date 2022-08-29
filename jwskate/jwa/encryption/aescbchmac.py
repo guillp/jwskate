@@ -1,6 +1,6 @@
 """This module implements AES-CBC with HMAC-SHA based Encryption algorithms."""
 
-from typing import Optional, Tuple
+from typing import Optional, SupportsBytes, Tuple, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
@@ -41,7 +41,11 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         self.padding = padding.PKCS7(algorithms.AES.block_size)
 
     def mac(
-        self, ciphertext: bytes, *, iv: bytes, aad: Optional[bytes] = None
+        self,
+        ciphertext: Union[bytes, SupportsBytes],
+        *,
+        iv: bytes,
+        aad: Optional[bytes] = None
     ) -> BinaPy:
         """Produce a Message Authentication Code for the given `ciphertext`, `iv` and `aad`.
 
@@ -57,6 +61,9 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
             aad = b""
         al = BinaPy.from_int(len(aad) * 8, length=8, byteorder="big", signed=False)
         hasher = hmac.HMAC(self.mac_key, self.hash_alg)
+        if not isinstance(ciphertext, bytes):
+            ciphertext = bytes(ciphertext)
+
         for param in (aad, iv, ciphertext, al):
             hasher.update(param)
         digest = hasher.finalize()
@@ -64,7 +71,11 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         return BinaPy(mac)
 
     def encrypt(
-        self, plaintext: bytes, *, iv: bytes, aad: Optional[bytes] = None
+        self,
+        plaintext: Union[bytes, SupportsBytes],
+        *,
+        iv: bytes,
+        aad: Optional[bytes] = None
     ) -> Tuple[BinaPy, BinaPy]:
         """Encrypt and MAC the given `plaintext`, using the given Initialization Vector (`iv`) and optional Additional Authenticated Data (`aad`).
 
@@ -76,6 +87,9 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         Returns:
           a tuple (encrypted_data, authentication_tag)
         """
+        if not isinstance(plaintext, bytes):
+            plaintext = bytes(plaintext)
+
         cipher = ciphers.Cipher(algorithms.AES(self.aes_key), modes.CBC(iv)).encryptor()
         padder = self.padding.padder()
         padded_text = padder.update(plaintext) + padder.finalize()
@@ -84,7 +98,12 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         return BinaPy(ciphertext), BinaPy(mac)
 
     def decrypt(
-        self, ciphertext: bytes, *, iv: bytes, auth_tag: bytes, aad: Optional[bytes]
+        self,
+        ciphertext: Union[bytes, SupportsBytes],
+        *,
+        iv: bytes,
+        auth_tag: bytes,
+        aad: Optional[bytes]
     ) -> BinaPy:
         """Decrypt and authenticate the given ciphertext with authentication tag (`ciphertext_with_tag`), as produced by `encrypt()`.
 
@@ -97,6 +116,9 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         Returns:
           the decrypted data
         """
+        if not isinstance(ciphertext, bytes):
+            ciphertext = bytes(ciphertext)
+
         mac = self.mac(ciphertext, iv=iv, aad=aad)
         if not constant_time.bytes_eq(mac, auth_tag):
             raise exceptions.InvalidSignature()

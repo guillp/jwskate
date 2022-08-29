@@ -1,6 +1,6 @@
 """This module implements AES-GCM based encryption algorithms."""
 
-from typing import Optional, Tuple
+from typing import Optional, SupportsBytes, Tuple, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives.ciphers import aead
@@ -15,7 +15,7 @@ class BaseAESGCM(BaseAESEncryptionAlg):
     tag_size = 16
 
     def encrypt(
-        self, plaintext: bytes, *, iv: bytes, aad: Optional[bytes]
+        self, plaintext: Union[bytes, SupportsBytes], *, iv: bytes, aad: Optional[bytes]
     ) -> Tuple[BinaPy, BinaPy]:
         """Encrypt a plaintext, with the given IV and Additional Authenticated Data.".
 
@@ -32,12 +32,19 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         """
         if len(iv) * 8 != self.iv_size:
             raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
+        if not isinstance(plaintext, bytes):
+            plaintext = bytes(plaintext)
         ciphertext_with_tag = BinaPy(aead.AESGCM(self.key).encrypt(iv, plaintext, aad))
         ciphertext, tag = ciphertext_with_tag.cut_at(-self.tag_size)
         return ciphertext, tag
 
     def decrypt(
-        self, ciphertext: bytes, *, iv: bytes, auth_tag: bytes, aad: Optional[bytes]
+        self,
+        ciphertext: Union[bytes, SupportsBytes],
+        *,
+        iv: bytes,
+        auth_tag: bytes,
+        aad: Optional[bytes],
     ) -> BinaPy:
         """Decrypt a ciphertext.
 
@@ -53,6 +60,9 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         Raises:
             ValueError: if the IV size is not appropriate
         """
+        if not isinstance(ciphertext, bytes):
+            ciphertext = bytes(ciphertext)
+
         if len(iv) * 8 != self.iv_size:
             raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
         ciphertext_with_tag = ciphertext + auth_tag

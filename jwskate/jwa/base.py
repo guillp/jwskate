@@ -36,7 +36,8 @@ class BaseAlg:
     description: str
     """Description of the algorithm (human readable)"""
     read_only: bool = False
-    """For algs that are considered insecure, allow only signature verification or decryption of existing data, but don't allow new signatures or new encryptions."""
+    """For algs that are considered insecure, set to True to allow only signature verification
+       or decryption of existing data, but don't allow new signatures or encryption."""
 
     def __repr__(self) -> str:
         """Use the name of the alg as repr."""

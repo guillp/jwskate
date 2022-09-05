@@ -176,7 +176,7 @@ def test_thumbprint() -> None:
     jwk_with_initial_kid = jwk.include_kid_thumbprint(force=False)
     assert jwk_with_initial_kid.kid == "2011-04-29"
     assert isinstance(jwk_with_initial_kid, Jwk)
-    assert jwk_with_initial_kid is not jwk
+    assert jwk_with_initial_kid is jwk
     assert jwk_with_initial_kid.n == jwk.n
 
 

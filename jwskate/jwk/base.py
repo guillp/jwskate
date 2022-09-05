@@ -847,7 +847,8 @@ class Jwk(BaseJsonDict):
         Returns:
             a copy of this key with a "kid" (either the previous one or the existing one, depending on `force`).
         """
+        if self.get("kid") is not None and not force:
+            return self
         jwk = self.copy()
-        if self.get("kid") is None or force:
-            jwk["kid"] = self.thumbprint()
+        jwk["kid"] = self.thumbprint()
         return jwk

@@ -136,7 +136,7 @@ class RSAJwk(Jwk):
 
     @classmethod
     def public(cls, n: int, e: int, **params: Any) -> RSAJwk:
-        """Initialize a public RsaJwk from a modulus and an exponent.
+        """Initialize a public `RsaJwk` from a modulus and an exponent.
 
         Args:
           n: the modulus
@@ -168,7 +168,7 @@ class RSAJwk(Jwk):
         qi: Optional[int] = None,
         **params: Any,
     ) -> RSAJwk:
-        """Initializes a Private RsaJwk from its required parameters.
+        """Initialize a private `RsaJwk` from its required parameters.
 
         Args:
           n: the modulus
@@ -201,7 +201,7 @@ class RSAJwk(Jwk):
 
     @classmethod
     def generate(cls, key_size: int = 4096, **params: Any) -> RSAJwk:
-        """Generate a new random private RSAJwk.
+        """Generate a new random private `RSAJwk`.
 
         Args:
           key_size: the key size to use for the generated key, in bits
@@ -226,7 +226,7 @@ class RSAJwk(Jwk):
 
     @cached_property
     def modulus(self) -> int:
-        """Returns the modulus from this Jwk.
+        """Return the modulus from this Jwk.
 
         Returns:
             the key modulus (from parameter `n`)
@@ -235,7 +235,7 @@ class RSAJwk(Jwk):
 
     @cached_property
     def exponent(self) -> int:
-        """Returns the exponent from this Jwk.
+        """Return the exponent from this Jwk.
 
         Returns:
             the key exponent (from parameter `e`)
@@ -244,7 +244,7 @@ class RSAJwk(Jwk):
 
     @cached_property
     def private_exponent(self) -> int:
-        """Returns the private exponent from this Jwk.
+        """Return the private exponent from this Jwk.
 
         Returns:
             the key private exponent (from parameter `d`)
@@ -253,7 +253,7 @@ class RSAJwk(Jwk):
 
     @cached_property
     def first_prime_factor(self) -> int:
-        """Returns the first prime factor from this Jwk.
+        """Return the first prime factor from this Jwk.
 
         Returns:
             the first prime factor (from parameter `p`)
@@ -262,7 +262,7 @@ class RSAJwk(Jwk):
 
     @cached_property
     def second_prime_factor(self) -> int:
-        """Returns the second prime factor from this Jwk.
+        """Return the second prime factor from this Jwk.
 
         Returns:
             the second prime factor (from parameter `q`)
@@ -271,7 +271,7 @@ class RSAJwk(Jwk):
 
     @cached_property
     def first_factor_crt_exponent(self) -> int:
-        """Returns the first factor CRT exponent from this Jwk.
+        """Return the first factor CRT exponent from this Jwk.
 
         Returns:
             the first factor CRT coefficient (from parameter `dp`)
@@ -280,7 +280,7 @@ class RSAJwk(Jwk):
 
     @cached_property
     def second_factor_crt_exponent(self) -> int:
-        """Returns the second factor CRT exponent from this Jwk.
+        """Return the second factor CRT exponent from this Jwk.
 
         Returns:
             the second factor CRT coefficient (from parameter `dq`)
@@ -289,9 +289,18 @@ class RSAJwk(Jwk):
 
     @cached_property
     def first_crt_coefficient(self) -> int:
-        """Returns the first CRT coefficient from this Jwk.
+        """Return the first CRT coefficient from this Jwk.
 
         Returns:
             the first CRT coefficient (from parameter `qi`)
         """
         return BinaPy(self.qi).decode_from("b64u").to_int()
+
+    @cached_property
+    def key_size(self) -> int:
+        """Key size, in bits.
+
+        Returns:
+            the key size
+        """
+        return len(BinaPy(self.n).decode_from("b64u")) * 8

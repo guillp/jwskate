@@ -32,6 +32,8 @@ def rsa_private_jwk() -> Jwk:
 
     assert jwk.thumbprint() == "Qfq9DOLKNRyptzTJBhCFlzccbA0ac7Ag9GVFL11GAfM"
 
+    assert jwk.key_size == 2048
+
     assert jwk.supported_encryption_algorithms() == []
     return jwk
 
@@ -88,7 +90,7 @@ def test_public_jwk(rsa_private_jwk: Jwk) -> None:
 
 
 def test_generate() -> None:
-    jwk = RSAJwk.generate(kid="myrsakey")
+    jwk = RSAJwk.generate(kid="myrsakey", key_size=3096)
     assert jwk.kty == "RSA"
     assert jwk.kid == "myrsakey"
     assert "n" in jwk
@@ -98,6 +100,7 @@ def test_generate() -> None:
     assert "dp" in jwk
     assert "dq" in jwk
     assert "qi" in jwk
+    assert jwk.key_size == 3096
 
     public_jwk = jwk.public_jwk()
     assert public_jwk.kty == "RSA"

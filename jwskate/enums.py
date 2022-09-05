@@ -35,6 +35,7 @@ class SignatureAlgs:
         PS512,
         EdDSA,
     ]
+    ALL = ALL_ASYMMETRIC + ALL_SYMMETRIC
 
 
 class EncryptionAlgs:
@@ -83,9 +84,6 @@ class KeyManagementAlgs:
         A192GCMKW,
         A256GCMKW,
         dir,
-        PBES2_HS256_A128KW,
-        PBES2_HS384_A192KW,
-        PBES2_HS512_A256KW,
     ]
     ALL_ASYMMETRIC = [
         RSA1_5,
@@ -98,3 +96,10 @@ class KeyManagementAlgs:
         ECDH_ES_A192KW,
         ECDH_ES_A256KW,
     ]
+    ALL_PASSWORD_BASED = [
+        PBES2_HS256_A128KW,
+        PBES2_HS384_A192KW,
+        PBES2_HS512_A256KW,
+    ]
+    ALL_KEY_BASED = ALL_ASYMMETRIC + ALL_SYMMETRIC
+    ALL = ALL_ASYMMETRIC + ALL_SYMMETRIC + ALL_PASSWORD_BASED

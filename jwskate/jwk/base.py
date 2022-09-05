@@ -35,6 +35,7 @@ from jwskate.jwa import (
     EcdhEs,
 )
 
+from .. import BaseAlg
 from ..token import BaseJsonDict
 from .alg import UnsupportedAlg, select_alg, select_algs
 
@@ -375,9 +376,6 @@ class Jwk(BaseJsonDict):
             if "sign" in key_ops:
                 key_ops.remove("sign")
                 key_ops.append("verify")
-            if "decrypt" in key_ops:
-                key_ops.remove("decrypt")
-                key_ops.append("encrypt")
             if "unwrapKey" in key_ops:
                 key_ops.remove("unwrapKey")
                 key_ops.append("wrapKey")
@@ -803,10 +801,28 @@ class Jwk(BaseJsonDict):
             the resulting Jwk
         """
         for kty, jwk_class in cls.subclasses.items():
-            if alg in jwk_class.SIGNATURE_ALGORITHMS:
-                return jwk_class.generate(alg=alg, use="sign", **kwargs)
-            elif alg in jwk_class.KEY_MANAGEMENT_ALGORITHMS:
-                return jwk_class.generate(alg=alg, use="enc", **kwargs)
+            alg_class: Optional[Type[BaseAlg]]
+            alg_class = jwk_class.SIGNATURE_ALGORITHMS.get(alg)
+            if alg_class is not None:
+                kwargs.update({"use": "sig", "key_ops": ["sign"]})
+            else:
+                alg_class = jwk_class.KEY_MANAGEMENT_ALGORITHMS.get(alg)
+                if alg_class is not None:
+                    if issubclass(alg_class, BaseSymmetricAlg):
+                        kwargs.update(
+                            {"use": "enc", "key_ops": ["wrapKey", "unwrapKey"]}
+                        )
+                    else:
+                        kwargs.update({"use": "enc", "key_ops": ["unwrapKey"]})
+                else:
+                    alg_class = jwk_class.ENCRYPTION_ALGORITHMS.get(alg)
+                    if alg_class is not None:
+                        kwargs.update({"use": "enc", "key_ops": ["encrypt", "decrypt"]})
+                        kwargs.setdefault("key_size", alg_class.key_size)
+                    else:
+                        continue
+
+            return jwk_class.generate(alg=alg, **kwargs)
 
         raise ValueError("No key type supports this alg:", alg)
 

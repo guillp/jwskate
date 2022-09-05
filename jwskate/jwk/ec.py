@@ -229,8 +229,11 @@ class ECJwk(Jwk):
         curve: Optional[EllipticCurve] = None
         if crv:
             curve = cls.get_curve(crv)
-        elif alg and alg in cls.SIGNATURE_ALGORITHMS:
-            curve = cls.SIGNATURE_ALGORITHMS[alg].curve
+        elif alg:
+            if alg in cls.SIGNATURE_ALGORITHMS:
+                curve = cls.SIGNATURE_ALGORITHMS[alg].curve
+            elif alg in cls.KEY_MANAGEMENT_ALGORITHMS:
+                curve = P_256
 
         if curve is None:
             raise UnsupportedEllipticCurve(crv)

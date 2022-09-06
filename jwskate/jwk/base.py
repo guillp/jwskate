@@ -329,7 +329,7 @@ class Jwk(BaseJsonDict):
 
         # if key is used for signing, it must be private
         for op in self.get("key_ops", []):
-            if op in ("sign", "decrypt", "unwrapKey") and not self.is_private:
+            if op in ("sign", "unwrapKey") and not self.is_private:
                 raise InvalidJwk(f"Key Operation is '{op}' but the key is public")
 
     def supported_signing_algorithms(self) -> List[str]:

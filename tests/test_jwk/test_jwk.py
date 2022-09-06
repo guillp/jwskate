@@ -133,7 +133,6 @@ def test_invalid_class_for_kty() -> None:
     "private_key_ops, public_key_ops",
     [
         ("sign", "verify"),
-        ("decrypt", "encrypt"),
         ("unwrapKey", "wrapKey"),
     ],
 )

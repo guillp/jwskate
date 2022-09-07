@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from typing import Any, Mapping, Optional
 
 from backports.cached_property import cached_property
 from binapy import BinaPy
@@ -281,16 +281,41 @@ class OKPJwk(Jwk):
         )
 
     @classmethod
-    def generate(cls, crv: str = "Ed25519", **params: Any) -> OKPJwk:
+    def generate(
+        cls, crv: Optional[str] = None, alg: Optional[str] = None, **params: Any
+    ) -> OKPJwk:
         """Generate a private OKPJwk on a given curve.
+
+        You can specify either a curve or an algorithm identifier, or both.
+        If using an alg identifier, crv will default to Ed25519 for signature algs,
+        or X25519 for encryption algs.
 
         Args:
           crv: the curve to use
+          alg: algorithm to use
           **params: additional members to include in the Jwk
 
         Returns:
             the resulting OKPJwk
         """
-        curve = cls.get_curve(crv)
+        if crv is None and alg is None:
+            raise ValueError(
+                "You must supply at least a Curve identifier (crv) or an Algorithm identifier (alg) "
+                "in order to generate an OKP JWK."
+            )
+        curve: Optional[OKPCurve] = None
+        if crv:
+            curve = cls.get_curve(crv)
+        elif alg:
+            if alg in cls.SIGNATURE_ALGORITHMS:
+                curve = Ed25519
+                params.setdefault("use", "sig")
+            elif alg in cls.KEY_MANAGEMENT_ALGORITHMS:
+                curve = X25519
+                params.setdefault("use", "enc")
+
+        if curve is None:
+            raise UnsupportedOKPCurve(crv)
+
         x, d = curve.generate()
-        return cls.private(crv=crv, x=x, d=d, **params)
+        return cls.private(crv=curve.name, x=x, d=d, **params)

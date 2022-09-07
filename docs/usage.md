@@ -159,12 +159,17 @@ assert jwk.use == "sig"
 
 ### Based on intended algorithm
 
+You can generate a private key of the appropriate type for a given signature, key management or encryption algorithm
+by using the method `Jwk.generate_for_alg()` this way:
+
 ```python
 from jwskate import Jwk
 
-ec_jwk = Jwk.generate_for_alg("RSA1_5")
-rsa_jwk = Jwk.generate_for_alg("RSA1_5", key_size=4096)
-okp_jwk = Jwk.generate_for_alg("EdDsa")
+ec_jwk = Jwk.generate_for_alg("ES512")  # key of type EC, with crv=P-521
+rsa_jwk = Jwk.generate_for_alg("RSA-OAEP-256", key_size=4096)  # RSA
+okp_jwk = Jwk.generate_for_alg("EdDSA")  # EC, default to crv=P-256
+okp_jwk = Jwk.generate_for_alg("EdDSA", crv="P-521")  # EC, default to crv=P-256
+okp_jwk = Jwk.generate_for_alg("HS512")
 ```
 
 ## Private and Public Keys

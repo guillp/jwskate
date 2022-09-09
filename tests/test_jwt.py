@@ -108,7 +108,7 @@ def test_empty_jwt(private_jwk: Jwk) -> None:
     assert jwt.expires_at is None
     assert jwt.not_before is None
     assert jwt.issuer is None
-    assert jwt.audiences is None
+    assert jwt.audiences == []
     assert jwt.subject is None
     assert jwt.jwt_token_id is None
     assert jwt.kid == private_jwk.kid

@@ -185,7 +185,7 @@ class SignedJwt(Jwt):
         raise AttributeError("iss has an unexpected type", type(iss))
 
     @cached_property
-    def audiences(self) -> Optional[List[str]]:
+    def audiences(self) -> List[str]:
         """Get the audience(s) (aud) claim from this token.
 
         If this token has a single audience, this will return a `list` anyway.
@@ -198,7 +198,7 @@ class SignedJwt(Jwt):
         """
         aud = self.get_claim("aud")
         if aud is None:
-            return None
+            return []
         if isinstance(aud, str):
             return [aud]
         if isinstance(aud, list):

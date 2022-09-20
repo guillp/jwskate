@@ -88,7 +88,8 @@ class Jwk(BaseJsonDict):
     KTY: ClassVar[str]
     """The Key Type associated with this JWK."""
 
-    CRYPTOGRAPHY_KEY_CLASSES: ClassVar[Iterable[Any]]
+    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES: ClassVar[Iterable[Any]]
+    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES: ClassVar[Iterable[Any]]
 
     SIGNATURE_ALGORITHMS: Mapping[str, Type[BaseSignatureAlg]] = {}
     KEY_MANAGEMENT_ALGORITHMS: Mapping[str, Type[BaseKeyManagementAlg]] = {}
@@ -112,7 +113,9 @@ class Jwk(BaseJsonDict):
         creating a Jwk
         """
         Jwk.subclasses[cls.KTY] = cls
-        for klass in cls.CRYPTOGRAPHY_KEY_CLASSES:
+        for klass in cls.CRYPTOGRAPHY_PRIVATE_KEY_CLASSES:
+            Jwk.cryptography_key_types[klass] = cls
+        for klass in cls.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES:
             Jwk.cryptography_key_types[klass] = cls
 
     def __new__(cls, key: Union[Jwk, Dict[str, Any], Any], **kwargs: Any):  # type: ignore
@@ -745,10 +748,11 @@ class Jwk(BaseJsonDict):
 
         return cls.from_cryptography_key(cryptography_key, **kwargs)
 
-    def to_pem_key(self, password: Optional[bytes] = None) -> bytes:
+    def to_pem(self, password: Union[bytes, str, None] = None) -> bytes:
         """Serialize this key to PEM format.
 
-        For private keys, you can provide a password for encryption.
+        For private keys, you can provide a password for encryption. This password should be bytes. A `str` is also
+        accepted, and will be encoded to `bytes` using UTF-8 before it is used as encryption key.
 
         Args:
           password: password to use to encrypt the PEM
@@ -756,7 +760,29 @@ class Jwk(BaseJsonDict):
         Returns:
             the PEM serialized key
         """
-        raise NotImplementedError
+        if password is not None and not isinstance(password, bytes):
+            password = str(password).encode("UTF-8")
+
+        if self.is_private:
+            encryption: serialization.KeySerializationEncryption
+            if password:
+                encryption = serialization.BestAvailableEncryption(password)
+            else:
+                encryption = serialization.NoEncryption()
+            return self.cryptography_key.private_bytes(  # type: ignore[no-any-return]
+                serialization.Encoding.PEM,
+                serialization.PrivateFormat.PKCS8,
+                encryption,
+            )
+        else:
+            if password:
+                raise ValueError(
+                    "Public keys cannot be encrypted when serialized in PEM format."
+                )
+            return self.cryptography_key.public_bytes(  # type: ignore[no-any-return]
+                serialization.Encoding.PEM,
+                serialization.PublicFormat.SubjectPublicKeyInfo,
+            )
 
     @classmethod
     def generate(cls, **kwargs: Any) -> Jwk:

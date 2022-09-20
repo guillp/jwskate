@@ -36,3 +36,9 @@ def test_jwk_symmetric_sign(symmetric_jwk: SymmetricJwk) -> None:
 
 def test_dir_alg(symmetric_jwk: SymmetricJwk) -> None:
     assert "dir" in symmetric_jwk.supported_key_management_algorithms()
+
+
+def test_pem_key() -> None:
+    private_jwk = SymmetricJwk.generate(key_size=128)
+    with pytest.raises(TypeError):
+        private_jwk.to_pem()

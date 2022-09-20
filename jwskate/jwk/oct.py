@@ -34,7 +34,8 @@ class SymmetricJwk(Jwk):
     """Implement Symetric keys, with `kty=oct`."""
 
     KTY = "oct"
-    CRYPTOGRAPHY_KEY_CLASSES = (bytes,)
+    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (bytes,)
+    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (bytes,)
 
     PARAMS = {
         "k": JwkParameter("Key Value", is_private=True, is_required=True, kind="b64u"),
@@ -265,3 +266,16 @@ class SymmetricJwk(Jwk):
             for name, alg in self.ENCRYPTION_ALGORITHMS.items()
             if alg.supports_key(self.cryptography_key)
         ]
+
+    def to_pem(self, password: Union[bytes, str, None] = None) -> bytes:
+        """Serialize this key to PEM format.
+
+        Symmetric keys are not serializable to PEM so this will raise a TypeError.
+
+        Args:
+          password: password to use to encrypt the PEM.
+
+        Raises:
+            TypeError: always
+        """
+        raise TypeError("Symmetric keys are not serializable to PEM.")

@@ -29,14 +29,17 @@ class OKPJwk(Jwk):
 
     KTY = "OKP"
 
-    CRYPTOGRAPHY_KEY_CLASSES = (
+    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (
         ed25519.Ed25519PrivateKey,
-        ed25519.Ed25519PublicKey,
         ed448.Ed448PrivateKey,
-        ed448.Ed448PublicKey,
         x25519.X25519PrivateKey,
-        x25519.X25519PublicKey,
         x448.X448PrivateKey,
+    )
+
+    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (
+        ed25519.Ed25519PublicKey,
+        ed448.Ed448PublicKey,
+        x25519.X25519PublicKey,
         x448.X448PublicKey,
     )
 
@@ -208,7 +211,13 @@ class OKPJwk(Jwk):
         else:
             raise TypeError(
                 "Unsupported key type for OKP. Supported key types are: "
-                + ", ".join(kls.__name__ for kls in cls.CRYPTOGRAPHY_KEY_CLASSES)
+                + ", ".join(
+                    kls.__name__
+                    for kls in (
+                        cls.CRYPTOGRAPHY_PRIVATE_KEY_CLASSES
+                        + cls.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES
+                    )
+                )
             )
 
     def _to_cryptography_key(self) -> Any:

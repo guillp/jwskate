@@ -29,7 +29,8 @@ class RSAJwk(Jwk):
     """Represent a RSA Jwk, with `kty=RSA`."""
 
     KTY = "RSA"
-    CRYPTOGRAPHY_KEY_CLASSES = (rsa.RSAPrivateKey, rsa.RSAPublicKey)
+    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (rsa.RSAPrivateKey,)
+    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (rsa.RSAPublicKey,)
 
     PARAMS = {
         "n": JwkParameter("Modulus", is_private=False, is_required=True, kind="b64u"),

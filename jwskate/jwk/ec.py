@@ -37,10 +37,9 @@ class ECJwk(Jwk):
 
     KTY = "EC"
 
-    CRYPTOGRAPHY_KEY_CLASSES = (
-        asymmetric.ec.EllipticCurvePrivateKey,
-        asymmetric.ec.EllipticCurvePublicKey,
-    )
+    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (asymmetric.ec.EllipticCurvePrivateKey,)
+
+    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (asymmetric.ec.EllipticCurvePublicKey,)
 
     PARAMS: Mapping[str, JwkParameter] = {
         "crv": JwkParameter("Curve", is_private=False, is_required=True, kind="name"),
@@ -302,37 +301,3 @@ class ECJwk(Jwk):
              a list of supported algorithms identifiers
         """
         return list(self.ENCRYPTION_ALGORITHMS)
-
-    def to_pem_key(self, password: Optional[bytes] = None) -> bytes:
-        """Serialize this key to PEM format.
-
-        For private keys, you can provide a password for encryption.
-
-        Args:
-          password: password to use to encrypt the PEM
-
-        Returns:
-            the PEM encrypted key
-        """
-        if self.is_private:
-            assert isinstance(self.cryptography_key, ec.EllipticCurvePrivateKey)
-            encryption: serialization.KeySerializationEncryption
-            if password:
-                encryption = serialization.BestAvailableEncryption(password)
-            else:
-                encryption = serialization.NoEncryption()
-            return self.cryptography_key.private_bytes(  # type: ignore[no-any-return, attr-defined]
-                serialization.Encoding.PEM,
-                serialization.PrivateFormat.PKCS8,
-                encryption,
-            )
-        else:
-            assert isinstance(self.cryptography_key, ec.EllipticCurvePublicKey)
-            if password:
-                raise ValueError(
-                    "Public keys cannot be encrypted when serialized in PEM format."
-                )
-            return self.cryptography_key.public_bytes(
-                serialization.Encoding.PEM,
-                serialization.PublicFormat.SubjectPublicKeyInfo,
-            )

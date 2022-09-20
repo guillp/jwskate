@@ -126,3 +126,26 @@ def test_thumbprint(rsa_private_jwk: Jwk) -> None:
         rsa_private_jwk.thumbprint_uri()
         == "urn:ietf:params:oauth:jwk-thumbprint:sha-256:Qfq9DOLKNRyptzTJBhCFlzccbA0ac7Ag9GVFL11GAfM"
     )
+
+
+@pytest.mark.parametrize("key_size", (1024, 2048, 4096, 1678))
+def test_pem_key(key_size: int) -> None:
+    private_jwk = RSAJwk.generate(key_size=key_size)
+    private_pem = private_jwk.to_pem()
+    assert Jwk.from_pem_key(private_pem) == private_jwk
+
+    public_jwk = private_jwk.public_jwk()
+    public_pem = public_jwk.to_pem()
+    assert Jwk.from_pem_key(public_pem) == public_jwk
+
+    # serialize private key with password
+    password = b"th1s_i5_a_p4ssW0rd!"
+    private_pem = private_jwk.to_pem(password)
+    assert Jwk.from_pem_key(private_pem, password) == private_jwk
+
+    # try to serialize the public key with password
+    with pytest.raises(ValueError):
+        public_jwk.to_pem(password)
+
+    with pytest.raises(ValueError):
+        assert Jwk.from_pem_key(public_pem, password) == public_jwk

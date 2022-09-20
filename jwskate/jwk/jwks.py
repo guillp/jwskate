@@ -207,3 +207,37 @@ class JwkSet(BaseJsonDict):
 
         # no key matches, so consider the signature invalid
         return False
+
+    def verification_keys(self) -> List[Jwk]:
+        """Return the list of keys from this JWKS that a usable for signature verification.
+
+        To be usable for signature verification, a key must:
+        - be asymmetric
+        - be public
+        - have an "alg" parameter that is a signature alg
+
+        Returns:
+            a list of `Jwk` that are usable for signature verification
+        """
+        return [
+            jwk
+            for jwk in self.jwks
+            if not jwk.is_symmetric and not jwk.is_private and jwk.use == "sig"
+        ]
+
+    def encryption_keys(self) -> List[Jwk]:
+        """Return the list of keys from this JWKS that are usable for encryption.
+
+        To be usable for encryption, a key must:
+        - be asymmetric
+        - be public
+        - have an "alg" parameter that is an encryption alg
+
+        Returns:
+            a list of `Jwk` that are suitable for encryption
+        """
+        return [
+            jwk
+            for jwk in self.jwks
+            if not jwk.is_symmetric and not jwk.is_private and jwk.use == "enc"
+        ]

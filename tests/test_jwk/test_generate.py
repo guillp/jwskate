@@ -1,6 +1,6 @@
 import pytest
 
-from jwskate import EncryptionAlgs, Jwk, KeyManagementAlgs, SignatureAlgs
+from jwskate import EncryptionAlgs, Jwk, KeyManagementAlgs, RSAJwk, SignatureAlgs
 
 
 @pytest.mark.parametrize(
@@ -34,3 +34,12 @@ def test_generate_for_alg(alg: str) -> None:
         assert jwk.use == "enc"
         assert jwk.key_ops == ["unwrapKey"]
         assert not jwk.is_symmetric
+
+    jwk_mini = jwk.minimize()
+    assert "alg" not in jwk_mini
+    assert "use" not in jwk_mini
+    assert "key_ops" not in jwk_mini
+    if isinstance(jwk_mini, RSAJwk):
+        jwk_mini = jwk_mini.with_optional_private_parameters()
+
+    assert jwk_mini.with_usage_parameters(alg) == jwk

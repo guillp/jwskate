@@ -948,3 +948,56 @@ class Jwk(BaseJsonDict):
         jwk = self.copy()
         jwk["kid"] = self.thumbprint()
         return jwk
+
+    def with_usage_parameters(
+        self,
+        alg: Optional[str] = None,
+        with_alg: bool = True,
+        with_use: bool = True,
+        with_key_ops: bool = True,
+    ) -> Jwk:
+        """Copy this Jwk and add the `use` and `key_ops` parameters.
+
+        The returned jwk `alg` parameter will be the one passed as parameter to this method, or as dfault the one declared as `alg` parameter in this Jwk.
+        The `use` (Public Key Use) param is deduced based on this `alg` value.
+        The `key_ops` (Key Operations) param is deduced based on the key `use` and if the key is public, private,
+        or symmetric.
+
+        Args:
+            alg: the alg to use, if not present in this Jwk
+            with_alg: whether to include an `alg` parameter
+            with_use: whether to include a `use` parameter
+            with_key_ops: whether to include a `key_ops` parameter
+
+        Returns:
+            a Jwk with the same key, with `alg`, `use` and `key_ops` parameters.
+        """
+        alg = alg or self.alg
+
+        if not alg:
+            raise ValueError("An algorithm is required to set the usage parameters")
+
+        self._get_alg_class(alg)  # raises an exception if alg is not supported
+
+        jwk = self.copy()
+        if with_alg:
+            jwk["alg"] = alg
+        if with_use:
+            jwk["use"] = jwk.use
+        if with_key_ops:
+            jwk["key_ops"] = jwk.key_ops
+
+        return jwk
+
+    def minimize(self) -> Jwk:
+        """Strips out any optional or non-standard parameter from that key.
+
+        This will remove `alg`, `use`, `key_ops`, optional parameters from RSA keys, and unknown parameters.
+        """
+        jwk = self.copy()
+        for key in self.keys():
+            if key == "kty" or key in self.PARAMS and self.PARAMS[key].is_required:
+                continue
+            del jwk[key]
+
+        return jwk

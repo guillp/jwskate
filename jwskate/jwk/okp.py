@@ -49,7 +49,7 @@ class OKPJwk(Jwk):
             "Public Key", is_private=False, is_required=True, kind="b64u"
         ),
         "d": JwkParameter(
-            "Private Key", is_private=True, is_required=False, kind="b64u"
+            "Private Key", is_private=True, is_required=True, kind="b64u"
         ),
     }
 
@@ -318,13 +318,11 @@ class OKPJwk(Jwk):
         elif alg:
             if alg in cls.SIGNATURE_ALGORITHMS:
                 curve = Ed25519
-                params.setdefault("use", "sig")
             elif alg in cls.KEY_MANAGEMENT_ALGORITHMS:
                 curve = X25519
-                params.setdefault("use", "enc")
 
         if curve is None:
             raise UnsupportedOKPCurve(crv)
 
         x, d = curve.generate()
-        return cls.private(crv=curve.name, x=x, d=d, **params)
+        return cls.private(crv=curve.name, x=x, d=d, alg=alg, **params)

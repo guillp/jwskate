@@ -3,8 +3,8 @@
 [![PyPi](https://img.shields.io/pypi/v/jwskate.svg)](https://pypi.python.org/pypi/jwskate)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A Pythonic implementation of Json Web Signature, Keys, Algorithms, Tokens and Encryption (RFC7514 to 7519), and their
-extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).
+A Pythonic implementation of the JOSE set of specifications: Json Web Signature, Keys, Algorithms, Tokens
+and Encryption (RFC7514 to 7519), and their extensions ECDH Signatures (RFC8037), and JWK Thumbprints (RFC7638).
 
 - Free software: MIT
 - Documentation: <https://guillp.github.io/jwskate/>

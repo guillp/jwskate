@@ -315,8 +315,12 @@ def test_sign_and_encrypt() -> None:
     enc_alg = "RSA-OAEP-256"
     enc = "A128GCM"
 
-    sign_jwk = Jwk.generate_for_alg(sign_alg).include_kid_thumbprint()
-    enc_jwk = Jwk.generate_for_alg(enc_alg).include_kid_thumbprint()
+    sign_jwk = (
+        Jwk.generate_for_alg(sign_alg).with_kid_thumbprint().with_usage_parameters()
+    )
+    enc_jwk = (
+        Jwk.generate_for_alg(enc_alg).with_kid_thumbprint().with_usage_parameters()
+    )
 
     claims = {"iat": 1661759343, "exp": 1661759403, "sub": "mysub"}
     jwt = Jwt.sign_and_encrypt(claims, sign_jwk, enc_jwk, enc)

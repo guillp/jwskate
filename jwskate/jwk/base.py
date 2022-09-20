@@ -930,7 +930,7 @@ class Jwk(BaseJsonDict):
         """
         return Jwk(super().copy())
 
-    def include_kid_thumbprint(self, force: bool = False) -> Jwk:
+    def with_kid_thumbprint(self, force: bool = False) -> Jwk:
         """Includes the JWK thumbprint as "kid".
 
         If key already has a "kid":

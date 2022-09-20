@@ -166,13 +166,13 @@ def test_thumbprint() -> None:
         == "urn:ietf:params:oauth:jwk-thumbprint:sha-256:NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"
     )
 
-    jwk_with_thumbprint_kid = jwk.include_kid_thumbprint(force=True)
+    jwk_with_thumbprint_kid = jwk.with_kid_thumbprint(force=True)
     assert jwk_with_thumbprint_kid.kid == "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"
     assert isinstance(jwk_with_thumbprint_kid, Jwk)
     assert jwk_with_thumbprint_kid is not jwk
     assert jwk_with_thumbprint_kid.n == jwk.n
 
-    jwk_with_initial_kid = jwk.include_kid_thumbprint(force=False)
+    jwk_with_initial_kid = jwk.with_kid_thumbprint(force=False)
     assert jwk_with_initial_kid.kid == "2011-04-29"
     assert isinstance(jwk_with_initial_kid, Jwk)
     assert jwk_with_initial_kid is jwk
@@ -194,4 +194,3 @@ def test_generate_for_alg() -> None:
     rsa15_jwk = Jwk.generate_for_alg("RSA1_5")
     assert isinstance(rsa15_jwk, RSAJwk)
     assert rsa15_jwk.alg == "RSA1_5"
-    assert rsa15_jwk.use == "enc"

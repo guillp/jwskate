@@ -18,6 +18,7 @@ from typing import (
     Union,
 )
 
+from backports.cached_property import cached_property
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 
@@ -167,6 +168,32 @@ class Jwk(BaseJsonDict):
         except AttributeError as exc:
             raise InvalidJwk() from exc
 
+    @classmethod
+    def _get_alg_class(cls, alg: str) -> Type[BaseAlg]:
+        """Given an alg identifier, return the matching JWA wrapper.
+
+        Args:
+            alg: an alg identifier
+
+        Returns:
+            the matching JWA wrapper
+        """
+        alg_class: Optional[Type[BaseAlg]]
+
+        alg_class = cls.SIGNATURE_ALGORITHMS.get(alg)
+        if alg_class is not None:
+            return alg_class
+
+        alg_class = cls.KEY_MANAGEMENT_ALGORITHMS.get(alg)
+        if alg_class is not None:
+            return alg_class
+
+        alg_class = cls.ENCRYPTION_ALGORITHMS.get(alg)
+        if alg_class is not None:
+            return alg_class
+
+        raise UnsupportedAlg(alg)
+
     @property
     def is_private(self) -> bool:
         """Return `True` if the key is private, `False` otherwise.
@@ -280,8 +307,57 @@ class Jwk(BaseJsonDict):
             raise TypeError(f"invalid kid type {type(kid)}", kid)
         return kid
 
+    @cached_property
+    def use(self) -> Optional[str]:
+        """Return the key use.
+
+        If no `alg` parameter is present, this returns the `use` parameter from this JWK.
+        If an `alg` parameter is present, the use is deduced from this alg.
+        To check for the presence of the `use` parameter, use `jwk.get('use')`.
+        """
+        if self.alg:
+            return self._get_alg_class(self.alg).use
+        else:
+            return self.get("use")
+
+    @cached_property
+    def key_ops(self) -> List[str]:
+        """Return the key operations.
+
+        If no `alg` parameter is present, this returns the `key_ops` parameter from this JWK.
+        If an `alg` parameter is present, the key operations are deduced from this alg.
+        To check for the presence of the `key_ops` parameter, use `jwk.get('key_ops')`.
+        """
+        if self.use == "sig":
+            if self.is_symmetric:
+                key_ops = ["sign", "verify"]
+            elif self.is_private:
+                key_ops = ["sign"]
+            else:
+                key_ops = ["verify"]
+        elif self.use == "enc":
+            if self.is_symmetric:
+                if self.alg:
+                    alg_class = self._get_alg_class(self.alg)
+                    if issubclass(alg_class, BaseKeyManagementAlg):
+                        key_ops = ["wrapKey", "unwrapKey"]
+                    elif issubclass(alg_class, BaseAESEncryptionAlg):
+                        key_ops = ["encrypt", "decrypt"]
+                else:
+                    key_ops = ["wrapKey", "unwrapKey", "encrypt", "decrypt"]
+            elif self.is_private:
+                key_ops = ["unwrapKey"]
+            else:
+                key_ops = ["wrapKey"]
+        else:
+            key_ops = self.get("key_ops", [])
+
+        return key_ops
+
     def _validate(self) -> None:
-        """Internal method used to validate a Jwk. It checks that all required parameters are present and well-formed. If the key is private, it sets the `is_private` flag to `True`.
+        """Internal method used to validate a Jwk.
+
+        It checks that all required parameters are present and well-formed. If the key is private, it sets the `is_private` flag to `True`.
 
         Raises:
             TypeError: if the key type doesn't match the subclass
@@ -379,14 +455,16 @@ class Jwk(BaseJsonDict):
             if not param.is_private
         }
 
-        key_ops = self.get("key_ops")
-        if key_ops:
+        if self.key_ops:
+            key_ops = list(self.key_ops)
             if "sign" in key_ops:
                 key_ops.remove("sign")
                 key_ops.append("verify")
             if "unwrapKey" in key_ops:
                 key_ops.remove("unwrapKey")
                 key_ops.append("wrapKey")
+        else:
+            key_ops = None
 
         return Jwk(
             dict(
@@ -833,29 +911,16 @@ class Jwk(BaseJsonDict):
         """
         for kty, jwk_class in cls.subclasses.items():
             alg_class: Optional[Type[BaseAlg]]
-            alg_class = jwk_class.SIGNATURE_ALGORITHMS.get(alg)
-            if alg_class is not None:
-                kwargs.update({"use": "sig", "key_ops": ["sign"]})
-            else:
-                alg_class = jwk_class.KEY_MANAGEMENT_ALGORITHMS.get(alg)
-                if alg_class is not None:
-                    if issubclass(alg_class, BaseSymmetricAlg):
-                        kwargs.update(
-                            {"use": "enc", "key_ops": ["wrapKey", "unwrapKey"]}
-                        )
-                    else:
-                        kwargs.update({"use": "enc", "key_ops": ["unwrapKey"]})
-                else:
-                    alg_class = jwk_class.ENCRYPTION_ALGORITHMS.get(alg)
-                    if alg_class is not None:
-                        kwargs.update({"use": "enc", "key_ops": ["encrypt", "decrypt"]})
-                        kwargs.setdefault("key_size", alg_class.key_size)
-                    else:
-                        continue
+            try:
+                alg_class = jwk_class._get_alg_class(alg)
+                if isinstance(jwk_class, BaseAESEncryptionAlg):
+                    kwargs.setdefault("key_size", alg_class.key_size)
 
-            return jwk_class.generate(alg=alg, **kwargs)
+                return jwk_class.generate(alg=alg, **kwargs)
+            except UnsupportedAlg:
+                continue
 
-        raise ValueError("No key type supports this alg:", alg)
+        raise UnsupportedAlg(alg)
 
     def copy(self) -> Jwk:
         """Creates a copy of this key.

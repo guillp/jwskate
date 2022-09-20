@@ -176,6 +176,11 @@ class Jwk(BaseJsonDict):
         """
         return True
 
+    @property
+    def is_symmetric(self) -> bool:
+        """Return `True` if the key is symmetric, `False` otherwise."""
+        return False
+
     def __getattr__(self, item: str) -> Any:
         """Allows access to key parameters as attributes, like `jwk.kid`, `jwk.kty`, instead of `jwk['kid']`, `jwk['kty']`, etc.
 

@@ -68,6 +68,11 @@ class SymmetricJwk(Jwk):
         ]
     }
 
+    @property
+    def is_symmetric(self) -> bool:
+        """Always returns `True`."""
+        return True
+
     def public_jwk(self) -> Jwk:
         """This always raises a ValueError since SymmetricKeys are always private.
 

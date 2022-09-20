@@ -31,6 +31,9 @@ class BaseAlg:
     An algorithm has a `name` and a `description`, whose reference is here: https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-algorithms
     """
 
+    use: str
+    """Alg use ('sig' or 'enc')"""
+
     name: str
     """Technical name of the algorithm"""
     description: str
@@ -176,6 +179,8 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 class BaseSignatureAlg(BaseAlg):
     """Base class for signature algorithms."""
 
+    use = "sig"
+
     def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:
         """Sign arbitrary data, return the signature.
 
@@ -202,6 +207,8 @@ class BaseSignatureAlg(BaseAlg):
 
 class BaseAESEncryptionAlg(BaseSymmetricAlg):
     """Base class for AES encryption algorithms."""
+
+    use = "enc"
 
     key_size: int
     tag_size: int
@@ -288,3 +295,5 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
 class BaseKeyManagementAlg(BaseAlg):
     """Base class for Key Management algorithms."""
+
+    use = "enc"

@@ -11,6 +11,8 @@ from ..encryption.aesgcm import BaseAESGCM
 class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
     """Base class for AES-GCM Key wrapping algorithms."""
 
+    use = "enc"
+
     key_size: int
     """Required key size, in bits."""
     tag_size: int = 16

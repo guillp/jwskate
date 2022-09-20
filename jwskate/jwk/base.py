@@ -455,7 +455,7 @@ class Jwk(BaseJsonDict):
             if not param.is_private
         }
 
-        if self.key_ops:
+        if "key_ops" in self:
             key_ops = list(self.key_ops)
             if "sign" in key_ops:
                 key_ops.remove("sign")

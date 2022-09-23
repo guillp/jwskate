@@ -277,7 +277,7 @@ class RSAJwk(Jwk):
             p, q = rsa.rsa_recover_prime_factors(
                 self.modulus, self.exponent, self.private_exponent
             )
-            return p, q
+            return (p, q) if p < q else (q, p)
         return (
             BinaPy(self.p).decode_from("b64u").to_int(),
             BinaPy(self.q).decode_from("b64u").to_int(),

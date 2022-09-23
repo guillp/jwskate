@@ -16,7 +16,7 @@ class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
     min_key_size: int
 
     def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:  # noqa: D102
-        if not isinstance(data, bytes):
+        if not isinstance(data, bytes):  # pragma: no branch
             data = bytes(data)
 
         if self.read_only:
@@ -29,7 +29,7 @@ class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
     def verify(
         self, data: Union[bytes, SupportsBytes], signature: bytes
     ) -> bool:  # noqa: D102
-        if not isinstance(data, bytes):
+        if not isinstance(data, bytes):  # pragma: no branch
             data = bytes(data)
 
         candidate_signature = self.sign(data)

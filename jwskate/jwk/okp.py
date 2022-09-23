@@ -17,6 +17,7 @@ from cryptography.hazmat.primitives.serialization import (
 from jwskate.jwa import X448, X25519, Ed448, Ed25519, EdDsa, OKPCurve
 
 from .. import EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW
+from .alg import UnsupportedAlg
 from .base import Jwk, JwkParameter
 
 
@@ -307,12 +308,6 @@ class OKPJwk(Jwk):
         Returns:
             the resulting OKPJwk
         """
-        if crv is None and alg is None:
-            raise ValueError(
-                "You must supply at least a Curve identifier (crv) or an Algorithm identifier (alg) "
-                "in order to generate an OKP JWK."
-            )
-        curve: Optional[OKPCurve] = None
         if crv:
             curve = cls.get_curve(crv)
         elif alg:
@@ -320,9 +315,13 @@ class OKPJwk(Jwk):
                 curve = Ed25519
             elif alg in cls.KEY_MANAGEMENT_ALGORITHMS:
                 curve = X25519
-
-        if curve is None:
-            raise UnsupportedOKPCurve(crv)
+            else:
+                raise UnsupportedAlg(alg)
+        else:
+            raise ValueError(
+                "You must supply at least a Curve identifier (crv) or an Algorithm identifier (alg) "
+                "in order to generate an OKP JWK."
+            )
 
         x, d = curve.generate()
         return cls.private(crv=curve.name, x=x, d=d, alg=alg, **params)

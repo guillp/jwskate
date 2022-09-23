@@ -38,7 +38,7 @@ class BaseRSASigAlg(
         if self.read_only:
             raise NotImplementedError
 
-        if not isinstance(data, bytes):
+        if not isinstance(data, bytes):  # pragma: no branch
             data = bytes(data)
 
         with self.private_key_required() as key:
@@ -54,7 +54,7 @@ class BaseRSASigAlg(
         Returns:
             `True` if the signature is valid, `False` otherwise
         """
-        if not isinstance(data, bytes):
+        if not isinstance(data, bytes):  # pragma: no branch
             data = bytes(data)
 
         with self.public_key_required() as key:

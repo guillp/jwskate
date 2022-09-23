@@ -57,11 +57,11 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         Returns:
           the resulting MAC.
         """
-        if aad is None:
+        if aad is None:  # pragma: no branch
             aad = b""
         al = BinaPy.from_int(len(aad) * 8, length=8, byteorder="big", signed=False)
         hasher = hmac.HMAC(self.mac_key, self.hash_alg)
-        if not isinstance(ciphertext, bytes):
+        if not isinstance(ciphertext, bytes):  # pragma: no branch
             ciphertext = bytes(ciphertext)
 
         for param in (aad, iv, ciphertext, al):
@@ -87,7 +87,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         Returns:
           a tuple (encrypted_data, authentication_tag)
         """
-        if not isinstance(plaintext, bytes):
+        if not isinstance(plaintext, bytes):  # pragma: no branch
             plaintext = bytes(plaintext)
 
         cipher = ciphers.Cipher(algorithms.AES(self.aes_key), modes.CBC(iv)).encryptor()
@@ -116,7 +116,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         Returns:
           the decrypted data
         """
-        if not isinstance(ciphertext, bytes):
+        if not isinstance(ciphertext, bytes):  # pragma: no branch
             ciphertext = bytes(ciphertext)
 
         mac = self.mac(ciphertext, iv=iv, aad=aad)

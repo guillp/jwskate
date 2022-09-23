@@ -32,7 +32,7 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         """
         if len(iv) * 8 != self.iv_size:
             raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
-        if not isinstance(plaintext, bytes):
+        if not isinstance(plaintext, bytes):  # pragma: no branch
             plaintext = bytes(plaintext)
         ciphertext_with_tag = BinaPy(aead.AESGCM(self.key).encrypt(iv, plaintext, aad))
         ciphertext, tag = ciphertext_with_tag.cut_at(-self.tag_size)
@@ -60,7 +60,7 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         Raises:
             ValueError: if the IV size is not appropriate
         """
-        if not isinstance(ciphertext, bytes):
+        if not isinstance(ciphertext, bytes):  # pragma: no branch
             ciphertext = bytes(ciphertext)
 
         if len(iv) * 8 != self.iv_size:

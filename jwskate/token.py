@@ -72,7 +72,7 @@ class BaseCompactToken:
             AttributeError: if the `alg` header value is not a string
         """
         alg = self.get_header("alg")
-        if alg is None or not isinstance(alg, str):
+        if alg is None or not isinstance(alg, str):  # pragma: no branch
             raise AttributeError("This token doesn't have a valid 'alg' header")
         return alg
 
@@ -86,7 +86,7 @@ class BaseCompactToken:
             AttributeError: if the `kid` header value is not a string
         """
         kid = self.get_header("kid")
-        if kid is None or not isinstance(kid, str):
+        if kid is None or not isinstance(kid, str):  # pragma: no branch
             raise AttributeError("This token doesn't have a valid 'kid' header")
         return kid
 
@@ -100,7 +100,7 @@ class BaseCompactToken:
             AttributeError: if the `typ` header value is not a string
         """
         typ = self.get_header("typ")
-        if typ is None or not isinstance(typ, str):
+        if typ is None or not isinstance(typ, str):  # pragma: no branch
             raise AttributeError("This token doesn't have a valid 'typ' header")
         return typ
 
@@ -114,7 +114,7 @@ class BaseCompactToken:
             AttributeError: if the `typ` header value is not a string
         """
         cty = self.get_header("cty")
-        if cty is None or not isinstance(cty, str):
+        if cty is None or not isinstance(cty, str):  # pragma: no branch
             raise AttributeError("This token doesn't have a valid 'cty' header")
         return cty
 

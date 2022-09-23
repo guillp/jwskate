@@ -336,3 +336,9 @@ def test_sign_and_encrypt() -> None:
     assert inner_jwt.claims == claims
     assert inner_jwt.verify_signature(sign_jwk)
     assert inner_jwt.kid == sign_jwk.kid
+
+
+def test_sign_without_alg() -> None:
+    jwk = Jwk.generate_for_kty("RSA")
+    with pytest.raises(ValueError):
+        Jwt.sign({"foo": "bar"}, jwk)

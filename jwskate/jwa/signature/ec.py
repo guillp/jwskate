@@ -21,8 +21,17 @@ class BaseECSignatureAlg(
     public_key_class = ec.EllipticCurvePublicKey
     private_key_class = ec.EllipticCurvePrivateKey
 
+    @classmethod
+    def check_key(
+        cls, key: Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey]
+    ) -> None:  # noqa: D102
+        if key.curve.name != cls.curve.cryptography_curve.name:
+            raise ValueError(
+                f"This key is on curve {key.curve.name}. An EC key on curve {cls.curve.name} is expected."
+            )
+
     def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:  # noqa: D102
-        if not isinstance(data, bytes):
+        if not isinstance(data, bytes):  # pragma: no branch
             data = bytes(data)
 
         with self.private_key_required() as key:
@@ -35,7 +44,7 @@ class BaseECSignatureAlg(
     def verify(
         self, data: Union[bytes, SupportsBytes], signature: bytes
     ) -> bool:  # noqa: D102
-        if not isinstance(data, bytes):
+        if not isinstance(data, bytes):  # pragma: no branch
             data = bytes(data)
 
         with self.public_key_required() as key:

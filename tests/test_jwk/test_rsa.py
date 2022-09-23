@@ -149,3 +149,77 @@ def test_pem_key(key_size: int) -> None:
 
     with pytest.raises(ValueError):
         assert Jwk.from_pem_key(public_pem, password) == public_jwk
+
+
+def test_optional_parameters() -> None:
+    jwk = RSAJwk(
+        {
+            "kty": "RSA",
+            "n": "vrTLXnpOv8Fe5stFYhmYrFKYUBcHpZU6GdtbXYRNPjBTAl2FMWE_chq5OMaM2QHBaAVLy62_xDV4AoUHydAlUoPtCtrxb9ViQnBpDytfXuhVEvAl0-K3zkWNVlOuLxDjp85cImbcPzmwrFADqAREPkCQh31V7tnlttlXlEYqDC_Cra8OnnPFwxRqcpcIWQmj2zy95TdJ1TQLv2HOYAbb1Ql1HhPhYJBFHcX4fhTVM0g-7JKOWRN7CBVudW3s5jqxgzykfkTopLDS0frP2ivz8p1vgHrXQKJr0M-dnj7FZzYiam8zBoTzOFRQ3-_QgWdu9Z9BCvJfpXhepZWu4Ryjiw",
+            "e": "AQAB",
+            "d": "AxJHWjivDwCOxjnM3sUZw-C6qkOMsHqESolRYeKxGcjOdXHLJN3zlyNeC0-LUi1oj4PSUi_0sDTKP4Qj-XicOUV9qliXXd06bWaBEqj4qr8kK59phI2Ytz5AhfzoB8MGX5v_uOAeOPh1Y3kQbgLPlI8WpM_8c9HXlMfQVMeCgtq08Vv15-eC6xeLqkNajQ8eEz3ZTt8eVuY5ElwiVAx8dl833_AV5E7s27mCoFWsd73zMk3ej1-eq0y4lwL7nHPPrM6JEdCrhMQgyR8BKmFZT14Ozm7W7p0W6llKY6SWV8VUEpnDbZrbm2Bpq_fvEptICE-byzIMVEN53KF9Mwo09Q",
+        }
+    )
+    assert "qi" not in jwk
+    assert "p" not in jwk
+    assert "q" not in jwk
+    assert "dp" not in jwk
+    assert "dq" not in jwk
+
+    assert (
+        jwk.first_prime_factor
+        == BinaPy(
+            "1W78w6KeVoikPeFMH1E7ot6QzOmZEIv8DxYzJ440XIcY_6cvko34igTWS7x-XdapedbjeER1EBkR0_E_dUXos8HmRCTvO33SZ9R-w1HSm9VSx5JqHdBSbpDJtM2mbSKRaW7p_-KxJF2cvvnTyN8cawgDaPiEl8YpgGsize7MHvU"
+        )
+        .decode_from("b64u")
+        .to_int()
+    )
+    assert (
+        jwk.second_prime_factor
+        == BinaPy(
+            "5L1yUc691HaYvK6iohvlAzQ7RRcp_xKC0TntmwMaSUCtVkKiYOrkFxrJgtWlTx7p-M4ecdKaxO9njnRHDiMwXmDgiEhri5NellgfsXy0IQFugnW7BQBBEOkk5Y6CRvYE7WNd5sWnISO3b9nV7RDtHna6_CL1t8oDC1COU6kXKH8"
+        )
+        .decode_from("b64u")
+        .to_int()
+    )
+    assert (
+        jwk.first_factor_crt_exponent
+        == BinaPy(
+            "oCaf08x6M0RkuWoMzJMPxK5syNWf3SKtCEUILW4vLB7TS0IQGFAfZrEqe7n8uD0S_jGYje4QSPwGvJoRm9XRPtEID6oHOQS4lOCGHdmPxw7TBp1-stBWilBqihimAM4nfo2TWEap1TfJHiQoHloL4OQqauHP3HL9QTci7pN45uE"
+        )
+        .decode_from("b64u")
+        .to_int()
+    )
+    assert (
+        jwk.second_factor_crt_exponent
+        == BinaPy(
+            "BMK8ol8_LDDbtPGdiOoztgFcSm_U--4SsvAVteg2n9esw-LXJlU9Mg3oq8RukFsAW6FOmOfdOMQSz7Az2mN5Gj3B7pQzSNBkY5Sp9DO4PAefmS-CGPSMZiG0FuMEax2rtJUg2zC57cKkirtp7GkxxjSKZ70CiDS4I4AltjAKv1k"
+        )
+        .decode_from("b64u")
+        .to_int()
+    )
+    assert (
+        jwk.first_crt_coefficient
+        == BinaPy(
+            "1W3UxRlpxu2H4rcalHlQN0i5pq4Cei55CSjXkvewithAi_kmkcEaqzD07YKMdfjS9oKCKozzSklS_9XoeD-orPlszZ1dHwKbH8xn2_0QExazgvptSBF-br3xHoj9jbQ-4_DD1RQS1tXwA2nex5VAlvFGC-uHQhGRTnsmU3NNUcs"
+        )
+        .decode_from("b64u")
+        .to_int()
+    )
+
+    jwk_with_opp = jwk.with_optional_private_parameters()
+    assert jwk_with_opp == {
+        "kty": "RSA",
+        "n": "vrTLXnpOv8Fe5stFYhmYrFKYUBcHpZU6GdtbXYRNPjBTAl2FMWE_chq5OMaM2QHBaAVLy62_xDV4AoUHydAlUoPtCtrxb9ViQnBpDytfXuhVEvAl0-K3zkWNVlOuLxDjp85cImbcPzmwrFADqAREPkCQh31V7tnlttlXlEYqDC_Cra8OnnPFwxRqcpcIWQmj2zy95TdJ1TQLv2HOYAbb1Ql1HhPhYJBFHcX4fhTVM0g-7JKOWRN7CBVudW3s5jqxgzykfkTopLDS0frP2ivz8p1vgHrXQKJr0M-dnj7FZzYiam8zBoTzOFRQ3-_QgWdu9Z9BCvJfpXhepZWu4Ryjiw",
+        "e": "AQAB",
+        "d": "AxJHWjivDwCOxjnM3sUZw-C6qkOMsHqESolRYeKxGcjOdXHLJN3zlyNeC0-LUi1oj4PSUi_0sDTKP4Qj-XicOUV9qliXXd06bWaBEqj4qr8kK59phI2Ytz5AhfzoB8MGX5v_uOAeOPh1Y3kQbgLPlI8WpM_8c9HXlMfQVMeCgtq08Vv15-eC6xeLqkNajQ8eEz3ZTt8eVuY5ElwiVAx8dl833_AV5E7s27mCoFWsd73zMk3ej1-eq0y4lwL7nHPPrM6JEdCrhMQgyR8BKmFZT14Ozm7W7p0W6llKY6SWV8VUEpnDbZrbm2Bpq_fvEptICE-byzIMVEN53KF9Mwo09Q",
+        "p": "1W78w6KeVoikPeFMH1E7ot6QzOmZEIv8DxYzJ440XIcY_6cvko34igTWS7x-XdapedbjeER1EBkR0_E_dUXos8HmRCTvO33SZ9R-w1HSm9VSx5JqHdBSbpDJtM2mbSKRaW7p_-KxJF2cvvnTyN8cawgDaPiEl8YpgGsize7MHvU",
+        "q": "5L1yUc691HaYvK6iohvlAzQ7RRcp_xKC0TntmwMaSUCtVkKiYOrkFxrJgtWlTx7p-M4ecdKaxO9njnRHDiMwXmDgiEhri5NellgfsXy0IQFugnW7BQBBEOkk5Y6CRvYE7WNd5sWnISO3b9nV7RDtHna6_CL1t8oDC1COU6kXKH8",
+        "dp": "oCaf08x6M0RkuWoMzJMPxK5syNWf3SKtCEUILW4vLB7TS0IQGFAfZrEqe7n8uD0S_jGYje4QSPwGvJoRm9XRPtEID6oHOQS4lOCGHdmPxw7TBp1-stBWilBqihimAM4nfo2TWEap1TfJHiQoHloL4OQqauHP3HL9QTci7pN45uE",
+        "dq": "BMK8ol8_LDDbtPGdiOoztgFcSm_U--4SsvAVteg2n9esw-LXJlU9Mg3oq8RukFsAW6FOmOfdOMQSz7Az2mN5Gj3B7pQzSNBkY5Sp9DO4PAefmS-CGPSMZiG0FuMEax2rtJUg2zC57cKkirtp7GkxxjSKZ70CiDS4I4AltjAKv1k",
+        "qi": "1W3UxRlpxu2H4rcalHlQN0i5pq4Cei55CSjXkvewithAi_kmkcEaqzD07YKMdfjS9oKCKozzSklS_9XoeD-orPlszZ1dHwKbH8xn2_0QExazgvptSBF-br3xHoj9jbQ-4_DD1RQS1tXwA2nex5VAlvFGC-uHQhGRTnsmU3NNUcs",
+    }
+    assert jwk_with_opp.without_optional_private_parameters() == jwk
+
+    with pytest.raises(ValueError):
+        jwk.public_jwk().with_optional_private_parameters()

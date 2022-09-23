@@ -1,9 +1,9 @@
 """Tests for the jwkskate.jwa submodule."""
-
+import pytest
 from binapy import BinaPy
+from cryptography.hazmat.primitives.asymmetric import ec
 
-from jwskate import Jwk
-from jwskate.jwa import Aes128CbcHmacSha256, Aes192CbcHmacSha384, EcdhEs
+from jwskate import ES256, Aes128CbcHmacSha256, Aes192CbcHmacSha384, EcdhEs, Jwk
 
 
 def test_aes_128_hmac_sha256() -> None:
@@ -191,3 +191,9 @@ def test_ecdhes() -> None:
         key_size=128,
     )
     assert BinaPy(bob_cek).to("b64u") == b"VqqN6vgjbSBcIijNcacQGg"
+
+
+def test_ec_signature_invalid_size() -> None:
+    es256 = ES256(ec.generate_private_key(ec.SECP256R1()).public_key())
+    with pytest.raises(ValueError):
+        es256.verify(b"foo", b"bar")

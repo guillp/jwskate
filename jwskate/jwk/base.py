@@ -295,7 +295,7 @@ class Jwk(BaseJsonDict):
             the key alg
         """
         alg = self.get("alg")
-        if alg is not None and not isinstance(alg, str):
+        if alg is not None and not isinstance(alg, str):  # pragma: no branch
             raise TypeError(f"Invalid alg type {type(alg)}", alg)
         return alg
 
@@ -303,7 +303,7 @@ class Jwk(BaseJsonDict):
     def kid(self) -> Optional[str]:
         """Return the JWK key ID (kid), if present."""
         kid = self.get("kid")
-        if kid is not None and not isinstance(kid, str):
+        if kid is not None and not isinstance(kid, str):  # pragma: no branch
             raise TypeError(f"invalid kid type {type(kid)}", kid)
         return kid
 

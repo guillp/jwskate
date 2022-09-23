@@ -137,7 +137,7 @@ def test_invalid_class_for_kty() -> None:
     ],
 )
 def test_key_ops(private_key_ops: str, public_key_ops: str) -> None:
-    private_jwk = Jwk.generate_for_kty("EC", crv="P-256", key_ops=[private_key_ops])
+    private_jwk = Jwk.generate_for_kty("RSA", key_ops=[private_key_ops])
     public_jwk = private_jwk.public_jwk()
     assert public_key_ops in public_jwk.key_ops
     assert private_key_ops not in public_jwk.key_ops

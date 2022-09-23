@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import Any, List, Mapping, Optional, Union
 
 from backports.cached_property import cached_property
@@ -221,10 +222,13 @@ class ECJwk(Jwk):
             UnsupportedEllipticCurve: if the provided curve identifier is not supported.
         """
         if crv is None and alg is None:
-            raise ValueError(
-                "You must supply at least a Curve identifier (crv) or an Algorithm identifier (alg) "
-                "in order to generate an Elliptic Curve JWK."
+            warnings.warn(
+                "No Curve identifier (crv) or an Algorithm identifier (alg) have been provided "
+                "when generating an Elliptic Curve JWK. So there is no hint to determine which curve to use. "
+                "Curve 'P-256' is used by default. You should explicitly pass an 'alg' or 'crv' parameter "
+                "to explicitly select the appropriate Curve and avoid this warning."
             )
+            crv = "P-256"
         curve: Optional[EllipticCurve] = None
         if crv:
             curve = cls.get_curve(crv)

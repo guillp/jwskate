@@ -14,8 +14,14 @@ A quick usage example, generating an RSA private key, signing some data, then va
 ```python
 from jwskate import Jwk
 
-# generate a RSA Jwk and sign a plaintext with it
-rsa_private_jwk = Jwk.generate_for_kty("RSA", key_size=2048, kid="my_key", alg="RS256")
+# let's generate a random private key
+rsa_private_jwk = (
+    Jwk.generate_for_alg(  # generated key will automatically be RSA, based on the required 'alg'
+        alg="RS256", key_size=2048
+    )
+    .with_kid_thumbprint()  # include an RFC7638 thumbprint as key id
+    .with_usage_parameters()  # include the appropriate 'use' and 'key_ops' parameters in the JWK, based on the 'alg'
+)
 
 data = b"Signing is easy!"
 signature = rsa_private_jwk.sign(data)
@@ -30,57 +36,60 @@ assert isinstance(rsa_private_jwk, dict)  # Jwk are dict
 print(rsa_private_jwk)
 ```
 
-The result of this print JWK will look like this:
+The result of this print will look like this (with the random parts abbreviated to `...` for display purposes only):
 
 ```
-{ 'kty': 'RSA',
-  'n': '...',
-  'e': 'AQAB',
-  'd': '...',
-  'p': '...',
-  'q': '...',
-  'dp': '...',
-  'dq': '...',
-  'qi': '...',
-  'kid': 'my_key',
-  'alg': 'RS256',
-}
+{'kty': 'RSA',
+ 'n': '...',
+ 'e': 'AQAB',
+ 'd': '...',
+ 'p': '...',
+ 'q': '...',
+ 'dp': '...',
+ 'dq': '...',
+ 'qi': '...',
+ 'alg': 'RS256',
+ 'kid': '...',
+ 'use': 'sig',
+ 'key_ops': ['sign']}
 ```
 
-Now let's sign a JWT containing arbitrary claims:
+Now let's sign a JWT containing arbitrary claims, this time using an EC key:
 
 ```python
 from jwskate import Jwk, Jwt
 
-private_jwk = Jwk.generate_for_kty("EC", kid="my_key")
+private_jwk = Jwk.generate_for_alg(
+    "ES256", kid="my_key"
+)  # let's specify a kid manually
 claims = {"sub": "some_sub", "claim1": "value1"}
-sign_alg = "ES256"
 
-jwt = Jwt.sign(claims, private_jwk, sign_alg)
+jwt = Jwt.sign(claims, private_jwk)
 # that's it! we have a signed JWT
 assert jwt.claims == claims  # claims can be accessed as a dict
 assert jwt.sub == "some_sub"  # or individual claims can be accessed as attributes
 assert jwt["claim1"] == "value1"  # or as dict items
-assert jwt.alg == sign_alg  # alg and kid headers are also accessible as attributes
+assert jwt.alg == "ES256"  # alg and kid headers are also accessible as attributes
 assert jwt.kid == private_jwk.kid
-assert jwt.verify_signature(private_jwk.public_jwk(), sign_alg)
+assert jwt.verify_signature(private_jwk.public_jwk())
 
 print(jwt)
+# eyJhbGciOiJFUzI1NiIsImtpZCI6Im15a2V5In0.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.C1KcDyDT8qXwUqcWzPKkQD7f6xai-gCgaRFMdKPe80Vk7XeYNa8ovuLwvdXgGW4ZZ_lL73QIyncY7tHGXUthag
+# This will output the full JWT compact representation. You can inspect it for example at <https://jwt.io>
+
+print(jwt.headers)
+# {'alg': 'ES256', 'kid': 'my_key'}
 ```
 
-This will output the full JWT compact representation. You can inspect it for example at <https://jwt.io>
-
-```
-eyJhbGciOiJFUzI1NiIsImtpZCI6Im15a2V5In0.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.C1KcDyDT8qXwUqcWzPKkQD7f6xai-gCgaRFMdKPe80Vk7XeYNa8ovuLwvdXgGW4ZZ_lL73QIyncY7tHGXUthag
-```
+Note above that the JWT headers are automatically generated with the appropriate values.
 
 Or let's sign a JWT with the standardised lifetime, subject, audience and ID claims:
 
 ```python
 from jwskate import Jwk, JwtSigner
 
-private_jwk = Jwk.generate_for_kty("EC")
-signer = JwtSigner(issuer="https://myissuer.com", jwk=private_jwk, alg="ES256")
+private_jwk = Jwk.generate_for_alg("ES256")
+signer = JwtSigner(issuer="https://myissuer.com", jwk=private_jwk)
 jwt = signer.sign(
     subject="some_sub",
     audience="some_aud",
@@ -117,6 +126,14 @@ The generated JWT claims will include the standardised claims:
 - nearly 100% code coverage
 - Relies on [cryptography](https://cryptography.io) for all cryptographic operations
 - Relies on [BinaPy](https://guillp.github.io/binapy/) for binary data manipulations
+
+### Supported Token Types
+
+| Token Type                | Support                                                                  |
+|---------------------------|--------------------------------------------------------------------------|
+| Json Web Signature (JWS)  | ☑ Compact <br/> ☑ JSON Flat <br/> ☑ JSON General <br/> |
+| Json Web Encryption (JWE) | ☑ Compact <br/> ☐ JSON Flat <br/> ☐ JSON General <br/> |
+| Json Web Tokens (JWT)     | ☑ Signed <br/> ☑ Signed and Encrypted                        |
 
 ### Supported Signature algorithms
 
@@ -205,6 +222,7 @@ been dissatisfied by all of them so far, so I decided to come up with my own mod
 - [JWCrypto](https://jwcrypto.readthedocs.io/): very inconsistent and complex API.
 - [Python-JOSE](https://python-jose.readthedocs.io/): lacks easy support for JWT validation
   (checking the standard claims like iss, exp, etc.), lacks easy access to claims
+- [AuthLib](https://docs.authlib.org/en/latest/jose/): limited documentation, limited features
 
 Not to say that those are _bad_ libs (I actually use `jwcrypto` myself for `jwskate` unit tests), but they either don't
 support some important features, or they just don't feel easy-enough, Pythonic-enough to use.
@@ -221,7 +239,7 @@ The same is true for Json Web tokens in JSON format.
 
 While you can directly use `cryptography` to do the cryptographic operations that are described in [JWA](https://www.rfc-editor.org/info/rfc7518),
 its usage is not straightforward and gives you plenty of options to carefully select, leaving room for errors.
-To work around this, `jwskate` comes with a set of wrappers that implement the exact JWA specification, with minimum
+To work around this, `jwskate` comes with a set of wrappers that implement the exact JWA specifications, with minimum
 risk of mistakes.
 
 ### Safe Signature Verification

@@ -4,28 +4,64 @@ from jwskate import Jwk, JwkSet
 
 
 def test_jwkset() -> None:
-    keys = [Jwk.generate_for_kty("RSA"), Jwk.generate_for_kty("RSA")]
+    keys = [
+        {
+            "kty": "RSA",
+            "n": "mUdmf5vJ3svsPSQ8BCOQVfwQdP8AmAEW21sYYUC5eSKR-pdwnRDBuFrIEjon2ry8cU-uaMjAoEZikPXcCTErye2Sj8fWQ8Wyo8DoGacJlFOJvs_18-CmNBc7oL8gBlYax3-feZZnaVIiJjvxQwUw5GQA6JTFnO8n2pnKMOOd8Gf6YrG-r0T6NXdviw0-2IW4f2UMJApqlu37yF8sgRNGZwDljNOkUtPK76Uz5T513Va4ckOqsVfnt4WoAkAkCl3eVBwGw3TJIbp_DaLUq53go0pXBCNxCHRD9mst69ZuknBLqn0SwKbQ9zJH9QvoqrEZ2q7GzkFzw70F6qH5MDEx2-dxQz_QccFV0XBpq4pkfuWzS8qKVO4QjyC7A0vIJUzrRHE2_moOtWvKTDsa7gfvK6kpnAW0iKnNchzBV0fzXWIIxRJ3_cc8Ue-KPRU9Wxm3heBOx_Qh-bKv9s9fVY9X6rimyX-pIwf-jkgWG8_FgTBuGkKTRcLi-XnwsCFIVNOtolmakbQHlin_lgDQm9s0nHoDJbZgAtzQfkIorclBJBzr2t__xgaZCfpSCLdwZFQvGEh1mK4WbSMMt5-L3zKsNLCBfdMbn2fS9n2hylfRwU_NZCY8f2RHAdP-z402Vq1c9-m2Ew3_695OmV5HoinJQPagY9hI-_EW8nhNWf8l4FE",
+            "e": "AQAB",
+            "d": "EGYw-3SrybxII3eBu1Chw-1Sxm20_s5ZB3GM33TZEzKFa0nyGL_e9g4yay7RLkg0oivsBVZ7M3qsV4WSe-JIpNNX862mCTy44ufD_WCfeADjEyj1T9kodxjIPqfMMZlbRp5rLctPd5d7w1r08l53D2x6o2etZ9-3hB4hoY7syjiZs58AP4jR-0_yvW4Wm_xck7a4MI_zvP-ryVGTdaDeDq2sIZ_QLDNwOikS7xM6cYqyc7k1JUG6Lyqr4cfCg2BtJdMUzysqzMLDDq6t8cmTq-zLeAwhrw2fatknQd0AmgbNNampjLacU2JMDBXw1_hYQ4shBpa-n8HUxPh87HDK_Gl4v7BZJHlzRQ73vkjHExcssZ3gkqEi90T4TNov-9uBXOtbVQCmut1IK6TnzBpaHepIqDovNmuzpc2gD3HFI78wdgHgzzV117lFgmLLIfg-mR9lj-qsJn-mdtKauXCXuZX24dBjGpknyBABx850px5nVQ2X9dWMFLxQomLhlxJAfhHQUsFlnpbw4StMDTz96zx9k_rgeNMTuj8VVTZ6DpOwhItYCvk41uIEbQTuehBRhOk7n6R8GELSizzLd6Yjw7FCxwWYavbnpx1sM9s3oOmxhQmm3BpcSRcochhPr14CA0SkTl1nQY3Z4Q_rIBTNtkDngrRBagjJGgtfN95cSIU",
+            "kid": "uzPODAa44gSUXvSI6zilPwxMJCULUHm0FmXoqXRfYdI",
+        },
+        {
+            "kty": "RSA",
+            "n": "ycSaZ7HWpKCY4vfmoLWCxsg2KvpD-3dfFlz-2YsrfnMwpJF0nuRrceAxhFF34NlzwTn-JgVc8-lUrOJmcrBcxQNtr7eaJ0QhcRxu_Wre72QhqTddJgNt4V5Zn9P8l8CplSqiLruVI4nKGoiPFQ7mftGY39wxYiiFB6BMb04lAshvCuUOIP8WFFvCb5Afqpugl-NKpO2-C5vWeN_4xNkSO0fEq49Do01oUkMM5t1D4kvE6_BDVA2jxPHSSulXwcnwHmGuhXEfpVh-ME9MW0S0g7v-uNfpJmjVl7VDV87au6C9GKXHQ3NEXt8DWM8HXqRyRQ0XidJLymDOdUnF1_DMtS_wOCDrPFO-4rG_ZH3dwm-fBRSl_chu324OBi_ER6XIQpjkFiQo2pqbD8bI4X6kH8kUASq5gVsBU_hfQUZljSJoR2gQtorNw5EK4rlAQ5jS-ww16WiSna6jzgT_M4ZLr9IPCloe7isVxSk35-gD87xXtl8PzmE1vdpFC9aArkdFL_PK7MOqDvYIb6MRIOBvoxOV524tFKZhNrZUowTLH3a_-sWFLmdvd14iGxuv_DaC-hCmgI0eq7rzE2wUNP5IVmZASoI-3rKb22QdDlAPHNzdsyJCX4JVIPAJrpLOwptObN30404_C4UUD0IN9OXHD-16NaX5SY1thge94shJpTE",
+            "e": "AQAB",
+            "d": "1I1426RNKkDEztW477RHgIGKDtx2oYKveS-eii5CM4PFypgw8vJO_jff8jSgxQ5PE0-0nPkpYwp7WWVn54pDMIjcFDCnBJaRZEc_5VegYzBpBYp9Zn5WUwTCBc2cW4FrJOk00WZrRnTxo-IYWWbJCvBiy_F7VJy7B72mx9rawoPD9wY2TCxtZiUEP-LkeSZZl6iqCfUqL7CLz-qidzz2J90DInhaGL6DF6XrAYo26T5IxQTm6LU1wVO-5YvMFypU-qyM3aa-X8FJrjrbhYprYBu7y54oz33BBYC-4NHZO6-phT2fHT9g11C4heYTLXCvsG6KTXZswVYaKRT-hu31t0mgD8myErBQYcbityrKzdqKNdE9pBiaGMUngUMuaInLRbr2ihXeLSTzgQv6LrEOBxyDeyW43kPTzHtkFOoArOT_xpTjYobIYUTnFOer2rFpetG-B-yRMGSq5hMQ9067cBLfBoOAvJc9MrFTzM6ynPuTh2ZPRV7jZAR0cymtYb2CK_-6eKju2-bqQ0awjb9VkZolYgDccDZWJiM5TuiOBb-HRIdJSkI8KPGlWC-p14Eo3xeMFNjVJo_-lrT91IIaQC-WDSiRva3HZZGVjQPUiABji62wkC9QPD8VwLou044fnBqkiY7whAbDIGRQHpPiN5Co0_ZUEJdKFdVnncS74Q",
+            "kid": "IYIB72QYGIUGP5lYlGmnrBeVOFOxTk9SO_5ajWBu1QE",
+        },
+    ]
     jwks = JwkSet(keys=keys)
     assert jwks.jwks == keys
 
-    jwk = Jwk.generate_for_kty("EC", crv="P-256")
+    jwk = Jwk.generate_for_kty("EC", alg="ES256", kid="my_ec_key")
     keys.append(jwk)
     kid = jwks.add_jwk(jwk)
     assert kid == jwk.kid
     assert jwks.jwks == keys
 
     data = b"this is a test"
-    signature = jwk.sign(data, "ES256")
+    signature = jwk.sign(data)
 
-    assert jwks.verify(data, signature, "ES256")
+    assert jwks.verify(data, signature, kid="my_ec_key")
+    assert jwks.verify(data, signature, alg="ES256")
+    assert jwks.verify(data, signature, algs=("ES256",))
+    assert jwks.verify(data, signature)
 
     jwks.remove_jwk(jwk.kid)
-
-    jwks.remove_jwk("foo")
 
     assert jwks.is_private
 
     assert not jwks.verify(data, signature, "ES256")
+    assert not jwks.verify(data, signature, "ES256")
+
+    assert jwks.public_jwks() == {
+        "keys": [
+            {
+                "kty": "RSA",
+                "n": "mUdmf5vJ3svsPSQ8BCOQVfwQdP8AmAEW21sYYUC5eSKR-pdwnRDBuFrIEjon2ry8cU-uaMjAoEZikPXcCTErye2Sj8fWQ8Wyo8DoGacJlFOJvs_18-CmNBc7oL8gBlYax3-feZZnaVIiJjvxQwUw5GQA6JTFnO8n2pnKMOOd8Gf6YrG-r0T6NXdviw0-2IW4f2UMJApqlu37yF8sgRNGZwDljNOkUtPK76Uz5T513Va4ckOqsVfnt4WoAkAkCl3eVBwGw3TJIbp_DaLUq53go0pXBCNxCHRD9mst69ZuknBLqn0SwKbQ9zJH9QvoqrEZ2q7GzkFzw70F6qH5MDEx2-dxQz_QccFV0XBpq4pkfuWzS8qKVO4QjyC7A0vIJUzrRHE2_moOtWvKTDsa7gfvK6kpnAW0iKnNchzBV0fzXWIIxRJ3_cc8Ue-KPRU9Wxm3heBOx_Qh-bKv9s9fVY9X6rimyX-pIwf-jkgWG8_FgTBuGkKTRcLi-XnwsCFIVNOtolmakbQHlin_lgDQm9s0nHoDJbZgAtzQfkIorclBJBzr2t__xgaZCfpSCLdwZFQvGEh1mK4WbSMMt5-L3zKsNLCBfdMbn2fS9n2hylfRwU_NZCY8f2RHAdP-z402Vq1c9-m2Ew3_695OmV5HoinJQPagY9hI-_EW8nhNWf8l4FE",
+                "e": "AQAB",
+                "kid": "uzPODAa44gSUXvSI6zilPwxMJCULUHm0FmXoqXRfYdI",
+            },
+            {
+                "kty": "RSA",
+                "n": "ycSaZ7HWpKCY4vfmoLWCxsg2KvpD-3dfFlz-2YsrfnMwpJF0nuRrceAxhFF34NlzwTn-JgVc8-lUrOJmcrBcxQNtr7eaJ0QhcRxu_Wre72QhqTddJgNt4V5Zn9P8l8CplSqiLruVI4nKGoiPFQ7mftGY39wxYiiFB6BMb04lAshvCuUOIP8WFFvCb5Afqpugl-NKpO2-C5vWeN_4xNkSO0fEq49Do01oUkMM5t1D4kvE6_BDVA2jxPHSSulXwcnwHmGuhXEfpVh-ME9MW0S0g7v-uNfpJmjVl7VDV87au6C9GKXHQ3NEXt8DWM8HXqRyRQ0XidJLymDOdUnF1_DMtS_wOCDrPFO-4rG_ZH3dwm-fBRSl_chu324OBi_ER6XIQpjkFiQo2pqbD8bI4X6kH8kUASq5gVsBU_hfQUZljSJoR2gQtorNw5EK4rlAQ5jS-ww16WiSna6jzgT_M4ZLr9IPCloe7isVxSk35-gD87xXtl8PzmE1vdpFC9aArkdFL_PK7MOqDvYIb6MRIOBvoxOV524tFKZhNrZUowTLH3a_-sWFLmdvd14iGxuv_DaC-hCmgI0eq7rzE2wUNP5IVmZASoI-3rKb22QdDlAPHNzdsyJCX4JVIPAJrpLOwptObN30404_C4UUD0IN9OXHD-16NaX5SY1thge94shJpTE",
+                "e": "AQAB",
+                "kid": "IYIB72QYGIUGP5lYlGmnrBeVOFOxTk9SO_5ajWBu1QE",
+            },
+        ]
+    }
+
+    jwks.remove_jwk("foo")  # this is a no op since there is not key 'foo'
 
 
 def test_empty_jwkset() -> None:

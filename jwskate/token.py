@@ -24,7 +24,7 @@ class BaseCompactToken:
                 "You can increase this limit by passing a different `max_size` value as parameter."
             )
 
-        if not isinstance(value, bytes):
+        if isinstance(value, str):
             value = value.encode("ascii")
 
         value = b"".join(value.split())
@@ -86,7 +86,7 @@ class BaseCompactToken:
             AttributeError: if the `kid` header value is not a string
         """
         kid = self.get_header("kid")
-        if kid is None or not isinstance(kid, str):  # pragma: no branch
+        if kid is None or not isinstance(kid, str):
             raise AttributeError("This token doesn't have a valid 'kid' header")
         return kid
 

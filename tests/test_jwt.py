@@ -342,3 +342,53 @@ def test_sign_without_alg() -> None:
     jwk = Jwk.generate_for_kty("RSA")
     with pytest.raises(ValueError):
         Jwt.sign({"foo": "bar"}, jwk)
+
+
+def test_large_jwt() -> None:
+    with pytest.raises(ValueError):
+        Jwt(
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+            f"{'alargevalue'*16*1024}"
+            "bl5iNgXfkbmgDXItaUx7_1lUMNtOffihsShVP8MeE1g"
+        )
+
+
+def test_eq() -> None:
+    jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    assert Jwt(jwt) == Jwt(jwt)
+    assert Jwt(jwt) == jwt
+    assert Jwt(jwt) == jwt.encode()
+
+    assert Jwt(jwt) != 1
+
+
+def test_invalid_headers() -> None:
+    jwt = Jwt(
+        "eyJhbGciOjEsImtpZCI6MSwidHlwIjoxLCJjdHkiOjF9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.cOUKU1ijv3KiN2KK_o50RU978I9MzQ4lNw2y7nOGAdM"
+    )
+    with pytest.raises(AttributeError):
+        jwt.alg
+    with pytest.raises(AttributeError):
+        jwt.kid
+    with pytest.raises(AttributeError):
+        jwt.typ
+    with pytest.raises(AttributeError):
+        jwt.cty
+
+
+def test_invalid_claims() -> None:
+    jwt = SignedJwt(
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImlhdCI6ImZvbyIsImV4cCI6ImZvbyIsIm5iZiI6ImZvbyIsImF1ZCI6MSwianRpIjoxfQ.lcNMSH9LNXbIpQUAqtbIjMv-kSWXeC0VamsrHNESTq0"
+    )
+    with pytest.raises(AttributeError):
+        jwt.subject
+    with pytest.raises(AttributeError):
+        jwt.issued_at
+    with pytest.raises(AttributeError):
+        jwt.expires_at
+    with pytest.raises(AttributeError):
+        jwt.not_before
+    with pytest.raises(AttributeError):
+        jwt.audiences
+    with pytest.raises(AttributeError):
+        jwt.jwt_token_id

@@ -27,7 +27,7 @@ class JwkSet(BaseJsonDict):
     def __init__(
         self,
         jwks: Optional[Dict[str, Any]] = None,
-        keys: Optional[Iterable[Jwk]] = None,
+        keys: Optional[Iterable[Union[Jwk, Dict[str, Any]]]] = None,
     ):
         if jwks is None and keys is None:
             keys = []
@@ -198,9 +198,9 @@ class JwkSet(BaseJsonDict):
 
         # then with the keys that have no defined `use`
         for jwk in self.jwks:
-            if jwk.get("use") is None and jwk.get("alg") is None:
+            if jwk.get("use") is None and jwk.get("alg") is not None:
                 try:
-                    if jwk.verify(data, signature, alg=alg):
+                    if jwk.verify(data, signature):
                         return True
                 except UnsupportedAlg:
                     continue

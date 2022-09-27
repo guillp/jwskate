@@ -1,6 +1,6 @@
 """This module implements AES-GCM based Key Management algorithms."""
 
-from typing import Tuple
+from typing import SupportsBytes, Tuple, Union
 
 from binapy import BinaPy
 
@@ -20,7 +20,9 @@ class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
     iv_size: int = 96
     """Initialisation Vector size, in bits."""
 
-    def wrap_key(self, plainkey: bytes, *, iv: bytes) -> Tuple[BinaPy, BinaPy]:
+    def wrap_key(
+        self, plainkey: Union[bytes, SupportsBytes], *, iv: Union[bytes, SupportsBytes]
+    ) -> Tuple[BinaPy, BinaPy]:
         """Wrap a key using the given Initialisation Vector (`iv`).
 
         Args:
@@ -32,7 +34,13 @@ class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
         """
         return self.encrypt(plainkey, iv=iv, aad=b"")
 
-    def unwrap_key(self, cipherkey: bytes, *, tag: bytes, iv: bytes) -> BinaPy:
+    def unwrap_key(
+        self,
+        cipherkey: Union[bytes, SupportsBytes],
+        *,
+        tag: Union[bytes, SupportsBytes],
+        iv: Union[bytes, SupportsBytes]
+    ) -> BinaPy:
         """Unwrap a key and authenticates it with the authentication `tag`, using the given Initialisation Vector (`iv`).
 
         Args:

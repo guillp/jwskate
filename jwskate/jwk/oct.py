@@ -223,11 +223,11 @@ class SymmetricJwk(Jwk):
 
     def decrypt(
         self,
-        ciphertext: bytes,
+        ciphertext: Union[bytes, SupportsBytes],
         *,
-        iv: bytes,
-        tag: bytes,
-        aad: Optional[bytes] = None,
+        iv: Union[bytes, SupportsBytes],
+        tag: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None,
         alg: Optional[str] = None,
     ) -> BinaPy:
         """Decrypt arbitrary data.
@@ -242,6 +242,15 @@ class SymmetricJwk(Jwk):
         Returns:
             the decrypted clear-text
         """
+        if aad is None:  # pragma: no branch
+            aad = b""
+        elif not isinstance(aad, bytes):
+            aad = bytes(aad)
+        if not isinstance(iv, bytes):
+            iv = bytes(iv)
+        if not isinstance(tag, bytes):
+            tag = bytes(tag)
+
         encalg = select_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
         decryptor: BaseAESEncryptionAlg = encalg(self.cryptography_key)
         plaintext: bytes = decryptor.decrypt(ciphertext, auth_tag=tag, iv=iv, aad=aad)

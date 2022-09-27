@@ -38,13 +38,15 @@ class BaseRSASigAlg(
         if self.read_only:
             raise NotImplementedError
 
-        if not isinstance(data, bytes):  # pragma: no branch
+        if not isinstance(data, bytes):
             data = bytes(data)
 
         with self.private_key_required() as key:
             return BinaPy(key.sign(data, self.padding_alg, self.hashing_alg))
 
-    def verify(self, data: Union[bytes, SupportsBytes], signature: bytes) -> bool:
+    def verify(
+        self, data: Union[bytes, SupportsBytes], signature: Union[bytes, SupportsBytes]
+    ) -> bool:
         """Verify a signature against some data.
 
         Args:
@@ -54,8 +56,11 @@ class BaseRSASigAlg(
         Returns:
             `True` if the signature is valid, `False` otherwise
         """
-        if not isinstance(data, bytes):  # pragma: no branch
+        if not isinstance(data, bytes):
             data = bytes(data)
+
+        if not isinstance(signature, bytes):
+            signature = bytes(signature)
 
         with self.public_key_required() as key:
             try:

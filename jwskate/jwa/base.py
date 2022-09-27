@@ -192,7 +192,9 @@ class BaseSignatureAlg(BaseAlg):
         """
         raise NotImplementedError
 
-    def verify(self, data: Union[bytes, SupportsBytes], signature: bytes) -> bool:
+    def verify(
+        self, data: Union[bytes, SupportsBytes], signature: Union[bytes, SupportsBytes]
+    ) -> bool:
         """Verify a signature against some data.
 
         Args:

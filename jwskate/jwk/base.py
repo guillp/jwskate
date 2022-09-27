@@ -487,7 +487,9 @@ class Jwk(BaseJsonDict):
 
         return JwkSet(keys=(self,))
 
-    def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
+    def sign(
+        self, data: Union[bytes, SupportsBytes], alg: Optional[str] = None
+    ) -> BinaPy:
         """Sign a data using this Jwk, and return the generated signature.
 
         Args:
@@ -510,8 +512,8 @@ class Jwk(BaseJsonDict):
 
     def verify(
         self,
-        data: bytes,
-        signature: bytes,
+        data: Union[bytes, SupportsBytes],
+        signature: Union[bytes, SupportsBytes],
         *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
@@ -564,11 +566,11 @@ class Jwk(BaseJsonDict):
 
     def decrypt(
         self,
-        ciphertext: bytes,
+        ciphertext: Union[bytes, SupportsBytes],
         *,
-        iv: bytes,
-        tag: bytes,
-        aad: Optional[bytes] = None,
+        iv: Union[bytes, SupportsBytes],
+        tag: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None,
         alg: Optional[str] = None,
     ) -> BinaPy:
         """Decrypt an encrypted data using this Jwk, and return the encrypted result.
@@ -692,7 +694,12 @@ class Jwk(BaseJsonDict):
         return SymmetricJwk.from_bytes(cek), wrapped_cek, cek_headers
 
     def recipient_key(
-        self, wrapped_cek: bytes, enc: str, *, alg: Optional[str] = None, **headers: Any
+        self,
+        wrapped_cek: Union[bytes, SupportsBytes],
+        enc: str,
+        *,
+        alg: Optional[str] = None,
+        **headers: Any,
     ) -> Jwk:
         """For DH-based algs. As a token recipient, derive the same CEK that was used for encryption, based on the recipient private key and the sender ephemeral public key.
 

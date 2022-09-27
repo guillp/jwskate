@@ -1,6 +1,6 @@
 """This module implements Elliptic Curve Diffie-Hellman based Key Management algorithms."""
 
-from typing import Any, Type, Union
+from typing import Any, SupportsBytes, Type, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes
@@ -242,7 +242,7 @@ class BaseEcdhEs_AesKw(EcdhEs):
 
     def unwrap_key_with_epk(
         self,
-        cipherkey: bytes,
+        cipherkey: Union[bytes, SupportsBytes],
         ephemeral_public_key: Union[
             ec.EllipticCurvePublicKey, x25519.X25519PublicKey, x448.X448PublicKey
         ],

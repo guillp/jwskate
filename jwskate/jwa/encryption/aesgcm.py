@@ -1,6 +1,6 @@
 """This module implements AES-GCM based encryption algorithms."""
 
-from typing import Optional, SupportsBytes, Tuple, Union
+from typing import SupportsBytes, Tuple, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives.ciphers import aead
@@ -15,7 +15,11 @@ class BaseAESGCM(BaseAESEncryptionAlg):
     tag_size = 16
 
     def encrypt(
-        self, plaintext: Union[bytes, SupportsBytes], *, iv: bytes, aad: Optional[bytes]
+        self,
+        plaintext: Union[bytes, SupportsBytes],
+        *,
+        iv: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None,
     ) -> Tuple[BinaPy, BinaPy]:
         """Encrypt a plaintext, with the given IV and Additional Authenticated Data.".
 
@@ -30,9 +34,15 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         Raises:
             ValueError: if the IV size is not appropriate
         """
+        if not isinstance(iv, bytes):
+            iv = bytes(iv)
         if len(iv) * 8 != self.iv_size:
             raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
-        if not isinstance(plaintext, bytes):  # pragma: no branch
+        if aad is None:
+            aad = b""
+        elif not isinstance(aad, bytes):
+            aad = bytes(aad)
+        if not isinstance(plaintext, bytes):
             plaintext = bytes(plaintext)
         ciphertext_with_tag = BinaPy(aead.AESGCM(self.key).encrypt(iv, plaintext, aad))
         ciphertext, tag = ciphertext_with_tag.cut_at(-self.tag_size)
@@ -42,9 +52,9 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         self,
         ciphertext: Union[bytes, SupportsBytes],
         *,
-        iv: bytes,
-        auth_tag: bytes,
-        aad: Optional[bytes],
+        iv: Union[bytes, SupportsBytes],
+        auth_tag: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None,
     ) -> BinaPy:
         """Decrypt a ciphertext.
 
@@ -60,8 +70,16 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         Raises:
             ValueError: if the IV size is not appropriate
         """
-        if not isinstance(ciphertext, bytes):  # pragma: no branch
+        if not isinstance(ciphertext, bytes):
             ciphertext = bytes(ciphertext)
+        if not isinstance(iv, bytes):
+            iv = bytes(iv)
+        if not isinstance(auth_tag, bytes):
+            auth_tag = bytes(auth_tag)
+        if aad is None:
+            aad = b""
+        elif not isinstance(aad, bytes):
+            aad = bytes(aad)
 
         if len(iv) * 8 != self.iv_size:
             raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")

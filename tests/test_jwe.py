@@ -521,6 +521,57 @@ def encrypted_jwe(
     return jwe
 
 
+class SupportsBytesTester:
+    """A test class with a __bytes__ method to match SupportBytes interface."""
+
+    def __init__(self, payload: bytes) -> None:
+        self.payload = payload
+
+    def __bytes__(self) -> bytes:  # noqa: D105
+        return self.payload
+
+
+def test_supportsbytes(
+    encryption_plaintext: bytes,
+    encryption_jwk: Union[Jwk, SupportsBytes],
+    key_management_alg: str,
+    encryption_alg: str,
+    encrypted_jwe: JweCompact,
+    decryption_jwk: Jwk,
+) -> None:
+    if isinstance(encryption_jwk, Jwk):
+        jwe = JweCompact.encrypt(
+            plaintext=SupportsBytesTester(encryption_plaintext),
+            jwk=encryption_jwk,
+            alg=key_management_alg,
+            enc=encryption_alg,
+        )
+    else:
+        password = bytes(encryption_jwk)
+        jwe = JweCompact.encrypt_with_password(
+            plaintext=SupportsBytesTester(encryption_plaintext),
+            password=password,
+            alg=key_management_alg,
+            enc=encryption_alg,
+        )
+
+    assert jwe.decrypt(decryption_jwk) == encrypted_jwe.decrypt(decryption_jwk)
+    if not isinstance(decryption_jwk, bytes):
+        cek = decryption_jwk.recipient_key(
+            SupportsBytesTester(jwe.wrapped_cek), **jwe.headers
+        )
+        assert (
+            cek.decrypt(
+                SupportsBytesTester(jwe.ciphertext),
+                iv=SupportsBytesTester(jwe.initialization_vector),
+                tag=SupportsBytesTester(jwe.authentication_tag),
+                aad=SupportsBytesTester(jwe.additional_authenticated_data),
+                alg=encryption_alg,
+            )
+            == encryption_plaintext
+        )
+
+
 def test_decrypt(
     encryption_plaintext: bytes,
     encrypted_jwe: JweCompact,

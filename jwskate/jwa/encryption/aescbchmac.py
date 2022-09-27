@@ -44,8 +44,8 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         self,
         ciphertext: Union[bytes, SupportsBytes],
         *,
-        iv: bytes,
-        aad: Optional[bytes] = None
+        iv: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None
     ) -> BinaPy:
         """Produce a Message Authentication Code for the given `ciphertext`, `iv` and `aad`.
 
@@ -57,12 +57,17 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         Returns:
           the resulting MAC.
         """
+        if not isinstance(ciphertext, bytes):
+            ciphertext = bytes(ciphertext)
         if aad is None:  # pragma: no branch
             aad = b""
+        elif not isinstance(aad, bytes):
+            aad = bytes(aad)
+        if not isinstance(iv, bytes):
+            iv = bytes(iv)
+
         al = BinaPy.from_int(len(aad) * 8, length=8, byteorder="big", signed=False)
         hasher = hmac.HMAC(self.mac_key, self.hash_alg)
-        if not isinstance(ciphertext, bytes):  # pragma: no branch
-            ciphertext = bytes(ciphertext)
 
         for param in (aad, iv, ciphertext, al):
             hasher.update(param)
@@ -87,7 +92,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         Returns:
           a tuple (encrypted_data, authentication_tag)
         """
-        if not isinstance(plaintext, bytes):  # pragma: no branch
+        if not isinstance(plaintext, bytes):
             plaintext = bytes(plaintext)
 
         cipher = ciphers.Cipher(algorithms.AES(self.aes_key), modes.CBC(iv)).encryptor()
@@ -101,9 +106,9 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         self,
         ciphertext: Union[bytes, SupportsBytes],
         *,
-        iv: bytes,
-        auth_tag: bytes,
-        aad: Optional[bytes]
+        iv: Union[bytes, SupportsBytes],
+        auth_tag: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None
     ) -> BinaPy:
         """Decrypt and authenticate the given ciphertext with authentication tag (`ciphertext_with_tag`), as produced by `encrypt()`.
 
@@ -116,8 +121,16 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         Returns:
           the decrypted data
         """
-        if not isinstance(ciphertext, bytes):  # pragma: no branch
+        if not isinstance(ciphertext, bytes):
             ciphertext = bytes(ciphertext)
+        if not isinstance(iv, bytes):
+            iv = bytes(iv)
+        if not isinstance(auth_tag, bytes):
+            auth_tag = bytes(auth_tag)
+        if aad is None:  # pragma: no branch
+            aad = b""
+        elif not isinstance(aad, bytes):
+            aad = bytes(aad)
 
         mac = self.mac(ciphertext, iv=iv, aad=aad)
         if not constant_time.bytes_eq(mac, auth_tag):

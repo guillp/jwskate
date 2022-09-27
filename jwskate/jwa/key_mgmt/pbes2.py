@@ -25,7 +25,7 @@ class BasePbes2(BaseKeyManagementAlg):
     def __init__(self, password: Union[SupportsBytes, bytes, str]):
         if isinstance(password, str):
             password = password.encode("utf-8")
-        if not isinstance(password, bytes):  # pragma: no branch
+        if not isinstance(password, bytes):
             password = bytes(password)
         self.password = password
 

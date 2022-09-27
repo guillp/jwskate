@@ -25,17 +25,19 @@ class EdDsa(
     description = __doc__
 
     def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:  # noqa: D102
-        if not isinstance(data, bytes):  # pragma: no branch
+        if not isinstance(data, bytes):
             data = bytes(data)
 
         with self.private_key_required() as key:
             return BinaPy(key.sign(data))
 
     def verify(
-        self, data: Union[bytes, SupportsBytes], signature: bytes
+        self, data: Union[bytes, SupportsBytes], signature: Union[bytes, SupportsBytes]
     ) -> bool:  # noqa: D102
-        if not isinstance(data, bytes):  # pragma: no branch
+        if not isinstance(data, bytes):
             data = bytes(data)
+        if not isinstance(signature, bytes):
+            signature = bytes(signature)
 
         with self.public_key_required() as key:
             try:

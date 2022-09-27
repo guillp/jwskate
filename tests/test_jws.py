@@ -277,6 +277,40 @@ def signed_jws_compact(
     return jws
 
 
+class SupportsBytesTester:
+    """A test class with a __bytes__ method to match SupportBytes interface."""
+
+    def __init__(self, payload: bytes) -> None:
+        self.payload = payload
+
+    def __bytes__(self) -> bytes:  # noqa: D105
+        return self.payload
+
+
+def test_supportsbytes(
+    signature_payload: bytes,
+    signature_jwk: Jwk,
+    signature_alg: str,
+    signed_jws_compact: JwsCompact,
+    verification_jwk: Jwk,
+) -> None:
+    jws = JwsCompact.sign(
+        payload=SupportsBytesTester(signature_payload),
+        jwk=signature_jwk,
+        alg=signature_alg,
+    )
+    if signature_alg not in ("ES256", "ES384", "ES512", "PS256", "PS384", "PS512"):
+        # those algs have non deterministic signatures
+        assert jws == signed_jws_compact
+
+    assert jws.payload == signed_jws_compact.payload
+    assert verification_jwk.verify(
+        SupportsBytesTester(jws.signed_part),
+        SupportsBytesTester(jws.signature),
+        alg=signature_alg,
+    )
+
+
 @pytest.fixture()
 def signed_jws_json_flat(
     signature_payload: bytes, signature_jwk: Jwk, signature_alg: str

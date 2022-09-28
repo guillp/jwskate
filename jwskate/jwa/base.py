@@ -3,17 +3,9 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import (
-    Generic,
-    Iterator,
-    Optional,
-    SupportsBytes,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Generic, Iterator, SupportsBytes, Tuple, Type, TypeVar, Union
 
+import cryptography.exceptions
 from binapy import BinaPy
 
 
@@ -250,7 +242,11 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         return BinaPy.random_bits(cls.iv_size)
 
     def encrypt(
-        self, plaintext: Union[bytes, SupportsBytes], *, iv: bytes, aad: Optional[bytes]
+        self,
+        plaintext: Union[bytes, SupportsBytes],
+        *,
+        iv: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None,
     ) -> Tuple[BinaPy, BinaPy]:
         """Encrypt arbitrary data (`plaintext`) with the given Initialisation Vector (`iv`) and optional Additional Authentication Data (`aad`), return the ciphered text and authentication tag.
 
@@ -268,9 +264,9 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         self,
         ciphertext: Union[bytes, SupportsBytes],
         *,
-        iv: bytes,
-        auth_tag: bytes,
-        aad: Optional[bytes],
+        iv: Union[bytes, SupportsBytes],
+        auth_tag: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None,
     ) -> BinaPy:
         """Decrypt a ciphertext with a given Initialisation Vector (iv) and optional Additional Authentication Data (aad), returns the resulting clear text.
 
@@ -299,3 +295,7 @@ class BaseKeyManagementAlg(BaseAlg):
     """Base class for Key Management algorithms."""
 
     use = "enc"
+
+
+class MismatchingAuthTag(cryptography.exceptions.InvalidTag):
+    """Raised when trying to decrypt with an Authentication Tag that doesn't match the expected value."""

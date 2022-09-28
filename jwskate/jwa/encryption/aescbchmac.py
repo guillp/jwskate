@@ -1,13 +1,13 @@
 """This module implements AES-CBC with HMAC-SHA based Encryption algorithms."""
 
-from typing import Optional, SupportsBytes, Tuple, Union
+from typing import SupportsBytes, Tuple, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import ciphers, constant_time, hashes, hmac, padding
 from cryptography.hazmat.primitives.ciphers import algorithms, modes
 
-from ..base import BaseAESEncryptionAlg
+from ..base import BaseAESEncryptionAlg, MismatchingAuthTag
 
 
 class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
@@ -45,7 +45,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         ciphertext: Union[bytes, SupportsBytes],
         *,
         iv: Union[bytes, SupportsBytes],
-        aad: Union[bytes, SupportsBytes, None] = None
+        aad: Union[bytes, SupportsBytes, None] = None,
     ) -> BinaPy:
         """Produce a Message Authentication Code for the given `ciphertext`, `iv` and `aad`.
 
@@ -59,12 +59,12 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         """
         if not isinstance(ciphertext, bytes):
             ciphertext = bytes(ciphertext)
+        if not isinstance(iv, bytes):
+            iv = bytes(iv)
         if aad is None:  # pragma: no branch
             aad = b""
         elif not isinstance(aad, bytes):
             aad = bytes(aad)
-        if not isinstance(iv, bytes):
-            iv = bytes(iv)
 
         al = BinaPy.from_int(len(aad) * 8, length=8, byteorder="big", signed=False)
         hasher = hmac.HMAC(self.mac_key, self.hash_alg)
@@ -79,8 +79,8 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         self,
         plaintext: Union[bytes, SupportsBytes],
         *,
-        iv: bytes,
-        aad: Optional[bytes] = None
+        iv: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None,
     ) -> Tuple[BinaPy, BinaPy]:
         """Encrypt and MAC the given `plaintext`, using the given Initialization Vector (`iv`) and optional Additional Authenticated Data (`aad`).
 
@@ -94,6 +94,15 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         """
         if not isinstance(plaintext, bytes):
             plaintext = bytes(plaintext)
+        if not isinstance(iv, bytes):
+            iv = bytes(iv)
+        if aad is None:
+            aad = b""
+        elif not isinstance(aad, bytes):
+            aad = bytes(aad)
+
+        if len(iv) * 8 != self.iv_size:
+            raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
 
         cipher = ciphers.Cipher(algorithms.AES(self.aes_key), modes.CBC(iv)).encryptor()
         padder = self.padding.padder()
@@ -108,9 +117,11 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         *,
         iv: Union[bytes, SupportsBytes],
         auth_tag: Union[bytes, SupportsBytes],
-        aad: Union[bytes, SupportsBytes, None] = None
+        aad: Union[bytes, SupportsBytes, None] = None,
     ) -> BinaPy:
-        """Decrypt and authenticate the given ciphertext with authentication tag (`ciphertext_with_tag`), as produced by `encrypt()`.
+        """Decrypt and authenticate a given ciphertext.
+
+         An optional Additional Authenticated Data must be authentication tag must be supplied, if the text was encryptwith authentication tag, as produced by `encrypt()`.
 
         Args:
           ciphertext: the ciphertext
@@ -132,9 +143,12 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         elif not isinstance(aad, bytes):
             aad = bytes(aad)
 
+        if len(iv) * 8 != self.iv_size:
+            raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
+
         mac = self.mac(ciphertext, iv=iv, aad=aad)
         if not constant_time.bytes_eq(mac, auth_tag):
-            raise exceptions.InvalidSignature()
+            raise MismatchingAuthTag()
 
         cipher = ciphers.Cipher(algorithms.AES(self.aes_key), modes.CBC(iv)).decryptor()
         padded_text = cipher.update(ciphertext) + cipher.finalize()
@@ -142,7 +156,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         return BinaPy(unpadder.update(padded_text) + unpadder.finalize())
 
 
-class Aes128CbcHmacSha256(BaseAesCbcHmacSha2):
+class A128CBC_HS256(BaseAesCbcHmacSha2):
     """AES_128_CBC_HMAC_SHA_256."""
 
     name = "A128CBC-HS256"
@@ -153,7 +167,7 @@ class Aes128CbcHmacSha256(BaseAesCbcHmacSha2):
     hash_alg = hashes.SHA256()
 
 
-class Aes192CbcHmacSha384(BaseAesCbcHmacSha2):
+class A192CBC_HS384(BaseAesCbcHmacSha2):
     """AES_192_CBC_HMAC_SHA_384."""
 
     name = "A192CBC-HS384"
@@ -164,7 +178,7 @@ class Aes192CbcHmacSha384(BaseAesCbcHmacSha2):
     hash_alg = hashes.SHA384()
 
 
-class Aes256CbcHmacSha512(BaseAesCbcHmacSha2):
+class A256CBC_HS512(BaseAesCbcHmacSha2):
     """AES_256_CBC_HMAC_SHA_512."""
 
     name = "A256CBC-HS512"

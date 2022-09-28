@@ -2,10 +2,11 @@
 
 from typing import SupportsBytes, Tuple, Union
 
+import cryptography.exceptions
 from binapy import BinaPy
 from cryptography.hazmat.primitives.ciphers import aead
 
-from ..base import BaseAESEncryptionAlg
+from ..base import BaseAESEncryptionAlg, MismatchingAuthTag
 
 
 class BaseAESGCM(BaseAESEncryptionAlg):
@@ -84,7 +85,10 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         if len(iv) * 8 != self.iv_size:
             raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
         ciphertext_with_tag = ciphertext + auth_tag
-        return BinaPy(aead.AESGCM(self.key).decrypt(iv, ciphertext_with_tag, aad))
+        try:
+            return BinaPy(aead.AESGCM(self.key).decrypt(iv, ciphertext_with_tag, aad))
+        except cryptography.exceptions.InvalidTag:
+            raise MismatchingAuthTag()
 
 
 class A128GCM(BaseAESGCM):

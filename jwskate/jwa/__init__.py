@@ -12,17 +12,18 @@ from .base import (
     BaseKeyManagementAlg,
     BaseSignatureAlg,
     BaseSymmetricAlg,
+    MismatchingAuthTag,
     PrivateKeyRequired,
     PublicKeyRequired,
 )
 from .ec import P_256, P_384, P_521, EllipticCurve, secp256k1
 from .encryption import (
+    A128CBC_HS256,
     A128GCM,
+    A192CBC_HS384,
     A192GCM,
+    A256CBC_HS512,
     A256GCM,
-    Aes128CbcHmacSha256,
-    Aes192CbcHmacSha384,
-    Aes256CbcHmacSha512,
 )
 from .key_mgmt import (
     A128GCMKW,
@@ -80,9 +81,9 @@ __all__ = [
     "P_521",
     "EllipticCurve",
     "secp256k1",
-    "Aes128CbcHmacSha256",
-    "Aes192CbcHmacSha384",
-    "Aes256CbcHmacSha512",
+    "A128CBC_HS256",
+    "A192CBC_HS384",
+    "A256CBC_HS512",
     "A128GCMKW",
     "A192GCMKW",
     "A256GCMKW",
@@ -131,4 +132,5 @@ __all__ = [
     "X25519",
     "PrivateKeyRequired",
     "PublicKeyRequired",
+    "MismatchingAuthTag",
 ]

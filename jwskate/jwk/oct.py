@@ -7,21 +7,21 @@ from typing import Any, List, Optional, SupportsBytes, Tuple, Union
 from binapy import BinaPy
 
 from jwskate.jwa import (
+    A128CBC_HS256,
     A128GCM,
     A128GCMKW,
     A128KW,
+    A192CBC_HS384,
     A192GCM,
     A192GCMKW,
     A192KW,
+    A256CBC_HS512,
     A256GCM,
     A256GCMKW,
     A256KW,
     HS256,
     HS384,
     HS512,
-    Aes128CbcHmacSha256,
-    Aes192CbcHmacSha384,
-    Aes256CbcHmacSha512,
     BaseAESEncryptionAlg,
     DirectKeyUse,
 )
@@ -59,9 +59,9 @@ class SymmetricJwk(Jwk):
     ENCRYPTION_ALGORITHMS = {
         keyalg.name: keyalg
         for keyalg in [
-            Aes128CbcHmacSha256,
-            Aes192CbcHmacSha384,
-            Aes256CbcHmacSha512,
+            A128CBC_HS256,
+            A192CBC_HS384,
+            A256CBC_HS512,
             A128GCM,
             A192GCM,
             A256GCM,

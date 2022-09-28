@@ -402,7 +402,7 @@ def encryption_plaintext() -> bytes:
     ],
 )
 def key_management_alg(request: pytest.FixtureRequest) -> str:
-    return request.param  # type: ignore[attr-defined,no-any-return]
+    return request.param  # type: ignore[no-any-return]
 
 
 @pytest.fixture(
@@ -417,7 +417,7 @@ def key_management_alg(request: pytest.FixtureRequest) -> str:
     ],
 )
 def encryption_alg(request: pytest.FixtureRequest) -> str:
-    alg: str = request.param  # type: ignore[attr-defined]
+    alg: str = request.param
     if alg in SymmetricJwk.ENCRYPTION_ALGORITHMS:
         return alg
     pytest.skip(f"Encryption alg {alg} is not supported yet!")

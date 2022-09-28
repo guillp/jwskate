@@ -229,7 +229,7 @@ def signature_payload() -> bytes:
     ]
 )
 def signature_alg(request: pytest.FixtureRequest) -> str:
-    return request.param  # type: ignore[attr-defined,no-any-return]
+    return request.param  # type: ignore[no-any-return]
 
 
 @pytest.fixture()

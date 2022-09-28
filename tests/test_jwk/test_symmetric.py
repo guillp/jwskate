@@ -13,7 +13,7 @@ from jwskate import SymmetricJwk
     ids=("256bits", "384bits", "512bits"),
 )
 def symmetric_jwk(request: pytest.FixtureRequest) -> SymmetricJwk:
-    alg, min_key_size = request.param  # type: ignore
+    alg, min_key_size = request.param
     kid = f"my_{alg}_jwk"
     jwk = SymmetricJwk.generate_for_alg(alg, kid=kid)
     assert jwk.kty == "oct"

@@ -1,6 +1,6 @@
 import pytest
 
-from jwskate import Aes128CbcHmacSha256, EcdhEs, ECJwk, Jwk
+from jwskate import A128CBC_HS256, EcdhEs, ECJwk, Jwk
 
 
 def test_jwk_ec_generate() -> None:
@@ -47,7 +47,7 @@ def test_ecdh_es_with_controlled_cek_and_epk() -> None:
     enc = "A128CBC-HS256"
     private_jwk = ECJwk.generate(alg=alg, crv="P-256")
     public_jwk = private_jwk.public_jwk()
-    cek = Aes128CbcHmacSha256.generate_key()
+    cek = A128CBC_HS256.generate_key()
     epk = Jwk(EcdhEs(public_jwk.cryptography_key).generate_ephemeral_key())
     sender_cek, wrapped_cek, headers = public_jwk.sender_key(enc, cek=cek, epk=epk)
     assert sender_cek.cryptography_key == cek

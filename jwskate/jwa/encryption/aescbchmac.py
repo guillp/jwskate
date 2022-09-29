@@ -82,7 +82,10 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         iv: Union[bytes, SupportsBytes],
         aad: Union[bytes, SupportsBytes, None] = None,
     ) -> Tuple[BinaPy, BinaPy]:
-        """Encrypt and MAC the given `plaintext`, using the given Initialization Vector (`iv`) and optional Additional Authenticated Data (`aad`).
+        """Encrypt and MAC the given `plaintext`.
+
+        This requires a given Initialization Vector (`iv`).
+        An optional Additional Authenticated Data can be passed as parameter `aad`.
 
         Args:
           plaintext: the plain data to encrypt

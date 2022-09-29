@@ -70,7 +70,7 @@ class BaseRsaKeyWrap(
 
 
 class RsaEsPcks1v1_5(BaseRsaKeyWrap):  # noqa: D415
-    """RSAES-PKCS1-v1_5"""
+    """RSAES-PKCS1-v1_5."""
 
     name = "RSA1_5"
     description = __doc__
@@ -80,7 +80,7 @@ class RsaEsPcks1v1_5(BaseRsaKeyWrap):  # noqa: D415
 
 
 class RsaEsOaep(BaseRsaKeyWrap):  # noqa: D415
-    """RSAES OAEP using default parameters"""
+    """RSAES OAEP using default parameters."""
 
     name = "RSA-OAEP"
     description = __doc__
@@ -93,7 +93,7 @@ class RsaEsOaep(BaseRsaKeyWrap):  # noqa: D415
 
 
 class RsaEsOaepSha256(BaseRsaKeyWrap):  # noqa: D415
-    """RSAES OAEP using SHA-256 and MGF1 with SHA-256"""
+    """RSAES OAEP using SHA-256 and MGF1 with SHA-256."""
 
     name = "RSA-OAEP-256"
     description = __doc__
@@ -106,7 +106,7 @@ class RsaEsOaepSha256(BaseRsaKeyWrap):  # noqa: D415
 
 
 class RsaEsOaepSha384(BaseRsaKeyWrap):  # noqa: D415
-    """RSA-OAEP using SHA-384 and MGF1 with SHA-384"""
+    """RSA-OAEP using SHA-384 and MGF1 with SHA-384."""
 
     name = "RSA-OAEP-384"
     description = __doc__
@@ -119,7 +119,7 @@ class RsaEsOaepSha384(BaseRsaKeyWrap):  # noqa: D415
 
 
 class RsaEsOaepSha512(BaseRsaKeyWrap):  # noqa: D415
-    """RSA-OAEP using SHA-512 and MGF1 with SHA-512"""
+    """RSA-OAEP using SHA-512 and MGF1 with SHA-512."""
 
     name = "RSA-OAEP-512"
     description = __doc__

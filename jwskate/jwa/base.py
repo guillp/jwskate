@@ -20,7 +20,9 @@ class PublicKeyRequired(AttributeError):
 class BaseAlg:
     """Base class for all algorithms.
 
-    An algorithm has a `name` and a `description`, whose reference is here: https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-algorithms
+    An algorithm has a `name` and a `description`, whose reference is found in [IANA JOSE registry][IANA].
+
+    [IANA]: https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-algorithms
     """
 
     use: str
@@ -248,7 +250,13 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         iv: Union[bytes, SupportsBytes],
         aad: Union[bytes, SupportsBytes, None] = None,
     ) -> Tuple[BinaPy, BinaPy]:
-        """Encrypt arbitrary data (`plaintext`) with the given Initialisation Vector (`iv`) and optional Additional Authentication Data (`aad`), return the ciphered text and authentication tag.
+        """Encrypt arbitrary data, with [Authenticated Encryption (with optional Associated Data)][AEAD].
+
+        This needs:
+        - the raw data to encrypt (`plaintext`)
+        - a given random Initialisation Vector (`iv`) of the appropriate size
+        - optional Additional Authentication Data (`aad`)
+        And returns a tuple (ciphered_data, authentication_tag).
 
         Args:
           plaintext: the data to encrypt
@@ -257,6 +265,8 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
           a tuple of ciphered data and authentication tag
+
+        [AEAD]: https://wikipedia.org/wiki/Authenticated_encryption
         """
         raise NotImplementedError
 
@@ -268,7 +278,12 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         auth_tag: Union[bytes, SupportsBytes],
         aad: Union[bytes, SupportsBytes, None] = None,
     ) -> BinaPy:
-        """Decrypt a ciphertext with a given Initialisation Vector (iv) and optional Additional Authentication Data (aad), returns the resulting clear text.
+        """Decrypt and verify a ciphertext with Authenticated Encryption.
+
+        This needs:
+        - the raw encrypted Data (`ciphertext`) and Authentication Tag (`auth_tag`) that were produced by encryption,
+        - the same Initialisation Vector (`iv`) and optional Additional Authentication Data that were provided for encryption.
+        and returns the resulting clear text data.
 
         Args:
           ciphertext: the data to decrypt

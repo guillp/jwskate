@@ -40,7 +40,7 @@ class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
 
 
 class HS256(BaseHMACSigAlg):  # noqa: D415
-    """HMAC using SHA-256"""
+    """HMAC using SHA-256."""
 
     name = "HS256"
     description = __doc__
@@ -49,7 +49,7 @@ class HS256(BaseHMACSigAlg):  # noqa: D415
 
 
 class HS384(BaseHMACSigAlg):  # noqa: D415
-    """HMAC using SHA-384"""
+    """HMAC using SHA-384."""
 
     name = "HS384"
     description = __doc__
@@ -58,7 +58,7 @@ class HS384(BaseHMACSigAlg):  # noqa: D415
 
 
 class HS512(BaseHMACSigAlg):  # noqa: D415
-    """HMAC using SHA-512"""
+    """HMAC using SHA-512."""
 
     name = "HS512"
     description = __doc__
@@ -67,7 +67,7 @@ class HS512(BaseHMACSigAlg):  # noqa: D415
 
 
 class HS1(BaseHMACSigAlg):  # noqa: D415
-    """HMAC using SHA-1"""
+    """HMAC using SHA-1."""
 
     name = "HS1"
     description = __doc__

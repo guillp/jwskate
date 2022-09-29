@@ -1,8 +1,10 @@
-"""This module implements the Json Web Algorithms as defined in RFC7518.
+"""This module implements the Json Web Algorithms as defined in [RFC7518].
 
-Each algorithm is represented as a wrapper around a symmetric or
-asymmetric key, and exposes the cryptographic operations as methods. The
-cryptographic operations themselves are delegated to `cryptography`.
+Each algorithm is represented as a wrapper around a symmetric or asymmetric key, and exposes the
+cryptographic operations as methods. The cryptographic operations themselves are delegated to
+`cryptography`.
+
+[RFC7518]: https://www.rfc-editor.org/rfc/rfc7518
 """
 
 from .base import (

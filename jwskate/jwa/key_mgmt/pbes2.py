@@ -46,7 +46,7 @@ class BasePbes2(BaseKeyManagementAlg):
         return BinaPy.random(size)
 
     def derive(self, *, salt: bytes, count: int) -> BinaPy:
-        """Derive the encryption key based on the configured password, the given salt and the number of PBKDF iterations.
+        """Derive an encryption key based on the configured password, a given salt and the number of PBKDF iterations.
 
         Args:
           salt: the generated salt

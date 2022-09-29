@@ -132,7 +132,6 @@ class JwkSet(BaseJsonDict):
 
         Returns:
             `True` if this JwkSet contains at least one private key
-
         """
         return any(key.is_private for key in self.jwks)
 

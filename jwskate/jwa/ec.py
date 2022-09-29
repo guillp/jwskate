@@ -13,8 +13,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 class EllipticCurve:
     """A descriptive class for Elliptic Curves.
 
-    Elliptic Curves have a name, a `cryptography.ec.EllipticCurve`, and
-    a coordinate size.
+    Elliptic Curves have a name, a `cryptography.ec.EllipticCurve`, and a coordinate size.
     """
 
     name: str
@@ -72,7 +71,9 @@ class EllipticCurve:
     def get_jwk_parameters(
         cls, key: Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey]
     ) -> Dict[str, Any]:
-        """Extract all private and public parameters from a given `cryptography` `EllipticCurvePrivateKey` or `EllipticCurvePublicKey`.
+        """Extract all private and public parameters from the given `cryptography` key.
+
+        Key must be an instance of `EllipticCurvePrivateKey` or `EllipticCurvePublicKey`.
 
         Args:
           key: an Elliptic Curve public or private key from `cryptography`.

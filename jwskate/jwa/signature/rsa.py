@@ -76,7 +76,7 @@ class BaseRSASigAlg(
 
 
 class RS256(BaseRSASigAlg):  # noqa: D415
-    """RSASSA-PKCS1-v1_5 using SHA-256"""
+    """RSASSA-PKCS1-v1_5 using SHA-256."""
 
     name = "RS256"
     description = __doc__
@@ -84,7 +84,7 @@ class RS256(BaseRSASigAlg):  # noqa: D415
 
 
 class RS384(BaseRSASigAlg):  # noqa: D415
-    """RSASSA-PKCS1-v1_5 using SHA-384"""
+    """RSASSA-PKCS1-v1_5 using SHA-384."""
 
     name = "RS384"
     description = __doc__
@@ -92,7 +92,7 @@ class RS384(BaseRSASigAlg):  # noqa: D415
 
 
 class RS512(BaseRSASigAlg):  # noqa: D415
-    """RSASSA-PKCS1-v1_5 using SHA-256"""
+    """RSASSA-PKCS1-v1_5 using SHA-256."""
 
     name = "RS512"
     description = __doc__
@@ -100,7 +100,7 @@ class RS512(BaseRSASigAlg):  # noqa: D415
 
 
 class PS256(BaseRSASigAlg):  # noqa: D415
-    """RSASSA-PSS using SHA-256 and MGF1 with SHA-256"""
+    """RSASSA-PSS using SHA-256 and MGF1 with SHA-256."""
 
     name = "PS256"
     description = __doc__
@@ -109,7 +109,7 @@ class PS256(BaseRSASigAlg):  # noqa: D415
 
 
 class PS384(BaseRSASigAlg):  # noqa: D415
-    """RSASSA-PSS using SHA-384 and MGF1 with SHA-384"""
+    """RSASSA-PSS using SHA-384 and MGF1 with SHA-384."""
 
     name = "PS384"
     description = __doc__
@@ -118,7 +118,7 @@ class PS384(BaseRSASigAlg):  # noqa: D415
 
 
 class PS512(BaseRSASigAlg):  # noqa: D415
-    """RSASSA-PSS using SHA-512 and MGF1 with SHA-512"""
+    """RSASSA-PSS using SHA-512 and MGF1 with SHA-512."""
 
     name = "PS512"
     description = __doc__
@@ -127,7 +127,7 @@ class PS512(BaseRSASigAlg):  # noqa: D415
 
 
 class RS1(BaseRSASigAlg):  # noqa: D415
-    """RSASSA-PKCS1-v1_5 with SHA-1"""
+    """RSASSA-PKCS1-v1_5 with SHA-1."""
 
     name = "RS1"
     description = __doc__

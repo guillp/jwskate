@@ -76,7 +76,7 @@ class BaseECSignatureAlg(
 
 
 class ES256(BaseECSignatureAlg):  # noqa: D415
-    """ECDSA using P-256 and SHA-256"""
+    """ECDSA using P-256 and SHA-256."""
 
     name = "ES256"
     description = __doc__
@@ -85,7 +85,7 @@ class ES256(BaseECSignatureAlg):  # noqa: D415
 
 
 class ES384(BaseECSignatureAlg):  # noqa: D415
-    """ECDSA using P-384 and SHA-384"""
+    """ECDSA using P-384 and SHA-384."""
 
     name = "ES384"
     description = __doc__
@@ -94,7 +94,7 @@ class ES384(BaseECSignatureAlg):  # noqa: D415
 
 
 class ES512(BaseECSignatureAlg):  # noqa: D415
-    """ECDSA using P-521 and SHA-512"""
+    """ECDSA using P-521 and SHA-512."""
 
     name = "ES512"
     description = __doc__
@@ -103,7 +103,7 @@ class ES512(BaseECSignatureAlg):  # noqa: D415
 
 
 class ES256K(BaseECSignatureAlg):  # noqa: D415
-    """ECDSA using secp256k1 and SHA-256"""
+    """ECDSA using secp256k1 and SHA-256."""
 
     name = "ES256k"
     description = __doc__

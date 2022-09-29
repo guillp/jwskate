@@ -23,7 +23,9 @@ class Jwt(BaseCompactToken):
     """Represents a Json Web Token."""
 
     def __new__(cls, value: Union[bytes, str]):  # type: ignore
-        """Allow parsing both Signed and Encrypted JWTs. Returns the appropriate subclass instance.
+        """Allow parsing both Signed and Encrypted JWTs.
+
+        This returns the appropriate subclass or instance depending on the number of dots (.) in the serialized JWT.
 
         Args:
             value: the token value

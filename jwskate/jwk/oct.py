@@ -31,7 +31,7 @@ from .base import Jwk, JwkParameter
 
 
 class SymmetricJwk(Jwk):
-    """Implement Symetric keys, with `kty=oct`."""
+    """Implement Symmetric keys, with `kty=oct`."""
 
     KTY = "oct"
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (bytes,)
@@ -83,7 +83,9 @@ class SymmetricJwk(Jwk):
 
     @classmethod
     def from_bytes(cls, k: Union[bytes, str], **params: Any) -> SymmetricJwk:
-        """Initializes a SymmetricJwk from a raw secret key. The provided secret key is encoded and used as the `k` parameter for the returned SymetricKey.
+        """Initialize a `SymmetricJwk` from a raw secret key.
+
+        The provided secret key is encoded and used as the `k` parameter for the returned SymmetricKey.
 
         Args:
           k: the key to use
@@ -190,9 +192,12 @@ class SymmetricJwk(Jwk):
         alg: Optional[str] = None,
         iv: Optional[bytes] = None,
     ) -> Tuple[BinaPy, BinaPy, BinaPy]:
-        """Encrypt arbitrary data using this key. Supports Authenticated Encryption with the Additional Authenticated Data (`aad`). An Initializatin Vector (IV) will be generated automatically. You can choose your own IV by providing the `iv` parameter (only use this if you know what you are doing).
+        """Encrypt arbitrary data using this key.
 
-        This return the ciphertext, the authentication tag, and the used IV (if an IV was provided as parameter, the same IV is returned).
+        Supports Authenticated Encryption with Additional Authenticated Data (`aad`).
+        An Initialization Vector (IV) will be generated automatically. You can choose your own IV by providing the `iv` parameter (only use this if you know what you are doing).
+
+        This returns the ciphertext, the authentication tag, and the used IV (if an IV was provided as parameter, the same IV is returned).
 
         Args:
           plaintext: the plaintext to encrypt
@@ -258,7 +263,9 @@ class SymmetricJwk(Jwk):
         return BinaPy(plaintext)
 
     def supported_key_management_algorithms(self) -> List[str]:
-        """Return the list of supported Key Management algorithms, usable for key (un)wrapping with this key.
+        """Return the list of Key Management algorithms that this key supports.
+
+        Key Management algorithms are used to generate or wrap Content Encryption Keys (CEK).
 
         Returns:
             a list of supported algorithms identifiers

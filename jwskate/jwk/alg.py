@@ -20,7 +20,13 @@ T = TypeVar("T", bound=Type[BaseAlg])
 def select_alg(
     jwk_alg: Optional[str], alg: Optional[str], supported_algs: Mapping[str, T]
 ) -> T:
-    """Given an alg parameter from a JWK, and/or a user-specified alg, return the alg to use.
+    """Internal helper method to choose the appropriate alg to use for cryptographic operations.
+
+    Given:
+    - an alg parameter from a JWK
+    - and/or a user-specified alg
+    - a mapping of supported algs names to wrapper classes
+    this returns the wrapper class to use.
 
     This checks the coherency between the user specified `alg` and the `jwk_alg`, and will emit a warning
     if the user specified alg is different from the `jwk_alg`.
@@ -67,13 +73,23 @@ def select_algs(
     algs: Optional[Iterable[str]],
     supported_algs: Mapping[str, T],
 ) -> List[T]:
-    """Given an alg parameter from a JWK, and/or a user-specified alg, and/or a user specified list of useable algs, return a list of algorithms.
+    """Internal helper method to select several appropriate algs to use on cryptographic operations.
 
-    This method is typically used to get the list of possible algs when checking a signature.
+    This method is typically used to get the list of valid algorithms when checking a signature, when several algorithms are allowed.
+
+    Given:
+    - an alg parameter from a JWK
+    - and/or a user-specified alg
+    - and/or a user specified list of usable algs
+    - a mapping of supported algorithms name to wrapper classes
+    this returns a list of supported alg wrapper classes that matches what the user specified, or, as default, the alg parameter from the JWK.
+
+    This checks the coherency between the user specified `alg` and the `jwk_alg`, and will emit a warning
+    if the user specified alg is different from the `jwk_alg`.
 
     Args:
       jwk_alg: the alg from the JWK, if any
-      alg: a user specified alg to use
+      alg: a user specified alg to use, if any
       algs: a user specified list of algs to use, if several are allowed
       supported_algs: a mapping of alg names to alg wrappers
 
@@ -89,6 +105,9 @@ def select_algs(
     """
     if alg and algs:
         raise ValueError("Please use either parameter 'alg' or 'algs', not both.")
+
+    if not supported_algs:
+        raise ValueError("No possible algorithms to choose from!")
 
     if jwk_alg is not None:
         if alg and alg != jwk_alg:

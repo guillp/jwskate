@@ -1,4 +1,7 @@
-"""This module implements JWK representing Octet Key Pairs from [RFC8037](https://datatracker.ietf.org/doc/rfc8037/)."""
+"""This module implements JWK representing Octet Key Pairs from [RFC8037].
+
+[RFC8037]: https://www.rfc-editor.org/rfc/rfc8037.html
+"""
 
 from __future__ import annotations
 

@@ -238,7 +238,6 @@ SYMMETRIC_ENCRYPTION_KEY = {
     "kty": "oct",
     "kid": "018c0ae5-4d9b-471b-bfd6-eef314bc7037",
     "use": "enc",
-    "alg": "A256KW",
     "k": "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg",
 }
 
@@ -348,7 +347,6 @@ def symmetric_256_encryption_jwk() -> Jwk:
     assert jwk.kty == "oct"
     assert jwk.kid == "018c0ae5-4d9b-471b-bfd6-eef314bc7037"
     assert jwk.use == "enc"
-    assert jwk.alg == "A256KW"
     assert (
         jwk.key.hex()
         == "849b57219dae48de646d07dbb533566e976686457c1491be3a76dcea6c427188"
@@ -735,7 +733,7 @@ def test_invalid_password_encryption() -> None:
             "password",
             alg="PBES2-HS256+A128KW",
             enc="A128GCM",
-            count=50,
+            count=5000,
             cek=b"foo" * 8,
         )
 

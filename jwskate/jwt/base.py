@@ -153,7 +153,9 @@ class Jwt(BaseCompactToken):
         return jwe
 
     @classmethod
-    def decrypt_nested_jwt(cls, jwt: str, jwk: Union[Jwk, Dict[str, Any]]) -> Jwt:
+    def decrypt_nested_jwt(
+        cls, jwe: Union[str, JweCompact], jwk: Union[Jwk, Dict[str, Any]]
+    ) -> Jwt:
         """Convenience method to decrypt a nested JWT.
 
         It will return a Jwt instance.
@@ -168,18 +170,19 @@ class Jwt(BaseCompactToken):
         Raises:
             InvalidJwt: if the inner JWT is not valid
         """
-        jwe = JweCompact(jwt)
+        if not isinstance(jwe, JweCompact):
+            jwe = JweCompact(jwe)
         cleartext = jwe.decrypt(jwk)
         return Jwt(cleartext)
 
     @classmethod
     def decrypt_and_verify(
         cls,
-        jwt: str,
+        jwt: Union[str, JweCompact],
         enc_jwk: Union[Jwk, Dict[str, Any]],
         sig_jwk: Union[Jwk, Dict[str, Any], None],
-        sig_alg: Optional[str],
-        sig_algs: Optional[Iterable[str]],
+        sig_alg: Optional[str] = None,
+        sig_algs: Optional[Iterable[str]] = None,
     ) -> SignedJwt:
         """Decrypt then verify the signature of a JWT nested in a JWE.
 
@@ -199,6 +202,8 @@ class Jwt(BaseCompactToken):
             InvalidJwt: if the JWT is not valid
             InvalidSignature: if the nested JWT signature is not valid
         """
+        from .signed import InvalidSignature, SignedJwt
+
         nested_jwt = cls.decrypt_nested_jwt(jwt, enc_jwk)
         if not isinstance(nested_jwt, SignedJwt):
             raise ValueError("Nested JWT is not signed", nested_jwt)
@@ -206,7 +211,5 @@ class Jwt(BaseCompactToken):
         if sig_jwk:
             if nested_jwt.verify_signature(sig_jwk, sig_alg, sig_algs):
                 return nested_jwt
-
-        from .signed import InvalidSignature
 
         raise InvalidSignature()

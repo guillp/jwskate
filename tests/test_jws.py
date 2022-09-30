@@ -80,11 +80,17 @@ OKP_ED25519_PRIVATE_KEY = {
     "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
 }
 
+OKP_ED448_PRIVATE_KEY = {
+    "kty": "OKP",
+    "crv": "Ed448",
+    "x": "Cg5TBDGx0VUzIsTBy7-1ipgpdbn1URt9Ahb4tKwzav788lold5nGfmuqMcdyBOBMnc-kVdtBew4A",
+    "d": "8AW_tfr1kQkyMqOjoGzM3yiLgu6zbN2Nlcpc50b4lwh4bVE1b1EwyJJJqJ4J3zhXLRmUB3REz1y0",
+}
+
 SYMMETRIC_SIGNATURE_KEY = {
     "kty": "oct",
     "kid": "018c0ae5-4d9b-471b-bfd6-eef314bc7037",
     "use": "sig",
-    "alg": "HS256",
     "k": "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg",
 }
 
@@ -183,6 +189,24 @@ def okp_ed25519_signature_jwk() -> Jwk:
     return jwk
 
 
+@pytest.fixture(scope="module")
+def okp_ed448_signature_jwk() -> Jwk:
+    jwk = Jwk(OKP_ED448_PRIVATE_KEY)
+    assert isinstance(jwk, OKPJwk)
+    assert jwk.is_private
+    assert jwk.kty == "OKP"
+    assert (
+        jwk.private_key.hex()
+        == "f005bfb5faf591093232a3a3a06cccdf288b82eeb36cdd8d95ca5ce746f89708786d51356f5130c89249a89e09df38572d1994077444cf5cb4"
+    )
+    assert (
+        jwk.public_key.hex()
+        == "0a0e530431b1d1553322c4c1cbbfb58a982975b9f5511b7d0216f8b4ac336afefcf25a257799c67e6baa31c77204e04c9dcfa455db417b0e00"
+    )
+    assert jwk.thumbprint() == "tNxVYGfEeBGXEG7N8YAvNhBlZ1mSKVjc3tMP_t_3-t0"
+    return jwk
+
+
 @pytest.fixture(scope="session")
 def symmetric_signature_jwk() -> Jwk:
     """This is the key from [https://datatracker.ietf.org/doc/html/rfc7520#section-3.5]."""
@@ -192,7 +216,6 @@ def symmetric_signature_jwk() -> Jwk:
     assert jwk.kty == "oct"
     assert jwk.kid == "018c0ae5-4d9b-471b-bfd6-eef314bc7037"
     assert jwk.use == "sig"
-    assert jwk.alg == "HS256"
     assert (
         jwk.key.hex()
         == "849b57219dae48de646d07dbb533566e976686457c1491be3a76dcea6c427188"
@@ -240,6 +263,7 @@ def signature_jwk(
     ec_p384_private_jwk: Jwk,
     ec_p521_private_jwk: Jwk,
     okp_ed25519_signature_jwk: Jwk,
+    okp_ed448_signature_jwk: Jwk,
     symmetric_signature_jwk: Jwk,
 ) -> Jwk:
     for key in (
@@ -248,6 +272,7 @@ def signature_jwk(
         ec_p384_private_jwk,
         ec_p256_private_jwk,
         okp_ed25519_signature_jwk,
+        okp_ed448_signature_jwk,
         symmetric_signature_jwk,
     ):
         if signature_alg in key.supported_signing_algorithms():
@@ -335,18 +360,42 @@ def test_verify_signature(
     signed_jws_compact: JwsCompact, verification_jwk: Jwk, signature_alg: str
 ) -> None:
     assert signed_jws_compact.verify_signature(verification_jwk, alg=signature_alg)
+    altered_jws = bytes(signed_jws_compact)[:-4] + (
+        b"aaaa" if not signed_jws_compact.value.endswith(b"aaaa") else b"bbbb"
+    )
+    assert not JwsCompact(altered_jws).verify_signature(
+        verification_jwk, alg=signature_alg
+    )
 
 
 def test_verify_signature_json_flat(
     signed_jws_json_flat: JwsJsonFlat, verification_jwk: Jwk, signature_alg: str
 ) -> None:
     assert signed_jws_json_flat.verify_signature(verification_jwk, alg=signature_alg)
+    altered_jws = dict(signed_jws_json_flat)
+    altered_jws["signature"] = signed_jws_json_flat["signature"][:-4] + (
+        "aaaa" if not signed_jws_json_flat["signature"].endswith("aaaa") else "bbbb"
+    )
+    assert not JwsJsonFlat(altered_jws).verify_signature(
+        verification_jwk, alg=signature_alg
+    )
 
 
 def test_verify_signature_json_general(
     signed_jws_json_general: JwsJsonGeneral, verification_jwk: Jwk, signature_alg: str
 ) -> None:
     assert signed_jws_json_general.verify_signature(verification_jwk, alg=signature_alg)
+    altered_jws = dict(signed_jws_json_general)
+    altered_jws["signatures"][0]["signature"] = signed_jws_json_general["signatures"][
+        0
+    ]["signature"][:-4] + (
+        "aaaa"
+        if not signed_jws_json_general["signatures"][0]["signature"].endswith("aaaa")
+        else "bbbb"
+    )
+    assert not JwsJsonGeneral(altered_jws).verify_signature(
+        verification_jwk, alg=signature_alg
+    )
 
 
 def test_jws_format_transformation(

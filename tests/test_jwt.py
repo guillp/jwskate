@@ -323,19 +323,33 @@ def test_sign_and_encrypt() -> None:
     )
 
     claims = {"iat": 1661759343, "exp": 1661759403, "sub": "mysub"}
-    jwt = Jwt.sign_and_encrypt(claims, sign_jwk, enc_jwk, enc)
-    assert isinstance(jwt, JweCompact)
-    assert jwt.cty == "JWT"
-    assert jwt.alg == enc_alg
-    assert jwt.enc == enc
-    assert jwt.kid == enc_jwk.kid
+    enc_jwt = Jwt.sign_and_encrypt(claims, sign_jwk, enc_jwk.public_jwk(), enc)
+    assert isinstance(enc_jwt, JweCompact)
+    assert enc_jwt.cty == "JWT"
+    assert enc_jwt.alg == enc_alg
+    assert enc_jwt.enc == enc
+    assert enc_jwt.kid == enc_jwk.kid
 
-    inner_jwt = Jwt(jwt.decrypt(enc_jwk))
+    inner_jwt = Jwt(enc_jwt.decrypt(enc_jwk))
     assert isinstance(inner_jwt, SignedJwt)
     assert inner_jwt.alg == sign_alg
     assert inner_jwt.claims == claims
     assert inner_jwt.verify_signature(sign_jwk)
     assert inner_jwt.kid == sign_jwk.kid
+
+    verified_inner_jwt = Jwt.decrypt_and_verify(
+        enc_jwt, enc_jwk=enc_jwk, sig_jwk=sign_jwk.public_jwk()
+    )
+    assert isinstance(verified_inner_jwt, SignedJwt)
+
+    altered_inner_jwt = bytes(verified_inner_jwt)[:-4] + (
+        b"aaaa" if not verified_inner_jwt.value.endswith(b"aaaa") else b"bbbb"
+    )
+    enc_altered_jwe = JweCompact.encrypt(altered_inner_jwt, jwk=enc_jwk, enc=enc)
+    with pytest.raises(InvalidSignature):
+        Jwt.decrypt_and_verify(
+            enc_altered_jwe, enc_jwk=enc_jwk, sig_jwk=sign_jwk.public_jwk()
+        )
 
 
 def test_sign_without_alg() -> None:

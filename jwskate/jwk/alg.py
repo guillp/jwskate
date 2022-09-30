@@ -39,9 +39,16 @@ def select_alg(
     Returns:
       the alg to use
 
+    Warnings:
+        A warning is emitted if `jwk_alg` is supplied and `alg` doesn't match its value.
+
     Raises:
         UnsupportedAlg: if the requested alg is not supported
+        ValueError: if supported_algs is empty
     """
+    if not supported_algs:
+        raise ValueError("No possible algorithms to choose from!")
+
     choosen_alg: str
     if jwk_alg is not None:
         if alg is not None:
@@ -110,11 +117,7 @@ def select_algs(
         raise ValueError("No possible algorithms to choose from!")
 
     if jwk_alg is not None:
-        if alg and alg != jwk_alg:
-            warnings.warn(
-                "This key has an 'alg' parameter, you should use that alg for each operation."
-            )
-        if algs and jwk_alg not in algs:
+        if (alg and alg != jwk_alg) or (algs and jwk_alg not in algs):
             warnings.warn(
                 "This key has an 'alg' parameter, you should use that alg for each operation."
             )

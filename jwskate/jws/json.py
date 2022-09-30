@@ -166,7 +166,7 @@ class JwsJsonGeneral(BaseJsonDict):
             Union[Jwk, Mapping[str, Any]],
         ],
     ) -> JwsJsonGeneral:
-        """Sign a payload with several keys and return the resulting JWS JSON in general format.
+        """Sign a payload with several keys and return the resulting JWS in JSON general format.
 
         Args:
             payload: the data to sign

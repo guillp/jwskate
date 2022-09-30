@@ -1,4 +1,4 @@
-from typing import Union
+from typing import SupportsBytes, Union
 
 import pytest
 
@@ -238,7 +238,6 @@ SYMMETRIC_ENCRYPTION_KEY = {
     "kty": "oct",
     "kid": "018c0ae5-4d9b-471b-bfd6-eef314bc7037",
     "use": "enc",
-    "alg": "A256KW",
     "k": "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg",
 }
 
@@ -348,7 +347,6 @@ def symmetric_256_encryption_jwk() -> Jwk:
     assert jwk.kty == "oct"
     assert jwk.kid == "018c0ae5-4d9b-471b-bfd6-eef314bc7037"
     assert jwk.use == "enc"
-    assert jwk.alg == "A256KW"
     assert (
         jwk.key.hex()
         == "849b57219dae48de646d07dbb533566e976686457c1491be3a76dcea6c427188"
@@ -402,7 +400,7 @@ def encryption_plaintext() -> bytes:
     ],
 )
 def key_management_alg(request: pytest.FixtureRequest) -> str:
-    return request.param  # type: ignore[attr-defined,no-any-return]
+    return request.param  # type: ignore[no-any-return]
 
 
 @pytest.fixture(
@@ -417,7 +415,7 @@ def key_management_alg(request: pytest.FixtureRequest) -> str:
     ],
 )
 def encryption_alg(request: pytest.FixtureRequest) -> str:
-    alg: str = request.param  # type: ignore[attr-defined]
+    alg: str = request.param
     if alg in SymmetricJwk.ENCRYPTION_ALGORITHMS:
         return alg
     pytest.skip(f"Encryption alg {alg} is not supported yet!")
@@ -496,8 +494,8 @@ def encryption_jwk(decryption_jwk: Union[Jwk, bytes]) -> Union[Jwk, bytes]:
 
 @pytest.fixture(scope="module")
 def encrypted_jwe(
-    encryption_plaintext: bytes,
-    encryption_jwk: Union[Jwk, bytes],
+    encryption_plaintext: SupportsBytes,
+    encryption_jwk: Union[Jwk, SupportsBytes],
     key_management_alg: str,
     encryption_alg: str,
 ) -> JweCompact:
@@ -508,18 +506,68 @@ def encrypted_jwe(
             alg=key_management_alg,
             enc=encryption_alg,
         )
-    elif isinstance(encryption_jwk, bytes):
+    else:
+        password = bytes(encryption_jwk)
         jwe = JweCompact.encrypt_with_password(
             plaintext=encryption_plaintext,
-            password=encryption_jwk,
+            password=password,
+            alg=key_management_alg,
+            enc=encryption_alg,
+        )
+    assert isinstance(jwe, JweCompact)
+    assert jwe.enc == encryption_alg
+    return jwe
+
+
+class SupportsBytesTester:
+    """A test class with a __bytes__ method to match SupportBytes interface."""
+
+    def __init__(self, payload: bytes) -> None:
+        self.payload = payload
+
+    def __bytes__(self) -> bytes:  # noqa: D105
+        return self.payload
+
+
+def test_supportsbytes(
+    encryption_plaintext: bytes,
+    encryption_jwk: Union[Jwk, SupportsBytes],
+    key_management_alg: str,
+    encryption_alg: str,
+    encrypted_jwe: JweCompact,
+    decryption_jwk: Jwk,
+) -> None:
+    if isinstance(encryption_jwk, Jwk):
+        jwe = JweCompact.encrypt(
+            plaintext=SupportsBytesTester(encryption_plaintext),
+            jwk=encryption_jwk,
             alg=key_management_alg,
             enc=encryption_alg,
         )
     else:
-        assert False, "Unsupported encryption key type"
-    assert isinstance(jwe, JweCompact)
-    assert jwe.enc == encryption_alg
-    return jwe
+        password = bytes(encryption_jwk)
+        jwe = JweCompact.encrypt_with_password(
+            plaintext=SupportsBytesTester(encryption_plaintext),
+            password=password,
+            alg=key_management_alg,
+            enc=encryption_alg,
+        )
+
+    assert jwe.decrypt(decryption_jwk) == encrypted_jwe.decrypt(decryption_jwk)
+    if not isinstance(decryption_jwk, bytes):
+        cek = decryption_jwk.recipient_key(
+            SupportsBytesTester(jwe.wrapped_cek), **jwe.headers
+        )
+        assert (
+            cek.decrypt(
+                SupportsBytesTester(jwe.ciphertext),
+                iv=SupportsBytesTester(jwe.initialization_vector),
+                tag=SupportsBytesTester(jwe.authentication_tag),
+                aad=SupportsBytesTester(jwe.additional_authenticated_data),
+                alg=encryption_alg,
+            )
+            == encryption_plaintext
+        )
 
 
 def test_decrypt(
@@ -685,7 +733,7 @@ def test_invalid_password_encryption() -> None:
             "password",
             alg="PBES2-HS256+A128KW",
             enc="A128GCM",
-            count=50,
+            count=5000,
             cek=b"foo" * 8,
         )
 

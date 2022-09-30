@@ -1,4 +1,5 @@
 """This module implement Elliptic Curve signature algorithms."""
+from typing import SupportsBytes, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
@@ -20,7 +21,19 @@ class BaseECSignatureAlg(
     public_key_class = ec.EllipticCurvePublicKey
     private_key_class = ec.EllipticCurvePrivateKey
 
-    def sign(self, data: bytes) -> BinaPy:  # noqa: D102
+    @classmethod
+    def check_key(
+        cls, key: Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey]
+    ) -> None:  # noqa: D102
+        if key.curve.name != cls.curve.cryptography_curve.name:
+            raise ValueError(
+                f"This key is on curve {key.curve.name}. An EC key on curve {cls.curve.name} is expected."
+            )
+
+    def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:  # noqa: D102
+        if not isinstance(data, bytes):
+            data = bytes(data)
+
         with self.private_key_required() as key:
             dss_sig = key.sign(data, ec.ECDSA(self.hashing_alg))
             r, s = asymmetric.utils.decode_dss_signature(dss_sig)
@@ -28,7 +41,15 @@ class BaseECSignatureAlg(
                 s, self.curve.coordinate_size
             )
 
-    def verify(self, data: bytes, signature: bytes) -> bool:  # noqa: D102
+    def verify(
+        self, data: Union[bytes, SupportsBytes], signature: Union[bytes, SupportsBytes]
+    ) -> bool:  # noqa: D102
+        if not isinstance(data, bytes):
+            data = bytes(data)
+
+        if not isinstance(signature, bytes):
+            signature = bytes(signature)
+
         with self.public_key_required() as key:
             if len(signature) != self.curve.coordinate_size * 2:
                 raise ValueError(
@@ -55,7 +76,7 @@ class BaseECSignatureAlg(
 
 
 class ES256(BaseECSignatureAlg):  # noqa: D415
-    """ECDSA using P-256 and SHA-256"""
+    """ECDSA using P-256 and SHA-256."""
 
     name = "ES256"
     description = __doc__
@@ -64,7 +85,7 @@ class ES256(BaseECSignatureAlg):  # noqa: D415
 
 
 class ES384(BaseECSignatureAlg):  # noqa: D415
-    """ECDSA using P-384 and SHA-384"""
+    """ECDSA using P-384 and SHA-384."""
 
     name = "ES384"
     description = __doc__
@@ -73,7 +94,7 @@ class ES384(BaseECSignatureAlg):  # noqa: D415
 
 
 class ES512(BaseECSignatureAlg):  # noqa: D415
-    """ECDSA using P-521 and SHA-512"""
+    """ECDSA using P-521 and SHA-512."""
 
     name = "ES512"
     description = __doc__
@@ -82,7 +103,7 @@ class ES512(BaseECSignatureAlg):  # noqa: D415
 
 
 class ES256K(BaseECSignatureAlg):  # noqa: D415
-    """ECDSA using secp256k1 and SHA-256"""
+    """ECDSA using secp256k1 and SHA-256."""
 
     name = "ES256k"
     description = __doc__

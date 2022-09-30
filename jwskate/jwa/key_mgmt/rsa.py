@@ -1,6 +1,6 @@
 """This module implements RSA based Key Management algorithms."""
 
-from typing import Any, Union
+from typing import Any, SupportsBytes, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import asymmetric, hashes
@@ -45,11 +45,13 @@ class BaseRsaKeyWrap(
             PublicKeyRequired: if this algorithm is initialized with a private key instead of a public key
         """
         if self.read_only:
-            raise NotImplementedError
+            raise NotImplementedError(
+                "Due to security reasons, this algorithm is only usable for decryption."
+            )
         with self.public_key_required() as key:
             return BinaPy(key.encrypt(plainkey, self.padding))
 
-    def unwrap_key(self, cipherkey: bytes) -> BinaPy:
+    def unwrap_key(self, cipherkey: Union[bytes, SupportsBytes]) -> BinaPy:
         """Unwrap a symmetric key with this alg.
 
         Args:
@@ -60,12 +62,15 @@ class BaseRsaKeyWrap(
         Raises:
             PrivateKeyRequired: if this alg is initialized with a public key instead of a private key
         """
+        if not isinstance(cipherkey, bytes):
+            cipherkey = bytes(cipherkey)
+
         with self.private_key_required() as key:
             return BinaPy(key.decrypt(cipherkey, self.padding))
 
 
 class RsaEsPcks1v1_5(BaseRsaKeyWrap):  # noqa: D415
-    """RSAES-PKCS1-v1_5"""
+    """RSAES-PKCS1-v1_5."""
 
     name = "RSA1_5"
     description = __doc__
@@ -75,7 +80,7 @@ class RsaEsPcks1v1_5(BaseRsaKeyWrap):  # noqa: D415
 
 
 class RsaEsOaep(BaseRsaKeyWrap):  # noqa: D415
-    """RSAES OAEP using default parameters"""
+    """RSAES OAEP using default parameters."""
 
     name = "RSA-OAEP"
     description = __doc__
@@ -88,7 +93,7 @@ class RsaEsOaep(BaseRsaKeyWrap):  # noqa: D415
 
 
 class RsaEsOaepSha256(BaseRsaKeyWrap):  # noqa: D415
-    """RSAES OAEP using SHA-256 and MGF1 with SHA-256"""
+    """RSAES OAEP using SHA-256 and MGF1 with SHA-256."""
 
     name = "RSA-OAEP-256"
     description = __doc__
@@ -101,7 +106,7 @@ class RsaEsOaepSha256(BaseRsaKeyWrap):  # noqa: D415
 
 
 class RsaEsOaepSha384(BaseRsaKeyWrap):  # noqa: D415
-    """RSA-OAEP using SHA-384 and MGF1 with SHA-384"""
+    """RSA-OAEP using SHA-384 and MGF1 with SHA-384."""
 
     name = "RSA-OAEP-384"
     description = __doc__
@@ -114,7 +119,7 @@ class RsaEsOaepSha384(BaseRsaKeyWrap):  # noqa: D415
 
 
 class RsaEsOaepSha512(BaseRsaKeyWrap):  # noqa: D415
-    """RSA-OAEP using SHA-512 and MGF1 with SHA-512"""
+    """RSA-OAEP using SHA-512 and MGF1 with SHA-512."""
 
     name = "RSA-OAEP-512"
     description = __doc__

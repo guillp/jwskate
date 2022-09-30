@@ -2,26 +2,26 @@
 
 from __future__ import annotations
 
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, SupportsBytes, Tuple, Union
 
 from binapy import BinaPy
 
 from jwskate.jwa import (
+    A128CBC_HS256,
     A128GCM,
     A128GCMKW,
     A128KW,
+    A192CBC_HS384,
     A192GCM,
     A192GCMKW,
     A192KW,
+    A256CBC_HS512,
     A256GCM,
     A256GCMKW,
     A256KW,
     HS256,
     HS384,
     HS512,
-    Aes128CbcHmacSha256,
-    Aes192CbcHmacSha384,
-    Aes256CbcHmacSha512,
     BaseAESEncryptionAlg,
     DirectKeyUse,
 )
@@ -31,10 +31,11 @@ from .base import Jwk, JwkParameter
 
 
 class SymmetricJwk(Jwk):
-    """Implement Symetric keys, with `kty=oct`."""
+    """Implement Symmetric keys, with `kty=oct`."""
 
     KTY = "oct"
-    CRYPTOGRAPHY_KEY_CLASSES = (bytes,)
+    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (bytes,)
+    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (bytes,)
 
     PARAMS = {
         "k": JwkParameter("Key Value", is_private=True, is_required=True, kind="b64u"),
@@ -58,14 +59,19 @@ class SymmetricJwk(Jwk):
     ENCRYPTION_ALGORITHMS = {
         keyalg.name: keyalg
         for keyalg in [
-            Aes128CbcHmacSha256,
-            Aes192CbcHmacSha384,
-            Aes256CbcHmacSha512,
+            A128CBC_HS256,
+            A192CBC_HS384,
+            A256CBC_HS512,
             A128GCM,
             A192GCM,
             A256GCM,
         ]
     }
+
+    @property
+    def is_symmetric(self) -> bool:
+        """Always returns `True`."""
+        return True
 
     def public_jwk(self) -> Jwk:
         """This always raises a ValueError since SymmetricKeys are always private.
@@ -77,7 +83,9 @@ class SymmetricJwk(Jwk):
 
     @classmethod
     def from_bytes(cls, k: Union[bytes, str], **params: Any) -> SymmetricJwk:
-        """Initializes a SymmetricJwk from a raw secret key. The provided secret key is encoded and used as the `k` parameter for the returned SymetricKey.
+        """Initialize a `SymmetricJwk` from a raw secret key.
+
+        The provided secret key is encoded and used as the `k` parameter for the returned SymmetricKey.
 
         Args:
           k: the key to use
@@ -178,15 +186,18 @@ class SymmetricJwk(Jwk):
 
     def encrypt(
         self,
-        plaintext: bytes,
+        plaintext: Union[bytes, SupportsBytes],
         *,
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
         iv: Optional[bytes] = None,
     ) -> Tuple[BinaPy, BinaPy, BinaPy]:
-        """Encrypt arbitrary data using this key. Supports Authenticated Encryption with the Additional Authenticated Data (`aad`). An Initializatin Vector (IV) will be generated automatically. You can choose your own IV by providing the `iv` parameter (only use this if you know what you are doing).
+        """Encrypt arbitrary data using this key.
 
-        This return the ciphertext, the authentication tag, and the used IV (if an IV was provided as parameter, the same IV is returned).
+        Supports Authenticated Encryption with Additional Authenticated Data (`aad`).
+        An Initialization Vector (IV) will be generated automatically. You can choose your own IV by providing the `iv` parameter (only use this if you know what you are doing).
+
+        This returns the ciphertext, the authentication tag, and the used IV (if an IV was provided as parameter, the same IV is returned).
 
         Args:
           plaintext: the plaintext to encrypt
@@ -217,11 +228,11 @@ class SymmetricJwk(Jwk):
 
     def decrypt(
         self,
-        ciphertext: bytes,
+        ciphertext: Union[bytes, SupportsBytes],
         *,
-        iv: bytes,
-        tag: bytes,
-        aad: Optional[bytes] = None,
+        iv: Union[bytes, SupportsBytes],
+        tag: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None,
         alg: Optional[str] = None,
     ) -> BinaPy:
         """Decrypt arbitrary data.
@@ -236,6 +247,15 @@ class SymmetricJwk(Jwk):
         Returns:
             the decrypted clear-text
         """
+        if aad is None:  # pragma: no branch
+            aad = b""
+        elif not isinstance(aad, bytes):
+            aad = bytes(aad)
+        if not isinstance(iv, bytes):
+            iv = bytes(iv)
+        if not isinstance(tag, bytes):
+            tag = bytes(tag)
+
         encalg = select_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
         decryptor: BaseAESEncryptionAlg = encalg(self.cryptography_key)
         plaintext: bytes = decryptor.decrypt(ciphertext, auth_tag=tag, iv=iv, aad=aad)
@@ -243,7 +263,9 @@ class SymmetricJwk(Jwk):
         return BinaPy(plaintext)
 
     def supported_key_management_algorithms(self) -> List[str]:
-        """Return the list of supported Key Management algorithms, usable for key (un)wrapping with this key.
+        """Return the list of Key Management algorithms that this key supports.
+
+        Key Management algorithms are used to generate or wrap Content Encryption Keys (CEK).
 
         Returns:
             a list of supported algorithms identifiers
@@ -265,3 +287,16 @@ class SymmetricJwk(Jwk):
             for name, alg in self.ENCRYPTION_ALGORITHMS.items()
             if alg.supports_key(self.cryptography_key)
         ]
+
+    def to_pem(self, password: Union[bytes, str, None] = None) -> bytes:
+        """Serialize this key to PEM format.
+
+        Symmetric keys are not serializable to PEM so this will raise a TypeError.
+
+        Args:
+          password: password to use to encrypt the PEM.
+
+        Raises:
+            TypeError: always
+        """
+        raise TypeError("Symmetric keys are not serializable to PEM.")

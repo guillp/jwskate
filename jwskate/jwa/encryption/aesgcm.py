@@ -1,11 +1,12 @@
 """This module implements AES-GCM based encryption algorithms."""
 
-from typing import Optional, Tuple
+from typing import SupportsBytes, Tuple, Union
 
+import cryptography.exceptions
 from binapy import BinaPy
 from cryptography.hazmat.primitives.ciphers import aead
 
-from ..base import BaseAESEncryptionAlg
+from ..base import BaseAESEncryptionAlg, MismatchingAuthTag
 
 
 class BaseAESGCM(BaseAESEncryptionAlg):
@@ -15,7 +16,11 @@ class BaseAESGCM(BaseAESEncryptionAlg):
     tag_size = 16
 
     def encrypt(
-        self, plaintext: bytes, *, iv: bytes, aad: Optional[bytes]
+        self,
+        plaintext: Union[bytes, SupportsBytes],
+        *,
+        iv: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None,
     ) -> Tuple[BinaPy, BinaPy]:
         """Encrypt a plaintext, with the given IV and Additional Authenticated Data.".
 
@@ -30,14 +35,27 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         Raises:
             ValueError: if the IV size is not appropriate
         """
+        if not isinstance(iv, bytes):
+            iv = bytes(iv)
         if len(iv) * 8 != self.iv_size:
             raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
+        if aad is None:
+            aad = b""
+        elif not isinstance(aad, bytes):
+            aad = bytes(aad)
+        if not isinstance(plaintext, bytes):
+            plaintext = bytes(plaintext)
         ciphertext_with_tag = BinaPy(aead.AESGCM(self.key).encrypt(iv, plaintext, aad))
         ciphertext, tag = ciphertext_with_tag.cut_at(-self.tag_size)
         return ciphertext, tag
 
     def decrypt(
-        self, ciphertext: bytes, *, iv: bytes, auth_tag: bytes, aad: Optional[bytes]
+        self,
+        ciphertext: Union[bytes, SupportsBytes],
+        *,
+        iv: Union[bytes, SupportsBytes],
+        auth_tag: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None,
     ) -> BinaPy:
         """Decrypt a ciphertext.
 
@@ -53,10 +71,24 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         Raises:
             ValueError: if the IV size is not appropriate
         """
+        if not isinstance(ciphertext, bytes):
+            ciphertext = bytes(ciphertext)
+        if not isinstance(iv, bytes):
+            iv = bytes(iv)
+        if not isinstance(auth_tag, bytes):
+            auth_tag = bytes(auth_tag)
+        if aad is None:
+            aad = b""
+        elif not isinstance(aad, bytes):
+            aad = bytes(aad)
+
         if len(iv) * 8 != self.iv_size:
             raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
         ciphertext_with_tag = ciphertext + auth_tag
-        return BinaPy(aead.AESGCM(self.key).decrypt(iv, ciphertext_with_tag, aad))
+        try:
+            return BinaPy(aead.AESGCM(self.key).decrypt(iv, ciphertext_with_tag, aad))
+        except cryptography.exceptions.InvalidTag:
+            raise MismatchingAuthTag()
 
 
 class A128GCM(BaseAESGCM):

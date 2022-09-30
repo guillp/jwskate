@@ -1,8 +1,11 @@
-"""This module implements JWK representing Octet Key Pairs from [RFC8037](https://datatracker.ietf.org/doc/rfc8037/)."""
+"""This module implements JWK representing Octet Key Pairs from [RFC8037].
+
+[RFC8037]: https://www.rfc-editor.org/rfc/rfc8037.html
+"""
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from typing import Any, Mapping, Optional
 
 from backports.cached_property import cached_property
 from binapy import BinaPy
@@ -17,6 +20,7 @@ from cryptography.hazmat.primitives.serialization import (
 from jwskate.jwa import X448, X25519, Ed448, Ed25519, EdDsa, OKPCurve
 
 from .. import EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW
+from .alg import UnsupportedAlg
 from .base import Jwk, JwkParameter
 
 
@@ -29,14 +33,17 @@ class OKPJwk(Jwk):
 
     KTY = "OKP"
 
-    CRYPTOGRAPHY_KEY_CLASSES = (
+    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (
         ed25519.Ed25519PrivateKey,
-        ed25519.Ed25519PublicKey,
         ed448.Ed448PrivateKey,
-        ed448.Ed448PublicKey,
         x25519.X25519PrivateKey,
-        x25519.X25519PublicKey,
         x448.X448PrivateKey,
+    )
+
+    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (
+        ed25519.Ed25519PublicKey,
+        ed448.Ed448PublicKey,
+        x25519.X25519PublicKey,
         x448.X448PublicKey,
     )
 
@@ -46,7 +53,7 @@ class OKPJwk(Jwk):
             "Public Key", is_private=False, is_required=True, kind="b64u"
         ),
         "d": JwkParameter(
-            "Private Key", is_private=True, is_required=False, kind="b64u"
+            "Private Key", is_private=True, is_required=True, kind="b64u"
         ),
     }
 
@@ -208,7 +215,13 @@ class OKPJwk(Jwk):
         else:
             raise TypeError(
                 "Unsupported key type for OKP. Supported key types are: "
-                + ", ".join(kls.__name__ for kls in cls.CRYPTOGRAPHY_KEY_CLASSES)
+                + ", ".join(
+                    kls.__name__
+                    for kls in (
+                        cls.CRYPTOGRAPHY_PRIVATE_KEY_CLASSES
+                        + cls.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES
+                    )
+                )
             )
 
     def _to_cryptography_key(self) -> Any:
@@ -281,16 +294,37 @@ class OKPJwk(Jwk):
         )
 
     @classmethod
-    def generate(cls, crv: str = "Ed25519", **params: Any) -> OKPJwk:
+    def generate(
+        cls, crv: Optional[str] = None, alg: Optional[str] = None, **params: Any
+    ) -> OKPJwk:
         """Generate a private OKPJwk on a given curve.
+
+        You can specify either a curve or an algorithm identifier, or both.
+        If using an alg identifier, crv will default to Ed25519 for signature algs,
+        or X25519 for encryption algs.
 
         Args:
           crv: the curve to use
+          alg: algorithm to use
           **params: additional members to include in the Jwk
 
         Returns:
             the resulting OKPJwk
         """
-        curve = cls.get_curve(crv)
+        if crv:
+            curve = cls.get_curve(crv)
+        elif alg:
+            if alg in cls.SIGNATURE_ALGORITHMS:
+                curve = Ed25519
+            elif alg in cls.KEY_MANAGEMENT_ALGORITHMS:
+                curve = X25519
+            else:
+                raise UnsupportedAlg(alg)
+        else:
+            raise ValueError(
+                "You must supply at least a Curve identifier (crv) or an Algorithm identifier (alg) "
+                "in order to generate an OKP JWK."
+            )
+
         x, d = curve.generate()
-        return cls.private(crv=crv, x=x, d=d, **params)
+        return cls.private(crv=curve.name, x=x, d=d, alg=alg, **params)

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Generic, Iterator, Optional, Tuple, Type, TypeVar, Union
+from typing import Generic, Iterator, SupportsBytes, Tuple, Type, TypeVar, Union
 
+import cryptography.exceptions
 from binapy import BinaPy
 
 
@@ -19,15 +20,21 @@ class PublicKeyRequired(AttributeError):
 class BaseAlg:
     """Base class for all algorithms.
 
-    An algorithm has a `name` and a `description`, whose reference is here: https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-algorithms
+    An algorithm has a `name` and a `description`, whose reference is found in [IANA JOSE registry][IANA].
+
+    [IANA]: https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-algorithms
     """
+
+    use: str
+    """Alg use ('sig' or 'enc')"""
 
     name: str
     """Technical name of the algorithm"""
     description: str
     """Description of the algorithm (human readable)"""
     read_only: bool = False
-    """For algs that are considered insecure, allow only signature verification or decryption of existing data, but don't allow new signatures or new encryptions."""
+    """For algs that are considered insecure, set to True to allow only signature verification
+       or decryption of existing data, but don't allow new signatures or encryption."""
 
     def __repr__(self) -> str:
         """Use the name of the alg as repr."""
@@ -166,7 +173,9 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 class BaseSignatureAlg(BaseAlg):
     """Base class for signature algorithms."""
 
-    def sign(self, data: bytes) -> BinaPy:
+    use = "sig"
+
+    def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:
         """Sign arbitrary data, return the signature.
 
         Args:
@@ -177,7 +186,9 @@ class BaseSignatureAlg(BaseAlg):
         """
         raise NotImplementedError
 
-    def verify(self, data: bytes, signature: bytes) -> bool:
+    def verify(
+        self, data: Union[bytes, SupportsBytes], signature: Union[bytes, SupportsBytes]
+    ) -> bool:
         """Verify a signature against some data.
 
         Args:
@@ -192,6 +203,8 @@ class BaseSignatureAlg(BaseAlg):
 
 class BaseAESEncryptionAlg(BaseSymmetricAlg):
     """Base class for AES encryption algorithms."""
+
+    use = "enc"
 
     key_size: int
     tag_size: int
@@ -231,9 +244,19 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         return BinaPy.random_bits(cls.iv_size)
 
     def encrypt(
-        self, plaintext: bytes, *, iv: bytes, aad: Optional[bytes]
+        self,
+        plaintext: Union[bytes, SupportsBytes],
+        *,
+        iv: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None,
     ) -> Tuple[BinaPy, BinaPy]:
-        """Encrypt arbitrary data (`plaintext`) with the given Initialisation Vector (`iv`) and optional Additional Authentication Data (`aad`), return the ciphered text and authentication tag.
+        """Encrypt arbitrary data, with [Authenticated Encryption (with optional Associated Data)][AEAD].
+
+        This needs:
+        - the raw data to encrypt (`plaintext`)
+        - a given random Initialisation Vector (`iv`) of the appropriate size
+        - optional Additional Authentication Data (`aad`)
+        And returns a tuple (ciphered_data, authentication_tag).
 
         Args:
           plaintext: the data to encrypt
@@ -242,13 +265,25 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
           a tuple of ciphered data and authentication tag
+
+        [AEAD]: https://wikipedia.org/wiki/Authenticated_encryption
         """
         raise NotImplementedError
 
     def decrypt(
-        self, ciphertext: bytes, *, iv: bytes, auth_tag: bytes, aad: Optional[bytes]
+        self,
+        ciphertext: Union[bytes, SupportsBytes],
+        *,
+        iv: Union[bytes, SupportsBytes],
+        auth_tag: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None,
     ) -> BinaPy:
-        """Decrypt a ciphertext with a given Initialisation Vector (iv) and optional Additional Authentication Data (aad), returns the resulting clear text.
+        """Decrypt and verify a ciphertext with Authenticated Encryption.
+
+        This needs:
+        - the raw encrypted Data (`ciphertext`) and Authentication Tag (`auth_tag`) that were produced by encryption,
+        - the same Initialisation Vector (`iv`) and optional Additional Authentication Data that were provided for encryption.
+        and returns the resulting clear text data.
 
         Args:
           ciphertext: the data to decrypt
@@ -273,3 +308,9 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
 class BaseKeyManagementAlg(BaseAlg):
     """Base class for Key Management algorithms."""
+
+    use = "enc"
+
+
+class MismatchingAuthTag(cryptography.exceptions.InvalidTag):
+    """Raised when trying to decrypt with an Authentication Tag that doesn't match the expected value."""

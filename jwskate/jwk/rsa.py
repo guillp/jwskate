@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, Union
+from typing import Any, Optional, Tuple, Union
 
 from backports.cached_property import cached_property
 from binapy import BinaPy
@@ -29,7 +29,8 @@ class RSAJwk(Jwk):
     """Represent a RSA Jwk, with `kty=RSA`."""
 
     KTY = "RSA"
-    CRYPTOGRAPHY_KEY_CLASSES = (rsa.RSAPrivateKey, rsa.RSAPublicKey)
+    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (rsa.RSAPrivateKey,)
+    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (rsa.RSAPublicKey,)
 
     PARAMS = {
         "n": JwkParameter("Modulus", is_private=False, is_required=True, kind="b64u"),
@@ -136,7 +137,7 @@ class RSAJwk(Jwk):
 
     @classmethod
     def public(cls, n: int, e: int, **params: Any) -> RSAJwk:
-        """Initialize a public RsaJwk from a modulus and an exponent.
+        """Initialize a public `RsaJwk` from a modulus and an exponent.
 
         Args:
           n: the modulus
@@ -168,7 +169,7 @@ class RSAJwk(Jwk):
         qi: Optional[int] = None,
         **params: Any,
     ) -> RSAJwk:
-        """Initializes a Private RsaJwk from its required parameters.
+        """Initialize a private `RsaJwk` from its required parameters.
 
         Args:
           n: the modulus
@@ -201,7 +202,7 @@ class RSAJwk(Jwk):
 
     @classmethod
     def generate(cls, key_size: int = 4096, **params: Any) -> RSAJwk:
-        """Generates a new random private RSAJwk.
+        """Generate a new random private `RSAJwk`.
 
         Args:
           key_size: the key size to use for the generated key, in bits
@@ -226,7 +227,7 @@ class RSAJwk(Jwk):
 
     @cached_property
     def modulus(self) -> int:
-        """Returns the modulus from this Jwk.
+        """Return the modulus `n` from this Jwk.
 
         Returns:
             the key modulus (from parameter `n`)
@@ -235,7 +236,7 @@ class RSAJwk(Jwk):
 
     @cached_property
     def exponent(self) -> int:
-        """Returns the exponent from this Jwk.
+        """Return the public exponent `e` from this Jwk.
 
         Returns:
             the key exponent (from parameter `e`)
@@ -244,7 +245,7 @@ class RSAJwk(Jwk):
 
     @cached_property
     def private_exponent(self) -> int:
-        """Returns the private exponent from this Jwk.
+        """Return the private exponent `d` from this Jwk.
 
         Returns:
             the key private exponent (from parameter `d`)
@@ -253,45 +254,114 @@ class RSAJwk(Jwk):
 
     @cached_property
     def first_prime_factor(self) -> int:
-        """Returns the first prime factor from this Jwk.
+        """Return the first prime factor `p` from this Jwk.
 
         Returns:
             the first prime factor (from parameter `p`)
         """
-        return BinaPy(self.p).decode_from("b64u").to_int()
+        return self.prime_factors[0]
 
     @cached_property
     def second_prime_factor(self) -> int:
-        """Returns the second prime factor from this Jwk.
+        """Return the second prime factor `q` from this Jwk.
 
         Returns:
             the second prime factor (from parameter `q`)
         """
-        return BinaPy(self.q).decode_from("b64u").to_int()
+        return self.prime_factors[1]
+
+    @cached_property
+    def prime_factors(self) -> Tuple[int, int]:
+        """Return the 2 prime factors `p` and `q` from this Jwk."""
+        if "p" not in self or "q" not in self:
+            p, q = rsa.rsa_recover_prime_factors(
+                self.modulus, self.exponent, self.private_exponent
+            )
+            return (p, q) if p < q else (q, p)
+        return (
+            BinaPy(self.p).decode_from("b64u").to_int(),
+            BinaPy(self.q).decode_from("b64u").to_int(),
+        )
 
     @cached_property
     def first_factor_crt_exponent(self) -> int:
-        """Returns the first factor CRT exponent from this Jwk.
+        """Return the first factor CRT exponent `dp` from this Jwk.
 
         Returns:
             the first factor CRT coefficient (from parameter `dp`)
         """
-        return BinaPy(self.dp).decode_from("b64u").to_int()
+        if "dp" in self:
+            return BinaPy(self.dp).decode_from("b64u").to_int()
+        return rsa.rsa_crt_dmp1(self.private_exponent, self.first_prime_factor)
 
     @cached_property
     def second_factor_crt_exponent(self) -> int:
-        """Returns the second factor CRT exponent from this Jwk.
+        """Return the second factor CRT exponent `dq` from this Jwk.
 
         Returns:
             the second factor CRT coefficient (from parameter `dq`)
         """
-        return BinaPy(self.dq).decode_from("b64u").to_int()
+        if "dq" in self:
+            return BinaPy(self.dq).decode_from("b64u").to_int()
+        return rsa.rsa_crt_dmq1(self.private_exponent, self.second_prime_factor)
 
     @cached_property
     def first_crt_coefficient(self) -> int:
-        """Returns the first CRT coefficient from this Jwk.
+        """Return the first CRT coefficient `qi` from this Jwk.
 
         Returns:
             the first CRT coefficient (from parameter `qi`)
         """
-        return BinaPy(self.qi).decode_from("b64u").to_int()
+        if "qi" in self:
+            return BinaPy(self.qi).decode_from("b64u").to_int()
+        return rsa.rsa_crt_iqmp(self.first_prime_factor, self.second_prime_factor)
+
+    @cached_property
+    def key_size(self) -> int:
+        """Key size, in bits.
+
+        Returns:
+            the key size
+        """
+        return len(BinaPy(self.n).decode_from("b64u")) * 8
+
+    def with_optional_private_parameters(self) -> RSAJwk:
+        """Compute the optional RSA private parameters and add them into the JWK.
+
+        The optional parameters are:
+        - p: first prime factor
+        - q: second prime factor
+        - dp: first factor Chinese Remainder Theorem exponent
+        - dq: second factor Chinese Remainder Theorem exponent
+        - qi: first Chinese Remainder Theorem coefficient
+        """
+        if not self.is_private:
+            raise ValueError(
+                "Optional private parameters can only be computed for private RSA keys."
+            )
+
+        jwk = dict(self)
+
+        jwk.update(
+            {
+                "p": BinaPy.from_int(self.first_prime_factor).to("b64u").ascii(),
+                "q": BinaPy.from_int(self.second_prime_factor).to("b64u").ascii(),
+                "dp": BinaPy.from_int(self.first_factor_crt_exponent)
+                .to("b64u")
+                .ascii(),
+                "dq": BinaPy.from_int(self.second_factor_crt_exponent)
+                .to("b64u")
+                .ascii(),
+                "qi": BinaPy.from_int(self.first_crt_coefficient).to("b64u").ascii(),
+            }
+        )
+
+        return RSAJwk(jwk)
+
+    def without_optional_private_parameters(self) -> RSAJwk:
+        """Remove the optional private parameters and return another Jwk instance without them."""
+        jwk = dict(self)
+        for param in "p", "q", "dp", "dq", "qi":
+            jwk.pop(param, None)
+
+        return RSAJwk(jwk)

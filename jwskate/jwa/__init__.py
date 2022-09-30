@@ -1,8 +1,10 @@
-"""This module implements the Json Web Algorithms as defined in RFC7518.
+"""This module implements the Json Web Algorithms as defined in [RFC7518].
 
-Each algorithm is represented as a wrapper around a symmetric or
-asymmetric key, and exposes the cryptographic operations as methods. The
-cryptographic operations themselves are delegated to `cryptography`.
+Each algorithm is represented as a wrapper around a symmetric or asymmetric key, and exposes the
+cryptographic operations as methods. The cryptographic operations themselves are delegated to
+`cryptography`.
+
+[RFC7518]: https://www.rfc-editor.org/rfc/rfc7518
 """
 
 from .base import (
@@ -12,17 +14,18 @@ from .base import (
     BaseKeyManagementAlg,
     BaseSignatureAlg,
     BaseSymmetricAlg,
+    MismatchingAuthTag,
     PrivateKeyRequired,
     PublicKeyRequired,
 )
 from .ec import P_256, P_384, P_521, EllipticCurve, secp256k1
 from .encryption import (
+    A128CBC_HS256,
     A128GCM,
+    A192CBC_HS384,
     A192GCM,
+    A256CBC_HS512,
     A256GCM,
-    Aes128CbcHmacSha256,
-    Aes192CbcHmacSha384,
-    Aes256CbcHmacSha512,
 )
 from .key_mgmt import (
     A128GCMKW,
@@ -80,9 +83,9 @@ __all__ = [
     "P_521",
     "EllipticCurve",
     "secp256k1",
-    "Aes128CbcHmacSha256",
-    "Aes192CbcHmacSha384",
-    "Aes256CbcHmacSha512",
+    "A128CBC_HS256",
+    "A192CBC_HS384",
+    "A256CBC_HS512",
     "A128GCMKW",
     "A192GCMKW",
     "A256GCMKW",
@@ -131,4 +134,5 @@ __all__ = [
     "X25519",
     "PrivateKeyRequired",
     "PublicKeyRequired",
+    "MismatchingAuthTag",
 ]

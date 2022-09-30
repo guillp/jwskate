@@ -24,8 +24,10 @@ class BaseCompactToken:
                 "You can increase this limit by passing a different `max_size` value as parameter."
             )
 
-        if not isinstance(value, bytes):
+        if isinstance(value, str):
             value = value.encode("ascii")
+
+        value = b"".join(value.split())
 
         self.value = value
         self.headers: Dict[str, Any]
@@ -70,8 +72,8 @@ class BaseCompactToken:
             AttributeError: if the `alg` header value is not a string
         """
         alg = self.get_header("alg")
-        if alg is None or not isinstance(alg, str):
-            raise AttributeError("This JWS doesn't have a valid 'alg' header")
+        if alg is None or not isinstance(alg, str):  # pragma: no branch
+            raise AttributeError("This token doesn't have a valid 'alg' header")
         return alg
 
     @cached_property
@@ -85,8 +87,36 @@ class BaseCompactToken:
         """
         kid = self.get_header("kid")
         if kid is None or not isinstance(kid, str):
-            raise AttributeError("This JWS doesn't have a valid 'kid' header")
+            raise AttributeError("This token doesn't have a valid 'kid' header")
         return kid
+
+    @cached_property
+    def typ(self) -> str:
+        """Get the Type (typ) from this token headers.
+
+        Returns:
+            the `typ` value
+        Raises:
+            AttributeError: if the `typ` header value is not a string
+        """
+        typ = self.get_header("typ")
+        if typ is None or not isinstance(typ, str):  # pragma: no branch
+            raise AttributeError("This token doesn't have a valid 'typ' header")
+        return typ
+
+    @cached_property
+    def cty(self) -> str:
+        """Get the Type (typ) from this token headers.
+
+        Returns:
+            the `typ` value
+        Raises:
+            AttributeError: if the `typ` header value is not a string
+        """
+        cty = self.get_header("cty")
+        if cty is None or not isinstance(cty, str):  # pragma: no branch
+            raise AttributeError("This token doesn't have a valid 'cty' header")
+        return cty
 
     def __repr__(self) -> str:
         """Returns the `str` representation of this token."""

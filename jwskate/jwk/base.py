@@ -12,11 +12,13 @@ from typing import (
     List,
     Mapping,
     Optional,
+    SupportsBytes,
     Tuple,
     Type,
     Union,
 )
 
+from backports.cached_property import cached_property
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 
@@ -34,6 +36,7 @@ from jwskate.jwa import (
     EcdhEs,
 )
 
+from .. import BaseAlg
 from ..token import BaseJsonDict
 from .alg import UnsupportedAlg, select_alg, select_algs
 
@@ -86,7 +89,8 @@ class Jwk(BaseJsonDict):
     KTY: ClassVar[str]
     """The Key Type associated with this JWK."""
 
-    CRYPTOGRAPHY_KEY_CLASSES: ClassVar[Iterable[Any]]
+    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES: ClassVar[Iterable[Any]]
+    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES: ClassVar[Iterable[Any]]
 
     SIGNATURE_ALGORITHMS: Mapping[str, Type[BaseSignatureAlg]] = {}
     KEY_MANAGEMENT_ALGORITHMS: Mapping[str, Type[BaseKeyManagementAlg]] = {}
@@ -106,11 +110,12 @@ class Jwk(BaseJsonDict):
     def __init_subclass__(cls) -> None:
         """Automatically add subclasses to the registry.
 
-        This allows __new__ to pick the appropriate subclass when
-        creating a Jwk
+        This allows `__new__` to pick the appropriate subclass when creating a Jwk.
         """
         Jwk.subclasses[cls.KTY] = cls
-        for klass in cls.CRYPTOGRAPHY_KEY_CLASSES:
+        for klass in cls.CRYPTOGRAPHY_PRIVATE_KEY_CLASSES:
+            Jwk.cryptography_key_types[klass] = cls
+        for klass in cls.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES:
             Jwk.cryptography_key_types[klass] = cls
 
     def __new__(cls, key: Union[Jwk, Dict[str, Any], Any], **kwargs: Any):  # type: ignore
@@ -162,6 +167,32 @@ class Jwk(BaseJsonDict):
         except AttributeError as exc:
             raise InvalidJwk() from exc
 
+    @classmethod
+    def _get_alg_class(cls, alg: str) -> Type[BaseAlg]:
+        """Given an alg identifier, return the matching JWA wrapper.
+
+        Args:
+            alg: an alg identifier
+
+        Returns:
+            the matching JWA wrapper
+        """
+        alg_class: Optional[Type[BaseAlg]]
+
+        alg_class = cls.SIGNATURE_ALGORITHMS.get(alg)
+        if alg_class is not None:
+            return alg_class
+
+        alg_class = cls.KEY_MANAGEMENT_ALGORITHMS.get(alg)
+        if alg_class is not None:
+            return alg_class
+
+        alg_class = cls.ENCRYPTION_ALGORITHMS.get(alg)
+        if alg_class is not None:
+            return alg_class
+
+        raise UnsupportedAlg(alg)
+
     @property
     def is_private(self) -> bool:
         """Return `True` if the key is private, `False` otherwise.
@@ -171,21 +202,28 @@ class Jwk(BaseJsonDict):
         """
         return True
 
-    def __getattr__(self, item: str) -> Any:
-        """Allows access to key parameters as attributes, like `jwk.kid`, `jwk.kty`, instead of `jwk['kid']`, `jwk['kty']`, etc.
+    @property
+    def is_symmetric(self) -> bool:
+        """Return `True` if the key is symmetric, `False` otherwise."""
+        return False
+
+    def __getattr__(self, param: str) -> Any:
+        """Allow access to key parameters as attributes.
+
+        This is a convenience to allow `jwk.param` instead of `jwk['param']`.
 
         Args:
-            item: the member to access
+            param: the parameter name to access
 
         Return:
-            the member value
+            the param value
 
         Raises:
-            AttributeError: if the member is not found
+            AttributeError: if the param is not found
         """
-        value = self.get(item)
+        value = self.get(param)
         if value is None:
-            raise AttributeError(item)
+            raise AttributeError(param)
         return value
 
     def __setitem__(self, key: str, value: Any) -> None:
@@ -197,7 +235,6 @@ class Jwk(BaseJsonDict):
 
         Raises:
             RuntimeError: when trying to modify cryptographic attributes
-
         """
         if key in self.PARAMS:
             raise RuntimeError("JWK key attributes cannot be modified.")
@@ -258,12 +295,69 @@ class Jwk(BaseJsonDict):
             the key alg
         """
         alg = self.get("alg")
-        if alg is not None and not isinstance(alg, str):
-            raise TypeError(f"Invalid alg type {type(str)}", alg)
+        if alg is not None and not isinstance(alg, str):  # pragma: no branch
+            raise TypeError(f"Invalid alg type {type(alg)}", alg)
         return alg
 
+    @property
+    def kid(self) -> Optional[str]:
+        """Return the JWK key ID (kid), if present."""
+        kid = self.get("kid")
+        if kid is not None and not isinstance(kid, str):  # pragma: no branch
+            raise TypeError(f"invalid kid type {type(kid)}", kid)
+        return kid
+
+    @cached_property
+    def use(self) -> Optional[str]:
+        """Return the key use.
+
+        If no `alg` parameter is present, this returns the `use` parameter from this JWK. If an
+        `alg` parameter is present, the use is deduced from this alg. To check for the presence of
+        the `use` parameter, use `jwk.get('use')`.
+        """
+        if self.alg:
+            return self._get_alg_class(self.alg).use
+        else:
+            return self.get("use")
+
+    @cached_property
+    def key_ops(self) -> List[str]:
+        """Return the key operations.
+
+        If no `alg` parameter is present, this returns the `key_ops` parameter from this JWK. If an
+        `alg` parameter is present, the key operations are deduced from this alg. To check for the
+        presence of the `key_ops` parameter, use `jwk.get('key_ops')`.
+        """
+        if self.use == "sig":
+            if self.is_symmetric:
+                key_ops = ["sign", "verify"]
+            elif self.is_private:
+                key_ops = ["sign"]
+            else:
+                key_ops = ["verify"]
+        elif self.use == "enc":
+            if self.is_symmetric:
+                if self.alg:
+                    alg_class = self._get_alg_class(self.alg)
+                    if issubclass(alg_class, BaseKeyManagementAlg):
+                        key_ops = ["wrapKey", "unwrapKey"]
+                    elif issubclass(alg_class, BaseAESEncryptionAlg):
+                        key_ops = ["encrypt", "decrypt"]
+                else:
+                    key_ops = ["wrapKey", "unwrapKey", "encrypt", "decrypt"]
+            elif self.is_private:
+                key_ops = ["unwrapKey"]
+            else:
+                key_ops = ["wrapKey"]
+        else:
+            key_ops = self.get("key_ops", [])
+
+        return key_ops
+
     def _validate(self) -> None:
-        """Internal method used to validate a Jwk. It checks that all required parameters are present and well-formed. If the key is private, it sets the `is_private` flag to `True`.
+        """Internal method used to validate a Jwk.
+
+        It checks that all required parameters are present and well-formed. If the key is private, it sets the `is_private` flag to `True`.
 
         Raises:
             TypeError: if the key type doesn't match the subclass
@@ -319,7 +413,7 @@ class Jwk(BaseJsonDict):
 
         # if key is used for signing, it must be private
         for op in self.get("key_ops", []):
-            if op in ("sign", "decrypt", "unwrapKey") and not self.is_private:
+            if op in ("sign", "unwrapKey") and not self.is_private:
                 raise InvalidJwk(f"Key Operation is '{op}' but the key is public")
 
     def supported_signing_algorithms(self) -> List[str]:
@@ -361,17 +455,16 @@ class Jwk(BaseJsonDict):
             if not param.is_private
         }
 
-        key_ops = self.get("key_ops")
-        if key_ops:
+        if "key_ops" in self:
+            key_ops = list(self.key_ops)
             if "sign" in key_ops:
                 key_ops.remove("sign")
                 key_ops.append("verify")
-            if "decrypt" in key_ops:
-                key_ops.remove("decrypt")
-                key_ops.append("encrypt")
             if "unwrapKey" in key_ops:
                 key_ops.remove("unwrapKey")
                 key_ops.append("wrapKey")
+        else:
+            key_ops = None
 
         return Jwk(
             dict(
@@ -394,7 +487,9 @@ class Jwk(BaseJsonDict):
 
         return JwkSet(keys=(self,))
 
-    def sign(self, data: bytes, alg: Optional[str] = None) -> BinaPy:
+    def sign(
+        self, data: Union[bytes, SupportsBytes], alg: Optional[str] = None
+    ) -> BinaPy:
         """Sign a data using this Jwk, and return the generated signature.
 
         Args:
@@ -417,8 +512,8 @@ class Jwk(BaseJsonDict):
 
     def verify(
         self,
-        data: bytes,
-        signature: bytes,
+        data: Union[bytes, SupportsBytes],
+        signature: Union[bytes, SupportsBytes],
         *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
@@ -449,20 +544,25 @@ class Jwk(BaseJsonDict):
 
     def encrypt(
         self,
-        plaintext: bytes,
+        plaintext: Union[bytes, SupportsBytes],
         *,
         aad: Optional[bytes] = None,
         alg: Optional[str] = None,
         iv: Optional[bytes] = None,
     ) -> Tuple[BinaPy, BinaPy, BinaPy]:
-        """Encrypt a plaintext, with an optional Additional Authenticated Data (AAD) using this JWK, and return the Encrypted Data, the Initialization Vector and the Authentication Tag.
+        """Encrypt a plaintext with Authenticated Encryption using this key.
+
+        Authenticated Encryption with Associated Data (AEAD) is supported, by passing Additional Authenticated Data (`aad`).
+        This returns a tuple with 3 raw data, in order:
+        - the encrypted Data
+        - the Initialization Vector that was used to encrypt data
+        - the generated Authentication Tag
 
         Args:
           plaintext: the data to encrypt.
           aad: the Additional Authenticated Data (AAD) to include in the authentication tag
           alg: the alg to use to encrypt the data
-          iv: the Initialization Vector that was used to encrypt the data. If `iv` is passed as parameter, this
-        will return that same value. Otherwise, an IV is generated.
+          iv: the Initialization Vector to use. If not provided, an IV is generated. If provided, the returned IV will be the same.
 
         Returns:
           a tuple (ciphertext, iv, authentication_tag), as raw data
@@ -471,11 +571,11 @@ class Jwk(BaseJsonDict):
 
     def decrypt(
         self,
-        ciphertext: bytes,
+        ciphertext: Union[bytes, SupportsBytes],
         *,
-        iv: bytes,
-        tag: bytes,
-        aad: Optional[bytes] = None,
+        iv: Union[bytes, SupportsBytes],
+        tag: Union[bytes, SupportsBytes],
+        aad: Union[bytes, SupportsBytes, None] = None,
         alg: Optional[str] = None,
     ) -> BinaPy:
         """Decrypt an encrypted data using this Jwk, and return the encrypted result.
@@ -503,18 +603,19 @@ class Jwk(BaseJsonDict):
         epk: Optional[Jwk] = None,
         **headers: Any,
     ) -> Tuple[Jwk, BinaPy, Mapping[str, Any]]:
-        """For DH-based algs. As a token issuer, derive a EPK and CEK from the recipient public key.
+        """Used by encrypted token senders to produce a Content Encryption Key.
 
         Returns a tuple with 3 items:
 
-        - the clear text CEK, as a SymmetricJwk instance. Use this key to encrypt your message, but do not communicate this key!
-        - the encrypted CEK, as bytes. You must send this to your recipient. This may be empty for algs which derive a CEK instead of generating one.
-        - extra headers depending on the Key Management algorithm, as a dict of name to values: you must send this to your recipient as well.
+        - the clear text CEK, as a SymmetricJwk instance. Use this key to encrypt your message, but do not communicate this key to anyone!
+        - the encrypted CEK, as bytes. You must send this to your recipient. This may be `None` for Key Management algs which derive a CEK instead of generating one.
+        - extra headers depending on the Key Management algorithm, as a dict of name to values: you must send those to your recipient as well.
 
-        For algorithms that rely on a randomly generated CEK, you can provide that value instead of letting `jwskate` generate a
-        safe, unique random value for you. Likewise, for algorithms that rely on an ephemeral key, you can provide an
-        EPK that you generated yourself, instead of letting `jwskate` generate an appropriate value for you.
-        Only use this if you know what you are doing!
+        For algorithms that rely on a randomly generated CEK, such as RSAES or AES, you can provide that CEK instead
+        of letting `jwskate` generate a safe, unique random value for you.
+        Likewise, for algorithms that rely on an ephemeral key, you can provide an EPK that you generated yourself,
+        instead of letting `jwskate` generate an appropriate value for you.
+        Only do this if you know what you are doing!
 
         Args:
           enc: the encryption algorithm to use with the CEK
@@ -599,9 +700,14 @@ class Jwk(BaseJsonDict):
         return SymmetricJwk.from_bytes(cek), wrapped_cek, cek_headers
 
     def recipient_key(
-        self, wrapped_cek: bytes, enc: str, *, alg: Optional[str] = None, **headers: Any
+        self,
+        wrapped_cek: Union[bytes, SupportsBytes],
+        enc: str,
+        *,
+        alg: Optional[str] = None,
+        **headers: Any,
     ) -> Jwk:
-        """For DH-based algs. As a token recipient, derive the same CEK that was used for encryption, based on the recipient private key and the sender ephemeral public key.
+        """Used by token recipients to obtain the CEK, which then allows decryption of the payload.
 
         Args:
           wrapped_cek: the wrapped CEK
@@ -738,10 +844,11 @@ class Jwk(BaseJsonDict):
 
         return cls.from_cryptography_key(cryptography_key, **kwargs)
 
-    def to_pem_key(self, password: Optional[bytes] = None) -> bytes:
+    def to_pem(self, password: Union[bytes, str, None] = None) -> bytes:
         """Serialize this key to PEM format.
 
-        For private keys, you can provide a password for encryption.
+        For private keys, you can provide a password for encryption. This password should be bytes. A `str` is also
+        accepted, and will be encoded to `bytes` using UTF-8 before it is used as encryption key.
 
         Args:
           password: password to use to encrypt the PEM
@@ -749,11 +856,35 @@ class Jwk(BaseJsonDict):
         Returns:
             the PEM serialized key
         """
-        raise NotImplementedError
+        if password is not None and not isinstance(password, bytes):
+            password = str(password).encode("UTF-8")
+
+        if self.is_private:
+            encryption: serialization.KeySerializationEncryption
+            if password:
+                encryption = serialization.BestAvailableEncryption(password)
+            else:
+                encryption = serialization.NoEncryption()
+            return self.cryptography_key.private_bytes(  # type: ignore[no-any-return]
+                serialization.Encoding.PEM,
+                serialization.PrivateFormat.PKCS8,
+                encryption,
+            )
+        else:
+            if password:
+                raise ValueError(
+                    "Public keys cannot be encrypted when serialized in PEM format."
+                )
+            return self.cryptography_key.public_bytes(  # type: ignore[no-any-return]
+                serialization.Encoding.PEM,
+                serialization.PublicFormat.SubjectPublicKeyInfo,
+            )
 
     @classmethod
     def generate(cls, **kwargs: Any) -> Jwk:
-        """Generates a Private Key. This method is implemented by subclasses for specific Key Types and returns an instance of that specific subclass.
+        """Generate a Private Key and return it as a `Jwk` instance.
+
+        This method is implemented by subclasses for specific Key Types and returns an instance of that subclass.
 
         Args:
           **kwargs: specific parameters depending on the type of key, or additional members to include in the Jwk
@@ -784,7 +915,7 @@ class Jwk(BaseJsonDict):
 
     @classmethod
     def generate_for_alg(cls, alg: str, **kwargs: Any) -> Jwk:
-        """Generate a key for usage with a specific alg and return the resuting Jwk.
+        """Generate a key for usage with a specific alg and return the resulting Jwk.
 
         Args:
             alg: a signature or key management alg
@@ -793,7 +924,18 @@ class Jwk(BaseJsonDict):
         Returns:
             the resulting Jwk
         """
-        raise NotImplementedError
+        for kty, jwk_class in cls.subclasses.items():
+            alg_class: Optional[Type[BaseAlg]]
+            try:
+                alg_class = jwk_class._get_alg_class(alg)
+                if isinstance(jwk_class, BaseAESEncryptionAlg):
+                    kwargs.setdefault("key_size", alg_class.key_size)
+
+                return jwk_class.generate(alg=alg, **kwargs)
+            except UnsupportedAlg:
+                continue
+
+        raise UnsupportedAlg(alg)
 
     def copy(self) -> Jwk:
         """Creates a copy of this key.
@@ -803,7 +945,7 @@ class Jwk(BaseJsonDict):
         """
         return Jwk(super().copy())
 
-    def include_kid_thumbprint(self, force: bool = False) -> Jwk:
+    def with_kid_thumbprint(self, force: bool = False) -> Jwk:
         """Includes the JWK thumbprint as "kid".
 
         If key already has a "kid":
@@ -816,7 +958,62 @@ class Jwk(BaseJsonDict):
         Returns:
             a copy of this key with a "kid" (either the previous one or the existing one, depending on `force`).
         """
+        if self.get("kid") is not None and not force:
+            return self
         jwk = self.copy()
-        if self.kid is None or force:
-            jwk["kid"] = self.thumbprint()
+        jwk["kid"] = self.thumbprint()
+        return jwk
+
+    def with_usage_parameters(
+        self,
+        alg: Optional[str] = None,
+        with_alg: bool = True,
+        with_use: bool = True,
+        with_key_ops: bool = True,
+    ) -> Jwk:
+        """Copy this Jwk and add the `use` and `key_ops` parameters.
+
+        The returned jwk `alg` parameter will be the one passed as parameter to this method, or as dfault the one declared as `alg` parameter in this Jwk.
+        The `use` (Public Key Use) param is deduced based on this `alg` value.
+        The `key_ops` (Key Operations) param is deduced based on the key `use` and if the key is public, private,
+        or symmetric.
+
+        Args:
+            alg: the alg to use, if not present in this Jwk
+            with_alg: whether to include an `alg` parameter
+            with_use: whether to include a `use` parameter
+            with_key_ops: whether to include a `key_ops` parameter
+
+        Returns:
+            a Jwk with the same key, with `alg`, `use` and `key_ops` parameters.
+        """
+        alg = alg or self.alg
+
+        if not alg:
+            raise ValueError("An algorithm is required to set the usage parameters")
+
+        self._get_alg_class(alg)  # raises an exception if alg is not supported
+
+        jwk = self.copy()
+        if with_alg:
+            jwk["alg"] = alg
+        if with_use:
+            jwk["use"] = jwk.use
+        if with_key_ops:
+            jwk["key_ops"] = jwk.key_ops
+
+        return jwk
+
+    def minimize(self) -> Jwk:
+        """Strips out any optional or non-standard parameter from that key.
+
+        This will remove `alg`, `use`, `key_ops`, optional parameters from RSA keys, and unknown
+        parameters.
+        """
+        jwk = self.copy()
+        for key in self.keys():
+            if key == "kty" or key in self.PARAMS and self.PARAMS[key].is_required:
+                continue
+            del jwk[key]
+
         return jwk

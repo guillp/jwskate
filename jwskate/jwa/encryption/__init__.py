@@ -1,12 +1,12 @@
 """This module exposes the Encryption algorithms that are available in `jwskate`."""
 
-from .aescbchmac import Aes128CbcHmacSha256, Aes192CbcHmacSha384, Aes256CbcHmacSha512
+from .aescbchmac import A128CBC_HS256, A192CBC_HS384, A256CBC_HS512
 from .aesgcm import A128GCM, A192GCM, A256GCM
 
 __all__ = [
-    "Aes128CbcHmacSha256",
-    "Aes192CbcHmacSha384",
-    "Aes256CbcHmacSha512",
+    "A128CBC_HS256",
+    "A192CBC_HS384",
+    "A256CBC_HS512",
     "A128GCM",
     "A192GCM",
     "A256GCM",

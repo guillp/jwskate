@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, SupportsBytes, Union
 
 from backports.cached_property import cached_property
 from binapy import BinaPy
@@ -30,7 +30,12 @@ class JwsCompact(BaseCompactToken):
     def __init__(self, value: Union[bytes, str]):
         super().__init__(value)
 
-        header, payload, signature = self.split(self.value)
+        if self.value.count(b".") != 2:
+            raise InvalidJws(
+                "A JWS must contain a header, a payload and a signature, separated by dots"
+            )
+
+        header, payload, signature = BinaPy(self.value).split(b".")
 
         try:
             self.headers = BinaPy(header).decode_from("b64u").parse_from("json")
@@ -54,34 +59,13 @@ class JwsCompact(BaseCompactToken):
             )
 
     @classmethod
-    def split(cls, value: bytes) -> Tuple[BinaPy, BinaPy, BinaPy]:
-        """Splits a JWS token value into its (header, payload, signature) parts.
-
-        Args:
-          value: the JWS token value
-
-        Returns:
-            a (header, payload, signature)
-
-        Raises:
-            InvalidJws: if the provided value doesn't have 2 dots.
-        """
-        if value.count(b".") != 2:
-            raise InvalidJws(
-                "A JWS must contain a header, a payload and a signature, separated by dots"
-            )
-
-        header, payload, signature = value.split(b".")
-        return BinaPy(header), BinaPy(payload), BinaPy(signature)
-
-    @classmethod
     def sign(
         cls,
-        payload: bytes,
+        payload: Union[bytes, SupportsBytes],
         jwk: Union[Jwk, Dict[str, Any]],
         alg: Optional[str] = None,
         extra_headers: Optional[Dict[str, Any]] = None,
-    ) -> "JwsCompact":
+    ) -> JwsCompact:
         """Sign a payload and returns the resulting JwsCompact.
 
         Args:
@@ -95,6 +79,9 @@ class JwsCompact(BaseCompactToken):
         """
         jwk = Jwk(jwk)
 
+        if not isinstance(payload, bytes):
+            payload = bytes(payload)
+
         headers = dict(extra_headers or {}, alg=alg)
         kid = jwk.get("kid")
         if kid:
@@ -106,8 +93,10 @@ class JwsCompact(BaseCompactToken):
 
     @classmethod
     def from_parts(
-        cls, signed_part: Union[bytes, str], signature: Union[bytes, str]
-    ) -> "JwsCompact":
+        cls,
+        signed_part: Union[bytes, SupportsBytes, str],
+        signature: Union[bytes, SupportsBytes, str],
+    ) -> JwsCompact:
         """Constructs a JWS token based on its signed part and signature values.
 
         Signed part is the concatenation of the header and payload, both encoded in Base64-Url, and joined by a dot.
@@ -119,8 +108,15 @@ class JwsCompact(BaseCompactToken):
         Returns:
             the resulting token
         """
-        if not isinstance(signed_part, bytes):
+        if isinstance(signed_part, str):
             signed_part = signed_part.encode("ascii")
+        if not isinstance(signed_part, bytes):
+            signed_part = bytes(signed_part)
+
+        if isinstance(signature, str):
+            signature = signature.encode("ascii")
+        if not isinstance(signature, bytes):
+            signature = bytes(signature)
 
         return cls(b".".join((signed_part, BinaPy(signature).to("b64u"))))
 
@@ -164,11 +160,12 @@ class JwsCompact(BaseCompactToken):
         """
         from .json import JwsJsonFlat
 
-        protected, payload, signature = self.split(self.value)
+        protected, payload, signature = self.value.split(b".")
+
         content = {
-            "payload": payload.ascii(),
-            "protected": protected.ascii(),
-            "signature": signature.ascii(),
+            "payload": payload.decode(),
+            "protected": protected.decode(),
+            "signature": signature.decode(),
         }
         if unprotected_header is not None:
             content["header"] = unprotected_header

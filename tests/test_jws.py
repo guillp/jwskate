@@ -80,11 +80,17 @@ OKP_ED25519_PRIVATE_KEY = {
     "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
 }
 
+OKP_ED448_PRIVATE_KEY = {
+    "kty": "OKP",
+    "crv": "Ed448",
+    "x": "Cg5TBDGx0VUzIsTBy7-1ipgpdbn1URt9Ahb4tKwzav788lold5nGfmuqMcdyBOBMnc-kVdtBew4A",
+    "d": "8AW_tfr1kQkyMqOjoGzM3yiLgu6zbN2Nlcpc50b4lwh4bVE1b1EwyJJJqJ4J3zhXLRmUB3REz1y0",
+}
+
 SYMMETRIC_SIGNATURE_KEY = {
     "kty": "oct",
     "kid": "018c0ae5-4d9b-471b-bfd6-eef314bc7037",
     "use": "sig",
-    "alg": "HS256",
     "k": "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg",
 }
 
@@ -183,6 +189,24 @@ def okp_ed25519_signature_jwk() -> Jwk:
     return jwk
 
 
+@pytest.fixture(scope="module")
+def okp_ed448_signature_jwk() -> Jwk:
+    jwk = Jwk(OKP_ED448_PRIVATE_KEY)
+    assert isinstance(jwk, OKPJwk)
+    assert jwk.is_private
+    assert jwk.kty == "OKP"
+    assert (
+        jwk.private_key.hex()
+        == "f005bfb5faf591093232a3a3a06cccdf288b82eeb36cdd8d95ca5ce746f89708786d51356f5130c89249a89e09df38572d1994077444cf5cb4"
+    )
+    assert (
+        jwk.public_key.hex()
+        == "0a0e530431b1d1553322c4c1cbbfb58a982975b9f5511b7d0216f8b4ac336afefcf25a257799c67e6baa31c77204e04c9dcfa455db417b0e00"
+    )
+    assert jwk.thumbprint() == "tNxVYGfEeBGXEG7N8YAvNhBlZ1mSKVjc3tMP_t_3-t0"
+    return jwk
+
+
 @pytest.fixture(scope="session")
 def symmetric_signature_jwk() -> Jwk:
     """This is the key from [https://datatracker.ietf.org/doc/html/rfc7520#section-3.5]."""
@@ -192,7 +216,6 @@ def symmetric_signature_jwk() -> Jwk:
     assert jwk.kty == "oct"
     assert jwk.kid == "018c0ae5-4d9b-471b-bfd6-eef314bc7037"
     assert jwk.use == "sig"
-    assert jwk.alg == "HS256"
     assert (
         jwk.key.hex()
         == "849b57219dae48de646d07dbb533566e976686457c1491be3a76dcea6c427188"
@@ -229,7 +252,7 @@ def signature_payload() -> bytes:
     ]
 )
 def signature_alg(request: pytest.FixtureRequest) -> str:
-    return request.param  # type: ignore[attr-defined,no-any-return]
+    return request.param  # type: ignore[no-any-return]
 
 
 @pytest.fixture()
@@ -240,6 +263,7 @@ def signature_jwk(
     ec_p384_private_jwk: Jwk,
     ec_p521_private_jwk: Jwk,
     okp_ed25519_signature_jwk: Jwk,
+    okp_ed448_signature_jwk: Jwk,
     symmetric_signature_jwk: Jwk,
 ) -> Jwk:
     for key in (
@@ -248,6 +272,7 @@ def signature_jwk(
         ec_p384_private_jwk,
         ec_p256_private_jwk,
         okp_ed25519_signature_jwk,
+        okp_ed448_signature_jwk,
         symmetric_signature_jwk,
     ):
         if signature_alg in key.supported_signing_algorithms():
@@ -257,7 +282,7 @@ def signature_jwk(
 
 
 @pytest.fixture()
-def validation_jwk(signature_jwk: Jwk) -> Jwk:
+def verification_jwk(signature_jwk: Jwk) -> Jwk:
     if isinstance(signature_jwk, SymmetricJwk):
         return signature_jwk
     public_jwk = signature_jwk.public_jwk()
@@ -275,6 +300,40 @@ def signed_jws_compact(
     )
     assert isinstance(jws, JwsCompact)
     return jws
+
+
+class SupportsBytesTester:
+    """A test class with a __bytes__ method to match SupportBytes interface."""
+
+    def __init__(self, payload: bytes) -> None:
+        self.payload = payload
+
+    def __bytes__(self) -> bytes:  # noqa: D105
+        return self.payload
+
+
+def test_supportsbytes(
+    signature_payload: bytes,
+    signature_jwk: Jwk,
+    signature_alg: str,
+    signed_jws_compact: JwsCompact,
+    verification_jwk: Jwk,
+) -> None:
+    jws = JwsCompact.sign(
+        payload=SupportsBytesTester(signature_payload),
+        jwk=signature_jwk,
+        alg=signature_alg,
+    )
+    if signature_alg not in ("ES256", "ES384", "ES512", "PS256", "PS384", "PS512"):
+        # those algs have non deterministic signatures
+        assert jws == signed_jws_compact
+
+    assert jws.payload == signed_jws_compact.payload
+    assert verification_jwk.verify(
+        SupportsBytesTester(jws.signed_part),
+        SupportsBytesTester(jws.signature),
+        alg=signature_alg,
+    )
 
 
 @pytest.fixture()
@@ -297,22 +356,46 @@ def signed_jws_json_general(
     return jws
 
 
-def test_validate_signature(
-    signed_jws_compact: JwsCompact, validation_jwk: Jwk, signature_alg: str
+def test_verify_signature(
+    signed_jws_compact: JwsCompact, verification_jwk: Jwk, signature_alg: str
 ) -> None:
-    assert signed_jws_compact.verify_signature(validation_jwk, alg=signature_alg)
+    assert signed_jws_compact.verify_signature(verification_jwk, alg=signature_alg)
+    altered_jws = bytes(signed_jws_compact)[:-4] + (
+        b"aaaa" if not signed_jws_compact.value.endswith(b"aaaa") else b"bbbb"
+    )
+    assert not JwsCompact(altered_jws).verify_signature(
+        verification_jwk, alg=signature_alg
+    )
 
 
-def test_validate_signature_json_flat(
-    signed_jws_json_flat: JwsJsonFlat, validation_jwk: Jwk, signature_alg: str
+def test_verify_signature_json_flat(
+    signed_jws_json_flat: JwsJsonFlat, verification_jwk: Jwk, signature_alg: str
 ) -> None:
-    assert signed_jws_json_flat.verify_signature(validation_jwk, alg=signature_alg)
+    assert signed_jws_json_flat.verify_signature(verification_jwk, alg=signature_alg)
+    altered_jws = dict(signed_jws_json_flat)
+    altered_jws["signature"] = signed_jws_json_flat["signature"][:-4] + (
+        "aaaa" if not signed_jws_json_flat["signature"].endswith("aaaa") else "bbbb"
+    )
+    assert not JwsJsonFlat(altered_jws).verify_signature(
+        verification_jwk, alg=signature_alg
+    )
 
 
-def test_validate_signature_json_general(
-    signed_jws_json_general: JwsJsonGeneral, validation_jwk: Jwk, signature_alg: str
+def test_verify_signature_json_general(
+    signed_jws_json_general: JwsJsonGeneral, verification_jwk: Jwk, signature_alg: str
 ) -> None:
-    assert signed_jws_json_general.verify_signature(validation_jwk, alg=signature_alg)
+    assert signed_jws_json_general.verify_signature(verification_jwk, alg=signature_alg)
+    altered_jws = dict(signed_jws_json_general)
+    altered_jws["signatures"][0]["signature"] = signed_jws_json_general["signatures"][
+        0
+    ]["signature"][:-4] + (
+        "aaaa"
+        if not signed_jws_json_general["signatures"][0]["signature"].endswith("aaaa")
+        else "bbbb"
+    )
+    assert not JwsJsonGeneral(altered_jws).verify_signature(
+        verification_jwk, alg=signature_alg
+    )
 
 
 def test_jws_format_transformation(
@@ -337,20 +420,20 @@ def test_jws_format_transformation(
         assert signed_jws_json_flat.compact() == signed_jws_compact
 
 
-def test_validate_signature_by_jwcrypto(
-    signed_jws_compact: JwsCompact, validation_jwk: Jwk, signature_alg: str
+def test_verify_signature_by_jwcrypto(
+    signed_jws_compact: JwsCompact, verification_jwk: Jwk, signature_alg: str
 ) -> None:
     """This test verifies tokens generated by `jwskate` using another lib `jwcrypto`.
 
     Args:
         signed_jws_compact: the Jws signed by jwskate to verify
-        validation_jwk: the Jwk containing the verification key
+        verification_jwk: the Jwk containing the verification key
         signature_alg: the signature alg
     """
     import jwcrypto.jwk  # type: ignore[import]
     import jwcrypto.jws  # type: ignore[import]
 
-    jwk = jwcrypto.jwk.JWK(**validation_jwk)
+    jwk = jwcrypto.jwk.JWK(**verification_jwk)
     jws = jwcrypto.jws.JWS()
     jws.deserialize(str(signed_jws_compact))
     jws.verify(jwk)
@@ -360,7 +443,7 @@ def test_validate_signature_by_jwcrypto(
 def jwcrypto_signed_jws(
     signature_payload: bytes, signature_jwk: Jwk, signature_alg: str
 ) -> str:
-    """Sign a JWS using `jwcrypto`, to make sure it validates with `jwskate`.
+    """Sign a JWS using `jwcrypto`, to make sure it verifies with `jwskate`.
 
     Args:
         signature_payload: the payload to sign
@@ -385,16 +468,31 @@ def jwcrypto_signed_jws(
     return token
 
 
-def test_validate_signature_from_jwcrypto(
-    jwcrypto_signed_jws: str, validation_jwk: Jwk, signature_alg: str
+def test_verify_signature_from_jwcrypto(
+    jwcrypto_signed_jws: str, verification_jwk: Jwk, signature_alg: str
 ) -> None:
-    """Check that `jwskate`validates tokens signed by `jwcrypto`.
+    """Check that `jwskate` verifies tokens signed by `jwcrypto`.
 
     Args:
-        jwcrypto_signed_jws: the JWS to validate
-        validation_jwk: the public key to validate the signature
+        jwcrypto_signed_jws: the JWS to verify
+        verification_jwk: the public key to verify the signature
         signature_alg: the alg to use
     """
     assert JwsCompact(jwcrypto_signed_jws).verify_signature(
-        validation_jwk, alg=signature_alg
+        verification_jwk, alg=signature_alg
     )
+
+
+def test_invalid_jws() -> None:
+    with pytest.raises(ValueError):
+        JwsCompact(
+            "ey.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.cOUKU1ijv3KiN2KK_o50RU978I9MzQ4lNw2y7nOGAdM"
+        )
+    with pytest.raises(ValueError):
+        JwsCompact(
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.!!.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+        )
+    with pytest.raises(ValueError):
+        JwsCompact(
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.!!"
+        )

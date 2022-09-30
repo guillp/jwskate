@@ -133,12 +133,11 @@ def test_invalid_class_for_kty() -> None:
     "private_key_ops, public_key_ops",
     [
         ("sign", "verify"),
-        ("decrypt", "encrypt"),
         ("unwrapKey", "wrapKey"),
     ],
 )
 def test_key_ops(private_key_ops: str, public_key_ops: str) -> None:
-    private_jwk = Jwk.generate_for_kty("EC", key_ops=[private_key_ops])
+    private_jwk = Jwk.generate_for_kty("RSA", key_ops=[private_key_ops])
     public_jwk = private_jwk.public_jwk()
     assert public_key_ops in public_jwk.key_ops
     assert private_key_ops not in public_jwk.key_ops
@@ -167,21 +166,21 @@ def test_thumbprint() -> None:
         == "urn:ietf:params:oauth:jwk-thumbprint:sha-256:NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"
     )
 
-    jwk_with_thumbprint_kid = jwk.include_kid_thumbprint(force=True)
+    jwk_with_thumbprint_kid = jwk.with_kid_thumbprint(force=True)
     assert jwk_with_thumbprint_kid.kid == "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"
     assert isinstance(jwk_with_thumbprint_kid, Jwk)
     assert jwk_with_thumbprint_kid is not jwk
     assert jwk_with_thumbprint_kid.n == jwk.n
 
-    jwk_with_initial_kid = jwk.include_kid_thumbprint(force=False)
+    jwk_with_initial_kid = jwk.with_kid_thumbprint(force=False)
     assert jwk_with_initial_kid.kid == "2011-04-29"
     assert isinstance(jwk_with_initial_kid, Jwk)
-    assert jwk_with_initial_kid is not jwk
+    assert jwk_with_initial_kid is jwk
     assert jwk_with_initial_kid.n == jwk.n
 
 
 def test_invalid_thumbprint_hash() -> None:
-    jwk = Jwk.generate_for_kty("EC")
+    jwk = Jwk.generate_for_kty("EC", crv="P-256")
     with pytest.raises(ValueError):
         jwk.thumbprint("foo")
 
@@ -189,3 +188,9 @@ def test_invalid_thumbprint_hash() -> None:
 def test_generate_invalid_kty() -> None:
     with pytest.raises(UnsupportedKeyType):
         Jwk.generate_for_kty("foobar")
+
+
+def test_generate_for_alg() -> None:
+    rsa15_jwk = Jwk.generate_for_alg("RSA1_5")
+    assert isinstance(rsa15_jwk, RSAJwk)
+    assert rsa15_jwk.alg == "RSA1_5"

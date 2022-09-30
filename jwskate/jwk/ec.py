@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import Any, List, Mapping, Optional, Union
 
 from backports.cached_property import cached_property
@@ -37,10 +38,9 @@ class ECJwk(Jwk):
 
     KTY = "EC"
 
-    CRYPTOGRAPHY_KEY_CLASSES = (
-        asymmetric.ec.EllipticCurvePrivateKey,
-        asymmetric.ec.EllipticCurvePublicKey,
-    )
+    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (asymmetric.ec.EllipticCurvePrivateKey,)
+
+    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (asymmetric.ec.EllipticCurvePublicKey,)
 
     PARAMS: Mapping[str, JwkParameter] = {
         "crv": JwkParameter("Curve", is_private=False, is_required=True, kind="name"),
@@ -124,7 +124,7 @@ class ECJwk(Jwk):
                 crv=crv,
                 x=BinaPy.from_int(x, length=coord_size).to("b64u"),
                 y=BinaPy.from_int(y, length=coord_size).to("b64u"),
-                **params,
+                **{k: v for k, v in params.items() if v is not None},
             )
         )
 
@@ -150,7 +150,7 @@ class ECJwk(Jwk):
                 x=BinaPy.from_int(x, coord_size).to("b64u").ascii(),
                 y=BinaPy.from_int(y, coord_size).to("b64u").ascii(),
                 d=BinaPy.from_int(d, coord_size).to("b64u").ascii(),
-                **params,
+                **{k: v for k, v in params.items() if v is not None},
             )
         )
 
@@ -205,10 +205,13 @@ class ECJwk(Jwk):
             ).public_key()
 
     @classmethod
-    def generate(cls, crv: str = "P-256", **params: str) -> "ECJwk":
-        """Generates a random ECJwk.
+    def generate(
+        cls, crv: Optional[str] = None, alg: Optional[str] = None, **params: str
+    ) -> "ECJwk":
+        """Generate a random ECJwk.
 
         Args:
+          alg: the alg
           crv: the curve to use
           **params:
 
@@ -218,12 +221,30 @@ class ECJwk(Jwk):
         Raises:
             UnsupportedEllipticCurve: if the provided curve identifier is not supported.
         """
-        curve = cls.get_curve(crv)
+        if crv is None and alg is None:
+            warnings.warn(
+                "No Curve identifier (crv) or an Algorithm identifier (alg) have been provided "
+                "when generating an Elliptic Curve JWK. So there is no hint to determine which curve to use. "
+                "Curve 'P-256' is used by default. You should explicitly pass an 'alg' or 'crv' parameter "
+                "to explicitly select the appropriate Curve and avoid this warning."
+            )
+            crv = "P-256"
+        curve: Optional[EllipticCurve] = None
+        if crv:
+            curve = cls.get_curve(crv)
+        elif alg:
+            if alg in cls.SIGNATURE_ALGORITHMS:
+                curve = cls.SIGNATURE_ALGORITHMS[alg].curve
+            elif alg in cls.KEY_MANAGEMENT_ALGORITHMS:
+                curve = P_256
+
         if curve is None:
             raise UnsupportedEllipticCurve(crv)
+
         x, y, d = curve.generate()
         return cls.private(
-            crv=crv,
+            crv=curve.name,
+            alg=alg,
             x=x,
             y=y,
             d=d,
@@ -284,37 +305,3 @@ class ECJwk(Jwk):
              a list of supported algorithms identifiers
         """
         return list(self.ENCRYPTION_ALGORITHMS)
-
-    def to_pem_key(self, password: Optional[bytes] = None) -> bytes:
-        """Serialize this key to PEM format.
-
-        For private keys, you can provide a password for encryption.
-
-        Args:
-          password: password to use to encrypt the PEM
-
-        Returns:
-            the PEM encrypted key
-        """
-        if self.is_private:
-            assert isinstance(self.cryptography_key, ec.EllipticCurvePrivateKey)
-            encryption: serialization.KeySerializationEncryption
-            if password:
-                encryption = serialization.BestAvailableEncryption(password)
-            else:
-                encryption = serialization.NoEncryption()
-            return self.cryptography_key.private_bytes(  # type: ignore[no-any-return, attr-defined]
-                serialization.Encoding.PEM,
-                serialization.PrivateFormat.PKCS8,
-                encryption,
-            )
-        else:
-            assert isinstance(self.cryptography_key, ec.EllipticCurvePublicKey)
-            if password:
-                raise ValueError(
-                    "Public keys cannot be encrypted when serialized in PEM format."
-                )
-            return self.cryptography_key.public_bytes(
-                serialization.Encoding.PEM,
-                serialization.PublicFormat.SubjectPublicKeyInfo,
-            )

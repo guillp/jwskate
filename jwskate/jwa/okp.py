@@ -1,4 +1,7 @@
-"""This module contains classes that describe CFRG Elliptic Curve Diffie- Hellman algorithms as specified in RFC8037."""
+"""This module contains classes that describe CFRG Elliptic Curve Diffie-Hellman algorithms as specified in [RFC8037].
+
+[RFC8037]: https://www.rfc-editor.org/rfc/rfc8037.html
+"""
 
 from __future__ import annotations
 

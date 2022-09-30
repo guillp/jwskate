@@ -27,7 +27,7 @@ class JwkSet(BaseJsonDict):
     def __init__(
         self,
         jwks: Optional[Dict[str, Any]] = None,
-        keys: Optional[Iterable[Jwk]] = None,
+        keys: Optional[Iterable[Union[Jwk, Dict[str, Any]]]] = None,
     ):
         if jwks is None and keys is None:
             keys = []
@@ -132,7 +132,6 @@ class JwkSet(BaseJsonDict):
 
         Returns:
             `True` if this JwkSet contains at least one private key
-
         """
         return any(key.is_private for key in self.jwks)
 
@@ -198,12 +197,46 @@ class JwkSet(BaseJsonDict):
 
         # then with the keys that have no defined `use`
         for jwk in self.jwks:
-            if jwk.get("use") is None and jwk.get("alg") is None:
+            if jwk.get("use") is None and jwk.get("alg") is not None:
                 try:
-                    if jwk.verify(data, signature, alg=alg):
+                    if jwk.verify(data, signature):
                         return True
                 except UnsupportedAlg:
                     continue
 
         # no key matches, so consider the signature invalid
         return False
+
+    def verification_keys(self) -> List[Jwk]:
+        """Return the list of keys from this JWKS that a usable for signature verification.
+
+        To be usable for signature verification, a key must:
+        - be asymmetric
+        - be public
+        - have an "alg" parameter that is a signature alg
+
+        Returns:
+            a list of `Jwk` that are usable for signature verification
+        """
+        return [
+            jwk
+            for jwk in self.jwks
+            if not jwk.is_symmetric and not jwk.is_private and jwk.use == "sig"
+        ]
+
+    def encryption_keys(self) -> List[Jwk]:
+        """Return the list of keys from this JWKS that are usable for encryption.
+
+        To be usable for encryption, a key must:
+        - be asymmetric
+        - be public
+        - have an "alg" parameter that is an encryption alg
+
+        Returns:
+            a list of `Jwk` that are suitable for encryption
+        """
+        return [
+            jwk
+            for jwk in self.jwks
+            if not jwk.is_symmetric and not jwk.is_private and jwk.use == "enc"
+        ]

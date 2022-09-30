@@ -13,7 +13,7 @@ from jwskate import SymmetricJwk
     ids=("256bits", "384bits", "512bits"),
 )
 def symmetric_jwk(request: pytest.FixtureRequest) -> SymmetricJwk:
-    alg, min_key_size = request.param  # type: ignore
+    alg, min_key_size = request.param
     kid = f"my_{alg}_jwk"
     jwk = SymmetricJwk.generate_for_alg(alg, kid=kid)
     assert jwk.kty == "oct"
@@ -36,3 +36,9 @@ def test_jwk_symmetric_sign(symmetric_jwk: SymmetricJwk) -> None:
 
 def test_dir_alg(symmetric_jwk: SymmetricJwk) -> None:
     assert "dir" in symmetric_jwk.supported_key_management_algorithms()
+
+
+def test_pem_key() -> None:
+    private_jwk = SymmetricJwk.generate(key_size=128)
+    with pytest.raises(TypeError):
+        private_jwk.to_pem()

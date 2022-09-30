@@ -133,7 +133,9 @@ The available special attributes vary depending on the key type.
 
 ## Generating keys
 
-You can generate a `Jwk` with the class method `Jwk.generate_for_kty()`. It needs the key type as parameter, and
+### Based on a Key Type
+
+You can generate a `Jwk` of a specific type (RSA, EC, etc.) using the class method `Jwk.generate_for_kty()`. It needs the key type as parameter, and
 type-specific parameters:
 
 ```python
@@ -153,6 +155,21 @@ from jwskate import Jwk
 jwk = Jwk.generate_for_kty("EC", crv="P-256", use="sig")
 
 assert jwk.use == "sig"
+```
+
+### Based on intended algorithm
+
+You can generate a private key of the appropriate type for a given signature, key management or encryption algorithm
+by using the method `Jwk.generate_for_alg()` this way:
+
+```python
+from jwskate import Jwk
+
+ec_jwk = Jwk.generate_for_alg("ES512")  # key of type EC, with crv=P-521
+rsa_jwk = Jwk.generate_for_alg("RSA-OAEP-256", key_size=4096)  # RSA
+okp_jwk = Jwk.generate_for_alg("EdDSA")  # EC, default to crv=P-256
+okp_jwk = Jwk.generate_for_alg("EdDSA", crv="P-521")  # EC, default to crv=P-256
+okp_jwk = Jwk.generate_for_alg("HS512")
 ```
 
 ## Private and Public Keys

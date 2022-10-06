@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Union
 
 from binapy import BinaPy
@@ -213,3 +214,18 @@ class Jwt(BaseCompactToken):
                 return nested_jwt
 
         raise InvalidSignature()
+
+    @classmethod
+    def timestamp(cls, delta_seconds: int = 0) -> int:
+        """Return an integer timestamp that is suitable for use in Jwt tokens `iat`, `exp` and `nbf` claims.
+
+        By default, the current timestamp is returned. You can include `delta_seconds` to have a timestamp
+        a number of seconds in the future (if positive) or in the past (if negative).
+
+        Args:
+            delta_seconds: number of seconds in the future or in the past compared to current time
+
+        Returns:
+            An integer timestamp
+        """
+        return int(datetime.now(timezone.utc).timestamp()) + delta_seconds

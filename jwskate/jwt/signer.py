@@ -1,7 +1,6 @@
 """This module contains the `JwtSigner` class."""
 
 import uuid
-from datetime import datetime
 from typing import Any, Dict, Iterable, Optional, Union
 
 from jwskate import Jwk
@@ -79,7 +78,7 @@ class JwtSigner:
         Returns:
           the resulting signed token.
         """
-        now = int(datetime.now().timestamp())
+        now = Jwt.timestamp()
         lifetime = lifetime or self.default_lifetime
         exp = now + lifetime
         leeway = leeway or self.default_leeway

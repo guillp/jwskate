@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "jwskate"
-version = "0.4.0"
+version = "0.4.1"
 homepage = "https://github.com/guillp/jwskate"
 description = "A Pythonic implementation of Json Web Signature, Keys, Algorithms, Tokens and Encryption (RFC7514 to 7519), on top of the `cryptography` module."
 authors = ["Guillaume Pujol <guill.p.linux@gmail.com>"]
@@ -27,13 +27,14 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.7,<4.0"
 cryptography = ">=3.4"
-typing-extensions = "^4.2.0"
-"backports.cached-property" = "^1.0.1"
+typing-extensions = ">=4.3.0"
+"backports.cached-property" = "^1"
 binapy = "^0.6.0"
 
 [tool.poetry.dev-dependencies]
 black  = ">=22"
 coverage = ">=6.0"
+freezegun = "^1.2.2"
 isort  = ">=5.0"
 jwcrypto = ">=1.0"
 livereload = ">=2.0"

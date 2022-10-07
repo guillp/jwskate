@@ -126,7 +126,7 @@ class SignedJwt(Jwt):
         if not exp:
             return None
         try:
-            exp_dt = datetime.fromtimestamp(exp, tz=timezone.utc)
+            exp_dt = Jwt.timestamp_to_datetime(exp)
             return exp_dt
         except (TypeError, OSError):
             raise AttributeError("invalid `exp `claim", exp)
@@ -145,7 +145,7 @@ class SignedJwt(Jwt):
         if not iat:
             return None
         try:
-            iat_dt = datetime.fromtimestamp(iat, tz=timezone.utc)
+            iat_dt = Jwt.timestamp_to_datetime(iat)
             return iat_dt
         except (TypeError, OSError):
             raise AttributeError("invalid `iat `claim", iat)
@@ -164,7 +164,7 @@ class SignedJwt(Jwt):
         if not nbf:
             return None
         try:
-            nbf_dt = datetime.fromtimestamp(nbf, tz=timezone.utc)
+            nbf_dt = Jwt.timestamp_to_datetime(nbf)
             return nbf_dt
         except (TypeError, OSError):
             raise AttributeError("invalid `nbf `claim", nbf)

@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 import pytest
+from freezegun import freeze_time  # type: ignore[import]
 
 from jwskate import (
     ExpectedAlgRequired,
@@ -406,3 +407,16 @@ def test_invalid_claims() -> None:
         jwt.audiences
     with pytest.raises(AttributeError):
         jwt.jwt_token_id
+
+
+@freeze_time("2022-10-07 10:40:15 UTC")  # type: ignore[misc]
+def test_timestamp() -> None:
+    now_ts = Jwt.timestamp()
+    assert isinstance(now_ts, int)
+    assert now_ts == 1665139215
+    assert Jwt.timestamp_to_datetime(now_ts) == datetime(
+        year=2022, month=10, day=7, hour=10, minute=40, second=15, tzinfo=timezone.utc
+    )
+
+    assert Jwt.timestamp(+60) == 1665139275
+    assert Jwt.timestamp(-60) == 1665139155

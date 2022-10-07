@@ -219,6 +219,8 @@ class Jwt(BaseCompactToken):
     def timestamp(cls, delta_seconds: int = 0) -> int:
         """Return an integer timestamp that is suitable for use in Jwt tokens `iat`, `exp` and `nbf` claims.
 
+        A timestamp is a number of seconds since January 1st, 1970 00:00:00 UTC, ignoring leap seconds.
+
         By default, the current timestamp is returned. You can include `delta_seconds` to have a timestamp
         a number of seconds in the future (if positive) or in the past (if negative).
 
@@ -229,3 +231,17 @@ class Jwt(BaseCompactToken):
             An integer timestamp
         """
         return int(datetime.now(timezone.utc).timestamp()) + delta_seconds
+
+    @classmethod
+    def timestamp_to_datetime(cls, timestamp: int) -> datetime:
+        """Convert a JWT timestamp to a `datetime`.
+
+        Returned datetime is always in the UTC timezone.
+
+        Args:
+            timestamp: a timestamp from a JWT token
+
+        Returns:
+            the corresponding `datetime` in UTC timezone
+        """
+        return datetime.fromtimestamp(timestamp, tz=timezone.utc)

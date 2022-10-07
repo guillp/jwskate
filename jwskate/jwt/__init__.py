@@ -5,11 +5,11 @@ from .signed import ExpiredJwt, InvalidClaim, InvalidSignature, SignedJwt
 from .signer import JwtSigner
 
 __all__ = [
-    "Jwt",
-    "InvalidJwt",
     "ExpiredJwt",
     "InvalidClaim",
+    "InvalidJwt",
     "InvalidSignature",
-    "SignedJwt",
+    "Jwt",
     "JwtSigner",
+    "SignedJwt",
 ]

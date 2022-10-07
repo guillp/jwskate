@@ -9,15 +9,15 @@ from .okp import OKPJwk, UnsupportedOKPCurve
 from .rsa import RSAJwk
 
 __all__ = [
+    "ECJwk",
     "ExpectedAlgRequired",
-    "UnsupportedAlg",
     "InvalidJwk",
     "Jwk",
-    "ECJwk",
-    "UnsupportedEllipticCurve",
     "JwkSet",
-    "SymmetricJwk",
     "OKPJwk",
-    "UnsupportedOKPCurve",
     "RSAJwk",
+    "SymmetricJwk",
+    "UnsupportedAlg",
+    "UnsupportedEllipticCurve",
+    "UnsupportedOKPCurve",
 ]

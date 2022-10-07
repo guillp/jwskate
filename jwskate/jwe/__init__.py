@@ -5,4 +5,4 @@
 
 from .compact import InvalidJwe, JweCompact
 
-__all__ = ["JweCompact", "InvalidJwe"]
+__all__ = ["InvalidJwe", "JweCompact"]

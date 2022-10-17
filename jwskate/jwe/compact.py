@@ -13,7 +13,7 @@ from jwskate.jwa import (
     Pbes2_HS512_A256KW,
 )
 from jwskate.jwk import Jwk, SymmetricJwk
-from jwskate.jwk.alg import UnsupportedAlg, select_alg
+from jwskate.jwk.alg import UnsupportedAlg, select_alg_class
 from jwskate.token import BaseCompactToken
 
 
@@ -159,7 +159,9 @@ class JweCompact(BaseCompactToken):
         extra_headers = extra_headers or {}
         if not isinstance(jwk, Jwk):
             jwk = Jwk(jwk)
-        alg = select_alg(jwk.alg, alg, jwk.KEY_MANAGEMENT_ALGORITHMS).name
+        alg = select_alg_class(
+            jwk.KEY_MANAGEMENT_ALGORITHMS, jwk_alg=jwk.alg, alg=alg
+        ).name
 
         cek_jwk, wrapped_cek, cek_headers = jwk.sender_key(
             enc=enc, alg=alg, cek=cek, epk=epk, **extra_headers

@@ -26,7 +26,7 @@ from jwskate.jwa import (
     DirectKeyUse,
 )
 
-from .alg import select_alg
+from .alg import select_alg_class
 from .base import Jwk, JwkParameter
 
 
@@ -208,7 +208,7 @@ class SymmetricJwk(Jwk):
         Returns:
             a (ciphertext, authentication_tag, iv) tuple
         """
-        encalg = select_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
+        encalg = select_alg_class(self.ENCRYPTION_ALGORITHMS, jwk_alg=self.alg, alg=alg)
 
         if iv is None:
             iv = encalg.generate_iv()
@@ -256,7 +256,7 @@ class SymmetricJwk(Jwk):
         if not isinstance(tag, bytes):
             tag = bytes(tag)
 
-        encalg = select_alg(self.alg, alg, self.ENCRYPTION_ALGORITHMS)
+        encalg = select_alg_class(self.ENCRYPTION_ALGORITHMS, jwk_alg=self.alg, alg=alg)
         decryptor: BaseAESEncryptionAlg = encalg(self.cryptography_key)
         plaintext: bytes = decryptor.decrypt(ciphertext, auth_tag=tag, iv=iv, aad=aad)
 

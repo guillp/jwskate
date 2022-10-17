@@ -38,7 +38,7 @@ from jwskate.jwa import (
 
 from .. import BaseAlg
 from ..token import BaseJsonDict
-from .alg import UnsupportedAlg, select_alg, select_algs
+from .alg import UnsupportedAlg, select_alg_class, select_alg_classes
 
 if TYPE_CHECKING:
     from .jwks import JwkSet  # pragma: no cover
@@ -499,7 +499,7 @@ class Jwk(BaseJsonDict):
         Returns:
           the generated signature
         """
-        sigalg = select_alg(self.alg, alg, self.SIGNATURE_ALGORITHMS)
+        sigalg = select_alg_class(self.SIGNATURE_ALGORITHMS, jwk_alg=self.alg, alg=alg)
         wrapper: BaseSignatureAlg
         if issubclass(sigalg, BaseAsymmetricAlg):
             wrapper = sigalg(self.cryptography_key)
@@ -530,7 +530,9 @@ class Jwk(BaseJsonDict):
           `True` if the signature matches, `False` otherwise
         """
         wrapper: BaseSignatureAlg
-        for sigalg in select_algs(self.alg, alg, algs, self.SIGNATURE_ALGORITHMS):
+        for sigalg in select_alg_classes(
+            self.SIGNATURE_ALGORITHMS, jwk_alg=self.alg, alg=alg, algs=algs
+        ):
             if issubclass(sigalg, BaseAsymmetricAlg):
                 key = self.public_jwk().cryptography_key
                 wrapper = sigalg(key)
@@ -632,8 +634,10 @@ class Jwk(BaseJsonDict):
         """
         from jwskate import SymmetricJwk
 
-        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
+        keyalg = select_alg_class(
+            self.KEY_MANAGEMENT_ALGORITHMS, jwk_alg=self.alg, alg=alg
+        )
+        encalg = select_alg_class(SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc)
 
         cek_headers: Dict[str, Any] = {}
 
@@ -723,8 +727,10 @@ class Jwk(BaseJsonDict):
         """
         from jwskate import SymmetricJwk
 
-        keyalg = select_alg(self.alg, alg, self.KEY_MANAGEMENT_ALGORITHMS)
-        encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
+        keyalg = select_alg_class(
+            self.KEY_MANAGEMENT_ALGORITHMS, jwk_alg=self.alg, alg=alg
+        )
+        encalg = select_alg_class(SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc)
 
         if issubclass(keyalg, BaseRsaKeyWrap):
             rsa = keyalg(self.cryptography_key)
@@ -739,7 +745,7 @@ class Jwk(BaseJsonDict):
             if epk_jwk.is_private:
                 raise ValueError("The EPK present in the header is private.")
             epk = epk_jwk.cryptography_key
-            encalg = select_alg(None, enc, SymmetricJwk.ENCRYPTION_ALGORITHMS)
+            encalg = select_alg_class(SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc)
             if isinstance(ecdh, BaseEcdhEs_AesKw):
                 cek = ecdh.unwrap_key_with_epk(wrapped_cek, epk, alg=keyalg.name)
             else:

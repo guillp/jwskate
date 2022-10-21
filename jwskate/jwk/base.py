@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
@@ -38,7 +39,7 @@ from jwskate.jwa import (
 
 from .. import BaseAlg
 from ..token import BaseJsonDict
-from .alg import UnsupportedAlg, select_alg_class, select_alg_classes
+from .alg import UnsupportedAlg, select_alg_class
 
 if TYPE_CHECKING:
     from .jwks import JwkSet  # pragma: no cover
@@ -299,6 +300,103 @@ class Jwk(BaseJsonDict):
             raise TypeError(f"Invalid alg type {type(alg)}", alg)
         return alg
 
+    def signature_class(self, alg: Optional[str] = None) -> Type[BaseSignatureAlg]:
+        """Return the appropriate signature algorithm class (a `BaseSignatureAlg` subclass) to use with this key.
+
+        If this key doesn't have an `alg` parameter, you must supply one as parameter to this method.
+
+        Args:
+            alg: the algorithm identifier, if not already present in this Jwk
+
+        Returns:
+            the appropriate `BaseSignatureAlg` subclass
+        """
+        return select_alg_class(self.SIGNATURE_ALGORITHMS, jwk_alg=self.alg, alg=alg)
+
+    def encryption_class(self, alg: Optional[str] = None) -> Type[BaseAESEncryptionAlg]:
+        """Return the appropriate encryption algorithm class (a `BaseAESEncryptionAlg` subclass) to use with this key.
+
+        If this key doesn't have an `alg` parameter, you must supply one as parameter to this method.
+
+        Args:
+            alg: the algorithm identifier, if not already present in this Jwk
+
+        Returns:
+            the appropriate `BaseAESEncryptionAlg` subclass
+        """
+        return select_alg_class(self.ENCRYPTION_ALGORITHMS, jwk_alg=self.alg, alg=alg)
+
+    def key_management_class(
+        self, alg: Optional[str] = None
+    ) -> Type[BaseKeyManagementAlg]:
+        """Return the appropriate key management algorithm class (a `BaseKeyManagementAlg` subclass) to use with this key.
+
+        If this key doesn't have an `alg` parameter, you must supply one as parameter to this method.
+
+        Args:
+            alg: the algorithm identifier, if not already present in this Jwk
+
+        Returns:
+            the appropriate `BaseKeyManagementAlg` subclass
+        """
+        return select_alg_class(
+            self.KEY_MANAGEMENT_ALGORITHMS, jwk_alg=self.alg, alg=alg
+        )
+
+    def signature_wrapper(self, alg: Optional[str] = None) -> BaseSignatureAlg:
+        """Initialize a  key management wrapper (an instance of a `BaseKeyManagementAlg` subclass) with this key.
+
+        If this key doesn't have an `alg` parameter, you must supply one as parameter to this method.
+
+        Args:
+            alg: the algorithm identifier, if not already present in this Jwk
+
+        Returns:
+            a `BaseKeyManagementAlg` instance initialized with the current key
+        """
+        alg_class = self.signature_class(alg)
+        if issubclass(alg_class, BaseSymmetricAlg):
+            return alg_class(self.key)
+        elif issubclass(alg_class, BaseAsymmetricAlg):
+            return alg_class(self.cryptography_key)
+        raise UnsupportedAlg(alg)
+
+    def encryption_wrapper(self, alg: Optional[str] = None) -> BaseAESEncryptionAlg:
+        """Initialize an encryption wrapper (an instance of a `BaseAESEncryptionAlg` subclass) with this key.
+
+        If this key doesn't have an `alg` parameter, you must supply one as parameter to this method.
+
+        Args:
+            alg: the algorithm identifier, if not already present in this Jwk
+
+        Returns:
+            a `BaseAESEncryptionAlg` instance initialized with the current key
+        """
+        alg_class = self.encryption_class(alg)
+        if issubclass(alg_class, BaseSymmetricAlg):
+            return alg_class(self.key)
+        elif issubclass(alg_class, BaseAsymmetricAlg):
+            return alg_class(self.cryptography_key)
+        raise UnsupportedAlg(alg)
+
+    def key_management_wrapper(self, alg: Optional[str] = None) -> BaseKeyManagementAlg:
+        """Initialize a key management wrapper (an instance of a `BaseKeyManagementAlg` subclass) with this key.
+
+        If this key doesn't have an `alg` parameter, you must supply one as parameter to this method.
+
+        Args:
+            alg: the algorithm identifier, if not already present in this Jwk
+
+        Returns:
+            a `BaseKeyManagementAlg` instance initialized with the current key
+        """
+        alg_class = self.key_management_class(alg)
+        if issubclass(alg_class, BaseSymmetricAlg):
+            return alg_class(self.key)
+        elif issubclass(alg_class, BaseAsymmetricAlg):
+            return alg_class(self.cryptography_key)
+        raise UnsupportedAlg(alg)
+
     @property
     def kid(self) -> Optional[str]:
         """Return the JWK key ID (kid), if present."""
@@ -499,14 +597,7 @@ class Jwk(BaseJsonDict):
         Returns:
           the generated signature
         """
-        sigalg = select_alg_class(self.SIGNATURE_ALGORITHMS, jwk_alg=self.alg, alg=alg)
-        wrapper: BaseSignatureAlg
-        if issubclass(sigalg, BaseAsymmetricAlg):
-            wrapper = sigalg(self.cryptography_key)
-
-        elif issubclass(sigalg, BaseSymmetricAlg):
-            wrapper = sigalg(self.key)
-
+        wrapper = self.signature_wrapper(alg)
         signature = wrapper.sign(data)
         return BinaPy(signature)
 
@@ -529,16 +620,17 @@ class Jwk(BaseJsonDict):
         Returns:
           `True` if the signature matches, `False` otherwise
         """
-        wrapper: BaseSignatureAlg
-        for sigalg in select_alg_classes(
-            self.SIGNATURE_ALGORITHMS, jwk_alg=self.alg, alg=alg, algs=algs
-        ):
-            if issubclass(sigalg, BaseAsymmetricAlg):
-                key = self.public_jwk().cryptography_key
-                wrapper = sigalg(key)
-            elif issubclass(sigalg, BaseSymmetricAlg):
-                key = self.key
-                wrapper = sigalg(key)
+        if not self.is_symmetric and self.is_private:
+            warnings.warn(
+                "You are trying to validate a signature with a private key. Signature should always be verified with a public key."
+            )
+            public_jwk = self.public_jwk()
+        else:
+            public_jwk = self
+        if algs is None and alg:
+            algs = [alg]
+        for alg in algs or (None,):
+            wrapper = public_jwk.signature_wrapper(alg)
             if wrapper.verify(data, signature):
                 return True
 
@@ -634,72 +726,75 @@ class Jwk(BaseJsonDict):
         """
         from jwskate import SymmetricJwk
 
-        keyalg = select_alg_class(
-            self.KEY_MANAGEMENT_ALGORITHMS, jwk_alg=self.alg, alg=alg
-        )
-        encalg = select_alg_class(SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc)
+        if not self.is_symmetric and self.is_private:
+            warnings.warn(
+                "You are using a private key for encryption. Encrypting data should always be done with a puiblic key."
+            )
+            key_alg_wrapper = self.public_jwk().key_management_wrapper(alg)
+        else:
+            key_alg_wrapper = self.key_management_wrapper(alg)
+
+        enc_alg_class = select_alg_class(SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc)
 
         cek_headers: Dict[str, Any] = {}
 
-        if issubclass(keyalg, BaseRsaKeyWrap):
-            rsa: BaseRsaKeyWrap = keyalg(self.public_jwk().cryptography_key)
+        if isinstance(key_alg_wrapper, BaseRsaKeyWrap):
             if cek:
-                encalg.check_key(cek)
+                enc_alg_class.check_key(cek)
             else:
-                cek = encalg.generate_key()
+                cek = enc_alg_class.generate_key()
             assert cek
-            wrapped_cek = rsa.wrap_key(cek)
+            wrapped_cek = key_alg_wrapper.wrap_key(cek)
 
-        elif issubclass(keyalg, EcdhEs):
-            ecdh: EcdhEs = keyalg(self.public_jwk().cryptography_key)
-            epk = epk or Jwk.from_cryptography_key(ecdh.generate_ephemeral_key())
+        elif isinstance(key_alg_wrapper, EcdhEs):
+            epk = epk or Jwk.from_cryptography_key(
+                key_alg_wrapper.generate_ephemeral_key()
+            )
             cek_headers = {"epk": epk.public_jwk()}
-            if isinstance(ecdh, BaseEcdhEs_AesKw):
+            if isinstance(key_alg_wrapper, BaseEcdhEs_AesKw):
                 if cek:
-                    encalg.check_key(cek)
+                    enc_alg_class.check_key(cek)
                 else:
-                    cek = encalg.generate_key()
+                    cek = enc_alg_class.generate_key()
                 assert cek
-                wrapped_cek = ecdh.wrap_key_with_epk(
-                    cek, epk.cryptography_key, alg=keyalg.name, **headers
+                wrapped_cek = key_alg_wrapper.wrap_key_with_epk(
+                    cek, epk.cryptography_key, alg=key_alg_wrapper.name, **headers
                 )
             else:
-                cek = ecdh.sender_key(
+                cek = key_alg_wrapper.sender_key(
                     epk.cryptography_key,
-                    alg=encalg.name,
-                    key_size=encalg.key_size,
+                    alg=enc_alg_class.name,
+                    key_size=enc_alg_class.key_size,
                     **headers,
                 )
                 wrapped_cek = BinaPy(b"")
-        elif issubclass(keyalg, BaseAesKeyWrap):
-            aes: BaseAesKeyWrap = keyalg(self.cryptography_key)
-            if cek:
-                encalg.check_key(cek)
-            else:
-                cek = encalg.generate_key()
-            assert cek
-            wrapped_cek = aes.wrap_key(cek)
 
-        elif issubclass(keyalg, BaseAesGcmKeyWrap):
-            aesgcm: BaseAesGcmKeyWrap = keyalg(self.cryptography_key)
+        elif isinstance(key_alg_wrapper, BaseAesKeyWrap):
             if cek:
-                encalg.check_key(cek)
+                enc_alg_class.check_key(cek)
             else:
-                cek = encalg.generate_key()
+                cek = enc_alg_class.generate_key()
             assert cek
-            iv = aesgcm.generate_iv()
-            wrapped_cek, tag = aesgcm.wrap_key(cek, iv=iv)
+            wrapped_cek = key_alg_wrapper.wrap_key(cek)
+
+        elif isinstance(key_alg_wrapper, BaseAesGcmKeyWrap):
+            if cek:
+                enc_alg_class.check_key(cek)
+            else:
+                cek = enc_alg_class.generate_key()
+            assert cek
+            iv = key_alg_wrapper.generate_iv()
+            wrapped_cek, tag = key_alg_wrapper.wrap_key(cek, iv=iv)
             cek_headers = {
                 "iv": iv.to("b64u").ascii(),
                 "tag": tag.to("b64u").ascii(),
             }
 
-        elif issubclass(keyalg, DirectKeyUse):
-            dir: DirectKeyUse = keyalg(self.key)
-            cek = dir.direct_key(encalg)
+        elif isinstance(key_alg_wrapper, DirectKeyUse):
+            cek = key_alg_wrapper.direct_key(enc_alg_class)
             wrapped_cek = BinaPy(b"")
         else:
-            raise UnsupportedAlg(f"Unsupported Key Management Alg {keyalg}")
+            raise UnsupportedAlg(f"Unsupported Key Management Alg {key_alg_wrapper}")
 
         return SymmetricJwk.from_bytes(cek), wrapped_cek, cek_headers
 
@@ -727,17 +822,13 @@ class Jwk(BaseJsonDict):
         """
         from jwskate import SymmetricJwk
 
-        keyalg = select_alg_class(
-            self.KEY_MANAGEMENT_ALGORITHMS, jwk_alg=self.alg, alg=alg
-        )
-        encalg = select_alg_class(SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc)
+        key_alg_wrapper = self.key_management_wrapper(alg)
+        enc_alg_class = select_alg_class(SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc)
 
-        if issubclass(keyalg, BaseRsaKeyWrap):
-            rsa = keyalg(self.cryptography_key)
-            cek = rsa.unwrap_key(wrapped_cek)
+        if isinstance(key_alg_wrapper, BaseRsaKeyWrap):
+            cek = key_alg_wrapper.unwrap_key(wrapped_cek)
 
-        elif issubclass(keyalg, EcdhEs):
-            ecdh = keyalg(self.cryptography_key)
+        elif isinstance(key_alg_wrapper, EcdhEs):
             epk = headers.get("epk")
             if epk is None:
                 raise ValueError("No EPK in the headers!")
@@ -745,20 +836,22 @@ class Jwk(BaseJsonDict):
             if epk_jwk.is_private:
                 raise ValueError("The EPK present in the header is private.")
             epk = epk_jwk.cryptography_key
-            encalg = select_alg_class(SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc)
-            if isinstance(ecdh, BaseEcdhEs_AesKw):
-                cek = ecdh.unwrap_key_with_epk(wrapped_cek, epk, alg=keyalg.name)
+            if isinstance(key_alg_wrapper, BaseEcdhEs_AesKw):
+                cek = key_alg_wrapper.unwrap_key_with_epk(
+                    wrapped_cek, epk, alg=key_alg_wrapper.name
+                )
             else:
-                cek = ecdh.recipient_key(
-                    epk, alg=encalg.name, key_size=encalg.key_size, **headers
+                cek = key_alg_wrapper.recipient_key(
+                    epk,
+                    alg=enc_alg_class.name,
+                    key_size=enc_alg_class.key_size,
+                    **headers,
                 )
 
-        elif issubclass(keyalg, BaseAesKeyWrap):
-            aes = keyalg(self.cryptography_key)
-            cek = aes.unwrap_key(wrapped_cek)
+        elif isinstance(key_alg_wrapper, BaseAesKeyWrap):
+            cek = key_alg_wrapper.unwrap_key(wrapped_cek)
 
-        elif issubclass(keyalg, BaseAesGcmKeyWrap):
-            aesgcm = keyalg(self.cryptography_key)
+        elif isinstance(key_alg_wrapper, BaseAesGcmKeyWrap):
             iv = headers.get("iv")
             if iv is None:
                 raise ValueError("No 'iv' in headers!")
@@ -767,13 +860,13 @@ class Jwk(BaseJsonDict):
             if tag is None:
                 raise ValueError("No 'tag' in headers!")
             tag = BinaPy(tag).decode_from("b64u")
-            cek = aesgcm.unwrap_key(wrapped_cek, tag=tag, iv=iv)
+            cek = key_alg_wrapper.unwrap_key(wrapped_cek, tag=tag, iv=iv)
 
-        elif issubclass(keyalg, DirectKeyUse):
-            dir_ = keyalg(self.key)
-            cek = dir_.direct_key(encalg)
+        elif isinstance(key_alg_wrapper, DirectKeyUse):
+            cek = key_alg_wrapper.direct_key(enc_alg_class)
+
         else:
-            raise UnsupportedAlg(f"Unsupported Key Management Alg {keyalg}")
+            raise UnsupportedAlg(f"Unsupported Key Management Alg {key_alg_wrapper}")
 
         return SymmetricJwk.from_bytes(cek)
 

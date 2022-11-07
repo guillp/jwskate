@@ -5,6 +5,14 @@ from jwskate import A128GCM, ES256, EcdhEs_A128KW, InvalidJwk, Jwk, RSAJwk
 from jwskate.jwk.base import UnsupportedKeyType
 
 
+def test_public_jwk() -> None:
+    private_jwk = Jwk.generate_for_alg("RS256")
+    assert private_jwk.is_private
+    public_jwk = private_jwk.public_jwk()
+    assert not public_jwk.is_private
+    assert public_jwk is public_jwk.public_jwk()
+
+
 def test_jwk_copy() -> None:
     jwk1 = Jwk.generate_for_kty("RSA")
 

@@ -359,7 +359,7 @@ class Jwk(BaseJsonDict):
             return alg_class(self.key)
         elif issubclass(alg_class, BaseAsymmetricAlg):
             return alg_class(self.cryptography_key)
-        raise UnsupportedAlg(alg)
+        raise UnsupportedAlg(alg)  # pragma: no cover
 
     def encryption_wrapper(self, alg: Optional[str] = None) -> BaseAESEncryptionAlg:
         """Initialize an encryption wrapper (an instance of a `BaseAESEncryptionAlg` subclass) with this key.
@@ -375,9 +375,9 @@ class Jwk(BaseJsonDict):
         alg_class = self.encryption_class(alg)
         if issubclass(alg_class, BaseSymmetricAlg):
             return alg_class(self.key)
-        elif issubclass(alg_class, BaseAsymmetricAlg):
-            return alg_class(self.cryptography_key)
-        raise UnsupportedAlg(alg)
+        elif issubclass(alg_class, BaseAsymmetricAlg):  # pragma: no cover
+            return alg_class(self.cryptography_key)  # pragma: no cover
+        raise UnsupportedAlg(alg)  # pragma: no cover
 
     def key_management_wrapper(self, alg: Optional[str] = None) -> BaseKeyManagementAlg:
         """Initialize a key management wrapper (an instance of a `BaseKeyManagementAlg` subclass) with this key.
@@ -395,7 +395,7 @@ class Jwk(BaseJsonDict):
             return alg_class(self.key)
         elif issubclass(alg_class, BaseAsymmetricAlg):
             return alg_class(self.cryptography_key)
-        raise UnsupportedAlg(alg)
+        raise UnsupportedAlg(alg)  # pragma: no cover
 
     @property
     def kid(self) -> Optional[str]:
@@ -719,7 +719,7 @@ class Jwk(BaseJsonDict):
           **headers: additional headers to include for the CEK derivation
 
         Returns:
-          Tuple[Jwk,BinaPy,Mapping[str,Any]]: a tuple (cek, wrapped_cek, additional_headers_map)
+          a tuple (cek, wrapped_cek, additional_headers_map)
 
         Raises:
             UnsupportedAlg: if the requested alg identifier is not supported
@@ -794,7 +794,9 @@ class Jwk(BaseJsonDict):
             cek = key_alg_wrapper.direct_key(enc_alg_class)
             wrapped_cek = BinaPy(b"")
         else:
-            raise UnsupportedAlg(f"Unsupported Key Management Alg {key_alg_wrapper}")
+            raise UnsupportedAlg(
+                f"Unsupported Key Management Alg {key_alg_wrapper}"
+            )  # pragma: no cover
 
         return SymmetricJwk.from_bytes(cek), wrapped_cek, cek_headers
 

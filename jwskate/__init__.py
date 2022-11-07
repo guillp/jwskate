@@ -89,6 +89,8 @@ from .jwk import (
     UnsupportedAlg,
     UnsupportedEllipticCurve,
     UnsupportedOKPCurve,
+    select_alg_class,
+    select_alg_classes,
 )
 from .jws import InvalidJws, JwsCompact, JwsJsonFlat, JwsJsonGeneral
 from .jwt import (
@@ -190,4 +192,6 @@ __all__ = [
     "X25519",
     "X448",
     "secp256k1",
+    "select_alg_class",
+    "select_alg_classes",
 ]

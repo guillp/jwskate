@@ -1,6 +1,11 @@
 """This module implements [Json Web Key RFC7517](https://tools.ietf.org/html/rfc7517)."""
 
-from .alg import ExpectedAlgRequired, UnsupportedAlg
+from .alg import (
+    ExpectedAlgRequired,
+    UnsupportedAlg,
+    select_alg_class,
+    select_alg_classes,
+)
 from .base import InvalidJwk, Jwk
 from .ec import ECJwk, UnsupportedEllipticCurve
 from .jwks import JwkSet
@@ -20,4 +25,6 @@ __all__ = [
     "UnsupportedAlg",
     "UnsupportedEllipticCurve",
     "UnsupportedOKPCurve",
+    "select_alg_class",
+    "select_alg_classes",
 ]

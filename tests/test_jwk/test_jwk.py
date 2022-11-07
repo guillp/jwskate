@@ -1,7 +1,7 @@
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from jwskate import InvalidJwk, Jwk, RSAJwk
+from jwskate import A128GCM, ES256, EcdhEs_A128KW, InvalidJwk, Jwk, RSAJwk
 from jwskate.jwk.base import UnsupportedKeyType
 
 
@@ -194,3 +194,24 @@ def test_generate_for_alg() -> None:
     rsa15_jwk = Jwk.generate_for_alg("RSA1_5")
     assert isinstance(rsa15_jwk, RSAJwk)
     assert rsa15_jwk.alg == "RSA1_5"
+
+
+def test_signature_wrapper() -> None:
+    signature_jwk = Jwk.generate_for_alg("ES256")
+    signature_wrapper = signature_jwk.signature_wrapper()
+    assert isinstance(signature_wrapper, ES256)
+    assert signature_wrapper.key == signature_jwk.cryptography_key
+
+
+def test_encryption_wrapper() -> None:
+    encryption_jwk = Jwk.generate_for_alg("A128GCM")
+    encryption_wrapper = encryption_jwk.encryption_wrapper()
+    assert isinstance(encryption_wrapper, A128GCM)
+    assert encryption_wrapper.key == encryption_jwk.cryptography_key
+
+
+def test_key_management_wrapper() -> None:
+    key_mgmt_jwk = Jwk.generate_for_alg("ECDH-ES+A128KW")
+    key_mgmt_wrapper = key_mgmt_jwk.key_management_wrapper()
+    assert isinstance(key_mgmt_wrapper, EcdhEs_A128KW)
+    assert key_mgmt_wrapper.key == key_mgmt_jwk.cryptography_key

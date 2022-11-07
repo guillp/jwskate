@@ -208,12 +208,10 @@ class SymmetricJwk(Jwk):
         Returns:
             a (ciphertext, authentication_tag, iv) tuple
         """
-        encalg = select_alg_class(self.ENCRYPTION_ALGORITHMS, jwk_alg=self.alg, alg=alg)
-
+        wrapper = self.encryption_wrapper(alg)
         if iv is None:
-            iv = encalg.generate_iv()
+            iv = wrapper.generate_iv()
 
-        wrapper: BaseAESEncryptionAlg = encalg(self.cryptography_key)
         ciphertext, tag = wrapper.encrypt(plaintext, iv=iv, aad=aad)
         return ciphertext, BinaPy(iv), tag
 
@@ -256,9 +254,8 @@ class SymmetricJwk(Jwk):
         if not isinstance(tag, bytes):
             tag = bytes(tag)
 
-        encalg = select_alg_class(self.ENCRYPTION_ALGORITHMS, jwk_alg=self.alg, alg=alg)
-        decryptor: BaseAESEncryptionAlg = encalg(self.cryptography_key)
-        plaintext: bytes = decryptor.decrypt(ciphertext, auth_tag=tag, iv=iv, aad=aad)
+        wrapper = self.encryption_wrapper(alg)
+        plaintext: bytes = wrapper.decrypt(ciphertext, auth_tag=tag, iv=iv, aad=aad)
 
         return BinaPy(plaintext)
 

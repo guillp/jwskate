@@ -78,11 +78,11 @@ def test_select_alg_classes() -> None:
 
     # selecting an unsupported alg
     with pytest.raises(UnsupportedAlg):
-        select_alg_class(RSAJwk.SIGNATURE_ALGORITHMS, alg="ES256")
+        select_alg_classes(RSAJwk.SIGNATURE_ALGORITHMS, alg="ES256")
 
     # you need to specify at least one of jwk_alg, alg or algs
     with pytest.raises(ExpectedAlgRequired):
-        select_alg_class(RSAJwk.SIGNATURE_ALGORITHMS)
+        select_alg_classes(RSAJwk.SIGNATURE_ALGORITHMS)
 
     # if jwk_alg and alg/algs is inconsistent, a warning is fired
     with pytest.warns():

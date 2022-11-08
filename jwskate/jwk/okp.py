@@ -135,8 +135,8 @@ class OKPJwk(Jwk):
         The public key will be automatically derived from the supplied private key,
 
         The appropriate curve will be guessed based on the key length or supplied `crv`/`use` hints:
-        - 56 bytes will use Ed448
-        - 57 bytes will use X448
+        - 56 bytes will use X448
+        - 57 bytes will use Ed448
         - 32 bytes will use Ed25519 or X25519. Since there is no way to guess which one you want, it needs an hint with either a `crv` or `use` parameter.
 
         Args:
@@ -152,7 +152,9 @@ class OKPJwk(Jwk):
             if (crv in ("Ed25519", "Ed448") and use != "sig") or (
                 crv in ("X25519", "X448") and use != "enc"
             ):
-                raise ValueError(f"Inconsistent `{crv=}` and `{use=}` parameters")
+                raise ValueError(
+                    f"Inconsistent `crv={crv}` and `use={use}` parameters."
+                )
         elif crv:
             if crv in ("Ed25519", "Ed448"):
                 use = "sig"
@@ -162,7 +164,7 @@ class OKPJwk(Jwk):
                 raise UnsupportedOKPCurve(crv)
         elif use:
             if use not in ("sig", "enc"):
-                raise ValueError("Invalid `{use=}` parameter, need 'sig' or 'enc'.")
+                raise ValueError(f"Invalid `use={use}` parameter, need 'sig' or 'enc'.")
 
         cryptography_key: Any
         if len(private_key) == 32:
@@ -182,7 +184,7 @@ class OKPJwk(Jwk):
             cryptography_key = x448.X448PrivateKey.from_private_bytes(private_key)
             if use and use != "enc":
                 raise ValueError(
-                    f"Invalid {use=} parameter. Keys of length 56 bytes are for curve X448."
+                    f"Invalid `use={use}` parameter. Keys of length 56 bytes are for curve X448."
                 )
             use = "enc"
         elif len(private_key) == 57:

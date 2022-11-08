@@ -191,7 +191,7 @@ class OKPJwk(Jwk):
             cryptography_key = ed448.Ed448PrivateKey.from_private_bytes(private_key)
             if use and use != "sig":
                 raise ValueError(
-                    f"Invalid {use=} parameter. Keys of length 57 bytes are for curve Ed448."
+                    f"Invalid `use={use}` parameter. Keys of length 57 bytes are for curve Ed448."
                 )
             use = "sig"
         else:

@@ -335,7 +335,7 @@ def test_sign_and_encrypt() -> None:
     assert isinstance(inner_jwt, SignedJwt)
     assert inner_jwt.alg == sign_alg
     assert inner_jwt.claims == claims
-    assert inner_jwt.verify_signature(sign_jwk)
+    assert inner_jwt.verify_signature(sign_jwk.public_jwk())
     assert inner_jwt.kid == sign_jwk.kid
 
     verified_inner_jwt = Jwt.decrypt_and_verify(
@@ -343,13 +343,28 @@ def test_sign_and_encrypt() -> None:
     )
     assert isinstance(verified_inner_jwt, SignedJwt)
 
+    # try to encrypt a JWT with an altered signature
     altered_inner_jwt = bytes(verified_inner_jwt)[:-4] + (
         b"aaaa" if not verified_inner_jwt.value.endswith(b"aaaa") else b"bbbb"
     )
-    enc_altered_jwe = JweCompact.encrypt(altered_inner_jwt, jwk=enc_jwk, enc=enc)
+    enc_altered_jwe = JweCompact.encrypt(
+        altered_inner_jwt, jwk=enc_jwk.public_jwk(), enc=enc
+    )
     with pytest.raises(InvalidSignature):
         Jwt.decrypt_and_verify(
             enc_altered_jwe, enc_jwk=enc_jwk, sig_jwk=sign_jwk.public_jwk()
+        )
+
+    # trying to decrypt and verify a JWE nested in a JWE will raise a ValueError
+    inner_jwe = JweCompact.encrypt(
+        b"this_is_a_test",
+        jwk=Jwk.generate_for_alg("ECDH-ES+A128KW").public_jwk(),
+        enc="A128GCM",
+    )
+    nested_inner_jwe = JweCompact.encrypt(inner_jwe, jwk=enc_jwk.public_jwk(), enc=enc)
+    with pytest.raises(ValueError):
+        Jwt.decrypt_and_verify(
+            nested_inner_jwe, enc_jwk=enc_jwk, sig_jwk=sign_jwk.public_jwk()
         )
 
 
@@ -375,6 +390,16 @@ def test_eq() -> None:
     assert Jwt(jwt) == jwt.encode()
 
     assert Jwt(jwt) != 1
+
+
+def test_headers() -> None:
+    jwt = Jwt(
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Im15X2tpZCIsImN0eSI6Im15X2N0eSJ9.e30.XYERQ3ODkqLEnQvcak8wHEVJMtEqNNUmzRGRtjmqcdE"
+    )
+    assert jwt.alg == "HS256"
+    assert jwt.typ == "JWT"
+    assert jwt.kid == "my_kid"
+    assert jwt.cty == "my_cty"
 
 
 def test_invalid_headers() -> None:

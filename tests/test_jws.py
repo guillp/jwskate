@@ -287,7 +287,9 @@ def signature_jwk(
         if signature_alg in key.supported_signing_algorithms():
             return key
 
-    pytest.skip(f"No key supports this signature alg: {signature_alg}")
+    pytest.skip(
+        f"No key supports this signature alg: {signature_alg}"
+    )  # pragma: no cover
 
 
 @pytest.fixture()

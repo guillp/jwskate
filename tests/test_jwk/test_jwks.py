@@ -24,8 +24,8 @@ def test_jwkset() -> None:
     assert jwks.jwks == keys
 
     jwk = Jwk.generate_for_kty("EC", alg="ES256", kid="my_ec_key")
-    keys.append(jwk)
-    kid = jwks.add_jwk(jwk)
+    keys.append(jwk.public_jwk())
+    kid = jwks.add_jwk(jwk.public_jwk())
     assert kid == jwk.kid
     assert jwks.jwks == keys
 

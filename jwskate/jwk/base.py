@@ -166,7 +166,7 @@ class Jwk(BaseJsonDict):
         try:
             self.cryptography_key = self._to_cryptography_key()
         except AttributeError as exc:
-            raise InvalidJwk() from exc
+            raise InvalidJwk("Invalid JWK parameter", *exc.args) from exc
 
     @classmethod
     def _get_alg_class(cls, alg: str) -> Type[BaseAlg]:

@@ -222,7 +222,7 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         """
         if len(key) * 8 != cls.key_size:
             raise ValueError(
-                f"This key size of {len(key) * 8} bits doesn't match the expected keysize of {cls.key_size} bits"
+                f"This key size of {len(key) * 8} bits doesn't match the expected key size of {cls.key_size} bits"
             )
 
     @classmethod

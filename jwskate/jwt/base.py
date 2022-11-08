@@ -159,10 +159,10 @@ class Jwt(BaseCompactToken):
     ) -> Jwt:
         """Convenience method to decrypt a nested JWT.
 
-        It will return a Jwt instance.
+        It will return a [Jwt] instance.
 
         Args:
-            jwt: the JWE containing a nested Token
+            jwe: the JWE containing a nested Token
             jwk: the decryption key
 
         Returns:

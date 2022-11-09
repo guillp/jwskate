@@ -7,7 +7,7 @@ from jwskate.jwa import BaseAlg
 
 
 class UnsupportedAlg(ValueError):
-    """Raised when an UnsupportedAlg is requested."""
+    """Raised when a unsupported alg is requested."""
 
 
 class ExpectedAlgRequired(ValueError):

@@ -14,14 +14,6 @@ repos:
     - id: check-merge-conflict
     - id: check-yaml
       args: [--unsafe]
-- repo: https://github.com/executablebooks/mdformat
-  rev: 0.7.16
-  hooks:
-  - id: mdformat
-    args:
-      - --number
-    additional_dependencies:
-    - mdformat-black
 -   repo: https://github.com/hadialqattan/pycln
     rev: v2.1.1
     hooks:

@@ -1,3 +1,1 @@
-{%
-include-markdown "../AUTHORS.md"
-%}
+{% include-markdown "../AUTHORS.md" %}

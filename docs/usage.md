@@ -100,8 +100,8 @@ assert jwk.x == "WtjnvHG9b_IKBLn4QYTHz-AdoAiO_ork5LH1BL_5tyI"
 assert jwk["x"] == jwk.x
 ```
 
-Those will return the exact (usually base64url-encoded) value exactly as expressed in the JWK.
-You can also get the real, decoded parameters with some special attributes:
+Those will return the exact (usually base64url-encoded) value exactly as expressed in the JWK. You can also get the
+real, decoded parameters with some special attributes:
 
 ```python
 from jwskate import Jwk
@@ -135,8 +135,8 @@ The available special attributes vary depending on the key type.
 
 ### Based on a Key Type
 
-You can generate a `Jwk` of a specific type (RSA, EC, etc.) using the class method `Jwk.generate_for_kty()`. It needs the key type as parameter, and
-type-specific parameters:
+You can generate a `Jwk` of a specific type (RSA, EC, etc.) using the class method `Jwk.generate_for_kty()`. It needs
+the key type as parameter, and type-specific parameters:
 
 ```python
 from jwskate import Jwk
@@ -159,8 +159,8 @@ assert jwk.use == "sig"
 
 ### Based on intended algorithm
 
-You can generate a private key of the appropriate type for a given signature, key management or encryption algorithm
-by using the method `Jwk.generate_for_alg()` this way:
+You can generate a private key of the appropriate type for a given signature, key management or encryption algorithm by
+using the method `Jwk.generate_for_alg()` this way:
 
 ```python
 from jwskate import Jwk
@@ -218,8 +218,7 @@ Note that Symmetric keys are always considered private, so calling `.public_jwk(
 ### to JSON
 
 `Jwk` instances are dicts, so you can serialize it to JSON in the usual ways (with Python `json` module or any other
-means).
-You can also use the `to_json()` convenience method to serialize a Jwk:
+means). You can also use the `to_json()` convenience method to serialize a Jwk:
 
 ```python
 from jwskate import Jwk
@@ -320,22 +319,20 @@ Encrypting/decrypting arbitrary data requires a symmetric key. But it is possibl
 symmetric keys from asymmetric keys, using Key Management algorithms.
 
 Some of those Key Management algorithms rely on key wrapping, where a randomly-generated symmetric key (called a Content
-Encryption Key or CEK)
-is itself asymmetrically encrypted. It is also possible to use a symmetric key to "wrap" the CEK.
+Encryption Key or CEK) is itself asymmetrically encrypted. It is also possible to use a symmetric key to "wrap" the CEK.
 Other algorithms rely on Diffie-Hellman, where the CEK is derived from a pair of keys, one private, the other public.
 
-You can use the methods `sender_key()` and `receiver_key()` to handle all the key management stuff for you.
-For `sender_key()`, which the message sender will use get a CEK, you just need to specify which encryption algorithm you
-will use with the CEK, and the key management algorithm you want to wrap or derive that CEK.
-It will return a tuple `(plaintext_message, encrypted_cek, extra_headers)`, with `plaintext_message` being the generated
-CEK (as an instance of `SymmetricJwk`),
-`encrypted_cek` is the wrapped CEK value (which can be empty for Diffie-Hellman based algorithms),
-and `extra_headers` a dict of extra headers that are required for the key management algorithm (for example, `epk` for
+You can use the methods `sender_key()` and `receiver_key()` to handle all the key management stuff for you. For
+`sender_key()`, which the message sender will use get a CEK, you just need to specify which encryption algorithm you
+will use with the CEK, and the key management algorithm you want to wrap or derive that CEK. It will return a tuple
+`(plaintext_message, encrypted_cek, extra_headers)`, with `plaintext_message` being the generated CEK (as an instance of
+`SymmetricJwk`), `encrypted_cek` is the wrapped CEK value (which can be empty for Diffie-Hellman based algorithms), and
+`extra_headers` a dict of extra headers that are required for the key management algorithm (for example, `epk` for
 ECDH-ES based algorithms),
 
-You can use `cleartext_cek` to encrypt your message with a given Encryption algorithm. You must then
-send `encrypted_cek` and `extra_headers` to your recipient, along with the encrypted message, and both Key Management
-and Encryption algorithms identifiers.
+You can use `cleartext_cek` to encrypt your message with a given Encryption algorithm. You must then send
+`encrypted_cek` and `extra_headers` to your recipient, along with the encrypted message, and both Key Management and
+Encryption algorithms identifiers.
 
 ```python
 from jwskate import Jwk
@@ -373,11 +370,10 @@ encrypted_message, iv, tag = plaintext_cek.encrypt(plaintext_message, alg=enc_al
 ```
 
 On recipient side, in order to decrypt the message, you will need to obtain the same symmetric CEK that was used to
-encrypt the message. That is done with `recipient_key()`.
-You need to provide it with the `encrypted_cek` received from the sender (possibly empty for Diffie-Hellman based
-algorithms),
-the Key Management algorithm that is used to wrap the CEK, the Encryption algorithm that is used to encrypt/decrypt the
-message, and the eventual extra headers depending on the Key Management algorithm.
+encrypt the message. That is done with `recipient_key()`. You need to provide it with the `encrypted_cek` received from
+the sender (possibly empty for Diffie-Hellman based algorithms), the Key Management algorithm that is used to wrap the
+CEK, the Encryption algorithm that is used to encrypt/decrypt the message, and the eventual extra headers depending on
+the Key Management algorithm.
 
 You can then use that CEK to decrypt the received message.
 
@@ -619,15 +615,13 @@ The `Jwt` class and its subclasses represent a syntactically valid Jwt token. It
 and verify its signature.
 
 Note that a JWT token can optionally be encrypted. In that case, the signed JWT content will be the plaintext of a JWE
-token.
-Decrypting that JWE can then be achieved with the `JweCompact` class, then this plaintext can be manipulated with
+token. Decrypting that JWE can then be achieved with the `JweCompact` class, then this plaintext can be manipulated with
 the `Jwt` class.
 
 ## Parsing JWT tokens
 
-To parse an existing JWT token, simply provide its value to `Jwt`. It exposes all the JWT attributes, and
-a `verify_signature()` method just like `JwsCompact()`.
-Claims can be accessed either:
+To parse an existing JWT token, simply provide its value to `Jwt`. It exposes all the JWT attributes, and a
+`verify_signature()` method just like `JwsCompact()`. Claims can be accessed either:
 
 - with the `claims` attribute, which is a dict of the parsed JSON content
 - with subscription: `jwt['attribute']` does a key lookup inside the `claims` dict, just like `jwt.claims['attribute']`
@@ -707,8 +701,8 @@ assert jwt.is_expired()
 ## Validating JWT tokens
 
 To validate a JWT token, verifying the signature is usually not enough. You probably want to validate the issuer,
-audience, expiration date, and other claims.
-To make things easier, use `SignedJwt.validate()`. It raises exceptions if one of the check fails:
+audience, expiration date, and other claims. To make things easier, use `SignedJwt.validate()`. It raises exceptions if
+one of the check fails:
 
 ```python
 from jwskate import Jwt
@@ -747,8 +741,8 @@ print(jwt)
 
 ### JWT headers
 
-The default header will contain the signing algorithm identifier (alg) and the JWK Key Identifier (kid), if there was one in the used JWK.
-You can add additional headers by using the `extra_headers` parameter to `Jwt.sign()`:
+The default header will contain the signing algorithm identifier (alg) and the JWK Key Identifier (kid), if there was
+one in the used JWK. You can add additional headers by using the `extra_headers` parameter to `Jwt.sign()`:
 
 ```python
 from jwskate import Jwt, Jwk

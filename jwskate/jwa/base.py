@@ -123,24 +123,6 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
             Exception: if the key is not suitable for use with this alg class
         """
 
-    @classmethod
-    def supports_key(cls, key: Union[Kpriv, Kpub]) -> bool:
-        """Return `True` if the given key is suitable for this alg class, or `False` otherwise.
-
-        This is a convenience wrapper around `check_key(key)`.
-
-        Args:
-          key: the key to check for this alg class
-
-        Returns:
-          `True` if the key is suitable for this alg class, `False` otherwise
-        """
-        try:
-            cls.check_key(key)
-            return True
-        except Exception:
-            return False
-
     @contextmanager
     def private_key_required(self) -> Iterator[Kpriv]:
         """A context manager that checks if this alg is initialised with a private key.

@@ -13,3 +13,6 @@ exclude_lines =
     if __name__ == .__main__.:
     def main
     \.\.\.
+    assert False
+    pytest.skip
+    pass

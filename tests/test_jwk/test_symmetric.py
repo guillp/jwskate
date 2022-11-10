@@ -1,6 +1,6 @@
 import pytest
 
-from jwskate import SymmetricJwk
+from jwskate import Jwk, SymmetricJwk
 
 
 @pytest.fixture(
@@ -42,3 +42,25 @@ def test_pem_key() -> None:
     private_jwk = SymmetricJwk.generate(key_size=128)
     with pytest.raises(TypeError):
         private_jwk.to_pem()
+
+
+def test_aesgcmkw() -> None:
+    alg = "A128GCMKW"
+    enc = "A128GCM"
+    jwk = Jwk.generate_for_alg(alg)
+    sender_cek, wrapped_cek, headers = jwk.sender_key(enc)
+    assert sender_cek
+    assert wrapped_cek
+    assert "iv" in headers
+    assert "tag" in headers
+
+    recipient_cek = jwk.recipient_key(wrapped_cek, enc, **headers)
+    assert recipient_cek == sender_cek
+
+    # missing 'iv' in headers
+    with pytest.raises(ValueError):
+        jwk.recipient_key(wrapped_cek, enc, **{"tag": headers["tag"]})
+
+    # missing 'tag' in headers
+    with pytest.raises(ValueError):
+        jwk.recipient_key(wrapped_cek, enc, **{"iv": headers["iv"]})

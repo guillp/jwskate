@@ -1,6 +1,14 @@
 import pytest
 
-from jwskate import EncryptionAlgs, Jwk, KeyManagementAlgs, RSAJwk, SignatureAlgs
+from jwskate import (
+    EncryptionAlgs,
+    ExpectedAlgRequired,
+    Jwk,
+    KeyManagementAlgs,
+    RSAJwk,
+    SignatureAlgs,
+    UnsupportedAlg,
+)
 
 
 @pytest.mark.parametrize(
@@ -43,3 +51,13 @@ def test_generate_for_alg(alg: str) -> None:
         jwk_mini = jwk_mini.with_optional_private_parameters()
 
     assert jwk_mini.with_usage_parameters(alg) == jwk
+
+    # cannot guess usage parameters if there is no 'alg' parameter in the Jwk
+    with pytest.raises(ExpectedAlgRequired):
+        jwk_mini.with_usage_parameters()
+
+
+def test_unsupported_alg() -> None:
+    # trying to generate a Jwk with an unsupported alg raises a UnsupportedAlg
+    with pytest.raises(UnsupportedAlg):
+        Jwk.generate_for_alg("unknown_alg")

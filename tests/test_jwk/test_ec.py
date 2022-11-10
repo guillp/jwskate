@@ -27,7 +27,7 @@ def test_jwk_ec_generate() -> None:
 def test_ecdh_es() -> None:
     alg = "ECDH-ES+A128KW"
     enc = "A128CBC-HS256"
-    private_jwk = ECJwk.generate(alg=alg)
+    private_jwk = Jwk.generate_for_alg(alg)
     assert private_jwk.crv == "P-256"
     public_jwk = private_jwk.public_jwk()
     sender_cek, wrapped_cek, headers = public_jwk.sender_key(enc)
@@ -39,6 +39,10 @@ def test_ecdh_es() -> None:
 
     recipient_cek = private_jwk.recipient_key(wrapped_cek, enc, **headers)
     assert recipient_cek == sender_cek
+
+    # no 'epk' in headers
+    with pytest.raises(ValueError):
+        private_jwk.recipient_key(wrapped_cek, enc)
 
 
 def test_ecdh_es_with_controlled_cek_and_epk() -> None:
@@ -56,10 +60,7 @@ def test_ecdh_es_with_controlled_cek_and_epk() -> None:
     recipient_cek = private_jwk.recipient_key(wrapped_cek, enc, **headers)
     assert recipient_cek == sender_cek
 
-    # EPK is mandatory for recipient_key() to work
-    with pytest.raises(ValueError):
-        private_jwk.recipient_key(wrapped_cek, enc)
-    # try passing the private EPK to recipient key
+    # try passing the private EPK
     with pytest.raises(ValueError):
         private_jwk.recipient_key(wrapped_cek, enc, epk=epk)
 

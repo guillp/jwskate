@@ -48,29 +48,24 @@ def test_signed_jwt() -> None:
     assert jwt.expires_at == datetime.fromtimestamp(1629204620, tz=timezone.utc)
     assert jwt.issued_at == datetime.fromtimestamp(1629204560, tz=timezone.utc)
     assert jwt.nonce == jwt["nonce"]
+
+    # validating with the appropriate key must work
     jwt.validate(
-        jwk=Jwk(
-            {
-                "kty": "RSA",
-                "alg": "RS256",
-                "kid": "my_key",
-                "n": "2m4QVSHdUo2DFSbGY24cJbxE10KbgdkSCtm0YZ1q0Zmna8pJg8YhaWCJHV7D5AxQ_L1b1PK0jsdpGYWc5-Pys0FB2hyABGPxXIdg1mjxn6geHLpWzsA3MHD29oqfl0Rt7g6AFc5St3lBgJCyWtci6QYBmBkX9oIMOx9pgv4BaT6y1DdrNh27-oSMXZ0a58KwnC6jbCpdA3V3Eume-Be1Tx9lJN3j6S8ydT7CGY1Xd-sc3oB8pXfkr1_EYf0Sgb9EwOJfqlNK_kVjT3GZ-1JJMKJ6zkU7H0yXe2SKXAzfayvJaIcYrk-sYwmf-u7yioOLLvjlGjysN7SOSM8socACcw",
-                "e": "AQAB",
-                "d": "RldleRTzwi8CRKB9CO4fsGNFxBCWJaWy8r2TIlBgYulZihPVwtLeVaIZ5dRrvxfcSNfuJ9CVJtm-1dI6ak71DJb6TvQYodFRm9uY6tNW5HRuZg_3_pLV8wqd7V1M8Zi-0gfnZZ5Q8vbgijeOyEQ54NLnVoTWO7M7nxqJjv6fk7Vd1vd6Gy8jI_soA6AMFCSAF-Vab07jGklBaLyow_TdczYufQ1737RNsFra2l43esAKeavxxkr7Js6OpgUkrXPEOc19GAwJLDdfkZ6yJLR8poWwX_OD-Opmvqmq6BT0s0mAyjBKZUxTGJuD3hm6mKOxXrbJOKY_UXRN7EAuH6U0gQ",
-                "p": "9WQs9id-xB2AhrpHgyt4nfljXFXjaDqRHzUydw15HAOoSZzYMZJW-GT8g2hB3oH3EsSCuMh70eiE1ohTLeipYdJ-s7Gy5qTH5-CblT_OfLXxi2hIumdTx53w-AtDEWl2PRt_qGHZ0B83NjVU2fo96kp9bgJWYh_iWWtSJyabXbM",
-                "q": "499_fCUhh5zL-3a4WGENy_yrsAa5C1sylZUtokyJNYBz68kWRFHFsArXnwZifBD_GWBgJQtldsouqvvPxzAlHQB9kfhxaRbaugwVePSjgHYmhd-NhAySq7rBURvRquAxJmoBmN2lS54YyN_X-VAKgfHDNsN7f7LIw9ISrLeR6EE",
-                "dp": "Cfxwo_fJfduhfloYTOs49lzOwVQxc-1mOHnmuteOhShU8eHzHllRNryNVh-pBpANaPMcSr7F4y3uMfjMQcMFGZkCVPe3SxGLnRET48f79DFHSiANTaCk1SvFQaLbsNq02BnFYSnSPlj22zriYBiB6oXrgs2PjGC1ymPGrRcyHWc",
-                "dq": "hL-4AfeTn_AtORJBdGMd6X8J-eMAu-fmARRF4G3b5Qou_eZIjYZhtxup31-V0hcItZzahdoswtYn9734nl6i0FFv1bC5SPJie838WFmUQosSCB1i0NGORHLombquG3C90VYiFg7Rc8rnP2Z_6CLD7E2OXwHkmVDq-oEQFgRfAME",
-                "qi": "riPJlv9XNjdheryQWGr7Rhlvp9rxeNyWfVzj3y_IGh3tpe--Cd6-1GUrF00HLTTc-5iKVIa-FWOeMPTYc2_Uldi_0qWlrKjM5teIpUlDJbz7Ha-bfed9-eTbG8cI5F57KdDjbjB8YgqWYKz4YPMwqZFbWxZi4W_X79Bs3htXcXA",
-            }
-        ),
+        jwk={
+            "kty": "RSA",
+            "alg": "RS256",
+            "kid": "my_key",
+            "n": "2m4QVSHdUo2DFSbGY24cJbxE10KbgdkSCtm0YZ1q0Zmna8pJg8YhaWCJHV7D5AxQ_L1b1PK0jsdpGYWc5-Pys0FB2hyABGPxXIdg1mjxn6geHLpWzsA3MHD29oqfl0Rt7g6AFc5St3lBgJCyWtci6QYBmBkX9oIMOx9pgv4BaT6y1DdrNh27-oSMXZ0a58KwnC6jbCpdA3V3Eume-Be1Tx9lJN3j6S8ydT7CGY1Xd-sc3oB8pXfkr1_EYf0Sgb9EwOJfqlNK_kVjT3GZ-1JJMKJ6zkU7H0yXe2SKXAzfayvJaIcYrk-sYwmf-u7yioOLLvjlGjysN7SOSM8socACcw",
+            "e": "AQAB",
+        },
         issuer="https://myas.local",
         audience="client_id",
         check_exp=False,
     )
 
+    # validating with another key must fail
     with pytest.raises(InvalidSignature):
-        jwt.validate(Jwk.generate_for_kty("RSA"), alg="RS256")
+        jwt.validate(Jwk.generate_for_alg("RS256").public_jwk())
 
 
 def test_unprotected() -> None:
@@ -128,10 +123,10 @@ def test_empty_jwt(private_jwk: Jwk) -> None:
     assert bytes(jwt) == str(jwt).encode()
     assert jwt.signed_part == b"eyJhbGciOiJSUzI1NiIsImtpZCI6IkpXSy1BQkNEIn0.e30"
 
-    jwt.validate(jwk=private_jwk, check_exp=False)
+    jwt.validate(jwk=private_jwk.public_jwk(), check_exp=False)
 
     with pytest.raises(InvalidClaim):
-        jwt.validate(jwk=private_jwk)
+        jwt.validate(jwk=private_jwk.public_jwk())
 
 
 def test_validate() -> None:
@@ -378,7 +373,7 @@ def test_large_jwt() -> None:
     with pytest.raises(ValueError):
         Jwt(
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
-            f"{'alargevalue'*16*1024}"
+            f"{'alargevalue' * 16 * 1024}"
             "bl5iNgXfkbmgDXItaUx7_1lUMNtOffihsShVP8MeE1g"
         )
 

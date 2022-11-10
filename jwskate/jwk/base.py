@@ -39,7 +39,7 @@ from jwskate.jwa import (
 
 from .. import BaseAlg
 from ..token import BaseJsonDict
-from .alg import UnsupportedAlg, select_alg_class
+from .alg import ExpectedAlgRequired, UnsupportedAlg, select_alg_class
 
 if TYPE_CHECKING:
     from .jwks import JwkSet  # pragma: no cover
@@ -729,7 +729,7 @@ class Jwk(BaseJsonDict):
 
         if not self.is_symmetric and self.is_private:
             warnings.warn(
-                "You are using a private key for encryption. Encrypting data should always be done with a puiblic key."
+                "You are using a private key for sender key wrapping. Key wrapping should always be done using the recipient public key."
             )
             key_alg_wrapper = self.public_jwk().key_management_wrapper(alg)
         else:
@@ -825,6 +825,11 @@ class Jwk(BaseJsonDict):
         """
         from jwskate import SymmetricJwk
 
+        if not self.is_symmetric and not self.is_private:
+            warnings.warn(
+                "You are using a public key for recipient key unwrapping. Key wrapping should always be done using the recipient private key."
+            )
+
         key_alg_wrapper = self.key_management_wrapper(alg)
         enc_alg_class = select_alg_class(SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc)
 
@@ -869,7 +874,9 @@ class Jwk(BaseJsonDict):
             cek = key_alg_wrapper.direct_key(enc_alg_class)
 
         else:
-            raise UnsupportedAlg(f"Unsupported Key Management Alg {key_alg_wrapper}")
+            raise UnsupportedAlg(
+                f"Unsupported Key Management Alg {key_alg_wrapper}"
+            )  # pragma: no cover
 
         return SymmetricJwk.from_bytes(cek)
 
@@ -917,17 +924,14 @@ class Jwk(BaseJsonDict):
 
         Args:
           data: the PEM encoded data to load
-          password: the password to decrypt the PEM, if required
+          password: the password to decrypt the PEM, if required. Should be bytes. If it is a string, it will be encoded with UTF-8.
           **kwargs: additional members to include in the Jwk (e.g. kid, use)
 
         Returns:
             a Jwk instance from the loaded key
         """
-        if isinstance(data, str):
-            data = data.encode()
-
-        if isinstance(password, str):
-            password = password.encode()
+        data = data.encode() if isinstance(data, str) else data
+        password = password.encode("UTF-8") if isinstance(password, str) else password
 
         try:
             cryptography_key = serialization.load_pem_private_key(data, password)
@@ -953,13 +957,14 @@ class Jwk(BaseJsonDict):
         accepted, and will be encoded to `bytes` using UTF-8 before it is used as encryption key.
 
         Args:
-          password: password to use to encrypt the PEM
+          password: password to use to encrypt the PEM. Should be bytes. If it is a string, it will be encoded with UTF-8.
 
         Returns:
             the PEM serialized key
         """
-        if password is not None and not isinstance(password, bytes):
-            password = str(password).encode("UTF-8")
+        password = (
+            str(password).encode("UTF-8") if isinstance(password, str) else password
+        )
 
         if self.is_private:
             encryption: serialization.KeySerializationEncryption
@@ -1030,7 +1035,7 @@ class Jwk(BaseJsonDict):
             alg_class: Optional[Type[BaseAlg]]
             try:
                 alg_class = jwk_class._get_alg_class(alg)
-                if isinstance(jwk_class, BaseAESEncryptionAlg):
+                if issubclass(jwk_class, BaseAESEncryptionAlg):
                     kwargs.setdefault("key_size", alg_class.key_size)
 
                 return jwk_class.generate(alg=alg, **kwargs)
@@ -1092,7 +1097,9 @@ class Jwk(BaseJsonDict):
         alg = alg or self.alg
 
         if not alg:
-            raise ValueError("An algorithm is required to set the usage parameters")
+            raise ExpectedAlgRequired(
+                "An algorithm is required to set the usage parameters"
+            )
 
         self._get_alg_class(alg)  # raises an exception if alg is not supported
 
@@ -1109,7 +1116,7 @@ class Jwk(BaseJsonDict):
     def minimize(self) -> Jwk:
         """Strips out any optional or non-standard parameter from that key.
 
-        This will remove `alg`, `use`, `key_ops`, optional parameters from RSA keys, and unknown
+        This will remove `alg`, `use`, `key_ops`, optional parameters from RSA keys, and other unknown
         parameters.
         """
         jwk = self.copy()

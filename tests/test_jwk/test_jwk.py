@@ -1,8 +1,17 @@
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from jwskate import A128GCM, ES256, EcdhEs_A128KW, InvalidJwk, Jwk, RSAJwk
-from jwskate.jwk.base import UnsupportedKeyType
+from jwskate import (
+    A128GCM,
+    ES256,
+    EcdhEs_A128KW,
+    InvalidJwk,
+    Jwk,
+    RSAJwk,
+    SymmetricJwk,
+    UnsupportedKeyType,
+    to_jwk,
+)
 
 
 def test_public_jwk() -> None:
@@ -223,3 +232,39 @@ def test_key_management_wrapper() -> None:
     key_mgmt_wrapper = key_mgmt_jwk.key_management_wrapper()
     assert isinstance(key_mgmt_wrapper, EcdhEs_A128KW)
     assert key_mgmt_wrapper.key == key_mgmt_jwk.cryptography_key
+
+
+def test_to_jwk() -> None:
+    # symmetric key
+    SYMMETRIC_KEY = b"this is a symmetric key"
+    sym_key = to_jwk(SYMMETRIC_KEY, is_symmetric=True, kty="oct")
+    assert isinstance(sym_key, SymmetricJwk)
+    assert sym_key.key == b"this is a symmetric key"
+
+    with pytest.raises(ValueError):
+        to_jwk(SYMMETRIC_KEY, is_symmetric=False)
+
+    with pytest.raises(ValueError):
+        to_jwk(SYMMETRIC_KEY, is_private=False)
+
+    # test using a Google public key
+    GOOGLE_KEY = """{
+      "kty": "RSA",
+      "e": "AQAB",
+      "use": "sig",
+      "kid": "f451345fad08101bfb345cf642a2da9267b9ebeb",
+      "n": "ppFPAZUqIVqCf_SffT6xDCXu1R7aRoT6TNT5_Q8PKxkkqbOVysJPNwliF-486VeM8KNW8onFOv0GkP0lJ2ASrVgyMG1qmlGUlKug64dMQXPxSlVUCXCPN676W5IZTvT0tD2byM_29HZXnOifRg-d7PRRvIBLSUWe-fGb1-tP2w65SOW-W6LuOjGzLNPJFYQvHyUx_uXHOCfIoSb8kaMwx8bCWvKc76yT0DG1wcygGXKuFQHW-Sdi1j_6bF19lVu30DX-jhYsNMUnGUr6g2iycQ50pWMORZqvcHVOH1bbDrWuz0b564sK0ET2B3XDR37djNQ305PxiQZaBStm-hM8Aw",
+      "alg": "RS256"
+    }"""
+    asym_key = to_jwk(GOOGLE_KEY, kty="RSA", is_private=False)
+    assert not asym_key.is_private
+    assert isinstance(asym_key, RSAJwk)
+
+    with pytest.raises(ValueError):
+        to_jwk(GOOGLE_KEY, kty="EC")
+
+    with pytest.raises(ValueError):
+        to_jwk(GOOGLE_KEY, is_private=True)
+
+    with pytest.raises(ValueError):
+        to_jwk(GOOGLE_KEY, is_symmetric=True)

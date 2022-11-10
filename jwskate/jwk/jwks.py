@@ -4,7 +4,7 @@ from typing import Any, Dict, Iterable, List, Optional, Union
 
 from ..token import BaseJsonDict
 from .alg import UnsupportedAlg
-from .base import Jwk
+from .base import Jwk, to_jwk
 
 
 class JwkSet(BaseJsonDict):
@@ -94,8 +94,7 @@ class JwkSet(BaseJsonDict):
         Returns:
           the kid from the added Jwk (it may be generated if no kid is provided)
         """
-        if not isinstance(jwk, Jwk):
-            jwk = Jwk(jwk)
+        jwk = to_jwk(jwk)
 
         if "keys" not in self:
             self["keys"] = []

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, SupportsBytes, 
 from backports.cached_property import cached_property
 from binapy import BinaPy
 
-from jwskate.jwk.base import Jwk
+from jwskate.jwk.base import Jwk, to_jwk
 from jwskate.token import BaseCompactToken
 
 from .signature import JwsSignature
@@ -77,7 +77,7 @@ class JwsCompact(BaseCompactToken):
         Returns:
           the resulting token
         """
-        jwk = Jwk(jwk)
+        jwk = to_jwk(jwk)
 
         if not isinstance(payload, bytes):
             payload = bytes(payload)
@@ -146,7 +146,7 @@ class JwsCompact(BaseCompactToken):
         Returns:
          `True` if the signature matches, `False` otherwise
         """
-        jwk = Jwk(jwk)
+        jwk = to_jwk(jwk)
         return jwk.verify(self.signed_part, self.signature, alg=alg, algs=algs)
 
     def flat_json(self, unprotected_header: Any = None) -> JwsJsonFlat:

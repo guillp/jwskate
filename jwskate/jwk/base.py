@@ -1118,3 +1118,76 @@ class Jwk(BaseJsonDict):
             del jwk[key]
 
         return jwk
+
+    def check(
+        self,
+        *,
+        is_private: Optional[bool] = None,
+        is_symmetric: Optional[bool] = None,
+        kty: Optional[str] = None,
+    ) -> Jwk:
+        """Check this key for type, privateness and/or symmetricness. Raise a ValueError if it not as expected.
+
+        Args:
+            is_private: if `True`, check if the key is private, if `False`, check if it is public, if `None`, do nothing
+            is_symmetric: if `True`, check if the key is symmetric, if `False`, check if it is asymmetric, if `None`, do nothing
+            kty: the expected key type, if any
+
+        Returns:
+            this key, if all checks passed
+
+        Raises:
+            ValueError: if any check fails
+        """
+        if is_private is not None:
+            if is_private is True and self.is_private is False:
+                raise ValueError("This key is public while a private key is expected.")
+            elif is_private is False and self.is_private is True:
+                raise ValueError("This key is private while a public key is expected.")
+
+        if is_symmetric is not None:
+            if is_symmetric is True and self.is_symmetric is False:
+                raise ValueError(
+                    "This key is asymmetric while a symmetric key is expected."
+                )
+            if is_symmetric is False and self.is_symmetric is True:
+                raise ValueError(
+                    "This key is symmetric while an asymmetric key is expected."
+                )
+
+        if kty is not None:
+            if self.kty != kty:
+                raise ValueError(
+                    f"This key has kty={self.kty} while a kty={kty} is expected."
+                )
+
+        return self
+
+
+def to_jwk(
+    key: Any,
+    *,
+    kty: Optional[str] = None,
+    is_private: Optional[bool] = None,
+    is_symmetric: Optional[bool] = None,
+) -> Jwk:
+    """Convert any supported kind of key to a Jwk, and optionally check if that key is private or symmetric.
+
+    The key can be any type supported by Jwk:
+    - a `cryptography` key instance
+    - a bytes, to initialize a symmetric key
+    - a JWK, as a dict or as a JSON formatted string
+    - an existing Jwk instance
+    If the supplied param is already a Jwk, it is left untouched.
+
+    Args:
+        key: the key material
+        kty: the expected key type
+        is_private: if `True`, check if the key is private, if `False`, check if it is public, if `None`, do nothing
+        is_symmetric: if `True`, check if the key is symmetric, if `False`, check if it is asymmetric, if `None`, do nothing
+
+    Returns:
+        a Jwk key
+    """
+    jwk = key if isinstance(key, Jwk) else Jwk(key)
+    return jwk.check(kty=kty, is_private=is_private, is_symmetric=is_symmetric)

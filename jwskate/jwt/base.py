@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Union
 from binapy import BinaPy
 
 from jwskate.jwe import JweCompact
-from jwskate.jwk import Jwk
+from jwskate.jwk import Jwk, to_jwk
 
 from ..token import BaseCompactToken
 
@@ -69,7 +69,7 @@ class Jwt(BaseCompactToken):
         """
         from .signed import SignedJwt
 
-        jwk = Jwk(jwk)
+        jwk = to_jwk(jwk)
 
         alg = alg or jwk.get("alg")
 

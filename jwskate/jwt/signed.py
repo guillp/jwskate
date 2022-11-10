@@ -6,7 +6,7 @@ from typing import Any, Dict, Iterable, List, Optional, Union
 from backports.cached_property import cached_property
 from binapy import BinaPy
 
-from jwskate import Jwk
+from jwskate.jwk import Jwk, to_jwk
 
 from .base import InvalidJwt, Jwt
 
@@ -92,7 +92,7 @@ class SignedJwt(Jwt):
         Returns:
             `True` if the token signature is verified, `False` otherwise
         """
-        jwk = Jwk(jwk)
+        jwk = to_jwk(jwk)
 
         return jwk.verify(
             data=self.signed_part, signature=self.signature, alg=alg, algs=algs

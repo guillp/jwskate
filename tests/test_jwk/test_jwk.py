@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 
@@ -147,17 +149,51 @@ def test_invalid_class_for_kty() -> None:
 
 
 @pytest.mark.parametrize(
-    "private_key_ops, public_key_ops",
+    "kty, private_key_ops, public_key_ops",
     [
-        ("sign", "verify"),
-        ("unwrapKey", "wrapKey"),
+        ("RSA", ("sign",), ("verify",)),
+        ("RSA", ("unwrapKey",), ("wrapKey",)),
+        ("oct", ("sign",), ("verify",)),
+        ("oct", ("unwrapKey",), ("wrapKey",)),
     ],
 )
-def test_key_ops(private_key_ops: str, public_key_ops: str) -> None:
-    private_jwk = Jwk.generate_for_kty("RSA", key_ops=[private_key_ops])
+def test_key_ops_without_alg(
+    kty: str, private_key_ops: Tuple[str], public_key_ops: Tuple[str]
+) -> None:
+    # with a key with no alg or use, we can only trust the key_ops from the key
+    private_jwk = Jwk.generate_for_kty("RSA", key_ops=private_key_ops)
+    assert private_jwk.key_ops == private_key_ops
+
     public_jwk = private_jwk.public_jwk()
-    assert public_key_ops in public_jwk.key_ops
-    assert private_key_ops not in public_jwk.key_ops
+    assert public_key_ops == public_jwk.key_ops
+
+
+@pytest.mark.parametrize(
+    "alg, use, private_key_ops, public_key_ops",
+    [
+        ("RS256", "sig", ("sign",), ("verify",)),
+        ("HS256", "sig", ("sign", "verify"), ("sign", "verify")),
+        ("A128GCMKW", "enc", ("wrapKey", "unwrapKey"), ("wrapKey", "unwrapKey")),
+        ("A128GCM", "enc", ("encrypt", "decrypt"), ("encrypt", "decrypt")),
+    ],
+)
+def test_use_key_ops_with_alg(
+    alg: str, use: str, private_key_ops: Tuple[str], public_key_ops: Tuple[str]
+) -> None:
+    # if key has an 'alg' parameter, we can deduce the use and key ops
+    private_jwk = Jwk.generate_for_alg(alg)
+    assert "use" not in private_jwk
+    assert "key_ops" not in private_jwk
+    assert private_jwk.use == use
+    assert private_jwk.key_ops == private_key_ops
+
+    public_jwk = (
+        private_jwk.public_jwk() if not private_jwk.is_symmetric else private_jwk
+    )
+    assert "use" not in public_jwk
+    assert "key_ops" not in public_jwk
+    assert public_jwk.use == use
+    assert public_jwk.key_ops == public_key_ops
 
 
 def test_thumbprint() -> None:

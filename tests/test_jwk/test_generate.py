@@ -12,27 +12,27 @@ def test_generate_for_alg(alg: str) -> None:
     if alg in SignatureAlgs.ALL_SYMMETRIC:
         assert jwk.kty == "oct"
         assert jwk.use == "sig"
-        assert jwk.key_ops == ["sign", "verify"]
+        assert jwk.key_ops == ("sign", "verify")
         assert jwk.is_symmetric
     elif alg in SignatureAlgs.ALL_ASYMMETRIC:
         assert jwk.kty in ("EC", "RSA", "OKP")
         assert jwk.use == "sig"
-        assert jwk.key_ops == ["sign"]
+        assert jwk.key_ops == ("sign",)
         assert not jwk.is_symmetric
     elif alg in EncryptionAlgs.ALL:
         assert jwk.kty == "oct"
         assert jwk.use == "enc"
-        assert jwk.key_ops == ["encrypt", "decrypt"]
+        assert jwk.key_ops == ("encrypt", "decrypt")
         assert jwk.is_symmetric
     elif alg in KeyManagementAlgs.ALL_SYMMETRIC:
         assert jwk.kty == "oct"
         assert jwk.use == "enc"
-        assert jwk.key_ops == ["wrapKey", "unwrapKey"]
+        assert jwk.key_ops == ("wrapKey", "unwrapKey")
         assert jwk.is_symmetric
     elif alg in KeyManagementAlgs.ALL_ASYMMETRIC:
         assert jwk.kty in ("EC", "RSA", "OKP")
         assert jwk.use == "enc"
-        assert jwk.key_ops == ["unwrapKey"]
+        assert jwk.key_ops == ("unwrapKey",)
         assert not jwk.is_symmetric
 
     jwk_mini = jwk.minimize()

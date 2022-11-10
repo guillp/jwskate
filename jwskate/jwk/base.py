@@ -419,38 +419,39 @@ class Jwk(BaseJsonDict):
             return self.get("use")
 
     @cached_property
-    def key_ops(self) -> List[str]:
+    def key_ops(self) -> Tuple[str, ...]:
         """Return the key operations.
 
         If no `alg` parameter is present, this returns the `key_ops` parameter from this JWK. If an
         `alg` parameter is present, the key operations are deduced from this alg. To check for the
         presence of the `key_ops` parameter, use `jwk.get('key_ops')`.
         """
+        key_ops: Tuple[str, ...]
         if self.use == "sig":
             if self.is_symmetric:
-                key_ops = ["sign", "verify"]
+                key_ops = ("sign", "verify")
             elif self.is_private:
-                key_ops = ["sign"]
+                key_ops = ("sign",)
             else:
-                key_ops = ["verify"]
+                key_ops = ("verify",)
         elif self.use == "enc":
             if self.is_symmetric:
                 if self.alg:
                     alg_class = self._get_alg_class(self.alg)
                     if issubclass(alg_class, BaseKeyManagementAlg):
-                        key_ops = ["wrapKey", "unwrapKey"]
+                        key_ops = ("wrapKey", "unwrapKey")
                     elif issubclass(alg_class, BaseAESEncryptionAlg):
-                        key_ops = ["encrypt", "decrypt"]
+                        key_ops = ("encrypt", "decrypt")
                 else:
-                    key_ops = ["wrapKey", "unwrapKey", "encrypt", "decrypt"]
+                    key_ops = ("wrapKey", "unwrapKey", "encrypt", "decrypt")
             elif self.is_private:
-                key_ops = ["unwrapKey"]
+                key_ops = ("unwrapKey",)
             else:
-                key_ops = ["wrapKey"]
+                key_ops = ("wrapKey",)
         else:
-            key_ops = self.get("key_ops", [])
+            key_ops = self.get("key_ops", ())
 
-        return key_ops
+        return tuple(key_ops)
 
     def _validate(self) -> None:
         """Internal method used to validate a Jwk.

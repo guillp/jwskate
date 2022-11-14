@@ -32,10 +32,10 @@ def test_jwkset() -> None:
     data = b"this is a test"
     signature = jwk.sign(data)
 
-    assert jwks.verify(data, signature, kid="my_ec_key")
+    assert jwks.verify(data, signature, kid="my_ec_key", alg="ES256")
     assert jwks.verify(data, signature, alg="ES256")
     assert jwks.verify(data, signature, algs=("ES256",))
-    assert jwks.verify(data, signature)
+    assert not jwks.verify(data, signature, algs=("HS256",))
 
     jwks.remove_jwk(jwk.kid)
 

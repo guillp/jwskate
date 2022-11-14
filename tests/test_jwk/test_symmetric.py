@@ -64,3 +64,27 @@ def test_aesgcmkw() -> None:
     # missing 'tag' in headers
     with pytest.raises(ValueError):
         jwk.recipient_key(wrapped_cek, enc, **{"iv": headers["iv"]})
+
+
+@pytest.mark.parametrize(
+    "alg, key_size",
+    [
+        ("HS256", 256),
+        ("HS384", 384),
+        ("HS512", 512),
+        ("A128CBC-HS256", 256),
+        ("A192CBC-HS384", 384),
+        ("A256CBC-HS512", 512),
+        ("A128GCM", 128),
+        ("A192GCM", 192),
+        ("A256GCM", 256),
+        ("A128KW", 128),
+        ("A192KW", 192),
+        ("A256KW", 256),
+        ("A128GCMKW", 128),
+        ("A192GCMKW", 192),
+        ("A256GCMKW", 256),
+    ],
+)
+def test_generate_for_alg(alg: str, key_size: int) -> None:
+    assert SymmetricJwk.generate_for_alg(alg).key_size == key_size

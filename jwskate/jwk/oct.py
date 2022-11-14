@@ -99,7 +99,7 @@ class SymmetricJwk(Jwk):
 
     @classmethod
     def from_cryptography_key(
-        cls, cryptography_key: Any, **kwargs: Any
+        cls, cryptography_key: Any, **params: Any
     ) -> SymmetricJwk:
         """Alias for `from_bytes()` since symmetric keys are simply bytes.
 
@@ -110,14 +110,14 @@ class SymmetricJwk(Jwk):
         Returns:
             the resulting SymmetricJwk
         """
-        return cls.from_bytes(cryptography_key, **kwargs)
+        return cls.from_bytes(cryptography_key, **params)
 
     @classmethod
-    def generate(cls, key_size: int = 128, **params: str) -> SymmetricJwk:
+    def generate(cls, key_size: int = 128, **params: Any) -> SymmetricJwk:
         """Generate a random SymmetricJwk, with a given key size.
 
         Args:
-          key_size: the size of the generated key, in bits
+          key_size: size of the generated key, in bits
           **params: additional members to include in the Jwk
 
         Returns:
@@ -127,26 +127,25 @@ class SymmetricJwk(Jwk):
         return cls.from_bytes(key, **params)
 
     @classmethod
-    def generate_for_alg(cls, alg: str, **params: str) -> SymmetricJwk:
+    def generate_for_alg(cls, alg: str, **params: Any) -> SymmetricJwk:
         """Generate a SymmetricJwk that is suitable for use with the given alg.
 
         Args:
-          alg: the signing algorithm to use this key with
+          alg: the algorithm identifier
           **params: additional members to include in the Jwk
 
         Returns:
-            the resulting Jwk
+            the generated `Jwk`
 
         Raises:
-            ValueError: if the provided `alg` is not supported
+            UnsupportedAlg: if the provided `alg` is not supported
         """
-        if alg in cls.SIGNATURE_ALGORITHMS:
-            sigalg = cls.SIGNATURE_ALGORITHMS[alg]
-            return cls.generate(sigalg.min_key_size, alg=alg, **params)
-        if alg in cls.ENCRYPTION_ALGORITHMS:
-            encalg = cls.ENCRYPTION_ALGORITHMS[alg]
-            return cls.generate(encalg.key_size, alg=alg, **params)
-        raise ValueError("Unsupported alg", alg)
+        alg_class = cls._get_alg_class(alg)
+        if issubclass(alg_class, BaseHMACSigAlg):
+            return cls.generate(key_size=alg_class.min_key_size, alg=alg, **params)
+        elif issubclass(alg_class, (BaseAESEncryptionAlg, BaseAesKeyWrap)):
+            return cls.generate(key_size=alg_class.key_size, alg=alg, **params)
+        return cls.generate(alg=alg, **params)
 
     def thumbprint(self, hashalg: str = "SHA256") -> str:
         """Return the key thumbprint as specified by RFC 7638.
@@ -246,9 +245,8 @@ class SymmetricJwk(Jwk):
         Returns:
             the decrypted clear-text
         """
-        if aad is None:  # pragma: no branch
-            aad = b""
-        elif not isinstance(aad, bytes):
+        aad = b"" if aad is None else aad
+        if not isinstance(aad, bytes):
             aad = bytes(aad)
         if not isinstance(iv, bytes):
             iv = bytes(iv)

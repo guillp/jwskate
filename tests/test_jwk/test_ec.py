@@ -1,17 +1,22 @@
 import pytest
 
-from jwskate import A128CBC_HS256, EcdhEs, ECJwk, Jwk
+from jwskate import A128CBC_HS256, EcdhEs, ECJwk, Jwk, UnsupportedEllipticCurve
+
+
+def test_ec_jwk() -> None:
+    with pytest.raises(UnsupportedEllipticCurve):
+        Jwk({"kty": "EC", "crv": "foo"})
 
 
 def test_jwk_ec_generate() -> None:
-    with pytest.warns():
-        jwk = ECJwk.generate(kid="myeckey")
+    jwk = ECJwk.generate(kid="myeckey", crv="P-256")
     assert jwk.kty == "EC"
     assert jwk.kid == "myeckey"
     assert jwk.crv == "P-256"
     assert "x" in jwk
     assert "y" in jwk
     assert "d" in jwk
+    assert jwk.coordinate_size == 32
 
     public_jwk = jwk.public_jwk()
     assert public_jwk.kty == "EC"
@@ -22,6 +27,9 @@ def test_jwk_ec_generate() -> None:
     assert "d" not in public_jwk
 
     assert jwk.supported_encryption_algorithms() == []
+
+    with pytest.raises(UnsupportedEllipticCurve):
+        ECJwk.generate(crv="foo")
 
 
 def test_ecdh_es() -> None:

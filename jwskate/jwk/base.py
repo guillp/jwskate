@@ -623,7 +623,8 @@ class Jwk(BaseJsonDict):
         """
         if not self.is_symmetric and self.is_private:
             warnings.warn(
-                "You are trying to validate a signature with a private key. Signature should always be verified with a public key."
+                "You are trying to validate a signature with a private key. "
+                "Signature should always be verified with a public key."
             )
             public_jwk = self.public_jwk()
         else:

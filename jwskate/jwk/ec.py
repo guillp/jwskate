@@ -73,8 +73,7 @@ class ECJwk(Jwk):
         return "d" in self
 
     def _validate(self) -> None:
-        if not isinstance(self.crv, str) or self.crv not in self.CURVES:
-            raise UnsupportedEllipticCurve(self.crv)
+        self.get_curve(self.crv)
         super()._validate()
 
     @classmethod

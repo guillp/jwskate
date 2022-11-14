@@ -9,17 +9,22 @@ from typing import Any, Mapping, Optional
 
 from backports.cached_property import cached_property
 from binapy import BinaPy
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
-from cryptography.hazmat.primitives.serialization import (
-    Encoding,
-    NoEncryption,
-    PrivateFormat,
-    PublicFormat,
+
+from jwskate.jwa import (
+    X448,
+    X25519,
+    EcdhEs,
+    EcdhEs_A128KW,
+    EcdhEs_A192KW,
+    EcdhEs_A256KW,
+    Ed448,
+    Ed25519,
+    EdDsa,
+    OKPCurve,
 )
 
-from jwskate.jwa import X448, X25519, Ed448, Ed25519, EdDsa, OKPCurve
-
-from .. import EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW
 from .alg import UnsupportedAlg
 from .base import Jwk, JwkParameter
 
@@ -214,12 +219,13 @@ class OKPJwk(Jwk):
         """
         if isinstance(cryptography_key, ed25519.Ed25519PrivateKey):
             priv = cryptography_key.private_bytes(
-                encoding=Encoding.Raw,
-                format=PrivateFormat.Raw,
-                encryption_algorithm=NoEncryption(),
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PrivateFormat.Raw,
+                encryption_algorithm=serialization.NoEncryption(),
             )
             pub = cryptography_key.public_key().public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.private(
                 crv="Ed25519",
@@ -228,7 +234,8 @@ class OKPJwk(Jwk):
             )
         elif isinstance(cryptography_key, ed25519.Ed25519PublicKey):
             pub = cryptography_key.public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.public(
                 crv="Ed25519",
@@ -236,12 +243,13 @@ class OKPJwk(Jwk):
             )
         elif isinstance(cryptography_key, ed448.Ed448PrivateKey):
             priv = cryptography_key.private_bytes(
-                encoding=Encoding.Raw,
-                format=PrivateFormat.Raw,
-                encryption_algorithm=NoEncryption(),
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PrivateFormat.Raw,
+                encryption_algorithm=serialization.NoEncryption(),
             )
             pub = cryptography_key.public_key().public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.private(
                 crv="Ed448",
@@ -250,17 +258,19 @@ class OKPJwk(Jwk):
             )
         elif isinstance(cryptography_key, ed448.Ed448PublicKey):
             pub = cryptography_key.public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.public(crv="Ed448", x=pub)
         elif isinstance(cryptography_key, x25519.X25519PrivateKey):
             priv = cryptography_key.private_bytes(
-                encoding=Encoding.Raw,
-                format=PrivateFormat.Raw,
-                encryption_algorithm=NoEncryption(),
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PrivateFormat.Raw,
+                encryption_algorithm=serialization.NoEncryption(),
             )
             pub = cryptography_key.public_key().public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.private(
                 crv="X25519",
@@ -269,17 +279,19 @@ class OKPJwk(Jwk):
             )
         elif isinstance(cryptography_key, x25519.X25519PublicKey):
             pub = cryptography_key.public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.public(crv="X25519", x=pub)
         elif isinstance(cryptography_key, x448.X448PrivateKey):
             priv = cryptography_key.private_bytes(
-                encoding=Encoding.Raw,
-                format=PrivateFormat.Raw,
-                encryption_algorithm=NoEncryption(),
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PrivateFormat.Raw,
+                encryption_algorithm=serialization.NoEncryption(),
             )
             pub = cryptography_key.public_key().public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.private(
                 crv="X448",
@@ -288,7 +300,8 @@ class OKPJwk(Jwk):
             )
         elif isinstance(cryptography_key, x448.X448PublicKey):
             pub = cryptography_key.public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.public(crv="X448", x=pub)
         else:

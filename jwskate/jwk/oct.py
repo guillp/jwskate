@@ -23,10 +23,11 @@ from jwskate.jwa import (
     HS384,
     HS512,
     BaseAESEncryptionAlg,
+    BaseAesKeyWrap,
+    BaseHMACSigAlg,
     DirectKeyUse,
 )
 
-from .alg import select_alg_class
 from .base import Jwk, JwkParameter
 
 

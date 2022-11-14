@@ -27,6 +27,7 @@ from jwskate.jwa import (
     BaseAESEncryptionAlg,
     BaseAesGcmKeyWrap,
     BaseAesKeyWrap,
+    BaseAlg,
     BaseAsymmetricAlg,
     BaseEcdhEs_AesKw,
     BaseKeyManagementAlg,
@@ -37,7 +38,6 @@ from jwskate.jwa import (
     EcdhEs,
 )
 
-from .. import BaseAlg
 from ..token import BaseJsonDict
 from .alg import ExpectedAlgRequired, UnsupportedAlg, select_alg_class
 

@@ -3,7 +3,7 @@
 import uuid
 from typing import Any, Dict, Iterable, Optional, Union
 
-from jwskate import Jwk
+from jwskate.jwk import Jwk
 
 from .base import Jwt
 from .signed import SignedJwt

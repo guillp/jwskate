@@ -68,6 +68,9 @@ from .signature import (
     RS256,
     RS384,
     RS512,
+    BaseECSignatureAlg,
+    BaseHMACSigAlg,
+    BaseRSASigAlg,
     EdDsa,
 )
 
@@ -90,9 +93,12 @@ __all__ = [
     "BaseAlg",
     "BaseAsymmetricAlg",
     "BaseEcdhEs_AesKw",
+    "BaseECSignatureAlg",
+    "BaseHMACSigAlg",
     "BaseKeyManagementAlg",
     "BasePbes2",
     "BaseRsaKeyWrap",
+    "BaseRSASigAlg",
     "BaseSignatureAlg",
     "BaseSymmetricAlg",
     "DirectKeyUse",

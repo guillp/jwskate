@@ -9,8 +9,7 @@ from binapy import BinaPy
 
 from jwskate.jwe import JweCompact
 from jwskate.jwk import Jwk, to_jwk
-
-from ..token import BaseCompactToken
+from jwskate.token import BaseCompactToken
 
 if TYPE_CHECKING:
     from jwskate import SignedJwt  # pragma: no cover

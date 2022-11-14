@@ -7,7 +7,7 @@ from typing import Any, Dict, Iterable, Mapping, Optional, Type, TypeVar, Union
 from backports.cached_property import cached_property
 from binapy import BinaPy
 
-from jwskate.jwk.base import Jwk
+from jwskate.jwk import Jwk, to_jwk
 from jwskate.token import BaseJsonDict
 
 S = TypeVar("S", bound="JwsSignature")
@@ -114,7 +114,7 @@ class JwsSignature(BaseJsonDict):
         Returns:
             The generated signature.
         """
-        jwk = Jwk(jwk)
+        jwk = to_jwk(jwk)
 
         headers = dict(extra_protected_headers or {}, alg=alg)
         kid = jwk.get("kid")
@@ -169,6 +169,6 @@ class JwsSignature(BaseJsonDict):
         Returns:
             `True` if the signature is verifier, `False` otherwise
         """
-        jwk = Jwk(jwk)
+        jwk = to_jwk(jwk)
         signed_part = self.assemble_signed_part(self.protected, payload)
         return jwk.verify(signed_part, self.signature, alg=alg, algs=algs)

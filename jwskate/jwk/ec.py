@@ -7,7 +7,7 @@ from typing import Any, List, Mapping, Optional, Union
 
 from backports.cached_property import cached_property
 from binapy import BinaPy
-from cryptography.hazmat.primitives import asymmetric, serialization
+from cryptography.hazmat.primitives import asymmetric
 from cryptography.hazmat.primitives.asymmetric import ec
 
 from jwskate.jwa import (
@@ -73,8 +73,7 @@ class ECJwk(Jwk):
         return "d" in self
 
     def _validate(self) -> None:
-        if not isinstance(self.crv, str) or self.crv not in self.CURVES:
-            raise UnsupportedEllipticCurve(self.crv)
+        self.get_curve(self.crv)
         super()._validate()
 
     @classmethod

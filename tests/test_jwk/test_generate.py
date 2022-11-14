@@ -1,6 +1,14 @@
 import pytest
 
-from jwskate import EncryptionAlgs, Jwk, KeyManagementAlgs, RSAJwk, SignatureAlgs
+from jwskate import (
+    EncryptionAlgs,
+    ExpectedAlgRequired,
+    Jwk,
+    KeyManagementAlgs,
+    RSAJwk,
+    SignatureAlgs,
+    UnsupportedAlg,
+)
 
 
 @pytest.mark.parametrize(
@@ -12,27 +20,27 @@ def test_generate_for_alg(alg: str) -> None:
     if alg in SignatureAlgs.ALL_SYMMETRIC:
         assert jwk.kty == "oct"
         assert jwk.use == "sig"
-        assert jwk.key_ops == ["sign", "verify"]
+        assert jwk.key_ops == ("sign", "verify")
         assert jwk.is_symmetric
     elif alg in SignatureAlgs.ALL_ASYMMETRIC:
         assert jwk.kty in ("EC", "RSA", "OKP")
         assert jwk.use == "sig"
-        assert jwk.key_ops == ["sign"]
+        assert jwk.key_ops == ("sign",)
         assert not jwk.is_symmetric
     elif alg in EncryptionAlgs.ALL:
         assert jwk.kty == "oct"
         assert jwk.use == "enc"
-        assert jwk.key_ops == ["encrypt", "decrypt"]
+        assert jwk.key_ops == ("encrypt", "decrypt")
         assert jwk.is_symmetric
     elif alg in KeyManagementAlgs.ALL_SYMMETRIC:
         assert jwk.kty == "oct"
         assert jwk.use == "enc"
-        assert jwk.key_ops == ["wrapKey", "unwrapKey"]
+        assert jwk.key_ops == ("wrapKey", "unwrapKey")
         assert jwk.is_symmetric
     elif alg in KeyManagementAlgs.ALL_ASYMMETRIC:
         assert jwk.kty in ("EC", "RSA", "OKP")
         assert jwk.use == "enc"
-        assert jwk.key_ops == ["unwrapKey"]
+        assert jwk.key_ops == ("unwrapKey",)
         assert not jwk.is_symmetric
 
     jwk_mini = jwk.minimize()
@@ -43,3 +51,13 @@ def test_generate_for_alg(alg: str) -> None:
         jwk_mini = jwk_mini.with_optional_private_parameters()
 
     assert jwk_mini.with_usage_parameters(alg) == jwk
+
+    # cannot guess usage parameters if there is no 'alg' parameter in the Jwk
+    with pytest.raises(ExpectedAlgRequired):
+        jwk_mini.with_usage_parameters()
+
+
+def test_unsupported_alg() -> None:
+    # trying to generate a Jwk with an unsupported alg raises a UnsupportedAlg
+    with pytest.raises(UnsupportedAlg):
+        Jwk.generate_for_alg("unknown_alg")

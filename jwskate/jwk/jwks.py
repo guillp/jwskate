@@ -3,8 +3,7 @@
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 from ..token import BaseJsonDict
-from .alg import UnsupportedAlg
-from .base import Jwk
+from .base import Jwk, to_jwk
 
 
 class JwkSet(BaseJsonDict):
@@ -94,8 +93,7 @@ class JwkSet(BaseJsonDict):
         Returns:
           the kid from the added Jwk (it may be generated if no kid is provided)
         """
-        if not isinstance(jwk, Jwk):
-            jwk = Jwk(jwk)
+        jwk = to_jwk(jwk)
 
         if "keys" not in self:
             self["keys"] = []
@@ -170,39 +168,25 @@ class JwkSet(BaseJsonDict):
         Returns:
           `True` if the signature validates with any of the tried keys, `False` otherwise
         """
+        if not alg and not algs:
+            raise ValueError("Please provide either 'alg' or 'algs' parameter")
+
         # if a kid is provided, try only the key matching `kid`
         if kid is not None:
             jwk = self.get_jwk_by_kid(kid)
             return jwk.verify(data, signature, alg=alg, algs=algs)
 
-        # if one or several alg are provided, try only the keys that are compatible with one of the provided alg(s)
-        if alg:
-            for jwk in self.jwks:
-                if jwk.get("alg") == alg:
+        if algs is None:
+            if alg is not None:
+                algs = (alg,)
+        else:
+            algs = list(algs)
+
+        for jwk in self.verification_keys():
+            for alg in algs or (None,):
+                if alg in jwk.supported_signing_algorithms():
                     if jwk.verify(data, signature, alg=alg):
                         return True
-
-        if algs:
-            for jwk in self.jwks:
-                alg = jwk.get("alg")
-                if alg is not None and alg in algs:
-                    if jwk.verify(data, signature, algs=algs):
-                        return True
-
-        # if no kid and no alg are provided, try first the keys flagged for signature verification (`"use": "verify"`)
-        for jwk in self.jwks:
-            if jwk.get("use") == "verify":
-                if jwk.verify(data, signature, alg=alg):
-                    return True
-
-        # then with the keys that have no defined `use`
-        for jwk in self.jwks:
-            if jwk.get("use") is None and jwk.get("alg") is not None:
-                try:
-                    if jwk.verify(data, signature):
-                        return True
-                except UnsupportedAlg:
-                    continue
 
         # no key matches, so consider the signature invalid
         return False

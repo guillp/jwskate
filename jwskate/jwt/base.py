@@ -8,9 +8,8 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Union
 from binapy import BinaPy
 
 from jwskate.jwe import JweCompact
-from jwskate.jwk import Jwk
-
-from ..token import BaseCompactToken
+from jwskate.jwk import Jwk, to_jwk
+from jwskate.token import BaseCompactToken
 
 if TYPE_CHECKING:
     from jwskate import SignedJwt  # pragma: no cover
@@ -69,7 +68,7 @@ class Jwt(BaseCompactToken):
         """
         from .signed import SignedJwt
 
-        jwk = Jwk(jwk)
+        jwk = to_jwk(jwk)
 
         alg = alg or jwk.get("alg")
 
@@ -159,10 +158,10 @@ class Jwt(BaseCompactToken):
     ) -> Jwt:
         """Convenience method to decrypt a nested JWT.
 
-        It will return a Jwt instance.
+        It will return a [Jwt] instance.
 
         Args:
-            jwt: the JWE containing a nested Token
+            jwe: the JWE containing a nested Token
             jwk: the decryption key
 
         Returns:

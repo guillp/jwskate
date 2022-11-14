@@ -3,9 +3,9 @@
 [![PyPi](https://img.shields.io/pypi/v/jwskate.svg)](https://pypi.python.org/pypi/jwskate)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A Pythonic implementation of the JOSE set of IETF specifications: [Json Web Signature][rfc7515], [Keys][rfc7517], [Algorithms][rfc7518], [Tokens][rfc7519]
-and [Encryption][rfc7516] (RFC7515 to 7519), and their extensions [ECDH Signatures][rfc8037] (RFC8037), [JWK Thumbprints][rfc7638] (RFC7638),
-and [JWK Thumbprint URI][rfc9278] (RFC9278).
+A Pythonic implementation of the JOSE set of IETF specifications: [Json Web Signature][rfc7515], [Keys][rfc7517],
+[Algorithms][rfc7518], [Tokens][rfc7519] and [Encryption][rfc7516] (RFC7515 to 7519), and their extensions
+[ECDH Signatures][rfc8037] (RFC8037), [JWK Thumbprints][rfc7638] (RFC7638), and [JWK Thumbprint URI][rfc9278] (RFC9278).
 
 - Free software: MIT
 - Documentation: <https://guillp.github.io/jwskate/>
@@ -216,8 +216,8 @@ The generated JWT claims will include the standardised claims:
 
 ## Why a new lib ?
 
-There are already multiple modules implementing JOSE and Json Web Crypto related specifications in Python. However, I have
-been dissatisfied by all of them so far, so I decided to come up with my own module.
+There are already multiple modules implementing JOSE and Json Web Crypto related specifications in Python. However, I
+have been dissatisfied by all of them so far, so I decided to come up with my own module.
 
 - [PyJWT](https://pyjwt.readthedocs.io)
 - [JWCrypto](https://jwcrypto.readthedocs.io/)
@@ -225,35 +225,39 @@ been dissatisfied by all of them so far, so I decided to come up with my own mod
 - [AuthLib](https://docs.authlib.org/en/latest/jose/)
 
 Not to say that those are _bad_ libs (I actually use `jwcrypto` myself for `jwskate` unit tests), but they either don't
-support some important features, lack documentation, or generally have APIs that don't feel easy-enough, Pythonic-enough to use.
+support some important features, lack documentation, or generally have APIs that don't feel easy-enough, Pythonic-enough
+to use.
 
 ## Design
 
 ### JWK are dicts
 
 JWK are specified as JSON objects, which are parsed as `dict` in Python. The `Jwk` class in `jwskate` is actually a
-`dict` subclass, so you can use it exactly like you would use a dict: you can access its members, dump it back as JSON, etc.
-The same is true for Signed or Encrypted Json Web tokens in JSON format.
+`dict` subclass, so you can use it exactly like you would use a dict: you can access its members, dump it back as JSON,
+etc. The same is true for Signed or Encrypted Json Web tokens in JSON format.
 
 ### JWA Wrappers
 
-You can use `cryptography` to do the cryptographic operations that are described in [JWA](https://www.rfc-editor.org/info/rfc7518),
-but since `cryptography` is a general purpose library, its usage is not straightforward and gives you plenty of options
-to carefully select and combine, leaving room for errors.
-To work around this, `jwskate` comes with a set of wrappers that implement the exact JWA specifications, with minimum
-risk of mistakes.
+You can use `cryptography` to do the cryptographic operations that are described in
+[JWA](https://www.rfc-editor.org/info/rfc7518), but since `cryptography` is a general purpose library, its usage is not
+straightforward and gives you plenty of options to carefully select and combine, leaving room for errors. It has also a
+quite inconsistent API to handle the different type of keys and algorithms. To work around
+this, `jwskate` comes with a set of consistent wrappers that implement the exact JWA specifications, with minimum risk
+of mistakes.
 
 ### Safe Signature Verification
 
-For every signature verification method in `jwskate`, the expected signature(s) algorithm(s) must be specified.
-That is to avoid a security flaw where your application accepts tokens with a weaker encryption scheme than what
-your security policy mandates; or even worse, where it accepts unsigned tokens, or tokens that are symmetrically signed
-with an improperly used public key, leaving your application exposed to exploitation by attackers.
+For every signature verification method in `jwskate`, the expected signature(s) algorithm(s) must be specified. That is
+to avoid a security flaw where your application accepts tokens with a weaker encryption scheme than what your security
+policy mandates; or even worse, where it accepts unsigned tokens, or tokens that are symmetrically signed with an
+improperly used public key, leaving your application exposed to exploitation by attackers.
 
 To specify which signature algorithms are accepted, each signature verification method accepts, in order of preference:
 
-- an `alg` parameter which contains the expected algorithm, or an `algs` parameter which contains a list of acceptable algorithms
-- the `alg` parameter from the signature verification `Jwk`, if present. This `alg` is the algorithm intended for use with that key.
+- an `alg` parameter which contains the expected algorithm, or an `algs` parameter which contains a list of acceptable
+  algorithms
+- the `alg` parameter from the signature verification `Jwk`, if present. This `alg` is the algorithm intended for use
+  with that key.
 
 Note that you cannot use `alg` and `algs` at the same time. If your `Jwk` contains an `alg` parameter, and you provide
 an `alg` or `algs` which does not match that value, a `Warning` will be emitted.

@@ -1,5 +1,7 @@
 import pytest
 from binapy import BinaPy
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 from jwskate import InvalidJwk, Jwk, RSAJwk
 
@@ -223,3 +225,30 @@ def test_optional_parameters() -> None:
 
     with pytest.raises(ValueError):
         jwk.public_jwk().with_optional_private_parameters()
+
+
+def test_from_cryptography_key() -> None:
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    private_jwk = RSAJwk.from_cryptography_key(private_key)
+    assert private_jwk.is_private
+    assert private_jwk.cryptography_key.private_bytes(
+        serialization.Encoding.PEM,
+        serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption(),
+    ) == private_key.private_bytes(
+        serialization.Encoding.PEM,
+        serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption(),
+    )
+
+    public_key = private_key.public_key()
+    public_jwk = RSAJwk.from_cryptography_key(public_key)
+    assert not public_jwk.is_private
+    assert public_jwk.cryptography_key.public_bytes(
+        serialization.Encoding.PEM, serialization.PublicFormat.PKCS1
+    ) == public_key.public_bytes(
+        serialization.Encoding.PEM, serialization.PublicFormat.PKCS1
+    )
+
+    with pytest.raises(TypeError):
+        RSAJwk.from_cryptography_key(b"foo")

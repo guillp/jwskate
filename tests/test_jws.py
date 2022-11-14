@@ -287,7 +287,9 @@ def signature_jwk(
         if signature_alg in key.supported_signing_algorithms():
             return key
 
-    pytest.skip(f"No key supports this signature alg: {signature_alg}")
+    pytest.skip(
+        f"No key supports this signature alg: {signature_alg}"
+    )  # pragma: no cover
 
 
 @pytest.fixture()
@@ -492,7 +494,7 @@ def test_verify_signature_from_jwcrypto(
     )
 
 
-def test_invalid_jws() -> None:
+def test_invalid_jws_compact() -> None:
     with pytest.raises(ValueError):
         JwsCompact(
             "ey.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.cOUKU1ijv3KiN2KK_o50RU978I9MzQ4lNw2y7nOGAdM"
@@ -505,3 +507,12 @@ def test_invalid_jws() -> None:
         JwsCompact(
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.!!"
         )
+
+
+def test_invalid_jws_json() -> None:
+    with pytest.raises(AttributeError):
+        JwsJsonFlat({}).payload
+    with pytest.raises(AttributeError):
+        JwsJsonGeneral({}).payload
+    with pytest.raises(AttributeError):
+        JwsJsonGeneral({}).signatures

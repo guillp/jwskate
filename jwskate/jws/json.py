@@ -8,8 +8,8 @@ from backports.cached_property import cached_property
 from binapy import BinaPy
 
 from jwskate.jwk.base import Jwk
+from jwskate.token import BaseJsonDict
 
-from ..token import BaseJsonDict
 from .compact import JwsCompact
 from .signature import JwsSignature
 

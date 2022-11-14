@@ -12,7 +12,7 @@ class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
     """Base class for HMAC signature algorithms."""
 
     mac: Type[hmac.HMAC] = hmac.HMAC
-    hash_alg: hashes.HashAlgorithm
+    hashing_alg: hashes.HashAlgorithm
     min_key_size: int
 
     def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:  # noqa: D102
@@ -21,7 +21,7 @@ class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
 
         if self.read_only:
             raise NotImplementedError
-        m = self.mac(self.key, self.hash_alg)
+        m = self.mac(self.key, self.hashing_alg)
         m.update(data)
         signature = m.finalize()
         return BinaPy(signature)
@@ -44,7 +44,7 @@ class HS256(BaseHMACSigAlg):  # noqa: D415
 
     name = "HS256"
     description = __doc__
-    hash_alg = hashes.SHA256()
+    hashing_alg = hashes.SHA256()
     min_key_size = 256
 
 
@@ -53,7 +53,7 @@ class HS384(BaseHMACSigAlg):  # noqa: D415
 
     name = "HS384"
     description = __doc__
-    hash_alg = hashes.SHA384()
+    hashing_alg = hashes.SHA384()
     min_key_size = 384
 
 
@@ -62,7 +62,7 @@ class HS512(BaseHMACSigAlg):  # noqa: D415
 
     name = "HS512"
     description = __doc__
-    hash_alg = hashes.SHA512()
+    hashing_alg = hashes.SHA512()
     min_key_size = 512
 
 
@@ -73,4 +73,4 @@ class HS1(BaseHMACSigAlg):  # noqa: D415
     description = __doc__
     read_only = True
     min_key_size = 160
-    hash_alg = hashes.SHA1()
+    hashing_alg = hashes.SHA1()

@@ -9,17 +9,22 @@ from typing import Any, Mapping, Optional
 
 from backports.cached_property import cached_property
 from binapy import BinaPy
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
-from cryptography.hazmat.primitives.serialization import (
-    Encoding,
-    NoEncryption,
-    PrivateFormat,
-    PublicFormat,
+
+from jwskate.jwa import (
+    X448,
+    X25519,
+    EcdhEs,
+    EcdhEs_A128KW,
+    EcdhEs_A192KW,
+    EcdhEs_A256KW,
+    Ed448,
+    Ed25519,
+    EdDsa,
+    OKPCurve,
 )
 
-from jwskate.jwa import X448, X25519, Ed448, Ed25519, EdDsa, OKPCurve
-
-from .. import EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW
 from .alg import UnsupportedAlg
 from .base import Jwk, JwkParameter
 
@@ -123,8 +128,87 @@ class OKPJwk(Jwk):
         return BinaPy(self.d).decode_from("b64u")
 
     @classmethod
+    def from_bytes(
+        cls,
+        private_key: bytes,
+        crv: Optional[str] = None,
+        use: Optional[str] = None,
+        **kwargs: Any,
+    ) -> OKPJwk:
+        """Initialize an `OKPJwk` from its private key.
+
+        The public key will be automatically derived from the supplied private key,
+
+        The appropriate curve will be guessed based on the key length or supplied `crv`/`use` hints:
+        - 56 bytes will use X448
+        - 57 bytes will use Ed448
+        - 32 bytes will use Ed25519 or X25519. Since there is no way to guess which one you want, it needs an hint with either a `crv` or `use` parameter.
+
+        Args:
+            private_key: the 32, 56 or 57 bytes private key, as raw bytes
+            crv: the curve to use
+            use: the key usage
+            **kwargs: additional members to include in the Jwk
+
+        Returns:
+            the matching OKPJwk
+        """
+        if crv and use:
+            if (crv in ("Ed25519", "Ed448") and use != "sig") or (
+                crv in ("X25519", "X448") and use != "enc"
+            ):
+                raise ValueError(
+                    f"Inconsistent `crv={crv}` and `use={use}` parameters."
+                )
+        elif crv:
+            if crv in ("Ed25519", "Ed448"):
+                use = "sig"
+            elif crv in ("X25519", "X448"):
+                use = "enc"
+            else:
+                raise UnsupportedOKPCurve(crv)
+        elif use:
+            if use not in ("sig", "enc"):
+                raise ValueError(f"Invalid `use={use}` parameter, need 'sig' or 'enc'.")
+
+        cryptography_key: Any
+        if len(private_key) == 32:
+            if use == "sig":
+                cryptography_key = ed25519.Ed25519PrivateKey.from_private_bytes(
+                    private_key
+                )
+            elif use == "enc":
+                cryptography_key = x25519.X25519PrivateKey.from_private_bytes(
+                    private_key
+                )
+            else:
+                raise ValueError(
+                    "You need to specify either crv={'Ed25519', 'X25519'} or use={'sig', 'enc'} when providing a 32 bytes private key."
+                )
+        elif len(private_key) == 56:
+            cryptography_key = x448.X448PrivateKey.from_private_bytes(private_key)
+            if use and use != "enc":
+                raise ValueError(
+                    f"Invalid `use={use}` parameter. Keys of length 56 bytes are for curve X448."
+                )
+            use = "enc"
+        elif len(private_key) == 57:
+            cryptography_key = ed448.Ed448PrivateKey.from_private_bytes(private_key)
+            if use and use != "sig":
+                raise ValueError(
+                    f"Invalid `use={use}` parameter. Keys of length 57 bytes are for curve Ed448."
+                )
+            use = "sig"
+        else:
+            raise ValueError(
+                "Invalid private key. It must be bytes of length 32, 56 or 57."
+            )
+
+        return OKPJwk.from_cryptography_key(cryptography_key, use=use, **kwargs)
+
+    @classmethod
     def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> OKPJwk:
-        """Initialize a OKPJwk from a `cryptography` key.
+        """Initialize an `OKPJwk` from a `cryptography` key.
 
         Args:
           cryptography_key: a `cryptography` key
@@ -135,12 +219,13 @@ class OKPJwk(Jwk):
         """
         if isinstance(cryptography_key, ed25519.Ed25519PrivateKey):
             priv = cryptography_key.private_bytes(
-                encoding=Encoding.Raw,
-                format=PrivateFormat.Raw,
-                encryption_algorithm=NoEncryption(),
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PrivateFormat.Raw,
+                encryption_algorithm=serialization.NoEncryption(),
             )
             pub = cryptography_key.public_key().public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.private(
                 crv="Ed25519",
@@ -149,7 +234,8 @@ class OKPJwk(Jwk):
             )
         elif isinstance(cryptography_key, ed25519.Ed25519PublicKey):
             pub = cryptography_key.public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.public(
                 crv="Ed25519",
@@ -157,12 +243,13 @@ class OKPJwk(Jwk):
             )
         elif isinstance(cryptography_key, ed448.Ed448PrivateKey):
             priv = cryptography_key.private_bytes(
-                encoding=Encoding.Raw,
-                format=PrivateFormat.Raw,
-                encryption_algorithm=NoEncryption(),
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PrivateFormat.Raw,
+                encryption_algorithm=serialization.NoEncryption(),
             )
             pub = cryptography_key.public_key().public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.private(
                 crv="Ed448",
@@ -171,17 +258,19 @@ class OKPJwk(Jwk):
             )
         elif isinstance(cryptography_key, ed448.Ed448PublicKey):
             pub = cryptography_key.public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.public(crv="Ed448", x=pub)
         elif isinstance(cryptography_key, x25519.X25519PrivateKey):
             priv = cryptography_key.private_bytes(
-                encoding=Encoding.Raw,
-                format=PrivateFormat.Raw,
-                encryption_algorithm=NoEncryption(),
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PrivateFormat.Raw,
+                encryption_algorithm=serialization.NoEncryption(),
             )
             pub = cryptography_key.public_key().public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.private(
                 crv="X25519",
@@ -190,17 +279,19 @@ class OKPJwk(Jwk):
             )
         elif isinstance(cryptography_key, x25519.X25519PublicKey):
             pub = cryptography_key.public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.public(crv="X25519", x=pub)
         elif isinstance(cryptography_key, x448.X448PrivateKey):
             priv = cryptography_key.private_bytes(
-                encoding=Encoding.Raw,
-                format=PrivateFormat.Raw,
-                encryption_algorithm=NoEncryption(),
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PrivateFormat.Raw,
+                encryption_algorithm=serialization.NoEncryption(),
             )
             pub = cryptography_key.public_key().public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.private(
                 crv="X448",
@@ -209,7 +300,8 @@ class OKPJwk(Jwk):
             )
         elif isinstance(cryptography_key, x448.X448PublicKey):
             pub = cryptography_key.public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
             return cls.public(crv="X448", x=pub)
         else:
@@ -254,7 +346,7 @@ class OKPJwk(Jwk):
             else:
                 return x448.X448PublicKey.from_public_bytes(self.public_key)
         else:
-            raise UnsupportedOKPCurve(self.curve)
+            raise UnsupportedOKPCurve(self.curve)  # pragma: no cover
 
     @classmethod
     def public(cls, crv: str, x: bytes, **params: Any) -> OKPJwk:
@@ -328,3 +420,15 @@ class OKPJwk(Jwk):
 
         x, d = curve.generate()
         return cls.private(crv=curve.name, x=x, d=d, alg=alg, **params)
+
+    @cached_property
+    def use(self) -> Optional[str]:
+        """Return the key use.
+
+        For OKP keys, this can be directly deduced from the curve.
+        """
+        if self.curve in (Ed25519, Ed448):
+            return "sig"
+        elif self.curve in (X25519, X448):
+            return "enc"
+        return None  # pragma: no cover

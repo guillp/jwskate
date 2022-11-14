@@ -7,7 +7,7 @@ from jwskate.jwa import BaseAlg
 
 
 class UnsupportedAlg(ValueError):
-    """Raised when an UnsupportedAlg is requested."""
+    """Raised when a unsupported alg is requested."""
 
 
 class ExpectedAlgRequired(ValueError):
@@ -17,24 +17,27 @@ class ExpectedAlgRequired(ValueError):
 T = TypeVar("T", bound=Type[BaseAlg])
 
 
-def select_alg(
-    jwk_alg: Optional[str], alg: Optional[str], supported_algs: Mapping[str, T]
+def select_alg_class(
+    supported_algs: Mapping[str, T],
+    *,
+    jwk_alg: Optional[str] = None,
+    alg: Optional[str] = None,
 ) -> T:
-    """Internal helper method to choose the appropriate alg to use for cryptographic operations.
+    """Internal helper method to choose the appropriate alg class to use for cryptographic operations.
 
     Given:
-    - an alg parameter from a JWK
-    - and/or a user-specified alg
     - a mapping of supported algs names to wrapper classes
+    - a preferred alg name (usually the one mentioned in a JWK)
+    - and/or a user-specified alg
     this returns the wrapper class to use.
 
     This checks the coherency between the user specified `alg` and the `jwk_alg`, and will emit a warning
     if the user specified alg is different from the `jwk_alg`.
 
     Args:
+      supported_algs: a mapping of supported alg names to alg wrapper
       jwk_alg: the alg from the JWK, if any
       alg: a user specified alg
-      supported_algs: a mapping of supported alg names to alg wrapper
 
     Returns:
       the alg to use
@@ -74,31 +77,32 @@ def select_alg(
         )
 
 
-def select_algs(
-    jwk_alg: Optional[str],
-    alg: Optional[str],
-    algs: Optional[Iterable[str]],
+def select_alg_classes(
     supported_algs: Mapping[str, T],
+    *,
+    jwk_alg: Optional[str] = None,
+    alg: Optional[str] = None,
+    algs: Optional[Iterable[str]] = None,
 ) -> List[T]:
-    """Internal helper method to select several appropriate algs to use on cryptographic operations.
+    """Internal helper method to select several appropriate algs classes to use on cryptographic operations.
 
     This method is typically used to get the list of valid algorithms when checking a signature, when several algorithms are allowed.
 
     Given:
+    - a mapping of supported algorithms name to wrapper classes
     - an alg parameter from a JWK
     - and/or a user-specified alg
     - and/or a user specified list of usable algs
-    - a mapping of supported algorithms name to wrapper classes
     this returns a list of supported alg wrapper classes that matches what the user specified, or, as default, the alg parameter from the JWK.
 
     This checks the coherency between the user specified `alg` and the `jwk_alg`, and will emit a warning
     if the user specified alg is different from the `jwk_alg`.
 
     Args:
+      supported_algs: a mapping of alg names to alg wrappers
       jwk_alg: the alg from the JWK, if any
       alg: a user specified alg to use, if any
       algs: a user specified list of algs to use, if several are allowed
-      supported_algs: a mapping of alg names to alg wrappers
 
     Returns:
       a list of possible algs to check

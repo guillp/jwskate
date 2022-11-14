@@ -34,14 +34,14 @@ class EcdhEs(
     )
 
     @classmethod
-    def otherinfo(cls, alg: str, apu: bytes, apv: bytes, keysize: int) -> BinaPy:
+    def otherinfo(cls, alg: str, apu: bytes, apv: bytes, key_size: int) -> BinaPy:
         """Build the "otherinfo" parameter for Concat KDF Hash.
 
         Args:
           alg: identifier for the encryption alg
           apu: Agreement PartyUInfo
           apv: Agreement PartyVInfo
-          keysize: length of the generated key
+          key_size: length of the generated key
 
         Returns:
             the "otherinfo" value
@@ -49,7 +49,7 @@ class EcdhEs(
         algorithm_id = BinaPy.from_int(len(alg), length=4) + BinaPy(alg)
         partyuinfo = BinaPy.from_int(len(apu), length=4) + apu
         partyvinfo = BinaPy.from_int(len(apv), length=4) + apv
-        supppubinfo = BinaPy.from_int(keysize or keysize, length=4)
+        supppubinfo = BinaPy.from_int(key_size or key_size, length=4)
         otherinfo = b"".join((algorithm_id, partyuinfo, partyvinfo, supppubinfo))
         return BinaPy(otherinfo)
 
@@ -91,8 +91,8 @@ class EcdhEs(
         else:
             raise ValueError(
                 "Invalid or unsupported private/public key combination for ECDH",
-                private_key,
-                public_key,
+                type(private_key),
+                type(public_key),
             )
         return BinaPy(shared_key)
 

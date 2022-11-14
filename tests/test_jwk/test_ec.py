@@ -1,17 +1,22 @@
 import pytest
 
-from jwskate import A128CBC_HS256, EcdhEs, ECJwk, Jwk
+from jwskate import A128CBC_HS256, EcdhEs, ECJwk, Jwk, UnsupportedEllipticCurve
+
+
+def test_ec_jwk() -> None:
+    with pytest.raises(UnsupportedEllipticCurve):
+        Jwk({"kty": "EC", "crv": "foo"})
 
 
 def test_jwk_ec_generate() -> None:
-    with pytest.warns():
-        jwk = ECJwk.generate(kid="myeckey")
+    jwk = ECJwk.generate(kid="myeckey", crv="P-256")
     assert jwk.kty == "EC"
     assert jwk.kid == "myeckey"
     assert jwk.crv == "P-256"
     assert "x" in jwk
     assert "y" in jwk
     assert "d" in jwk
+    assert jwk.coordinate_size == 32
 
     public_jwk = jwk.public_jwk()
     assert public_jwk.kty == "EC"
@@ -23,11 +28,14 @@ def test_jwk_ec_generate() -> None:
 
     assert jwk.supported_encryption_algorithms() == []
 
+    with pytest.raises(UnsupportedEllipticCurve):
+        ECJwk.generate(crv="foo")
+
 
 def test_ecdh_es() -> None:
     alg = "ECDH-ES+A128KW"
     enc = "A128CBC-HS256"
-    private_jwk = ECJwk.generate(alg=alg)
+    private_jwk = Jwk.generate_for_alg(alg)
     assert private_jwk.crv == "P-256"
     public_jwk = private_jwk.public_jwk()
     sender_cek, wrapped_cek, headers = public_jwk.sender_key(enc)
@@ -39,6 +47,10 @@ def test_ecdh_es() -> None:
 
     recipient_cek = private_jwk.recipient_key(wrapped_cek, enc, **headers)
     assert recipient_cek == sender_cek
+
+    # no 'epk' in headers
+    with pytest.raises(ValueError):
+        private_jwk.recipient_key(wrapped_cek, enc)
 
 
 def test_ecdh_es_with_controlled_cek_and_epk() -> None:
@@ -56,10 +68,7 @@ def test_ecdh_es_with_controlled_cek_and_epk() -> None:
     recipient_cek = private_jwk.recipient_key(wrapped_cek, enc, **headers)
     assert recipient_cek == sender_cek
 
-    # EPK is mandatory for recipient_key() to work
-    with pytest.raises(ValueError):
-        private_jwk.recipient_key(wrapped_cek, enc)
-    # try passing the private EPK to recipient key
+    # try passing the private EPK
     with pytest.raises(ValueError):
         private_jwk.recipient_key(wrapped_cek, enc, epk=epk)
 

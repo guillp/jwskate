@@ -24,18 +24,18 @@ def test_jwkset() -> None:
     assert jwks.jwks == keys
 
     jwk = Jwk.generate_for_kty("EC", alg="ES256", kid="my_ec_key")
-    keys.append(jwk)
-    kid = jwks.add_jwk(jwk)
+    keys.append(jwk.public_jwk())
+    kid = jwks.add_jwk(jwk.public_jwk())
     assert kid == jwk.kid
     assert jwks.jwks == keys
 
     data = b"this is a test"
     signature = jwk.sign(data)
 
-    assert jwks.verify(data, signature, kid="my_ec_key")
+    assert jwks.verify(data, signature, kid="my_ec_key", alg="ES256")
     assert jwks.verify(data, signature, alg="ES256")
     assert jwks.verify(data, signature, algs=("ES256",))
-    assert jwks.verify(data, signature)
+    assert not jwks.verify(data, signature, algs=("HS256",))
 
     jwks.remove_jwk(jwk.kid)
 

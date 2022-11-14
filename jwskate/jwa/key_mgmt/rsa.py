@@ -3,15 +3,15 @@
 from typing import Any, SupportsBytes, Union
 
 from binapy import BinaPy
-from cryptography.hazmat.primitives import asymmetric, hashes
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
 from ..base import BaseAsymmetricAlg, BaseKeyManagementAlg
 
 
 class BaseRsaKeyWrap(
     BaseKeyManagementAlg,
-    BaseAsymmetricAlg[asymmetric.rsa.RSAPrivateKey, asymmetric.rsa.RSAPublicKey],
+    BaseAsymmetricAlg[rsa.RSAPrivateKey, rsa.RSAPublicKey],
 ):
     """Base class for RSA Key Wrapping algorithms.
 
@@ -24,12 +24,10 @@ class BaseRsaKeyWrap(
     name: str
     description: str
 
-    private_key_class = asymmetric.rsa.RSAPrivateKey
-    public_key_class = asymmetric.rsa.RSAPublicKey
+    private_key_class = rsa.RSAPrivateKey
+    public_key_class = rsa.RSAPublicKey
 
-    def __init__(
-        self, key: Union[asymmetric.rsa.RSAPublicKey, asymmetric.rsa.RSAPrivateKey]
-    ):
+    def __init__(self, key: Union[rsa.RSAPublicKey, rsa.RSAPrivateKey]):
         self.key = key
 
     def wrap_key(self, plainkey: bytes) -> BinaPy:

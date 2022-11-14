@@ -60,7 +60,9 @@ def test_jwe() -> None:
     )
     iv = bytes.fromhex("e3c575fc02dbe944b4e14ddb")
 
-    jwe = JweCompact.encrypt(plaintext, jwk, alg=alg, enc=enc, cek=cek, iv=iv)
+    jwe = JweCompact.encrypt(
+        plaintext, jwk.public_jwk(), alg=alg, enc=enc, cek=cek, iv=iv
+    )
 
     assert jwe.initialization_vector == bytes.fromhex("e3c575fc02dbe944b4e14ddb")
 

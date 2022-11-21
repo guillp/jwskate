@@ -9,7 +9,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.0, mkdocs-material-8.5.6">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-8.5.8">
     
     
       
@@ -20,7 +20,7 @@
       <link rel="stylesheet" href="../assets/stylesheets/main.20d9efc8.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.cbb835fc.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.815d1a91.min.css">
         
           
           
@@ -1073,8 +1073,8 @@
 <span class="k">assert</span> <span class="n">jwk</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="s2">&quot;WtjnvHG9b_IKBLn4QYTHz-AdoAiO_ork5LH1BL_5tyI&quot;</span>
 <span class="k">assert</span> <span class="n">jwk</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">jwk</span><span class="o">.</span><span class="n">x</span>
 </code></pre></div></td></tr></table></div>
-<p>Those will return the exact (usually base64url-encoded) value exactly as expressed in the JWK.
-You can also get the real, decoded parameters with some special attributes:</p>
+<p>Those will return the exact (usually base64url-encoded) value exactly as expressed in the JWK. You can also get the
+real, decoded parameters with some special attributes:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1124,8 +1124,8 @@ You can also get the real, decoded parameters with some special attributes:</p>
 <p>The available special attributes vary depending on the key type.</p>
 <h3 id="generating-keys">Generating keys<a class="headerlink" href="#generating-keys" title="Permanent link">&para;</a></h3>
 <h4 id="based-on-a-key-type">Based on a Key Type<a class="headerlink" href="#based-on-a-key-type" title="Permanent link">&para;</a></h4>
-<p>You can generate a <code>Jwk</code> of a specific type (RSA, EC, etc.) using the class method <code>Jwk.generate_for_kty()</code>. It needs the key type as parameter, and
-type-specific parameters:</p>
+<p>You can generate a <code>Jwk</code> of a specific type (RSA, EC, etc.) using the class method <code>Jwk.generate_for_kty()</code>. It needs
+the key type as parameter, and type-specific parameters:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -1149,8 +1149,8 @@ generated key:</p>
 <span class="k">assert</span> <span class="n">jwk</span><span class="o">.</span><span class="n">use</span> <span class="o">==</span> <span class="s2">&quot;sig&quot;</span>
 </code></pre></div></td></tr></table></div>
 <h4 id="based-on-intended-algorithm">Based on intended algorithm<a class="headerlink" href="#based-on-intended-algorithm" title="Permanent link">&para;</a></h4>
-<p>You can generate a private key of the appropriate type for a given signature, key management or encryption algorithm
-by using the method <code>Jwk.generate_for_alg()</code> this way:</p>
+<p>You can generate a private key of the appropriate type for a given signature, key management or encryption algorithm by
+using the method <code>Jwk.generate_for_alg()</code> this way:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -1225,8 +1225,7 @@ instance that does not contain the private parameters:</p>
 <h3 id="dumping-keys">Dumping keys<a class="headerlink" href="#dumping-keys" title="Permanent link">&para;</a></h3>
 <h4 id="to-json">to JSON<a class="headerlink" href="#to-json" title="Permanent link">&para;</a></h4>
 <p><code>Jwk</code> instances are dicts, so you can serialize it to JSON in the usual ways (with Python <code>json</code> module or any other
-means).
-You can also use the <code>to_json()</code> convenience method to serialize a Jwk:</p>
+means). You can also use the <code>to_json()</code> convenience method to serialize a Jwk:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1361,20 +1360,18 @@ You can encrypt and decrypt arbitrary data with a Jwk instance, using the <code>
 <p>Encrypting/decrypting arbitrary data requires a symmetric key. But it is possible to encrypt/decrypt or otherwise derive
 symmetric keys from asymmetric keys, using Key Management algorithms.</p>
 <p>Some of those Key Management algorithms rely on key wrapping, where a randomly-generated symmetric key (called a Content
-Encryption Key or CEK)
-is itself asymmetrically encrypted. It is also possible to use a symmetric key to "wrap" the CEK.
+Encryption Key or CEK) is itself asymmetrically encrypted. It is also possible to use a symmetric key to "wrap" the CEK.
 Other algorithms rely on Diffie-Hellman, where the CEK is derived from a pair of keys, one private, the other public.</p>
-<p>You can use the methods <code>sender_key()</code> and <code>receiver_key()</code> to handle all the key management stuff for you.
-For <code>sender_key()</code>, which the message sender will use get a CEK, you just need to specify which encryption algorithm you
-will use with the CEK, and the key management algorithm you want to wrap or derive that CEK.
-It will return a tuple <code>(plaintext_message, encrypted_cek, extra_headers)</code>, with <code>plaintext_message</code> being the generated
-CEK (as an instance of <code>SymmetricJwk</code>),
-<code>encrypted_cek</code> is the wrapped CEK value (which can be empty for Diffie-Hellman based algorithms),
-and <code>extra_headers</code> a dict of extra headers that are required for the key management algorithm (for example, <code>epk</code> for
+<p>You can use the methods <code>sender_key()</code> and <code>receiver_key()</code> to handle all the key management stuff for you. For
+<code>sender_key()</code>, which the message sender will use get a CEK, you just need to specify which encryption algorithm you
+will use with the CEK, and the key management algorithm you want to wrap or derive that CEK. It will return a tuple
+<code>(plaintext_message, encrypted_cek, extra_headers)</code>, with <code>plaintext_message</code> being the generated CEK (as an instance of
+<code>SymmetricJwk</code>), <code>encrypted_cek</code> is the wrapped CEK value (which can be empty for Diffie-Hellman based algorithms), and
+<code>extra_headers</code> a dict of extra headers that are required for the key management algorithm (for example, <code>epk</code> for
 ECDH-ES based algorithms),</p>
-<p>You can use <code>cleartext_cek</code> to encrypt your message with a given Encryption algorithm. You must then
-send <code>encrypted_cek</code> and <code>extra_headers</code> to your recipient, along with the encrypted message, and both Key Management
-and Encryption algorithms identifiers.</p>
+<p>You can use <code>cleartext_cek</code> to encrypt your message with a given Encryption algorithm. You must then send
+<code>encrypted_cek</code> and <code>extra_headers</code> to your recipient, along with the encrypted message, and both Key Management and
+Encryption algorithms identifiers.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1440,11 +1437,10 @@ and Encryption algorithms identifiers.</p>
 <span class="c1"># tag: b&#39;\xc4\xee\xcf`\xfa\\\x8e\x9dn\xc4&gt;D\xd8\x1d\x8c\x1a&#39;</span>
 </code></pre></div></td></tr></table></div>
 <p>On recipient side, in order to decrypt the message, you will need to obtain the same symmetric CEK that was used to
-encrypt the message. That is done with <code>recipient_key()</code>.
-You need to provide it with the <code>encrypted_cek</code> received from the sender (possibly empty for Diffie-Hellman based
-algorithms),
-the Key Management algorithm that is used to wrap the CEK, the Encryption algorithm that is used to encrypt/decrypt the
-message, and the eventual extra headers depending on the Key Management algorithm.</p>
+encrypt the message. That is done with <code>recipient_key()</code>. You need to provide it with the <code>encrypted_cek</code> received from
+the sender (possibly empty for Diffie-Hellman based algorithms), the Key Management algorithm that is used to wrap the
+CEK, the Encryption algorithm that is used to encrypt/decrypt the message, and the eventual extra headers depending on
+the Key Management algorithm.</p>
 <p>You can then use that CEK to decrypt the received message.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -1829,13 +1825,11 @@ to represent the token issuer, audience, and lifetime.</p>
 <p>The <code>Jwt</code> class and its subclasses represent a syntactically valid Jwt token. It then allows to access the JWT content
 and verify its signature.</p>
 <p>Note that a JWT token can optionally be encrypted. In that case, the signed JWT content will be the plaintext of a JWE
-token.
-Decrypting that JWE can then be achieved with the <code>JweCompact</code> class, then this plaintext can be manipulated with
+token. Decrypting that JWE can then be achieved with the <code>JweCompact</code> class, then this plaintext can be manipulated with
 the <code>Jwt</code> class.</p>
 <h3 id="parsing-jwt-tokens">Parsing JWT tokens<a class="headerlink" href="#parsing-jwt-tokens" title="Permanent link">&para;</a></h3>
-<p>To parse an existing JWT token, simply provide its value to <code>Jwt</code>. It exposes all the JWT attributes, and
-a <code>verify_signature()</code> method just like <code>JwsCompact()</code>.
-Claims can be accessed either:</p>
+<p>To parse an existing JWT token, simply provide its value to <code>Jwt</code>. It exposes all the JWT attributes, and a
+<code>verify_signature()</code> method just like <code>JwsCompact()</code>. Claims can be accessed either:</p>
 <ul>
 <li>with the <code>claims</code> attribute, which is a dict of the parsed JSON content</li>
 <li>with subscription: <code>jwt['attribute']</code> does a key lookup inside the <code>claims</code> dict, just like <code>jwt.claims['attribute']</code></li>
@@ -1976,8 +1970,8 @@ Claims can be accessed either:</p>
 </code></pre></div></td></tr></table></div>
 <h3 id="validating-jwt-tokens">Validating JWT tokens<a class="headerlink" href="#validating-jwt-tokens" title="Permanent link">&para;</a></h3>
 <p>To validate a JWT token, verifying the signature is usually not enough. You probably want to validate the issuer,
-audience, expiration date, and other claims.
-To make things easier, use <code>SignedJwt.validate()</code>. It raises exceptions if one of the check fails:</p>
+audience, expiration date, and other claims. To make things easier, use <code>SignedJwt.validate()</code>. It raises exceptions if
+one of the check fails:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -2030,8 +2024,8 @@ signature alg to use (if the key doesn't have an 'alg' parameter).</p>
 <span class="c1"># eyJhbGciOiJFUzI1NiJ9.eyJjbGFpbTEiOiJ2YWx1ZTEiLCJjbGFpbTIiOiJ2YWx1ZTIifQ.mqqXTljXQwNff0Sah88oFGBNWC9XpZxUj3WDa9-00UAyuEoL6cey-rHQNtmYgYgPRgI_HnWpRm5M4_a9qv9m0g</span>
 </code></pre></div></td></tr></table></div>
 <h4 id="jwt-headers">JWT headers<a class="headerlink" href="#jwt-headers" title="Permanent link">&para;</a></h4>
-<p>The default header will contain the signing algorithm identifier (alg) and the JWK Key Identifier (kid), if there was one in the used JWK.
-You can add additional headers by using the <code>extra_headers</code> parameter to <code>Jwt.sign()</code>:</p>
+<p>The default header will contain the signing algorithm identifier (alg) and the JWK Key Identifier (kid), if there was
+one in the used JWK. You can add additional headers by using the <code>extra_headers</code> parameter to <code>Jwt.sign()</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -2141,10 +2135,10 @@ You can add additional headers by using the <code>extra_headers</code> parameter
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.indexes", "navigation.tabs", "navigation.instant", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.5bf1dace.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.indexes", "navigation.tabs", "navigation.instant", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.16e2a7d4.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.078830c0.min.js"></script>
+      <script src="../assets/javascripts/bundle.d6c3db9e.min.js"></script>
       
     
   </body>

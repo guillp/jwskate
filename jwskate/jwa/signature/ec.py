@@ -17,7 +17,6 @@ class BaseECSignatureAlg(
     """Base class for Elliptic Curve signature algorithms."""
 
     curve: EllipticCurve
-    hashing_alg: hashes.HashAlgorithm
     public_key_class = ec.EllipticCurvePublicKey
     private_key_class = ec.EllipticCurvePrivateKey
 

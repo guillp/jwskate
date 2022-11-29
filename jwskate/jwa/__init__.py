@@ -71,6 +71,8 @@ from .signature import (
     BaseECSignatureAlg,
     BaseHMACSigAlg,
     BaseRSASigAlg,
+    Ed448Dsa,
+    Ed25519Dsa,
     EdDsa,
 )
 
@@ -111,7 +113,9 @@ __all__ = [
     "EcdhEs_A192KW",
     "EcdhEs_A256KW",
     "Ed25519",
+    "Ed25519Dsa",
     "Ed448",
+    "Ed448Dsa",
     "EdDsa",
     "EllipticCurve",
     "HS256",

@@ -7,6 +7,7 @@ from typing import Generic, Iterator, SupportsBytes, Tuple, Type, TypeVar, Union
 
 import cryptography.exceptions
 from binapy import BinaPy
+from cryptography.hazmat.primitives import hashes
 
 
 class PrivateKeyRequired(AttributeError):
@@ -156,6 +157,7 @@ class BaseSignatureAlg(BaseAlg):
     """Base class for signature algorithms."""
 
     use = "sig"
+    hashing_alg: hashes.HashAlgorithm
 
     def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:
         """Sign arbitrary data, return the signature.

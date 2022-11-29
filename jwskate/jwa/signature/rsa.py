@@ -15,7 +15,6 @@ class BaseRSASigAlg(
 ):
     """Base class for RSA based signature algorithms."""
 
-    hashing_alg: hashes.HashAlgorithm
     padding_alg: padding.AsymmetricPadding = padding.PKCS1v15()
     min_key_size: int = 2048
 

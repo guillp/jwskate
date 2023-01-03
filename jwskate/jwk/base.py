@@ -1039,6 +1039,11 @@ class Jwk(BaseJsonDict):
                 if issubclass(jwk_class, BaseAESEncryptionAlg):
                     kwargs.setdefault("key_size", alg_class.key_size)
 
+                # SymmetricJwk has also implemented generate_for_alg, without this would be defaults ignored
+                reimplemented_in_child = getattr(jwk_class, 'generate_for_alg', None)
+                if reimplemented_in_child and reimplemented_in_child != getattr(cls, 'generate_for_alg'):
+                    return jwk_class.generate_for_alg(alg=alg, **kwargs)
+
                 return jwk_class.generate(alg=alg, **kwargs)
             except UnsupportedAlg:
                 continue

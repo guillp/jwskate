@@ -126,27 +126,6 @@ class SymmetricJwk(Jwk):
         key = BinaPy.random_bits(key_size)
         return cls.from_bytes(key, **params)
 
-    @classmethod
-    def generate_for_alg(cls, alg: str, **params: Any) -> SymmetricJwk:
-        """Generate a SymmetricJwk that is suitable for use with the given alg.
-
-        Args:
-          alg: the algorithm identifier
-          **params: additional members to include in the Jwk
-
-        Returns:
-            the generated `Jwk`
-
-        Raises:
-            UnsupportedAlg: if the provided `alg` is not supported
-        """
-        alg_class = cls._get_alg_class(alg)
-        if issubclass(alg_class, BaseHMACSigAlg):
-            return cls.generate(key_size=alg_class.min_key_size, alg=alg, **params)
-        elif issubclass(alg_class, (BaseAESEncryptionAlg, BaseAesKeyWrap)):
-            return cls.generate(key_size=alg_class.key_size, alg=alg, **params)
-        return cls.generate(alg=alg, **params)
-
     def thumbprint(self, hashalg: str = "SHA256") -> str:
         """Return the key thumbprint as specified by RFC 7638.
 

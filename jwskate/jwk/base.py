@@ -1041,8 +1041,25 @@ class Jwk(BaseJsonDict):
             alg_class: Optional[Type[BaseAlg]]
             try:
                 alg_class = jwk_class._get_alg_class(alg)
-                if issubclass(jwk_class, BaseAESEncryptionAlg):
+                # special cases for AES or HMAC based algs which require a specific key size
+                if issubclass(alg_class, (BaseAESEncryptionAlg, BaseAesKeyWrap)):
+                    key_size = kwargs.get("key_size")
+                    if key_size is not None and key_size != alg_class.key_size:
+                        raise ValueError(
+                            f"Key for {alg} must be exactly {alg_class.key_size} bits. "
+                            "You should remove the `key_size` parameter to generate a key of the appropriate length."
+                        )
                     kwargs.setdefault("key_size", alg_class.key_size)
+                elif issubclass(alg_class, BaseHMACSigAlg):
+                    key_size = kwargs.get("key_size")
+                    if key_size is not None and key_size < alg_class.min_key_size:
+                        warnings.warn(
+                            f"Symmetric keys to use with {alg} should be at least {alg_class.min_key_size} bits "
+                            "in order to make the key at least as hard to brute-force as the signature. "
+                            f"You requested a key size of {key_size} bits."
+                        )
+                    else:
+                        kwargs.setdefault("key_size", alg_class.min_key_size)
 
                 return jwk_class.generate(alg=alg, **kwargs)
             except UnsupportedAlg:

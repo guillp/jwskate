@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, List, Mapping, Optional, Union
+from typing import Any, List, Mapping, Optional, Type, Union
 
 from backports.cached_property import cached_property
 from binapy import BinaPy
@@ -18,6 +18,7 @@ from jwskate.jwa import (
     P_256,
     P_384,
     P_521,
+    BaseECSignatureAlg,
     EcdhEs,
     EcdhEs_A128KW,
     EcdhEs_A192KW,
@@ -59,11 +60,11 @@ class ECJwk(Jwk):
         curve.name: curve for curve in [P_256, P_384, P_521, secp256k1]
     }
 
-    SIGNATURE_ALGORITHMS = {
+    SIGNATURE_ALGORITHMS: Mapping[str, Type[BaseECSignatureAlg]] = {
         sigalg.name: sigalg for sigalg in [ES256, ES384, ES512, ES256K]
     }
 
-    KEY_MANAGEMENT_ALGORITHMS = {
+    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, Type[EcdhEs]] = {
         keyalg.name: keyalg
         for keyalg in [EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW]
     }

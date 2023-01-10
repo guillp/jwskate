@@ -75,7 +75,7 @@ class SymmetricJwk(Jwk):
         return True
 
     def public_jwk(self) -> Jwk:
-        """This always raises a ValueError since SymmetricKeys are always private.
+        """Raise an error since Symmetric Keys are always private.
 
         Raises:
             ValueError: symmetric keys are always private, it makes no sense to use them as public keys
@@ -166,7 +166,7 @@ class SymmetricJwk(Jwk):
         )
 
     def _to_cryptography_key(self) -> BinaPy:
-        """Converts this Jwk into a key usable with `cryptography`.
+        """Convert this Jwk into a key usable with `cryptography`.
 
         For SymmetricJwk instances, those are just `bytes` values.
 

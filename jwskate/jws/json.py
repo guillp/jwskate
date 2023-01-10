@@ -91,7 +91,7 @@ class JwsJsonFlat(JwsSignature):
         return JwsJsonGeneral(content)
 
     def signed_part(self) -> bytes:
-        """The signed part from this JWS, as bytes.
+        """Return the signed part from this JWS, as bytes.
 
         This is a concatenation of the protected header and the payload, separated by a dot (`.`).
 

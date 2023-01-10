@@ -110,7 +110,7 @@ class JwkSet(BaseJsonDict):
         return kid
 
     def remove_jwk(self, kid: str) -> None:
-        """Removes a Jwk from this JwkSet, based on a `kid`.
+        """Remove a Jwk from this JwkSet, based on a `kid`.
 
         Args:
           kid: the `kid` from the key to be removed.
@@ -176,6 +176,7 @@ class JwkSet(BaseJsonDict):
             jwk = self.get_jwk_by_kid(kid)
             return jwk.verify(data, signature, alg=alg, algs=algs)
 
+        # otherwise, try all keys which support the given alg(s)
         if algs is None:
             if alg is not None:
                 algs = (alg,)

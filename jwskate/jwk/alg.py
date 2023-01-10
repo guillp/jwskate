@@ -23,7 +23,7 @@ def select_alg_class(
     jwk_alg: Optional[str] = None,
     alg: Optional[str] = None,
 ) -> T:
-    """Internal helper method to choose the appropriate alg class to use for cryptographic operations.
+    """Choose the appropriate alg class to use for cryptographic operations.
 
     Given:
     - a mapping of supported algs names to wrapper classes
@@ -84,7 +84,7 @@ def select_alg_classes(
     alg: Optional[str] = None,
     algs: Optional[Iterable[str]] = None,
 ) -> List[T]:
-    """Internal helper method to select several appropriate algs classes to use on cryptographic operations.
+    """Select several appropriate algs classes to use on cryptographic operations.
 
     This method is typically used to get the list of valid algorithms when checking a signature, when several algorithms are allowed.
 

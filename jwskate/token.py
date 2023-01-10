@@ -119,7 +119,7 @@ class BaseCompactToken:
         return cty
 
     def __repr__(self) -> str:
-        """Returns the `str` representation of this token."""
+        """Return the `str` representation of this token."""
         return self.value.decode()
 
     def __bytes__(self) -> bytes:

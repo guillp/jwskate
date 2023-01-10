@@ -126,7 +126,7 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
     @contextmanager
     def private_key_required(self) -> Iterator[Kpriv]:
-        """A context manager that checks if this alg is initialised with a private key.
+        """Check if this alg is initialised with a private key, as a context manager.
 
         Yields:
             the private key
@@ -140,7 +140,7 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
     @contextmanager
     def public_key_required(self) -> Iterator[Kpub]:
-        """A context manager that checks if this alg is initialised with a public key.
+        """Check if this alg is initialised with a public key, as a context manager.
 
         Yields:
             The public key

@@ -156,16 +156,16 @@ class Jwt(BaseCompactToken):
     def decrypt_nested_jwt(
         cls, jwe: Union[str, JweCompact], jwk: Union[Jwk, Dict[str, Any]]
     ) -> Jwt:
-        """Convenience method to decrypt a nested JWT.
+        """Decrypt a JWE that contains a nested JWT.
 
-        It will return a [Jwt] instance.
+        It will return a [Jwt] instance for the inner JWT.
 
         Args:
             jwe: the JWE containing a nested Token
             jwk: the decryption key
 
         Returns:
-            the inner token
+            the inner JWT
 
         Raises:
             InvalidJwt: if the inner JWT is not valid

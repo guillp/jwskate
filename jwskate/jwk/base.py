@@ -30,6 +30,7 @@ from jwskate.jwa import (
     BaseAlg,
     BaseAsymmetricAlg,
     BaseEcdhEs_AesKw,
+    BaseHMACSigAlg,
     BaseKeyManagementAlg,
     BaseRsaKeyWrap,
     BaseSignatureAlg,
@@ -267,7 +268,7 @@ class Jwk(BaseJsonDict):
         )
 
     def thumbprint_uri(self, hashalg: str = "sha-256") -> str:
-        """Returns the JWK thumbprint URI for this key.
+        """Return the JWK thumbprint URI for this key.
 
         Args:
             hashalg: the IANA registered name for the hash alg to use
@@ -454,7 +455,7 @@ class Jwk(BaseJsonDict):
         return tuple(key_ops)
 
     def _validate(self) -> None:
-        """Internal method used to validate a Jwk.
+        """Validate the content of this JWK.
 
         It checks that all required parameters are present and well-formed. If the key is private, it sets the `is_private` flag to `True`.
 
@@ -699,7 +700,9 @@ class Jwk(BaseJsonDict):
         epk: Optional[Jwk] = None,
         **headers: Any,
     ) -> Tuple[Jwk, BinaPy, Mapping[str, Any]]:
-        """Used by encrypted token senders to produce a Content Encryption Key.
+        """Produce a Content Encryption Key, to use for encryption.
+
+        This method is meant to be used by encrypted token senders. Recipients should use the matching method `Jwk.recipient_key()`.
 
         Returns a tuple with 3 items:
 
@@ -810,7 +813,9 @@ class Jwk(BaseJsonDict):
         alg: Optional[str] = None,
         **headers: Any,
     ) -> Jwk:
-        """Used by token recipients to obtain the CEK, which then allows decryption of the payload.
+        """Produce a Content Encryption Key, to use for decryption.
+
+        This method is meant to be used by encrypted token recipient. Senders should use the matching method `Jwk.sender_key()`.
 
         Args:
           wrapped_cek: the wrapped CEK
@@ -1046,7 +1051,7 @@ class Jwk(BaseJsonDict):
         raise UnsupportedAlg(alg)
 
     def copy(self) -> Jwk:
-        """Creates a copy of this key.
+        """Create a copy of this key.
 
         Returns:
             a copy of this key, with the same value
@@ -1115,7 +1120,7 @@ class Jwk(BaseJsonDict):
         return jwk
 
     def minimize(self) -> Jwk:
-        """Strips out any optional or non-standard parameter from that key.
+        """Strip out any optional or non-standard parameter from that key.
 
         This will remove `alg`, `use`, `key_ops`, optional parameters from RSA keys, and other unknown
         parameters.

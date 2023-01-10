@@ -63,7 +63,7 @@ class EcdhEs(
             ec.EllipticCurvePublicKey, x25519.X25519PublicKey, x448.X448PublicKey
         ],
     ) -> BinaPy:
-        """This does an Elliptic Curve Diffie Hellman key exchange.
+        """Perform an Elliptic Curve Diffie Hellman key exchange.
 
         This derives a shared key between a sender and a receiver, based on a public and a private key from each side.
         ECDH exchange produces the same key with either a sender private key and a recipient public key,
@@ -225,7 +225,7 @@ class BaseEcdhEs_AesKw(EcdhEs):
         ],
         **headers: Any,
     ) -> BinaPy:
-        """Wraps a key for content encryption.
+        """Wrap a key for content encryption.
 
         Args:
           plainkey: the key to wrap

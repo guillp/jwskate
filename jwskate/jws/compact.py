@@ -97,7 +97,7 @@ class JwsCompact(BaseCompactToken):
         signed_part: Union[bytes, SupportsBytes, str],
         signature: Union[bytes, SupportsBytes, str],
     ) -> JwsCompact:
-        """Constructs a JWS token based on its signed part and signature values.
+        """Construct a JWS token based on its signed part and signature values.
 
         Signed part is the concatenation of the header and payload, both encoded in Base64-Url, and joined by a dot.
 

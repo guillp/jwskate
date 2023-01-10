@@ -93,6 +93,7 @@ class RSAJwk(Jwk):
 
         Raises:
             TypeError: if the given key type is not supported
+
         """
         if isinstance(cryptography_key, rsa.RSAPrivateKey):
             priv = cryptography_key.private_numbers()  # type: ignore[attr-defined]
@@ -121,6 +122,7 @@ class RSAJwk(Jwk):
 
         Returns:
             a cryptography RSAPrivateKey or RSAPublicKey
+
         """
         if self.is_private:
             return rsa.RSAPrivateNumbers(
@@ -146,6 +148,7 @@ class RSAJwk(Jwk):
 
         Returns:
           a RsaJwk initialized from the provided parameters
+
         """
         return cls(
             dict(
@@ -184,6 +187,7 @@ class RSAJwk(Jwk):
 
         Returns:
             a RSAJwk initialized from the given parameters
+
         """
         return cls(
             dict(
@@ -210,6 +214,7 @@ class RSAJwk(Jwk):
 
         Returns:
           a generated RSAJwk
+
         """
         private_key = rsa.generate_private_key(65537, key_size=key_size)
         pn = private_key.private_numbers()
@@ -231,6 +236,7 @@ class RSAJwk(Jwk):
 
         Returns:
             the key modulus (from parameter `n`)
+
         """
         return BinaPy(self.n).decode_from("b64u").to_int()
 
@@ -240,6 +246,7 @@ class RSAJwk(Jwk):
 
         Returns:
             the key exponent (from parameter `e`)
+
         """
         return BinaPy(self.e).decode_from("b64u").to_int()
 
@@ -249,6 +256,7 @@ class RSAJwk(Jwk):
 
         Returns:
             the key private exponent (from parameter `d`)
+
         """
         return BinaPy(self.d).decode_from("b64u").to_int()
 
@@ -258,6 +266,7 @@ class RSAJwk(Jwk):
 
         Returns:
             the first prime factor (from parameter `p`)
+
         """
         return self.prime_factors[0]
 
@@ -267,6 +276,7 @@ class RSAJwk(Jwk):
 
         Returns:
             the second prime factor (from parameter `q`)
+
         """
         return self.prime_factors[1]
 
@@ -289,6 +299,7 @@ class RSAJwk(Jwk):
 
         Returns:
             the first factor CRT coefficient (from parameter `dp`)
+
         """
         if "dp" in self:
             return BinaPy(self.dp).decode_from("b64u").to_int()
@@ -300,6 +311,7 @@ class RSAJwk(Jwk):
 
         Returns:
             the second factor CRT coefficient (from parameter `dq`)
+
         """
         if "dq" in self:
             return BinaPy(self.dq).decode_from("b64u").to_int()
@@ -311,6 +323,7 @@ class RSAJwk(Jwk):
 
         Returns:
             the first CRT coefficient (from parameter `qi`)
+
         """
         if "qi" in self:
             return BinaPy(self.qi).decode_from("b64u").to_int()
@@ -322,6 +335,7 @@ class RSAJwk(Jwk):
 
         Returns:
             the key size
+
         """
         return len(BinaPy(self.n).decode_from("b64u")) * 8
 
@@ -334,6 +348,7 @@ class RSAJwk(Jwk):
         - dp: first factor Chinese Remainder Theorem exponent
         - dq: second factor Chinese Remainder Theorem exponent
         - qi: first Chinese Remainder Theorem coefficient
+
         """
         if not self.is_private:
             raise ValueError(

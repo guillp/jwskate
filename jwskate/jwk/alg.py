@@ -48,6 +48,7 @@ def select_alg_class(
     Raises:
         UnsupportedAlg: if the requested alg is not supported
         ValueError: if supported_algs is empty
+
     """
     if not supported_algs:
         raise ValueError("No possible algorithms to choose from!")
@@ -113,6 +114,7 @@ def select_alg_classes(
 
     Warnings:
         if the requested 'alg' is different that the 'jwk_alg', or the 'jwk_alg' is not in the 'algs'
+
     """
     if alg and algs:
         raise ValueError("Please use either parameter 'alg' or 'algs', not both.")

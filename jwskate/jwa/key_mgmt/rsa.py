@@ -17,6 +17,7 @@ class BaseRsaKeyWrap(
 
     Args:
         key: the private or public key to use
+
     """
 
     padding: Any
@@ -41,6 +42,7 @@ class BaseRsaKeyWrap(
 
         Raises:
             PublicKeyRequired: if this algorithm is initialized with a private key instead of a public key
+
         """
         if self.read_only:
             raise NotImplementedError(
@@ -59,6 +61,7 @@ class BaseRsaKeyWrap(
             the unwrapped clear-text key
         Raises:
             PrivateKeyRequired: if this alg is initialized with a public key instead of a private key
+
         """
         if not isinstance(cipherkey, bytes):
             cipherkey = bytes(cipherkey)

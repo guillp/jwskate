@@ -79,6 +79,7 @@ class SymmetricJwk(Jwk):
 
         Raises:
             ValueError: symmetric keys are always private, it makes no sense to use them as public keys
+
         """
         raise ValueError("Symmetric keys don't have a public key")
 
@@ -94,6 +95,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
           the resulting SymmetricJwk
+
         """
         return cls(dict(kty="oct", k=BinaPy(k).to("b64u").ascii(), **params))
 
@@ -109,6 +111,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             the resulting SymmetricJwk
+
         """
         return cls.from_bytes(cryptography_key, **params)
 
@@ -122,6 +125,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             a SymmetricJwk with a randomly generated key
+
         """
         key = BinaPy.random_bits(key_size)
         return cls.from_bytes(key, **params)
@@ -136,6 +140,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             the calculated thumbprint
+
         """
         return (
             BinaPy.serialize_to("json", {"k": self.k, "kty": self.kty})
@@ -151,6 +156,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             the raw private key, as `bytes`
+
         """
         return BinaPy(self.k).decode_from("b64u")
 
@@ -160,6 +166,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
              the key from the `k` parameter, base64u-decoded
+
         """
         return self.cryptography_key  # type: ignore
 
@@ -186,6 +193,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             a (ciphertext, authentication_tag, iv) tuple
+
         """
         wrapper = self.encryption_wrapper(alg)
         if iv is None:
@@ -200,6 +208,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             the key size in bits
+
         """
         return len(self.key) * 8
 
@@ -223,6 +232,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             the decrypted clear-text
+
         """
         aad = b"" if aad is None else aad
         if not isinstance(aad, bytes):
@@ -244,6 +254,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             a list of supported algorithms identifiers
+
         """
         return [
             name
@@ -256,6 +267,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             a list of supported algorithms identifiers
+
         """
         return [
             name
@@ -273,5 +285,6 @@ class SymmetricJwk(Jwk):
 
         Raises:
             TypeError: always
+
         """
         raise TypeError("Symmetric keys are not serializable to PEM.")

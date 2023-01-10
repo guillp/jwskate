@@ -89,6 +89,7 @@ class ECJwk(Jwk):
 
         Raises:
             UnsupportedEllipticCurve: if the curve identifier is not supported
+
         """
         curve = cls.CURVES.get(crv)
         if curve is None:
@@ -101,6 +102,7 @@ class ECJwk(Jwk):
 
         Returns:
             the EllipticCurve instance
+
         """
         return self.get_curve(self.crv)
 
@@ -116,6 +118,7 @@ class ECJwk(Jwk):
 
         Returns:
           an ECJwk initialized with the supplied parameters
+
         """
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(
@@ -141,6 +144,7 @@ class ECJwk(Jwk):
 
         Returns:
           an ECJWk initialized with the supplied parameters
+
         """
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(
@@ -160,6 +164,7 @@ class ECJwk(Jwk):
 
         Returns:
           32, 48, or 66 (bits)
+
         """
         return self.curve.coordinate_size
 
@@ -173,6 +178,7 @@ class ECJwk(Jwk):
 
         Returns:
             an ECJwk initialized from the provided `cryptography` key
+
         """
         parameters = EllipticCurve.get_jwk_parameters(cryptography_key)
         return cls(parameters)
@@ -187,6 +193,7 @@ class ECJwk(Jwk):
 
         Returns:
             an EllipticCurvePublicKey or EllipticCurvePrivateKey
+
         """
         if self.is_private:
             return asymmetric.ec.EllipticCurvePrivateNumbers(
@@ -220,6 +227,7 @@ class ECJwk(Jwk):
 
         Raises:
             UnsupportedEllipticCurve: if the provided curve identifier is not supported.
+
         """
         if crv is None and alg is None:
             warnings.warn(
@@ -257,6 +265,7 @@ class ECJwk(Jwk):
 
         Returns:
          the x coordinate (from parameter `x`)
+
         """
         return BinaPy(self.x).decode_from("b64u").to_int()
 
@@ -266,6 +275,7 @@ class ECJwk(Jwk):
 
         Returns:
             the y coordinate (from parameter `y`)
+
         """
         return BinaPy(self.y).decode_from("b64u").to_int()
 
@@ -275,6 +285,7 @@ class ECJwk(Jwk):
 
         Returns:
              the ECC private key (from parameter `d`)
+
         """
         return BinaPy(self.d).decode_from("b64u").to_int()
 
@@ -283,6 +294,7 @@ class ECJwk(Jwk):
 
         Returns:
             a list of supported algorithms identifiers
+
         """
         return [
             name
@@ -295,6 +307,7 @@ class ECJwk(Jwk):
 
         Returns:
              a list of supported algorithms identifiers
+
         """
         return list(self.KEY_MANAGEMENT_ALGORITHMS)
 
@@ -303,5 +316,6 @@ class ECJwk(Jwk):
 
         Returns:
              a list of supported algorithms identifiers
+
         """
         return list(self.ENCRYPTION_ALGORITHMS)

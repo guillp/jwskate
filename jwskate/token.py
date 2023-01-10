@@ -14,6 +14,7 @@ class BaseCompactToken:
         value: the string or bytes representation of this JWS/JWE/JWT
         max_size: if the JWT length is larger than this value, raise a `ValueError`.
             This is to avoid JSON deserialization vulnerabilities.
+
     """
 
     def __init__(self, value: Union[bytes, str], max_size: int = 16 * 1024):
@@ -42,6 +43,7 @@ class BaseCompactToken:
 
         Returns:
             `True` if the other token has the same representation, `False` otherwise
+
         """
         if isinstance(other, BaseCompactToken):
             return self.value == other.value
@@ -59,6 +61,7 @@ class BaseCompactToken:
 
         Returns:
             the header value
+
         """
         return self.headers.get(name)
 
@@ -70,6 +73,7 @@ class BaseCompactToken:
             the `alg` value
         Raises:
             AttributeError: if the `alg` header value is not a string
+
         """
         alg = self.get_header("alg")
         if alg is None or not isinstance(alg, str):  # pragma: no branch
@@ -84,6 +88,7 @@ class BaseCompactToken:
             the `kid` value
         Raises:
             AttributeError: if the `kid` header value is not a string
+
         """
         kid = self.get_header("kid")
         if kid is None or not isinstance(kid, str):
@@ -98,6 +103,7 @@ class BaseCompactToken:
             the `typ` value
         Raises:
             AttributeError: if the `typ` header value is not a string
+
         """
         typ = self.get_header("typ")
         if typ is None or not isinstance(typ, str):  # pragma: no branch
@@ -112,6 +118,7 @@ class BaseCompactToken:
             the `typ` value
         Raises:
             AttributeError: if the `typ` header value is not a string
+
         """
         cty = self.get_header("cty")
         if cty is None or not isinstance(cty, str):  # pragma: no branch
@@ -142,6 +149,7 @@ class BaseJsonDict(Dict[str, Any]):
 
         Returns:
             the resulting object
+
         """
         return cls(json.loads(j))
 
@@ -154,5 +162,6 @@ class BaseJsonDict(Dict[str, Any]):
 
         Returns:
             a JSON representation of the current object
+
         """
         return json.dumps(self, *args, **kwargs)

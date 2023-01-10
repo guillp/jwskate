@@ -45,6 +45,7 @@ class EcdhEs(
 
         Returns:
             the "otherinfo" value
+
         """
         algorithm_id = BinaPy.from_int(len(alg), length=4) + BinaPy(alg)
         partyuinfo = BinaPy.from_int(len(apu), length=4) + apu
@@ -75,6 +76,7 @@ class EcdhEs(
 
         Returns:
           a shared key
+
         """
         if isinstance(private_key, ec.EllipticCurvePrivateKey) and isinstance(
             public_key, ec.EllipticCurvePublicKey
@@ -119,6 +121,7 @@ class EcdhEs(
 
         Returns:
             the derived key
+
         """
         shared_key = cls.ecdh(private_key, public_key)
         ckdf = ConcatKDFHash(
@@ -135,6 +138,7 @@ class EcdhEs(
 
         Returns:
             a generated EllipticCurvePrivateKey, on the same curve as this algorithm key
+
         """
         if isinstance(
             self.key, (ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey)
@@ -165,6 +169,7 @@ class EcdhEs(
 
         Returns:
             the CEK for encryption by the sender
+
         """
         with self.public_key_required() as key:
             apu = BinaPy(headers.get("apu", b"")).decode_from("b64u")
@@ -198,6 +203,7 @@ class EcdhEs(
 
         Returns:
             the CEK for decryption by the recipient
+
         """
         with self.private_key_required() as key:
             apu = BinaPy(headers.get("apu", b"")).decode_from("b64u")
@@ -234,6 +240,7 @@ class BaseEcdhEs_AesKw(EcdhEs):
 
         Returns:
             the wrapped CEK
+
         """
         aes_key = self.sender_key(
             ephemeral_private_key, key_size=self.kwalg.key_size, **headers
@@ -257,6 +264,7 @@ class BaseEcdhEs_AesKw(EcdhEs):
 
         Returns:
             the unwrapped key
+
         """
         aes_key = self.recipient_key(
             ephemeral_public_key, key_size=self.kwalg.key_size, **headers

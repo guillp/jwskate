@@ -15,7 +15,8 @@ from jwskate import Jwk, SymmetricJwk
 def symmetric_jwk(request: pytest.FixtureRequest) -> SymmetricJwk:
     alg, min_key_size = request.param
     kid = f"my_{alg}_jwk"
-    jwk = SymmetricJwk.generate_for_alg(alg, kid=kid)
+    jwk = Jwk.generate_for_alg(alg, kid=kid)
+    assert isinstance(jwk, SymmetricJwk)
     assert jwk.kty == "oct"
     assert jwk.alg == alg
     assert jwk.kid == kid

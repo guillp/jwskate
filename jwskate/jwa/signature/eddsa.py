@@ -4,6 +4,7 @@ from typing import SupportsBytes, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519
 
 from ..base import BaseAsymmetricAlg, BaseSignatureAlg
@@ -45,3 +46,35 @@ class EdDsa(
                 return True
             except exceptions.InvalidSignature:
                 return False
+
+
+class Ed25519Dsa(
+    BaseAsymmetricAlg[
+        ed25519.Ed25519PrivateKey,
+        ed25519.Ed25519PublicKey,
+    ],
+    BaseSignatureAlg,
+):
+    """EdDSA signature algorithm with Ed25519 curve."""
+
+    description = __doc__
+    hashing_alg = hashes.SHA256()
+
+    private_key_class = ed25519.Ed25519PrivateKey
+    public_key_class = ed25519.Ed25519PublicKey
+
+
+class Ed448Dsa(
+    BaseAsymmetricAlg[
+        ed448.Ed448PrivateKey,
+        ed448.Ed448PublicKey,
+    ],
+    BaseSignatureAlg,
+):
+    """EdDSA signature algorithm with Ed25519 curve."""
+
+    description = __doc__
+    hashing_alg = hashes.SHAKE256(114)
+
+    private_key_class = ed448.Ed448PrivateKey
+    public_key_class = ed448.Ed448PublicKey

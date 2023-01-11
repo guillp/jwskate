@@ -1,6 +1,7 @@
 """This module implements JWK representing Octet Key Pairs from [RFC8037].
 
 [RFC8037]: https://www.rfc-editor.org/rfc/rfc8037.html
+
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ from jwskate.jwa import (
     EdDsa,
     OKPCurve,
 )
+from jwskate.jwa.okp import PrivateKeyProtocol, PublicKeyProtocol
 
 from .alg import UnsupportedAlg
 from .base import Jwk, JwkParameter
@@ -94,6 +96,7 @@ class OKPJwk(Jwk):
 
         Raises:
             UnsupportedOKPCurve: if the curve is not supported
+
         """
         curve = cls.CURVES.get(crv)
         if curve is None:
@@ -106,6 +109,7 @@ class OKPJwk(Jwk):
 
         Returns:
             the OKPCurve for this key
+
         """
         return self.get_curve(self.crv)
 
@@ -115,6 +119,7 @@ class OKPJwk(Jwk):
 
         Returns:
             the public key (from param `x`)
+
         """
         return BinaPy(self.x).decode_from("b64u")
 
@@ -124,6 +129,7 @@ class OKPJwk(Jwk):
 
         Returns:
             the private key (from param `d`)
+
         """
         return BinaPy(self.d).decode_from("b64u")
 
@@ -152,6 +158,7 @@ class OKPJwk(Jwk):
 
         Returns:
             the matching OKPJwk
+
         """
         if crv and use:
             if (crv in ("Ed25519", "Ed448") and use != "sig") or (
@@ -216,8 +223,10 @@ class OKPJwk(Jwk):
 
         Returns:
             the matching OKPJwk
+
         """
-        if isinstance(cryptography_key, ed25519.Ed25519PrivateKey):
+        crv = OKPCurve.get_curve(cryptography_key)
+        if isinstance(cryptography_key, PrivateKeyProtocol):
             priv = cryptography_key.private_bytes(
                 encoding=serialization.Encoding.Raw,
                 format=serialization.PrivateFormat.Raw,
@@ -228,82 +237,19 @@ class OKPJwk(Jwk):
                 format=serialization.PublicFormat.Raw,
             )
             return cls.private(
-                crv="Ed25519",
+                crv=crv.name,
                 x=pub,
                 d=priv,
             )
-        elif isinstance(cryptography_key, ed25519.Ed25519PublicKey):
+        elif isinstance(cryptography_key, PublicKeyProtocol):
             pub = cryptography_key.public_bytes(
                 encoding=serialization.Encoding.Raw,
                 format=serialization.PublicFormat.Raw,
             )
             return cls.public(
-                crv="Ed25519",
+                crv=crv.name,
                 x=pub,
             )
-        elif isinstance(cryptography_key, ed448.Ed448PrivateKey):
-            priv = cryptography_key.private_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PrivateFormat.Raw,
-                encryption_algorithm=serialization.NoEncryption(),
-            )
-            pub = cryptography_key.public_key().public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw,
-            )
-            return cls.private(
-                crv="Ed448",
-                x=pub,
-                d=priv,
-            )
-        elif isinstance(cryptography_key, ed448.Ed448PublicKey):
-            pub = cryptography_key.public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw,
-            )
-            return cls.public(crv="Ed448", x=pub)
-        elif isinstance(cryptography_key, x25519.X25519PrivateKey):
-            priv = cryptography_key.private_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PrivateFormat.Raw,
-                encryption_algorithm=serialization.NoEncryption(),
-            )
-            pub = cryptography_key.public_key().public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw,
-            )
-            return cls.private(
-                crv="X25519",
-                x=pub,
-                d=priv,
-            )
-        elif isinstance(cryptography_key, x25519.X25519PublicKey):
-            pub = cryptography_key.public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw,
-            )
-            return cls.public(crv="X25519", x=pub)
-        elif isinstance(cryptography_key, x448.X448PrivateKey):
-            priv = cryptography_key.private_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PrivateFormat.Raw,
-                encryption_algorithm=serialization.NoEncryption(),
-            )
-            pub = cryptography_key.public_key().public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw,
-            )
-            return cls.private(
-                crv="X448",
-                x=pub,
-                d=priv,
-            )
-        elif isinstance(cryptography_key, x448.X448PublicKey):
-            pub = cryptography_key.public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw,
-            )
-            return cls.public(crv="X448", x=pub)
         else:
             raise TypeError(
                 "Unsupported key type for OKP. Supported key types are: "
@@ -324,6 +270,7 @@ class OKPJwk(Jwk):
 
         Raises:
             UnsupportedOKPCurve: if this Jwk curve is not supported.
+
         """
         if self.curve.name == "Ed25519":
             if self.is_private:
@@ -359,6 +306,7 @@ class OKPJwk(Jwk):
 
         Returns:
             the resulting OKPJwk
+
         """
         return cls(dict(kty="OKP", crv=crv, x=BinaPy(x).to("b64u").ascii(), **params))
 
@@ -374,6 +322,7 @@ class OKPJwk(Jwk):
 
         Returns:
             the resulting OKPJwk
+
         """
         return cls(
             dict(
@@ -402,6 +351,7 @@ class OKPJwk(Jwk):
 
         Returns:
             the resulting OKPJwk
+
         """
         if crv:
             curve = cls.get_curve(crv)
@@ -426,6 +376,7 @@ class OKPJwk(Jwk):
         """Return the key use.
 
         For OKP keys, this can be directly deduced from the curve.
+
         """
         if self.curve in (Ed25519, Ed448):
             return "sig"

@@ -93,8 +93,8 @@ class JweCompact(BaseCompactToken):
 
         Args:
           headers: the headers (as a mapping of name: value)
-          cek: the raw cek
-          iv: the raw iv
+          cek: the raw CEK
+          iv: the raw IV
           ciphertext: the raw ciphertext
           tag: the authentication tag
 

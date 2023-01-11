@@ -22,6 +22,19 @@ def test_generate_for_alg(alg: str) -> None:
         assert jwk.use == "sig"
         assert jwk.key_ops == ("sign", "verify")
         assert jwk.is_symmetric
+        keysize = {
+            "HS256": 256,
+            "HS384": 384,
+            "HS512": 512,
+            "A128CBC-HS256": 256,
+            "A192CBC-HS384": 384,
+            "A256CBC-HS512": 512,
+            "A128GCM": 128,
+            "A192GCM": 192,
+            "A256GCM": 256,
+        }.get(alg)
+        if keysize:
+            assert jwk.key_size == keysize
     elif alg in SignatureAlgs.ALL_ASYMMETRIC:
         assert jwk.kty in ("EC", "RSA", "OKP")
         assert jwk.use == "sig"
@@ -61,3 +74,15 @@ def test_unsupported_alg() -> None:
     # trying to generate a Jwk with an unsupported alg raises a UnsupportedAlg
     with pytest.raises(UnsupportedAlg):
         Jwk.generate_for_alg("unknown_alg")
+
+
+def test_symmetric_key_size() -> None:
+    with pytest.warns():
+        Jwk.generate_for_alg("HS256", key_size=64)
+
+    assert Jwk.generate_for_alg(
+        "HS256", key_size=384
+    )  # no warning when key_size > hash_size
+
+    with pytest.raises(ValueError):
+        Jwk.generate_for_alg("A128GCM", key_size=100)

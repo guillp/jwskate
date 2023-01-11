@@ -25,15 +25,12 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
     hash_alg: hashes.HashAlgorithm
     """Hash algorithm to use."""
 
-    def __init_subclass__(cls) -> None:
-        """This automatically sets the total key size based on the MAC and AES key sizes."""
-        cls.key_size = cls.mac_key_size + cls.aes_key_size
-
     def __init__(self, key: bytes) -> None:
         """Initialize this wrapper with the given key.
 
         Args:
             key: the key to use for encryption and decryption.
+
         """
         super().__init__(key)
         self.mac_key = self.key[: self.mac_key_size // 8]
@@ -56,6 +53,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         Returns:
           the resulting MAC.
+
         """
         if not isinstance(ciphertext, bytes):
             ciphertext = bytes(ciphertext)
@@ -94,6 +92,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         Returns:
           a tuple (encrypted_data, authentication_tag)
+
         """
         if not isinstance(plaintext, bytes):
             plaintext = bytes(plaintext)
@@ -134,6 +133,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         Returns:
           the decrypted data
+
         """
         if not isinstance(ciphertext, bytes):
             ciphertext = bytes(ciphertext)
@@ -166,6 +166,7 @@ class A128CBC_HS256(BaseAesCbcHmacSha2):
     description = __doc__
     mac_key_size = 128
     aes_key_size = 128
+    key_size = mac_key_size + aes_key_size
     tag_size = 16
     hash_alg = hashes.SHA256()
 
@@ -177,6 +178,7 @@ class A192CBC_HS384(BaseAesCbcHmacSha2):
     description = __doc__
     mac_key_size = 192
     aes_key_size = 192
+    key_size = mac_key_size + aes_key_size
     tag_size = 24
     hash_alg = hashes.SHA384()
 
@@ -186,8 +188,8 @@ class A256CBC_HS512(BaseAesCbcHmacSha2):
 
     name = "A256CBC-HS512"
     description = __doc__
-    key_size = 512
     mac_key_size = 256
     aes_key_size = 256
+    key_size = mac_key_size + aes_key_size
     tag_size = 32
     hash_alg = hashes.SHA512()

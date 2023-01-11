@@ -25,6 +25,7 @@ class JwsCompact(BaseCompactToken):
 
     Args:
         value: the JWS token value
+
     """
 
     def __init__(self, value: Union[bytes, str]):
@@ -76,6 +77,7 @@ class JwsCompact(BaseCompactToken):
 
         Returns:
           the resulting token
+
         """
         jwk = to_jwk(jwk)
 
@@ -97,7 +99,7 @@ class JwsCompact(BaseCompactToken):
         signed_part: Union[bytes, SupportsBytes, str],
         signature: Union[bytes, SupportsBytes, str],
     ) -> JwsCompact:
-        """Constructs a JWS token based on its signed part and signature values.
+        """Construct a JWS token based on its signed part and signature values.
 
         Signed part is the concatenation of the header and payload, both encoded in Base64-Url, and joined by a dot.
 
@@ -107,6 +109,7 @@ class JwsCompact(BaseCompactToken):
 
         Returns:
             the resulting token
+
         """
         if isinstance(signed_part, str):
             signed_part = signed_part.encode("ascii")
@@ -126,6 +129,7 @@ class JwsCompact(BaseCompactToken):
 
         Returns:
             the signed part
+
         """
         return b".".join(self.value.split(b".", 2)[:2])
 
@@ -145,6 +149,7 @@ class JwsCompact(BaseCompactToken):
 
         Returns:
          `True` if the signature matches, `False` otherwise
+
         """
         jwk = to_jwk(jwk)
         return jwk.verify(self.signed_part, self.signature, alg=alg, algs=algs)
@@ -157,6 +162,7 @@ class JwsCompact(BaseCompactToken):
 
         Returns:
             the resulting token
+
         """
         from .json import JwsJsonFlat
 
@@ -181,6 +187,13 @@ class JwsCompact(BaseCompactToken):
 
         Returns:
             the resulting token
+
         """
         jws = self.flat_json(unprotected_header)
         return jws.generalize()
+
+    def jws_signature(self, unprotected_header: Any = None) -> JwsSignature:
+        """Return a JwsSignature based on this JWS Compact token."""
+        return JwsSignature.from_parts(
+            protected=self.headers, signature=self.signature, header=unprotected_header
+        )

@@ -12,7 +12,6 @@ class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
     """Base class for HMAC signature algorithms."""
 
     mac: Type[hmac.HMAC] = hmac.HMAC
-    hashing_alg: hashes.HashAlgorithm
     min_key_size: int
 
     def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:  # noqa: D102

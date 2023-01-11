@@ -4,6 +4,7 @@ from binapy import BinaPy
 from jwskate import (
     P_521,
     ECJwk,
+    InvalidJws,
     Jwk,
     JwsCompact,
     JwsJsonFlat,
@@ -430,6 +431,46 @@ def test_jws_format_transformation(
         assert signed_jws_json_general.flatten() == signed_jws_json_flat
         assert signed_jws_json_flat.compact() == signed_jws_compact
 
+    unprotected_header = {"foo": "bar"}
+
+    flat_json_with_unprotected_header = signed_jws_compact.flat_json(unprotected_header)
+    assert flat_json_with_unprotected_header.payload == signed_jws_compact.payload
+    assert flat_json_with_unprotected_header.header == unprotected_header
+    assert flat_json_with_unprotected_header.protected == signed_jws_compact.headers
+    assert flat_json_with_unprotected_header.signature == signed_jws_compact.signature
+    assert (
+        flat_json_with_unprotected_header.jws_signature
+        == signed_jws_compact.jws_signature(unprotected_header)
+    )
+    assert flat_json_with_unprotected_header.compact() == signed_jws_compact
+
+    general_json_with_unprotected_header = signed_jws_compact.general_json(
+        unprotected_header
+    )
+    assert general_json_with_unprotected_header.payload == signed_jws_compact.payload
+    assert (
+        general_json_with_unprotected_header.signatures[0].header == unprotected_header
+    )
+    assert (
+        general_json_with_unprotected_header.signatures[0].protected
+        == signed_jws_compact.headers
+    )
+    assert (
+        general_json_with_unprotected_header.signatures[0].signature
+        == signed_jws_compact.signature
+    )
+    assert general_json_with_unprotected_header.signatures[
+        0
+    ] == signed_jws_compact.jws_signature(unprotected_header)
+    assert (
+        general_json_with_unprotected_header.signed_part(lambda sigs: sigs[0])
+        == signed_jws_compact.signed_part
+    )
+    assert (
+        general_json_with_unprotected_header.compact(lambda sigs: sigs[0])
+        == signed_jws_compact
+    )
+
 
 def test_verify_signature_by_jwcrypto(
     signed_jws_compact: JwsCompact, verification_jwk: Jwk, signature_alg: str
@@ -498,6 +539,8 @@ def test_verify_signature_from_jwcrypto(
 
 
 def test_invalid_jws_compact() -> None:
+    with pytest.raises(InvalidJws):
+        JwsCompact("foo")
     with pytest.raises(ValueError):
         JwsCompact(
             "ey.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.cOUKU1ijv3KiN2KK_o50RU978I9MzQ4lNw2y7nOGAdM"

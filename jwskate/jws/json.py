@@ -270,7 +270,11 @@ class JwsJsonGeneral(BaseJsonDict):
             A JwsCompact with the payload and the chosen signature from this JWS.
 
         """
-        return JwsCompact.from_parts(self.signed_part(signature_chooser), self.payload)
+        signature = signature_chooser(self.signatures)
+        return JwsCompact.from_parts(
+            JwsSignature.assemble_signed_part(signature.protected, self.payload),
+            signature.signature,
+        )
 
     def flatten(
         self,

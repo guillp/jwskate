@@ -191,3 +191,9 @@ class JwsCompact(BaseCompactToken):
         """
         jws = self.flat_json(unprotected_header)
         return jws.generalize()
+
+    def jws_signature(self, unprotected_header: Any = None) -> JwsSignature:
+        """Return a JwsSignature based on this JWS Compact token."""
+        return JwsSignature.from_parts(
+            protected=self.headers, signature=self.signature, header=unprotected_header
+        )

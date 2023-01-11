@@ -7,13 +7,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, ClassVar, Dict, Tuple, Type, Union
+from typing import Any, ClassVar, Dict, Tuple, Type, Union, runtime_checkable
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
 from typing_extensions import Protocol
 
 
+@runtime_checkable
 class PublicKeyProtocol(Protocol):  # noqa
     """A protocol that each `cryptography` ECDH public key class implements."""
 
@@ -25,6 +26,7 @@ class PublicKeyProtocol(Protocol):  # noqa
         ...
 
 
+@runtime_checkable
 class PrivateKeyProtocol(Protocol):  # noqa
     """A protocol that each `cryptography` ECDH private key class implements."""
 
@@ -109,7 +111,7 @@ class OKPCurve:
                 key, (c.cryptography_private_key_class, c.cryptography_public_key_class)
             ):
                 return c
-        raise NotImplementedError(f"Unsupported OKP key {type(key)}")
+        raise TypeError(f"Unsupported OKP key {type(key)}")
 
 
 Ed25519 = OKPCurve(

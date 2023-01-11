@@ -25,6 +25,7 @@ from jwskate.jwa import (
     EdDsa,
     OKPCurve,
 )
+from jwskate.jwa.okp import PrivateKeyProtocol, PublicKeyProtocol
 
 from .alg import UnsupportedAlg
 from .base import Jwk, JwkParameter
@@ -224,7 +225,8 @@ class OKPJwk(Jwk):
             the matching OKPJwk
 
         """
-        if isinstance(cryptography_key, ed25519.Ed25519PrivateKey):
+        crv = OKPCurve.get_curve(cryptography_key)
+        if isinstance(cryptography_key, PrivateKeyProtocol):
             priv = cryptography_key.private_bytes(
                 encoding=serialization.Encoding.Raw,
                 format=serialization.PrivateFormat.Raw,
@@ -235,82 +237,19 @@ class OKPJwk(Jwk):
                 format=serialization.PublicFormat.Raw,
             )
             return cls.private(
-                crv="Ed25519",
+                crv=crv.name,
                 x=pub,
                 d=priv,
             )
-        elif isinstance(cryptography_key, ed25519.Ed25519PublicKey):
+        elif isinstance(cryptography_key, PublicKeyProtocol):
             pub = cryptography_key.public_bytes(
                 encoding=serialization.Encoding.Raw,
                 format=serialization.PublicFormat.Raw,
             )
             return cls.public(
-                crv="Ed25519",
+                crv=crv.name,
                 x=pub,
             )
-        elif isinstance(cryptography_key, ed448.Ed448PrivateKey):
-            priv = cryptography_key.private_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PrivateFormat.Raw,
-                encryption_algorithm=serialization.NoEncryption(),
-            )
-            pub = cryptography_key.public_key().public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw,
-            )
-            return cls.private(
-                crv="Ed448",
-                x=pub,
-                d=priv,
-            )
-        elif isinstance(cryptography_key, ed448.Ed448PublicKey):
-            pub = cryptography_key.public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw,
-            )
-            return cls.public(crv="Ed448", x=pub)
-        elif isinstance(cryptography_key, x25519.X25519PrivateKey):
-            priv = cryptography_key.private_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PrivateFormat.Raw,
-                encryption_algorithm=serialization.NoEncryption(),
-            )
-            pub = cryptography_key.public_key().public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw,
-            )
-            return cls.private(
-                crv="X25519",
-                x=pub,
-                d=priv,
-            )
-        elif isinstance(cryptography_key, x25519.X25519PublicKey):
-            pub = cryptography_key.public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw,
-            )
-            return cls.public(crv="X25519", x=pub)
-        elif isinstance(cryptography_key, x448.X448PrivateKey):
-            priv = cryptography_key.private_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PrivateFormat.Raw,
-                encryption_algorithm=serialization.NoEncryption(),
-            )
-            pub = cryptography_key.public_key().public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw,
-            )
-            return cls.private(
-                crv="X448",
-                x=pub,
-                d=priv,
-            )
-        elif isinstance(cryptography_key, x448.X448PublicKey):
-            pub = cryptography_key.public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw,
-            )
-            return cls.public(crv="X448", x=pub)
         else:
             raise TypeError(
                 "Unsupported key type for OKP. Supported key types are: "

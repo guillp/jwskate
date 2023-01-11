@@ -74,3 +74,15 @@ def test_unsupported_alg() -> None:
     # trying to generate a Jwk with an unsupported alg raises a UnsupportedAlg
     with pytest.raises(UnsupportedAlg):
         Jwk.generate_for_alg("unknown_alg")
+
+
+def test_symmetric_key_size() -> None:
+    with pytest.warns():
+        Jwk.generate_for_alg("HS256", key_size=64)
+
+    assert Jwk.generate_for_alg(
+        "HS256", key_size=384
+    )  # no warning when key_size > hash_size
+
+    with pytest.raises(ValueError):
+        Jwk.generate_for_alg("A128GCM", key_size=100)

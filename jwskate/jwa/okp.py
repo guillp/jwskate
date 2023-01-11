@@ -7,11 +7,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, ClassVar, Dict, Tuple, Type, Union, runtime_checkable
+from typing import Any, ClassVar, Dict, Tuple, Type, Union
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
-from typing_extensions import Protocol
+from typing_extensions import Protocol, runtime_checkable
 
 
 @runtime_checkable

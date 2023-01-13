@@ -14,12 +14,13 @@ class EllipticCurve:
     """A descriptive class for Elliptic Curves.
 
     Elliptic Curves have a name, a `cryptography.ec.EllipticCurve`, and a coordinate size.
+
     """
 
     name: str
+    """Curve name as defined in [IANA JOSE](https://www.iana.org/assignments/jose/jose.xhtml#web- key-elliptic-curve).
+    This name will appear in `alg` or `enc` fields in JOSE headers.
     """
-    Curve name as defined in [IANA JOSE](https://www.iana.org/assignments/jose/jose.xhtml#web-key-elliptic-curve).
-    This name will appear in `alg` or `enc` fields in JOSE headers."""
 
     cryptography_curve: ec.EllipticCurve
     """`cryptography` curve instance."""
@@ -39,6 +40,7 @@ class EllipticCurve:
 
         Returns:
              a tuple of 4 `int`s: `x` and `y` coordinates (public key) and `d` (private key)
+
         """
         key = ec.generate_private_key(self.cryptography_curve)
         pn = key.private_numbers()  # type: ignore
@@ -61,6 +63,7 @@ class EllipticCurve:
 
         Raises:
             NotImplementedError: if the curve is not supported
+
         """
         for c in cls.instances.values():
             if c.cryptography_curve.name == key.curve.name:
@@ -83,6 +86,7 @@ class EllipticCurve:
 
         Raises:
             TypeError: if the provided key is not an EllipticCurvePrivateKey or EllipticCurvePublicKey
+
         """
         if not isinstance(key, (ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey)):
             raise TypeError(
@@ -113,21 +117,21 @@ P_256 = EllipticCurve(
     cryptography_curve=ec.SECP256R1(),
     coordinate_size=32,
 )
-"""P-256 curve"""
+"""P-256 curve."""
 
 P_384 = EllipticCurve(
     name="P-384",
     cryptography_curve=ec.SECP384R1(),
     coordinate_size=48,
 )
-"""P-384 curve"""
+"""P-384 curve."""
 
 P_521 = EllipticCurve(
     name="P-521",
     cryptography_curve=ec.SECP521R1(),
     coordinate_size=66,
 )
-"""P-521 curve"""
+"""P-521 curve."""
 
 secp256k1 = EllipticCurve(
     name="secp256k1",

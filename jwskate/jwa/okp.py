@@ -1,6 +1,7 @@
 """This module contains classes that describe CFRG Elliptic Curve Diffie-Hellman algorithms as specified in [RFC8037].
 
 [RFC8037]: https://www.rfc-editor.org/rfc/rfc8037.html
+
 """
 
 from __future__ import annotations
@@ -10,9 +11,10 @@ from typing import Any, ClassVar, Dict, Tuple, Type, Union
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
-from typing_extensions import Protocol
+from typing_extensions import Protocol, runtime_checkable
 
 
+@runtime_checkable
 class PublicKeyProtocol(Protocol):  # noqa
     """A protocol that each `cryptography` ECDH public key class implements."""
 
@@ -24,6 +26,7 @@ class PublicKeyProtocol(Protocol):  # noqa
         ...
 
 
+@runtime_checkable
 class PrivateKeyProtocol(Protocol):  # noqa
     """A protocol that each `cryptography` ECDH private key class implements."""
 
@@ -48,8 +51,9 @@ class OKPCurve:
     """Represent an Octet Key Pair (OKP) Curve."""
 
     name: str
-    """Curve name as defined in [IANA JOSE](https://www.iana.org/assignments/jose/jose.xhtml#web-key-elliptic-curve).
-    This name will appear in `alg` headers."""
+    """Curve name as defined in [IANA JOSE](https://www.iana.org/assignments/jose/jose.xhtml#web- key-elliptic-curve).
+    This name will appear in `crv` headers.
+    """
 
     description: str
     """Curve description (human readable)."""
@@ -75,6 +79,7 @@ class OKPCurve:
 
         Returns:
             a tuple of `x` (public  part), and `d` (private part), as bytes
+
         """
         key = self.cryptography_private_key_class.generate()
         x = key.public_key().public_bytes(
@@ -99,13 +104,14 @@ class OKPCurve:
 
         Raises:
             NotImplementedError: if the required OKP curve is not supported
+
         """
         for c in cls.instances.values():
             if isinstance(
                 key, (c.cryptography_private_key_class, c.cryptography_public_key_class)
             ):
                 return c
-        raise NotImplementedError(f"Unsupported OKP key {type(key)}")
+        raise TypeError(f"Unsupported OKP key {type(key)}")
 
 
 Ed25519 = OKPCurve(

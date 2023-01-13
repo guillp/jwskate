@@ -23,7 +23,7 @@ def select_alg_class(
     jwk_alg: Optional[str] = None,
     alg: Optional[str] = None,
 ) -> T:
-    """Internal helper method to choose the appropriate alg class to use for cryptographic operations.
+    """Choose the appropriate alg class to use for cryptographic operations.
 
     Given:
     - a mapping of supported algs names to wrapper classes
@@ -48,6 +48,7 @@ def select_alg_class(
     Raises:
         UnsupportedAlg: if the requested alg is not supported
         ValueError: if supported_algs is empty
+
     """
     if not supported_algs:
         raise ValueError("No possible algorithms to choose from!")
@@ -84,7 +85,7 @@ def select_alg_classes(
     alg: Optional[str] = None,
     algs: Optional[Iterable[str]] = None,
 ) -> List[T]:
-    """Internal helper method to select several appropriate algs classes to use on cryptographic operations.
+    """Select several appropriate algs classes to use on cryptographic operations.
 
     This method is typically used to get the list of valid algorithms when checking a signature, when several algorithms are allowed.
 
@@ -113,6 +114,7 @@ def select_alg_classes(
 
     Warnings:
         if the requested 'alg' is different that the 'jwk_alg', or the 'jwk_alg' is not in the 'algs'
+
     """
     if alg and algs:
         raise ValueError("Please use either parameter 'alg' or 'algs', not both.")

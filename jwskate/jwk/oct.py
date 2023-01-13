@@ -75,10 +75,11 @@ class SymmetricJwk(Jwk):
         return True
 
     def public_jwk(self) -> Jwk:
-        """This always raises a ValueError since SymmetricKeys are always private.
+        """Raise an error since Symmetric Keys are always private.
 
         Raises:
             ValueError: symmetric keys are always private, it makes no sense to use them as public keys
+
         """
         raise ValueError("Symmetric keys don't have a public key")
 
@@ -94,6 +95,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
           the resulting SymmetricJwk
+
         """
         return cls(dict(kty="oct", k=BinaPy(k).to("b64u").ascii(), **params))
 
@@ -109,6 +111,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             the resulting SymmetricJwk
+
         """
         return cls.from_bytes(cryptography_key, **params)
 
@@ -122,30 +125,10 @@ class SymmetricJwk(Jwk):
 
         Returns:
             a SymmetricJwk with a randomly generated key
+
         """
         key = BinaPy.random_bits(key_size)
         return cls.from_bytes(key, **params)
-
-    @classmethod
-    def generate_for_alg(cls, alg: str, **params: Any) -> SymmetricJwk:
-        """Generate a SymmetricJwk that is suitable for use with the given alg.
-
-        Args:
-          alg: the algorithm identifier
-          **params: additional members to include in the Jwk
-
-        Returns:
-            the generated `Jwk`
-
-        Raises:
-            UnsupportedAlg: if the provided `alg` is not supported
-        """
-        alg_class = cls._get_alg_class(alg)
-        if issubclass(alg_class, BaseHMACSigAlg):
-            return cls.generate(key_size=alg_class.min_key_size, alg=alg, **params)
-        elif issubclass(alg_class, (BaseAESEncryptionAlg, BaseAesKeyWrap)):
-            return cls.generate(key_size=alg_class.key_size, alg=alg, **params)
-        return cls.generate(alg=alg, **params)
 
     def thumbprint(self, hashalg: str = "SHA256") -> str:
         """Return the key thumbprint as specified by RFC 7638.
@@ -157,6 +140,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             the calculated thumbprint
+
         """
         return (
             BinaPy.serialize_to("json", {"k": self.k, "kty": self.kty})
@@ -166,12 +150,13 @@ class SymmetricJwk(Jwk):
         )
 
     def _to_cryptography_key(self) -> BinaPy:
-        """Converts this Jwk into a key usable with `cryptography`.
+        """Convert this Jwk into a key usable with `cryptography`.
 
         For SymmetricJwk instances, those are just `bytes` values.
 
         Returns:
             the raw private key, as `bytes`
+
         """
         return BinaPy(self.k).decode_from("b64u")
 
@@ -181,6 +166,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
              the key from the `k` parameter, base64u-decoded
+
         """
         return self.cryptography_key  # type: ignore
 
@@ -207,6 +193,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             a (ciphertext, authentication_tag, iv) tuple
+
         """
         wrapper = self.encryption_wrapper(alg)
         if iv is None:
@@ -221,6 +208,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             the key size in bits
+
         """
         return len(self.key) * 8
 
@@ -244,6 +232,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             the decrypted clear-text
+
         """
         aad = b"" if aad is None else aad
         if not isinstance(aad, bytes):
@@ -265,6 +254,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             a list of supported algorithms identifiers
+
         """
         return [
             name
@@ -277,6 +267,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             a list of supported algorithms identifiers
+
         """
         return [
             name
@@ -294,5 +285,6 @@ class SymmetricJwk(Jwk):
 
         Raises:
             TypeError: always
+
         """
         raise TypeError("Symmetric keys are not serializable to PEM.")

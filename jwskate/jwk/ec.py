@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, List, Mapping, Optional, Union
+from typing import Any, List, Mapping, Optional, Type, Union
 
 from backports.cached_property import cached_property
 from binapy import BinaPy
@@ -18,6 +18,7 @@ from jwskate.jwa import (
     P_256,
     P_384,
     P_521,
+    BaseECSignatureAlg,
     EcdhEs,
     EcdhEs_A128KW,
     EcdhEs_A192KW,
@@ -59,11 +60,11 @@ class ECJwk(Jwk):
         curve.name: curve for curve in [P_256, P_384, P_521, secp256k1]
     }
 
-    SIGNATURE_ALGORITHMS = {
+    SIGNATURE_ALGORITHMS: Mapping[str, Type[BaseECSignatureAlg]] = {
         sigalg.name: sigalg for sigalg in [ES256, ES384, ES512, ES256K]
     }
 
-    KEY_MANAGEMENT_ALGORITHMS = {
+    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, Type[EcdhEs]] = {
         keyalg.name: keyalg
         for keyalg in [EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW]
     }
@@ -88,6 +89,7 @@ class ECJwk(Jwk):
 
         Raises:
             UnsupportedEllipticCurve: if the curve identifier is not supported
+
         """
         curve = cls.CURVES.get(crv)
         if curve is None:
@@ -100,6 +102,7 @@ class ECJwk(Jwk):
 
         Returns:
             the EllipticCurve instance
+
         """
         return self.get_curve(self.crv)
 
@@ -115,6 +118,7 @@ class ECJwk(Jwk):
 
         Returns:
           an ECJwk initialized with the supplied parameters
+
         """
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(
@@ -140,6 +144,7 @@ class ECJwk(Jwk):
 
         Returns:
           an ECJWk initialized with the supplied parameters
+
         """
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(
@@ -159,6 +164,7 @@ class ECJwk(Jwk):
 
         Returns:
           32, 48, or 66 (bits)
+
         """
         return self.curve.coordinate_size
 
@@ -172,6 +178,7 @@ class ECJwk(Jwk):
 
         Returns:
             an ECJwk initialized from the provided `cryptography` key
+
         """
         parameters = EllipticCurve.get_jwk_parameters(cryptography_key)
         return cls(parameters)
@@ -186,6 +193,7 @@ class ECJwk(Jwk):
 
         Returns:
             an EllipticCurvePublicKey or EllipticCurvePrivateKey
+
         """
         if self.is_private:
             return asymmetric.ec.EllipticCurvePrivateNumbers(
@@ -219,6 +227,7 @@ class ECJwk(Jwk):
 
         Raises:
             UnsupportedEllipticCurve: if the provided curve identifier is not supported.
+
         """
         if crv is None and alg is None:
             warnings.warn(
@@ -256,6 +265,7 @@ class ECJwk(Jwk):
 
         Returns:
          the x coordinate (from parameter `x`)
+
         """
         return BinaPy(self.x).decode_from("b64u").to_int()
 
@@ -265,6 +275,7 @@ class ECJwk(Jwk):
 
         Returns:
             the y coordinate (from parameter `y`)
+
         """
         return BinaPy(self.y).decode_from("b64u").to_int()
 
@@ -274,6 +285,7 @@ class ECJwk(Jwk):
 
         Returns:
              the ECC private key (from parameter `d`)
+
         """
         return BinaPy(self.d).decode_from("b64u").to_int()
 
@@ -282,6 +294,7 @@ class ECJwk(Jwk):
 
         Returns:
             a list of supported algorithms identifiers
+
         """
         return [
             name
@@ -294,6 +307,7 @@ class ECJwk(Jwk):
 
         Returns:
              a list of supported algorithms identifiers
+
         """
         return list(self.KEY_MANAGEMENT_ALGORITHMS)
 
@@ -302,5 +316,6 @@ class ECJwk(Jwk):
 
         Returns:
              a list of supported algorithms identifiers
+
         """
         return list(self.ENCRYPTION_ALGORITHMS)

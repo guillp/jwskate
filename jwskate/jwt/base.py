@@ -29,6 +29,7 @@ class Jwt(BaseCompactToken):
 
         Args:
             value: the token value
+
         """
         if not isinstance(value, bytes):
             value = value.encode("ascii")
@@ -65,6 +66,7 @@ class Jwt(BaseCompactToken):
 
         Returns:
           the resulting token
+
         """
         from .signed import SignedJwt
 
@@ -100,6 +102,7 @@ class Jwt(BaseCompactToken):
 
         Returns:
             the resulting token
+
         """
         from .signed import SignedJwt
 
@@ -140,6 +143,7 @@ class Jwt(BaseCompactToken):
 
         Returns:
           the resulting JWE token, with the signed JWT as payload
+
         """
         enc_extra_headers = enc_extra_headers or {}
         enc_extra_headers.setdefault("cty", "JWT")
@@ -156,19 +160,20 @@ class Jwt(BaseCompactToken):
     def decrypt_nested_jwt(
         cls, jwe: Union[str, JweCompact], jwk: Union[Jwk, Dict[str, Any]]
     ) -> Jwt:
-        """Convenience method to decrypt a nested JWT.
+        """Decrypt a JWE that contains a nested JWT.
 
-        It will return a [Jwt] instance.
+        It will return a [Jwt] instance for the inner JWT.
 
         Args:
             jwe: the JWE containing a nested Token
             jwk: the decryption key
 
         Returns:
-            the inner token
+            the inner JWT
 
         Raises:
             InvalidJwt: if the inner JWT is not valid
+
         """
         if not isinstance(jwe, JweCompact):
             jwe = JweCompact(jwe)
@@ -201,6 +206,7 @@ class Jwt(BaseCompactToken):
         Raises:
             InvalidJwt: if the JWT is not valid
             InvalidSignature: if the nested JWT signature is not valid
+
         """
         from .signed import InvalidSignature, SignedJwt
 
@@ -228,6 +234,7 @@ class Jwt(BaseCompactToken):
 
         Returns:
             An integer timestamp
+
         """
         return int(datetime.now(timezone.utc).timestamp()) + delta_seconds
 
@@ -242,5 +249,6 @@ class Jwt(BaseCompactToken):
 
         Returns:
             the corresponding `datetime` in UTC timezone
+
         """
         return datetime.fromtimestamp(timestamp, tz=timezone.utc)

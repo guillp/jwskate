@@ -1,4 +1,10 @@
-"""This module implements the `Jwk` base class, which provides most of the common features of all JWK types."""
+"""This module implements the `Jwk` class, which provides the main interface for using or interacting with a JWK key.
+
+Subclasses of `Jwk` will implement the specific key types, like RSA, EC, OKP, and will provide an interface to access
+the specific attributes for each key type.
+Unless you are dealing with a specific key type and want to access the internal attributes, you should only ever need
+to use the interface from `Jwk`.
+"""
 
 from __future__ import annotations
 
@@ -80,9 +86,71 @@ class Jwk(BaseJsonDict):
 
     """
 
-    subclasses: Dict[str, Type[Jwk]] = {}
+    @classmethod
+    def generate_for_alg(cls, alg: str, **kwargs: Any) -> Jwk:
+        """Generate a key for usage with a specific alg and return the resulting Jwk.
+
+        Args:
+            alg: a signature or key management alg
+            **kwargs: specific parameters depending on the key type, or additional members to include in the Jwk
+
+        Returns:
+            the resulting Jwk
+
+        """
+        for kty, jwk_class in cls.subclasses.items():
+            alg_class: Optional[Type[BaseAlg]]
+            try:
+                alg_class = jwk_class._get_alg_class(alg)
+                # special cases for AES or HMAC based algs which require a specific key size
+                if issubclass(alg_class, (BaseAESEncryptionAlg, BaseAesKeyWrap)):
+                    key_size = kwargs.get("key_size")
+                    if key_size is not None and key_size != alg_class.key_size:
+                        raise ValueError(
+                            f"Key for {alg} must be exactly {alg_class.key_size} bits. "
+                            "You should remove the `key_size` parameter to generate a key of the appropriate length."
+                        )
+                    kwargs.setdefault("key_size", alg_class.key_size)
+                elif issubclass(alg_class, BaseHMACSigAlg):
+                    key_size = kwargs.get("key_size")
+                    if key_size is not None and key_size < alg_class.min_key_size:
+                        warnings.warn(
+                            f"Symmetric keys to use with {alg} should be at least {alg_class.min_key_size} bits "
+                            "in order to make the key at least as hard to brute-force as the signature. "
+                            f"You requested a key size of {key_size} bits."
+                        )
+                    else:
+                        kwargs.setdefault("key_size", alg_class.min_key_size)
+
+                return jwk_class.generate(alg=alg, **kwargs)
+            except UnsupportedAlg:
+                continue
+
+        raise UnsupportedAlg(alg)
+
     """A dict of 'kty' values to subclasses implementing each specific Key Type."""
 
+    @classmethod
+    def generate_for_kty(cls, kty: str, **kwargs: Any) -> Jwk:
+        """Generate a key with a specific type and return the resulting Jwk.
+
+        Args:
+          kty: key type to generate
+          **kwargs: specific parameters depending on the key type, or additional members to include in the Jwk
+
+        Returns:
+            the resulting Jwk
+
+        Raises:
+            UnsupportedKeyType: if the key type is not supported
+
+        """
+        jwk_class = cls.subclasses.get(kty)
+        if jwk_class is None:
+            raise UnsupportedKeyType("Unsupported Key Type:", kty)
+        return jwk_class.generate(**kwargs)
+
+    subclasses: Dict[str, Type[Jwk]] = {}
     cryptography_key_types: Dict[Any, Type[Jwk]] = {}
     """A dict of cryptography key classes to its specific 'kty' value."""
 
@@ -122,7 +190,7 @@ class Jwk(BaseJsonDict):
         for klass in cls.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES:
             Jwk.cryptography_key_types[klass] = cls
 
-    def __new__(cls, key: Union[Jwk, Dict[str, Any], Any], **kwargs: Any):  # type: ignore
+    def __new__(cls, key: Union[Jwk, Dict[str, Any], Any], **kwargs: Any) -> Jwk:
         """Overridden `__new__` to make the Jwk constructor smarter.
 
         The Jwk constructor will accept:
@@ -147,12 +215,12 @@ class Jwk(BaseJsonDict):
                 subclass = Jwk.subclasses.get(kty)
                 if subclass is None:
                     raise InvalidJwk("Unsupported Key Type", kty)
-                return super().__new__(subclass)
+                return super().__new__(subclass)  # type: ignore[type-var]
             elif isinstance(key, str):
                 return cls.from_json(key)
             else:
                 return cls.from_cryptography_key(key, **kwargs)
-        return super().__new__(cls, key, **kwargs)
+        return super().__new__(cls, key, **kwargs)  # type: ignore[type-var]
 
     def __init__(
         self, params: Union[Dict[str, Any], Any], include_kid_thumbprint: bool = False
@@ -249,6 +317,87 @@ class Jwk(BaseJsonDict):
             raise RuntimeError("JWK key attributes cannot be modified.")
         super().__setitem__(key, value)
 
+    @property
+    def kty(self) -> str:
+        """Return the Key Type.
+
+        Returns:
+            the key type
+
+        """
+        return self.KTY
+
+    @property
+    def alg(self) -> Optional[str]:
+        """Return the configured key alg, if any.
+
+        Returns:
+            the key alg
+
+        """
+        alg = self.get("alg")
+        if alg is not None and not isinstance(alg, str):  # pragma: no branch
+            raise TypeError(f"Invalid alg type {type(alg)}", alg)
+        return alg
+
+    @property
+    def kid(self) -> Optional[str]:
+        """Return the JWK key ID (kid), if present."""
+        kid = self.get("kid")
+        if kid is not None and not isinstance(kid, str):  # pragma: no branch
+            raise TypeError(f"invalid kid type {type(kid)}", kid)
+        return kid
+
+    @cached_property
+    def use(self) -> Optional[str]:
+        """Return the key use.
+
+        If no `alg` parameter is present, this returns the `use` parameter from this JWK. If an `alg` parameter is
+        present, the use is deduced from this alg. To check for the presence of the `use` parameter, use
+        `jwk.get('use')`.
+
+        """
+        if self.alg:
+            return self._get_alg_class(self.alg).use
+        else:
+            return self.get("use")
+
+    @cached_property
+    def key_ops(self) -> Tuple[str, ...]:
+        """Return the key operations.
+
+        If no `alg` parameter is present, this returns the `key_ops` parameter from this JWK. If an `alg` parameter is
+        present, the key operations are deduced from this alg. To check for the presence of the `key_ops` parameter, use
+        `jwk.get('key_ops')`.
+
+        """
+        key_ops: Tuple[str, ...]
+        if self.use == "sig":
+            if self.is_symmetric:
+                key_ops = ("sign", "verify")
+            elif self.is_private:
+                key_ops = ("sign",)
+            else:
+                key_ops = ("verify",)
+        elif self.use == "enc":
+            if self.is_symmetric:
+                if self.alg:
+                    alg_class = self._get_alg_class(self.alg)
+                    if issubclass(alg_class, BaseKeyManagementAlg):
+                        key_ops = ("wrapKey", "unwrapKey")
+                    elif issubclass(alg_class, BaseAESEncryptionAlg):
+                        key_ops = ("encrypt", "decrypt")
+                else:
+                    key_ops = ("wrapKey", "unwrapKey", "encrypt", "decrypt")
+            elif self.is_private:
+                key_ops = ("unwrapKey",)
+            else:
+                key_ops = ("wrapKey",)
+        else:
+            key_ops = self.get("key_ops", ())
+
+        return tuple(key_ops)
+
     def thumbprint(self, hashalg: str = "sha-256") -> str:
         """Return the key thumbprint as specified by RFC 7638.
 
@@ -289,28 +438,112 @@ class Jwk(BaseJsonDict):
             f"urn:ietf:params:oauth:jwk-thumbprint:{hashalg}:{self.thumbprint(hashalg)}"
         )
 
-    @property
-    def kty(self) -> str:
-        """Return the Key Type.
+    def check(
+        self,
+        *,
+        is_private: Optional[bool] = None,
+        is_symmetric: Optional[bool] = None,
+        kty: Optional[str] = None,
+    ) -> Jwk:
+        """Check this key for type, privateness and/or symmetricness. Raise a ValueError if it not as expected.
+
+        Args:
+            is_private: if `True`, check if the key is private, if `False`, check if it is public, if `None`, do nothing
+            is_symmetric: if `True`, check if the key is symmetric, if `False`, check if it is asymmetric, if `None`, do nothing
+            kty: the expected key type, if any
 
         Returns:
-            the key type
+            this key, if all checks passed
+
+        Raises:
+            ValueError: if any check fails
 
         """
-        return self.KTY
+        if is_private is not None:
+            if is_private is True and self.is_private is False:
+                raise ValueError("This key is public while a private key is expected.")
+            elif is_private is False and self.is_private is True:
+                raise ValueError("This key is private while a public key is expected.")
 
-    @property
-    def alg(self) -> Optional[str]:
-        """Return the configured key alg, if any.
+        if is_symmetric is not None:
+            if is_symmetric is True and self.is_symmetric is False:
+                raise ValueError(
+                    "This key is asymmetric while a symmetric key is expected."
+                )
+            if is_symmetric is False and self.is_symmetric is True:
+                raise ValueError(
+                    "This key is symmetric while an asymmetric key is expected."
+                )
 
-        Returns:
-            the key alg
+        if kty is not None:
+            if self.kty != kty:
+                raise ValueError(
+                    f"This key has kty={self.kty} while a kty={kty} is expected."
+                )
+
+        return self
+
+    def _validate(self) -> None:
+        """Validate the content of this JWK.
+
+        It checks that all required parameters are present and well-formed. If the key is private, it sets the `is_private` flag to `True`.
+
+        Raises:
+            TypeError: if the key type doesn't match the subclass
+            InvalidJwk: if the JWK misses required members or has invalid members
 
         """
-        alg = self.get("alg")
-        if alg is not None and not isinstance(alg, str):  # pragma: no branch
-            raise TypeError(f"Invalid alg type {type(alg)}", alg)
-        return alg
+        if self.get("kty") != self.KTY:
+            raise TypeError(
+                f"This key 'kty' {self.get('kty')} doesn't match this Jwk subclass intended 'kty' {self.KTY}!"
+            )
+
+        jwk_is_private = False
+        for name, param in self.PARAMS.items():
+            value = self.get(name)
+
+            if param.is_private and value is not None:
+                jwk_is_private = True
+
+            if not param.is_private and param.is_required and value is None:
+                raise InvalidJwk(
+                    f"Missing required public param {param.description} ({name})"
+                )
+
+            if value is None:
+                pass
+            elif param.kind == "b64u":
+                if not isinstance(value, str):
+                    raise InvalidJwk(
+                        f"Parameter {param.description} ({name}) must be a string with a Base64URL-encoded value"
+                    )
+                if not BinaPy(value).check("b64u"):
+                    raise InvalidJwk(
+                        f"Parameter {param.description} ({name}) must be a Base64URL-encoded value"
+                    )
+            elif param.kind == "unsupported":
+                if value is not None:  # pragma: no cover
+                    raise InvalidJwk(f"Unsupported JWK param '{name}'")
+            elif param.kind == "name":
+                pass
+            else:
+                assert (
+                    False
+                ), f"Unsupported param '{name}' type '{param.kind}'"  # pragma: no cover
+
+        # if at least one of the supplied parameter was private, then all required private parameters must be provided
+        if jwk_is_private:
+            for name, param in self.PARAMS.items():
+                value = self.get(name)
+                if param.is_private and param.is_required and value is None:
+                    raise InvalidJwk(
+                        f"Missing required private param {param.description} ({name})"
+                    )
+
+        # if key is used for signing, it must be private
+        for op in self.get("key_ops", []):
+            if op in ("sign", "unwrapKey") and not self.is_private:
+                raise InvalidJwk(f"Key Operation is '{op}' but the key is public")
 
     def signature_class(self, alg: Optional[str] = None) -> Type[BaseSignatureAlg]:
         """Return the appropriate signature algorithm class (a `BaseSignatureAlg` subclass) to use with this key.
@@ -415,127 +648,6 @@ class Jwk(BaseJsonDict):
             return alg_class(self.cryptography_key)
         raise UnsupportedAlg(alg)  # pragma: no cover
 
-    @property
-    def kid(self) -> Optional[str]:
-        """Return the JWK key ID (kid), if present."""
-        kid = self.get("kid")
-        if kid is not None and not isinstance(kid, str):  # pragma: no branch
-            raise TypeError(f"invalid kid type {type(kid)}", kid)
-        return kid
-
-    @cached_property
-    def use(self) -> Optional[str]:
-        """Return the key use.
-
-        If no `alg` parameter is present, this returns the `use` parameter from this JWK. If an `alg` parameter is
-        present, the use is deduced from this alg. To check for the presence of the `use` parameter, use
-        `jwk.get('use')`.
-
-        """
-        if self.alg:
-            return self._get_alg_class(self.alg).use
-        else:
-            return self.get("use")
-
-    @cached_property
-    def key_ops(self) -> Tuple[str, ...]:
-        """Return the key operations.
-
-        If no `alg` parameter is present, this returns the `key_ops` parameter from this JWK. If an `alg` parameter is
-        present, the key operations are deduced from this alg. To check for the presence of the `key_ops` parameter, use
-        `jwk.get('key_ops')`.
-
-        """
-        key_ops: Tuple[str, ...]
-        if self.use == "sig":
-            if self.is_symmetric:
-                key_ops = ("sign", "verify")
-            elif self.is_private:
-                key_ops = ("sign",)
-            else:
-                key_ops = ("verify",)
-        elif self.use == "enc":
-            if self.is_symmetric:
-                if self.alg:
-                    alg_class = self._get_alg_class(self.alg)
-                    if issubclass(alg_class, BaseKeyManagementAlg):
-                        key_ops = ("wrapKey", "unwrapKey")
-                    elif issubclass(alg_class, BaseAESEncryptionAlg):
-                        key_ops = ("encrypt", "decrypt")
-                else:
-                    key_ops = ("wrapKey", "unwrapKey", "encrypt", "decrypt")
-            elif self.is_private:
-                key_ops = ("unwrapKey",)
-            else:
-                key_ops = ("wrapKey",)
-        else:
-            key_ops = self.get("key_ops", ())
-
-        return tuple(key_ops)
-
-    def _validate(self) -> None:
-        """Validate the content of this JWK.
-
-        It checks that all required parameters are present and well-formed. If the key is private, it sets the `is_private` flag to `True`.
-
-        Raises:
-            TypeError: if the key type doesn't match the subclass
-            InvalidJwk: if the JWK misses required members or has invalid members
-
-        """
-        if self.get("kty") != self.KTY:
-            raise TypeError(
-                f"This key 'kty' {self.get('kty')} doesn't match this Jwk subclass intended 'kty' {self.KTY}!"
-            )
-
-        jwk_is_private = False
-        for name, param in self.PARAMS.items():
-
-            value = self.get(name)
-
-            if param.is_private and value is not None:
-                jwk_is_private = True
-
-            if not param.is_private and param.is_required and value is None:
-                raise InvalidJwk(
-                    f"Missing required public param {param.description} ({name})"
-                )
-
-            if value is None:
-                pass
-            elif param.kind == "b64u":
-                if not isinstance(value, str):
-                    raise InvalidJwk(
-                        f"Parameter {param.description} ({name}) must be a string with a Base64URL-encoded value"
-                    )
-                if not BinaPy(value).check("b64u"):
-                    raise InvalidJwk(
-                        f"Parameter {param.description} ({name}) must be a Base64URL-encoded value"
-                    )
-            elif param.kind == "unsupported":
-                if value is not None:  # pragma: no cover
-                    raise InvalidJwk(f"Unsupported JWK param '{name}'")
-            elif param.kind == "name":
-                pass
-            else:
-                assert (
-                    False
-                ), f"Unsupported param '{name}' type '{param.kind}'"  # pragma: no cover
-
-        # if at least one of the supplied parameter was private, then all required private parameters must be provided
-        if jwk_is_private:
-            for name, param in self.PARAMS.items():
-                value = self.get(name)
-                if param.is_private and param.is_required and value is None:
-                    raise InvalidJwk(
-                        f"Missing required private param {param.description} ({name})"
-                    )
-
-        # if key is used for signing, it must be private
-        for op in self.get("key_ops", []):
-            if op in ("sign", "unwrapKey") and not self.is_private:
-                raise InvalidJwk(f"Key Operation is '{op}' but the key is public")
-
     def supported_signing_algorithms(self) -> List[str]:
         """Return the list of Signature algorithms that can be used with this key.
 
@@ -562,55 +674,6 @@ class Jwk(BaseJsonDict):
 
         """
         return list(self.ENCRYPTION_ALGORITHMS)
-
-    def public_jwk(self) -> Jwk:
-        """Return the public Jwk associated with this key.
-
-        Returns:
-          a Jwk with the public key
-
-        """
-        if not self.is_private:
-            return self
-
-        params = {
-            name: self.get(name)
-            for name, param in self.PARAMS.items()
-            if not param.is_private
-        }
-
-        if "key_ops" in self:
-            key_ops = list(self.key_ops)
-            if "sign" in key_ops:
-                key_ops.remove("sign")
-                key_ops.append("verify")
-            if "unwrapKey" in key_ops:
-                key_ops.remove("unwrapKey")
-                key_ops.append("wrapKey")
-        else:
-            key_ops = None
-
-        return Jwk(
-            dict(
-                kty=self.kty,
-                kid=self.get("kid"),
-                alg=self.get("alg"),
-                use=self.get("use"),
-                key_ops=key_ops,
-                **params,
-            )
-        )
-
-    def as_jwks(self) -> JwkSet:
-        """Return a JwkSet with this key as single element.
-
-        Returns:
-            a JwsSet with this single key
-
-        """
-        from .jwks import JwkSet
-
-        return JwkSet(keys=(self,))
 
     def sign(
         self, data: Union[bytes, SupportsBytes], alg: Optional[str] = None
@@ -917,6 +980,55 @@ class Jwk(BaseJsonDict):
 
         return SymmetricJwk.from_bytes(cek)
 
+    def public_jwk(self) -> Jwk:
+        """Return the public Jwk associated with this key.
+
+        Returns:
+          a Jwk with the public key
+
+        """
+        if not self.is_private:
+            return self
+
+        params = {
+            name: self.get(name)
+            for name, param in self.PARAMS.items()
+            if not param.is_private
+        }
+
+        if "key_ops" in self:
+            key_ops = list(self.key_ops)
+            if "sign" in key_ops:
+                key_ops.remove("sign")
+                key_ops.append("verify")
+            if "unwrapKey" in key_ops:
+                key_ops.remove("unwrapKey")
+                key_ops.append("wrapKey")
+        else:
+            key_ops = None
+
+        return Jwk(
+            dict(
+                kty=self.kty,
+                kid=self.get("kid"),
+                alg=self.get("alg"),
+                use=self.get("use"),
+                key_ops=key_ops,
+                **params,
+            )
+        )
+
+    def as_jwks(self) -> JwkSet:
+        """Return a JwkSet with this key as single element.
+
+        Returns:
+            a JwsSet with this single key
+
+        """
+        from .jwks import JwkSet
+
+        return JwkSet(keys=(self,))
+
     @classmethod
     def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> Jwk:
         """Initialize a Jwk from a key from the `cryptography` library.
@@ -1041,69 +1153,14 @@ class Jwk(BaseJsonDict):
             a Jwk instance with a generated key
 
         """
-        raise NotImplementedError
-
-    @classmethod
-    def generate_for_kty(cls, kty: str, **kwargs: Any) -> Jwk:
-        """Generate a key with a specific type and return the resulting Jwk.
-
-        Args:
-          kty: key type to generate
-          **kwargs: specific parameters depending on the key type, or additional members to include in the Jwk
-
-        Returns:
-            the resulting Jwk
-
-        Raises:
-            UnsupportedKeyType: if the key type is not supported
-
-        """
-        jwk_class = cls.subclasses.get(kty)
-        if jwk_class is None:
-            raise UnsupportedKeyType("Unsupported Key Type:", kty)
-        return jwk_class.generate(**kwargs)
-
-    @classmethod
-    def generate_for_alg(cls, alg: str, **kwargs: Any) -> Jwk:
-        """Generate a key for usage with a specific alg and return the resulting Jwk.
-
-        Args:
-            alg: a signature or key management alg
-            **kwargs: specific parameters depending on the key type, or additional members to include in the Jwk
-
-        Returns:
-            the resulting Jwk
-
-        """
-        for kty, jwk_class in cls.subclasses.items():
-            alg_class: Optional[Type[BaseAlg]]
-            try:
-                alg_class = jwk_class._get_alg_class(alg)
-                # special cases for AES or HMAC based algs which require a specific key size
-                if issubclass(alg_class, (BaseAESEncryptionAlg, BaseAesKeyWrap)):
-                    key_size = kwargs.get("key_size")
-                    if key_size is not None and key_size != alg_class.key_size:
-                        raise ValueError(
-                            f"Key for {alg} must be exactly {alg_class.key_size} bits. "
-                            "You should remove the `key_size` parameter to generate a key of the appropriate length."
-                        )
-                    kwargs.setdefault("key_size", alg_class.key_size)
-                elif issubclass(alg_class, BaseHMACSigAlg):
-                    key_size = kwargs.get("key_size")
-                    if key_size is not None and key_size < alg_class.min_key_size:
-                        warnings.warn(
-                            f"Symmetric keys to use with {alg} should be at least {alg_class.min_key_size} bits "
-                            "in order to make the key at least as hard to brute-force as the signature. "
-                            f"You requested a key size of {key_size} bits."
-                        )
-                    else:
-                        kwargs.setdefault("key_size", alg_class.min_key_size)
-
-                return jwk_class.generate(alg=alg, **kwargs)
-            except UnsupportedAlg:
-                continue
-
-        raise UnsupportedAlg(alg)
+        if "alg" in kwargs:
+            return cls.generate_for_alg(**kwargs)
+        if "kty" in kwargs:
+            return cls.generate_for_kty(**kwargs)
+        raise ValueError(
+            "You must provide a hint for jwskate to know what kind of key it must generate. "
+            "You can either provide an 'alg' identifier as keyword parameter, and/or a 'kty'."
+        )
 
     def copy(self) -> Jwk:
         """Create a copy of this key.
@@ -1191,50 +1248,10 @@ class Jwk(BaseJsonDict):
 
         return jwk
 
-    def check(
-        self,
-        *,
-        is_private: Optional[bool] = None,
-        is_symmetric: Optional[bool] = None,
-        kty: Optional[str] = None,
-    ) -> Jwk:
-        """Check this key for type, privateness and/or symmetricness. Raise a ValueError if it not as expected.
-
-        Args:
-            is_private: if `True`, check if the key is private, if `False`, check if it is public, if `None`, do nothing
-            is_symmetric: if `True`, check if the key is symmetric, if `False`, check if it is asymmetric, if `None`, do nothing
-            kty: the expected key type, if any
-
-        Returns:
-            this key, if all checks passed
-
-        Raises:
-            ValueError: if any check fails
-
-        """
-        if is_private is not None:
-            if is_private is True and self.is_private is False:
-                raise ValueError("This key is public while a private key is expected.")
-            elif is_private is False and self.is_private is True:
-                raise ValueError("This key is private while a public key is expected.")
-
-        if is_symmetric is not None:
-            if is_symmetric is True and self.is_symmetric is False:
-                raise ValueError(
-                    "This key is asymmetric while a symmetric key is expected."
-                )
-            if is_symmetric is False and self.is_symmetric is True:
-                raise ValueError(
-                    "This key is symmetric while an asymmetric key is expected."
-                )
-
-        if kty is not None:
-            if self.kty != kty:
-                raise ValueError(
-                    f"This key has kty={self.kty} while a kty={kty} is expected."
-                )
-
-        return self
+    def __eq__(self, other: Any) -> bool:
+        """Compare JWK keys, ignoring optional/informational fields."""
+        other = to_jwk(other)
+        return super(Jwk, self.minimize()).__eq__(other.minimize())
 
 
 def to_jwk(

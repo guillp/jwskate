@@ -100,8 +100,7 @@ class JwkSet(BaseJsonDict):
         """
         jwk = to_jwk(jwk)
 
-        if "keys" not in self:
-            self["keys"] = []
+        self.setdefault("keys", [])
 
         kid = jwk.get("kid", kid)
         if not kid:

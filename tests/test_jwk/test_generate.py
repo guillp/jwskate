@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from jwskate import (
@@ -5,6 +7,7 @@ from jwskate import (
     ExpectedAlgRequired,
     Jwk,
     KeyManagementAlgs,
+    KeyTypes,
     RSAJwk,
     SignatureAlgs,
     UnsupportedAlg,
@@ -68,6 +71,25 @@ def test_generate_for_alg(alg: str) -> None:
     # cannot guess usage parameters if there is no 'alg' parameter in the Jwk
     with pytest.raises(ExpectedAlgRequired):
         jwk_mini.with_usage_parameters()
+
+
+def test_generate_for_kty() -> None:
+    kty2args: dict[str, dict[str, Any]] = {
+        KeyTypes.EC: {},
+        KeyTypes.OCT: {},
+        KeyTypes.RSA: {},
+        KeyTypes.OKP: {"crv": "Ed25519"},
+    }
+    for kty, kwargs in kty2args.items():
+        jwk = Jwk.generate_for_kty(kty, **kwargs)
+        assert jwk.kty == kty
+
+
+def test_generate() -> None:
+    for alg in SignatureAlgs.ALL + KeyManagementAlgs.ALL_KEY_BASED + EncryptionAlgs.ALL:
+        assert Jwk.generate(alg=alg).alg == alg
+
+    assert Jwk.generate(kty=KeyTypes.EC).kty == KeyTypes.EC
 
 
 def test_unsupported_alg() -> None:

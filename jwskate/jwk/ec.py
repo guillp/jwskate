@@ -27,6 +27,7 @@ from jwskate.jwa import (
     secp256k1,
 )
 
+from .. import KeyTypes
 from .base import Jwk, JwkParameter
 
 
@@ -37,7 +38,7 @@ class UnsupportedEllipticCurve(KeyError):
 class ECJwk(Jwk):
     """Represent an Elliptic Curve Jwk, with `kty=EC`."""
 
-    KTY = "EC"
+    KTY = KeyTypes.EC
 
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (asymmetric.ec.EllipticCurvePrivateKey,)
 
@@ -123,7 +124,7 @@ class ECJwk(Jwk):
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(
             dict(
-                key="EC",
+                key=cls.KTY,
                 crv=crv,
                 x=BinaPy.from_int(x, length=coord_size).to("b64u"),
                 y=BinaPy.from_int(y, length=coord_size).to("b64u"),
@@ -149,7 +150,7 @@ class ECJwk(Jwk):
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(
             dict(
-                kty="EC",
+                kty=cls.KTY,
                 crv=crv,
                 x=BinaPy.from_int(x, coord_size).to("b64u").ascii(),
                 y=BinaPy.from_int(y, coord_size).to("b64u").ascii(),

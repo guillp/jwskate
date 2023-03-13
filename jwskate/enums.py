@@ -104,3 +104,12 @@ class KeyManagementAlgs:
     ]
     ALL_KEY_BASED = ALL_ASYMMETRIC + ALL_SYMMETRIC
     ALL = ALL_ASYMMETRIC + ALL_SYMMETRIC + ALL_PASSWORD_BASED
+
+
+class KeyTypes:
+    """Identifier for Key Types (kty)."""
+
+    OCT = "oct"
+    RSA = "RSA"
+    EC = "EC"
+    OKP = "OKP"

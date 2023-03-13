@@ -22,13 +22,14 @@ from jwskate.jwa import (
     RsaEsPcks1v1_5,
 )
 
+from .. import KeyTypes
 from .base import Jwk, JwkParameter
 
 
 class RSAJwk(Jwk):
     """Represent a RSA Jwk, with `kty=RSA`."""
 
-    KTY = "RSA"
+    KTY = KeyTypes.RSA
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (rsa.RSAPrivateKey,)
     CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (rsa.RSAPublicKey,)
 
@@ -152,7 +153,7 @@ class RSAJwk(Jwk):
         """
         return cls(
             dict(
-                kty="RSA",
+                kty=cls.KTY,
                 n=BinaPy.from_int(n).to("b64u").ascii(),
                 e=BinaPy.from_int(e).to("b64u").ascii(),
                 **params,
@@ -191,7 +192,7 @@ class RSAJwk(Jwk):
         """
         return cls(
             dict(
-                kty="RSA",
+                kty=cls.KTY,
                 n=BinaPy.from_int(n).to("b64u").ascii(),
                 e=BinaPy.from_int(e).to("b64u").ascii(),
                 d=BinaPy.from_int(d).to("b64u").ascii(),

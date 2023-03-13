@@ -27,6 +27,7 @@ from jwskate.jwa import (
 )
 from jwskate.jwa.okp import PrivateKeyProtocol, PublicKeyProtocol
 
+from .. import KeyTypes
 from .alg import UnsupportedAlg
 from .base import Jwk, JwkParameter
 
@@ -38,7 +39,7 @@ class UnsupportedOKPCurve(KeyError):
 class OKPJwk(Jwk):
     """Represent an OKP Jwk, with `kty=OKP`."""
 
-    KTY = "OKP"
+    KTY = KeyTypes.OKP
 
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (
         ed25519.Ed25519PrivateKey,
@@ -308,7 +309,7 @@ class OKPJwk(Jwk):
             the resulting OKPJwk
 
         """
-        return cls(dict(kty="OKP", crv=crv, x=BinaPy(x).to("b64u").ascii(), **params))
+        return cls(dict(kty=cls.KTY, crv=crv, x=BinaPy(x).to("b64u").ascii(), **params))
 
     @classmethod
     def private(cls, crv: str, x: bytes, d: bytes, **params: Any) -> OKPJwk:

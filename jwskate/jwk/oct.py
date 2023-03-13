@@ -22,19 +22,17 @@ from jwskate.jwa import (
     HS256,
     HS384,
     HS512,
-    BaseAESEncryptionAlg,
-    BaseAesKeyWrap,
-    BaseHMACSigAlg,
     DirectKeyUse,
 )
 
+from .. import KeyTypes
 from .base import Jwk, JwkParameter
 
 
 class SymmetricJwk(Jwk):
     """Implement Symmetric keys, with `kty=oct`."""
 
-    KTY = "oct"
+    KTY = KeyTypes.OCT
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (bytes,)
     CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (bytes,)
 
@@ -97,7 +95,7 @@ class SymmetricJwk(Jwk):
           the resulting SymmetricJwk
 
         """
-        return cls(dict(kty="oct", k=BinaPy(k).to("b64u").ascii(), **params))
+        return cls(dict(kty=cls.KTY, k=BinaPy(k).to("b64u").ascii(), **params))
 
     @classmethod
     def from_cryptography_key(

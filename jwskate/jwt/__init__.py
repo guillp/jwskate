@@ -3,6 +3,7 @@
 from .base import InvalidJwt, Jwt
 from .signed import ExpiredJwt, InvalidClaim, InvalidSignature, SignedJwt
 from .signer import JwtSigner
+from .verifier import JwtVerifier
 
 __all__ = [
     "ExpiredJwt",
@@ -11,5 +12,6 @@ __all__ = [
     "InvalidSignature",
     "Jwt",
     "JwtSigner",
+    "JwtVerifier",
     "SignedJwt",
 ]

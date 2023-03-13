@@ -1,12 +1,36 @@
-"""This module contains the `JwtSigner` class."""
+"""High level JWT signing helpers.
+
+While you can use the method `Jwt.sign()` with all parameters to generate JWT tokens, this will soon prove to be impractical
+for real application usage where the issuer is static, expiration time must be a configured number of seconds in the future,
+tokens must include a uniquely generated Jwt Oken ID, and signing key is mostly static (but might be renewed once in a while).
+
+To make things easier, you should use the `JwtSigner` class, which you can pre-configure with a static issuer, private key, and signing alg.
+Once initialized, you can simply pass the token specific subject, audience and additional claims to `JwtSigner.sign()`, and
+a signed Jwt will be prepared accordingly.
+
+If you do not care about using a specific private key, you can even initialize a `JwtSigner` with a randomly generated key:
+
+```python
+from jwskate import JwtSigner, ECJwk
+
+signer = JwtSigner.with_random_key(issuer="https://myissuer.local", alg="ES256")
+jwt = signer.sign(subject="myuser", audience="myapp")
+
+# you can access the generated private key key, for example if you need to persist it:
+assert isinstance(signer.jwk, ECJwk) and signer.jwk.is_private
+```
+
+"""
+from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, Iterable, Optional, Union
+from typing import Any, Callable, Dict, Iterable, Optional, Union
 
 from jwskate.jwk import Jwk
 
 from .base import Jwt
 from .signed import SignedJwt
+from .verifier import JwtVerifier
 
 
 class JwtSigner:
@@ -36,6 +60,7 @@ class JwtSigner:
             when calling `.sign()`
         default_leeway: the default leeway, in seconds, to use for claim `nbf`. If None, no `nbf` claim is
             included. This can be overridden when calling `.sign()`
+
     """
 
     def __init__(
@@ -77,6 +102,7 @@ class JwtSigner:
 
         Returns:
           the resulting signed token.
+
         """
         now = Jwt.timestamp()
         lifetime = lifetime or self.default_lifetime
@@ -108,5 +134,47 @@ class JwtSigner:
 
         Returns:
             A unique value suitable for use as JWT Token ID (jti) claim.
+
         """
         return str(uuid.uuid4())
+
+    @classmethod
+    def with_random_key(
+        cls,
+        issuer: str,
+        alg: str,
+        default_lifetime: int = 60,
+        default_leeway: Optional[int] = None,
+        kid: Optional[str] = None,
+    ) -> JwtSigner:
+        """Initialize a JwtSigner with a randomly generated key.
+
+        Args:
+            issuer: the issuer identifier
+            alg: the signing alg to use
+            default_lifetime: lifetime for generated tokens expiration date (`exp` claim)
+            default_leeway: leeway for generated tokens not before date (`nbf` claim)
+            kid: key id to use for the generated key
+
+        Returns:
+            a JwtSigner initialized with a random key
+
+        """
+        jwk = Jwk.generate_for_alg(alg, kid=kid).with_kid_thumbprint()
+        return cls(issuer, jwk, alg, default_lifetime, default_leeway)
+
+    def verifier(
+        self,
+        audience: str,
+        verifiers: Optional[Iterable[Callable[[SignedJwt], None]]] = None,
+        **kwargs: Any,
+    ) -> JwtVerifier:
+        """Return the matching JwtVerifier, initialized with the public key."""
+        return JwtVerifier(
+            issuer=self.issuer,
+            jwkset=self.jwk.public_jwk().as_jwks(),
+            alg=self.alg,
+            audience=audience,
+            verifiers=verifiers,
+            **kwargs,
+        )

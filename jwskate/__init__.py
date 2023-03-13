@@ -7,6 +7,7 @@ for convenience, you can import any class or component directly from the root
 
 `jwskate` doesn't implement any actual cryptographic operation, it just
 provides a set of convenient wrappers around the `cryptography` module.
+
 """
 
 __author__ = """Guillaume Pujol"""
@@ -102,6 +103,7 @@ from .jwt import (
     InvalidSignature,
     Jwt,
     JwtSigner,
+    JwtVerifier,
     SignedJwt,
 )
 
@@ -161,6 +163,7 @@ __all__ = [
     "JwsJsonGeneral",
     "Jwt",
     "JwtSigner",
+    "JwtVerifier",
     "KeyManagementAlgs",
     "KeyTypes",
     "MismatchingAuthTag",

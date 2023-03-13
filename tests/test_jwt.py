@@ -1,3 +1,4 @@
+from builtins import ValueError
 from datetime import datetime, timezone
 
 import pytest
@@ -73,16 +74,33 @@ def test_unprotected() -> None:
     assert jwt == "eyJhbGciOiJub25lIn0.eyJmb28iOiJiYXIifQ."
 
 
-def test_jwt_signer(issuer: str, private_jwk: Jwk) -> None:
-    signer = JwtSigner(issuer, private_jwk)
+def test_jwt_signer_and_verifier(issuer: str) -> None:
+    audience = "some_audience"
+    signer = JwtSigner.with_random_key(issuer, alg="ES256")
     now = datetime.now(timezone.utc)
-    jwt = signer.sign(subject="some_id", audience="some_audience")
-    assert isinstance(jwt, Jwt)
+    jwt = signer.sign(subject="some_id", audience=audience, extra_claims={"foo": "bar"})
+    assert isinstance(jwt, SignedJwt)
     assert jwt.subject == "some_id"
-    assert jwt.audiences == ["some_audience"]
+    assert jwt.audiences == [audience]
     assert jwt.iat == pytest.approx(now.timestamp())
     assert jwt.expires_at is not None
     assert jwt.expires_at > now
+
+    verifier = signer.verifier(audience=audience)
+
+    @verifier.custom_verifier
+    def foobar_verifier(jwt: SignedJwt) -> None:
+        if jwt.foo != "bar":
+            raise ValueError("This JWT is not FooBar compliant!")
+
+    verifier.verify(jwt)
+
+    @verifier.custom_verifier
+    def failing_verifier(jwt: SignedJwt) -> None:
+        raise ValueError("This token will never be valid")
+
+    with pytest.raises(ValueError):
+        verifier.verify(jwt)
 
 
 def test_invalid_signed_jwt() -> None:

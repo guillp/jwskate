@@ -1046,9 +1046,8 @@ class Jwk(BaseJsonDict):
             TypeError: if the key type is not supported
 
         """
-        for klass in cryptography_key.__class__.mro():
-            jwk_class = cls.cryptography_key_types.get(klass)
-            if jwk_class:
+        for cryptography_class, jwk_class in cls.cryptography_key_types.items():
+            if isinstance(cryptography_key, cryptography_class):
                 return jwk_class.from_cryptography_key(cryptography_key, **kwargs)
 
         raise TypeError(

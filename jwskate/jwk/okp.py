@@ -253,7 +253,7 @@ class OKPJwk(Jwk):
             )
         else:
             raise TypeError(
-                "Unsupported key type for OKP. Supported key types are: "
+                f"Unsupported key type for OKP: {type(cryptography_key)}. Supported key types are: "
                 + ", ".join(
                     kls.__name__
                     for kls in (

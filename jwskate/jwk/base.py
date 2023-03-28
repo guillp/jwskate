@@ -1051,7 +1051,9 @@ class Jwk(BaseJsonDict):
             if jwk_class:
                 return jwk_class.from_cryptography_key(cryptography_key, **kwargs)
 
-        raise TypeError(f"Unsupported Jwk class for this Key Type: {cryptography_key}")
+        raise TypeError(
+            f"Unsupported Jwk class for this Key Type: {type(cryptography_key).__name__}"
+        )
 
     def _to_cryptography_key(self) -> Any:
         """Return a key from the `cryptography` library that matches this Jwk.

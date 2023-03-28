@@ -7,7 +7,6 @@ from typing import Any, List, Mapping, Optional, Type, Union
 
 from backports.cached_property import cached_property
 from binapy import BinaPy
-from cryptography.hazmat.primitives import asymmetric
 from cryptography.hazmat.primitives.asymmetric import ec
 
 from jwskate.jwa import (
@@ -40,9 +39,9 @@ class ECJwk(Jwk):
 
     KTY = KeyTypes.EC
 
-    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (asymmetric.ec.EllipticCurvePrivateKey,)
+    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (ec.EllipticCurvePrivateKey,)
 
-    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (asymmetric.ec.EllipticCurvePublicKey,)
+    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (ec.EllipticCurvePublicKey,)
 
     PARAMS: Mapping[str, JwkParameter] = {
         "crv": JwkParameter("Curve", is_private=False, is_required=True, kind="name"),
@@ -186,10 +185,7 @@ class ECJwk(Jwk):
 
     def _to_cryptography_key(
         self,
-    ) -> Union[
-        asymmetric.ec.EllipticCurvePrivateKey,
-        asymmetric.ec.EllipticCurvePublicKey,
-    ]:
+    ) -> Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey,]:
         """Initialize a `cryptography` key based on this Jwk.
 
         Returns:
@@ -197,16 +193,16 @@ class ECJwk(Jwk):
 
         """
         if self.is_private:
-            return asymmetric.ec.EllipticCurvePrivateNumbers(
+            return ec.EllipticCurvePrivateNumbers(
                 private_value=self.ecc_private_key,
-                public_numbers=asymmetric.ec.EllipticCurvePublicNumbers(
+                public_numbers=ec.EllipticCurvePublicNumbers(
                     x=self.x_coordinate,
                     y=self.y_coordinate,
                     curve=self.curve.cryptography_curve,
                 ),
             ).private_key()
         else:
-            return asymmetric.ec.EllipticCurvePublicNumbers(
+            return ec.EllipticCurvePublicNumbers(
                 x=self.x_coordinate,
                 y=self.y_coordinate,
                 curve=self.curve.cryptography_curve,
@@ -237,7 +233,7 @@ class ECJwk(Jwk):
                 "Curve 'P-256' is used by default. You should explicitly pass an 'alg' or 'crv' parameter "
                 "to explicitly select the appropriate Curve and avoid this warning."
             )
-            crv = "P-256"
+            crv = P_256.name
         curve: Optional[EllipticCurve] = None
         if crv:
             curve = cls.get_curve(crv)

@@ -227,7 +227,7 @@ class OKPJwk(Jwk):
 
         """
         crv = OKPCurve.get_curve(cryptography_key)
-        if isinstance(cryptography_key, PrivateKeyProtocol):
+        if isinstance(cryptography_key, cls.CRYPTOGRAPHY_PRIVATE_KEY_CLASSES):
             priv = cryptography_key.private_bytes(
                 encoding=serialization.Encoding.Raw,
                 format=serialization.PrivateFormat.Raw,
@@ -242,7 +242,7 @@ class OKPJwk(Jwk):
                 x=pub,
                 d=priv,
             )
-        elif isinstance(cryptography_key, PublicKeyProtocol):
+        elif isinstance(cryptography_key, cls.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES):
             pub = cryptography_key.public_bytes(
                 encoding=serialization.Encoding.Raw,
                 format=serialization.PublicFormat.Raw,

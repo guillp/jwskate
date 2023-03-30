@@ -24,7 +24,7 @@ repos:
     hooks:
     - id: isort
 -   repo: https://github.com/psf/black
-    rev: 23.1.0
+    rev: 23.3.0
     hooks:
     - id: black
 -   repo: https://github.com/pycqa/flake8
@@ -57,3 +57,4 @@ repos:
             - backports.cached_property==1.0.2
             - pytest-mypy==0.9.1
             - binapy==0.6.0
+            - freezegun==1.2.2

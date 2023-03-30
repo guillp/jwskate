@@ -2,7 +2,7 @@ from builtins import ValueError
 from datetime import datetime, timezone
 
 import pytest
-from freezegun import freeze_time  # type: ignore[import]
+from freezegun import freeze_time
 
 from jwskate import (
     ExpectedAlgRequired,
@@ -447,7 +447,7 @@ def test_invalid_claims() -> None:
         jwt.jwt_token_id
 
 
-@freeze_time("2022-10-07 10:40:15 UTC")  # type: ignore[misc]
+@freeze_time("2022-10-07 10:40:15 UTC")
 def test_timestamp() -> None:
     now_ts = Jwt.timestamp()
     assert isinstance(now_ts, int)

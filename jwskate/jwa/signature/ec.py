@@ -74,37 +74,37 @@ class BaseECSignatureAlg(
                 return False
 
 
-class ES256(BaseECSignatureAlg):  # noqa: D415
+class ES256(BaseECSignatureAlg):
     """ECDSA using P-256 and SHA-256."""
 
     name = "ES256"
     description = __doc__
-    curve = P_256
+    curve = P_256  # type: ignore[has-type]
     hashing_alg = hashes.SHA256()
 
 
-class ES384(BaseECSignatureAlg):  # noqa: D415
+class ES384(BaseECSignatureAlg):
     """ECDSA using P-384 and SHA-384."""
 
     name = "ES384"
     description = __doc__
-    curve = P_384
+    curve = P_384  # type: ignore[has-type]
     hashing_alg = hashes.SHA384()
 
 
-class ES512(BaseECSignatureAlg):  # noqa: D415
+class ES512(BaseECSignatureAlg):
     """ECDSA using P-521 and SHA-512."""
 
     name = "ES512"
     description = __doc__
-    curve = P_521
+    curve = P_521  # type: ignore[has-type]
     hashing_alg = hashes.SHA512()
 
 
-class ES256K(BaseECSignatureAlg):  # noqa: D415
+class ES256K(BaseECSignatureAlg):
     """ECDSA using secp256k1 and SHA-256."""
 
     name = "ES256k"
     description = __doc__
-    curve = secp256k1
+    curve = secp256k1  # type: ignore[has-type]
     hashing_alg = hashes.SHA256()

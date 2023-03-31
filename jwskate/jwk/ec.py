@@ -57,7 +57,7 @@ class ECJwk(Jwk):
     }
 
     CURVES: Mapping[str, EllipticCurve] = {
-        curve.name: curve for curve in [P_256, P_384, P_521, secp256k1]
+        curve.name: curve for curve in [P_256, P_384, P_521, secp256k1]  # type: ignore[has-type]
     }
 
     SIGNATURE_ALGORITHMS: Mapping[str, Type[BaseECSignatureAlg]] = {
@@ -143,7 +143,7 @@ class ECJwk(Jwk):
           **params: additional members to include in the JWK
 
         Returns:
-          an ECJWk initialized with the supplied parameters
+          an ECJwk initialized with the supplied parameters
 
         """
         coord_size = cls.get_curve(crv).coordinate_size

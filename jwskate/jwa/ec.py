@@ -8,6 +8,8 @@ from typing import Any, ClassVar, Dict, Tuple, Union
 from binapy import BinaPy
 from cryptography.hazmat.primitives.asymmetric import ec
 
+from jwskate import KeyTypes
+
 
 @dataclass
 class EllipticCurve:
@@ -100,7 +102,7 @@ class EllipticCurve:
             public_numbers = key.public_numbers()
         x = BinaPy.from_int(public_numbers.x, crv.coordinate_size).to("b64u").ascii()
         y = BinaPy.from_int(public_numbers.y, crv.coordinate_size).to("b64u").ascii()
-        parameters = {"kty": "EC", "crv": crv.name, "x": x, "y": y}
+        parameters = {"kty": KeyTypes.EC, "crv": crv.name, "x": x, "y": y}
         if isinstance(key, ec.EllipticCurvePrivateKey):
             pn = key.private_numbers()  # type: ignore
             d = (

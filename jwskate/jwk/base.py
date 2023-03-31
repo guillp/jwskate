@@ -1066,7 +1066,7 @@ class Jwk(BaseJsonDict):
         raise NotImplementedError
 
     @classmethod
-    def from_pem_key(
+    def from_pem(
         cls,
         data: Union[bytes, str],
         password: Union[bytes, str, None] = None,
@@ -1094,7 +1094,7 @@ class Jwk(BaseJsonDict):
                 if password is not None:
                     raise ValueError(
                         "A public key was loaded from PEM, while a password was provided for decryption."
-                        "Only private keys are encrypted in PEM."
+                        "Only private keys are encrypted using a password."
                     )
             except Exception:
                 raise ValueError(

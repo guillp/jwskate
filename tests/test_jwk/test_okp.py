@@ -217,23 +217,23 @@ def test_from_to_cryptography(
 def test_pem_key(crv: str) -> None:
     private_jwk = OKPJwk.generate(crv=crv)
     private_pem = private_jwk.to_pem()
-    assert Jwk.from_pem_key(private_pem) == private_jwk
+    assert Jwk.from_pem(private_pem) == private_jwk
 
     public_jwk = private_jwk.public_jwk()
     public_pem = public_jwk.to_pem()
-    assert Jwk.from_pem_key(public_pem) == public_jwk
+    assert Jwk.from_pem(public_pem) == public_jwk
 
     # serialize private key with password
     password = b"th1s_i5_a_p4ssW0rd!"
     private_pem = private_jwk.to_pem(password)
-    assert Jwk.from_pem_key(private_pem, password) == private_jwk
+    assert Jwk.from_pem(private_pem, password) == private_jwk
 
     # try to serialize the public key with password
     with pytest.raises(ValueError):
         public_jwk.to_pem(password)
 
     with pytest.raises(ValueError):
-        assert Jwk.from_pem_key(public_pem, password) == public_jwk
+        assert Jwk.from_pem(public_pem, password) == public_jwk
 
 
 def test_from_cryptography_key_unknown_type() -> None:

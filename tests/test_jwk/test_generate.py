@@ -91,6 +91,9 @@ def test_generate() -> None:
 
     assert Jwk.generate(kty=KeyTypes.EC).kty == KeyTypes.EC
 
+    assert Jwk.generate(kty="RSA", alg="RS256")
+    assert Jwk.generate(kty="RSA", alg="ES512")
+
 
 def test_unsupported_alg() -> None:
     # trying to generate a Jwk with an unsupported alg raises a UnsupportedAlg

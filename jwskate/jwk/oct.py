@@ -273,7 +273,7 @@ class SymmetricJwk(Jwk):
             if alg.supports_key(self.cryptography_key)
         ]
 
-    def to_pem(self, password: Union[bytes, str, None] = None) -> bytes:
+    def to_pem(self, password: Union[bytes, str, None] = None) -> str:
         """Serialize this key to PEM format.
 
         Symmetric keys are not serializable to PEM so this will raise a TypeError.

@@ -1103,22 +1103,20 @@ class Jwk(BaseJsonDict):
 
         return cls.from_cryptography_key(cryptography_key, **kwargs)
 
-    def to_pem(self, password: Union[bytes, str, None] = None) -> bytes:
+    def to_pem(self, password: Union[bytes, str, None] = None) -> str:
         """Serialize this key to PEM format.
 
         For private keys, you can provide a password for encryption. This password should be bytes. A `str` is also
         accepted, and will be encoded to `bytes` using UTF-8 before it is used as encryption key.
 
         Args:
-          password: password to use to encrypt the PEM. Should be bytes. If it is a string, it will be encoded with UTF-8.
+          password: password to use to encrypt the PEM. Should be bytes. If it is a string, it will be encoded to bytes with UTF-8.
 
         Returns:
             the PEM serialized key
 
         """
-        password = (
-            str(password).encode("UTF-8") if isinstance(password, str) else password
-        )
+        password = password.encode("UTF-8") if isinstance(password, str) else password
 
         if self.is_private:
             encryption: serialization.KeySerializationEncryption
@@ -1130,7 +1128,7 @@ class Jwk(BaseJsonDict):
                 serialization.Encoding.PEM,
                 serialization.PrivateFormat.PKCS8,
                 encryption,
-            )
+            ).decode()
         else:
             if password:
                 raise ValueError(
@@ -1139,7 +1137,7 @@ class Jwk(BaseJsonDict):
             return self.cryptography_key.public_bytes(  # type: ignore[no-any-return]
                 serialization.Encoding.PEM,
                 serialization.PublicFormat.SubjectPublicKeyInfo,
-            )
+            ).decode()
 
     @classmethod
     def generate(cls, **kwargs: Any) -> Jwk:
@@ -1155,6 +1153,8 @@ class Jwk(BaseJsonDict):
 
         """
         if "alg" in kwargs:
+            if "kty" in kwargs:
+                del kwargs["kty"]
             return cls.generate_for_alg(**kwargs)
         if "kty" in kwargs:
             return cls.generate_for_kty(**kwargs)

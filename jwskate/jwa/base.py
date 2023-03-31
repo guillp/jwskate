@@ -247,12 +247,14 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         iv: Union[bytes, SupportsBytes],
         aad: Union[bytes, SupportsBytes, None] = None,
     ) -> Tuple[BinaPy, BinaPy]:
-        """Encrypt arbitrary data, with [Authenticated Encryption (with optional Associated Data)][AEAD].
+        """Encrypt arbitrary data, with optional [Authenticated Encryption](https://wikipedia.org/wiki/Authenticated_encryption).
 
         This needs:
+
         - the raw data to encrypt (`plaintext`)
         - a given random Initialisation Vector (`iv`) of the appropriate size
         - optional Additional Authentication Data (`aad`)
+
         And returns a tuple (ciphered_data, authentication_tag).
 
         Args:
@@ -262,8 +264,6 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
           a tuple of ciphered data and authentication tag
-
-        [AEAD]: https://wikipedia.org/wiki/Authenticated_encryption
 
         """
         raise NotImplementedError

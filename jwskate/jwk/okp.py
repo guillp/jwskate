@@ -12,6 +12,7 @@ from backports.cached_property import cached_property
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
+from typing_extensions import override
 
 from jwskate.jwa import (
     X448,
@@ -25,7 +26,6 @@ from jwskate.jwa import (
     EdDsa,
     OKPCurve,
 )
-from jwskate.jwa.okp import PrivateKeyProtocol, PublicKeyProtocol
 
 from .. import KeyTypes
 from .alg import UnsupportedAlg
@@ -77,9 +77,11 @@ class OKPJwk(Jwk):
     }
 
     @property
+    @override
     def is_private(self) -> bool:  # noqa: D102
         return "d" in self
 
+    @override
     def _validate(self) -> None:
         if not isinstance(self.crv, str) or self.crv not in self.CURVES:
             raise UnsupportedOKPCurve(self.crv)
@@ -87,13 +89,13 @@ class OKPJwk(Jwk):
 
     @classmethod
     def get_curve(cls, crv: str) -> OKPCurve:
-        """Get the OKPCurve instance from a curve identifier.
+        """Get the `OKPCurve` instance from a curve identifier.
 
         Args:
           crv: a crv identifier
 
         Returns:
-            the matching OKPCurve instance
+            the matching `OKPCurve` instance
 
         Raises:
             UnsupportedOKPCurve: if the curve is not supported
@@ -106,32 +108,17 @@ class OKPJwk(Jwk):
 
     @property
     def curve(self) -> OKPCurve:
-        """Get the OKPCurve instance for this key.
-
-        Returns:
-            the OKPCurve for this key
-
-        """
+        """Get the `OKPCurve` instance for this key."""
         return self.get_curve(self.crv)
 
     @cached_property
     def public_key(self) -> bytes:
-        """Get the public key from this Jwk.
-
-        Returns:
-            the public key (from param `x`)
-
-        """
+        """Get the public key from this `Jwk`, from param `x`, base64url-decoded."""
         return BinaPy(self.x).decode_from("b64u")
 
     @cached_property
     def private_key(self) -> bytes:
-        """Get the private key from this Jwk.
-
-        Returns:
-            the private key (from param `d`)
-
-        """
+        """Get the private key from this `Jwk`, from param `d`, base64url-decoded."""
         return BinaPy(self.d).decode_from("b64u")
 
     @classmethod
@@ -142,23 +129,25 @@ class OKPJwk(Jwk):
         use: Optional[str] = None,
         **kwargs: Any,
     ) -> OKPJwk:
-        """Initialize an `OKPJwk` from its private key.
+        """Initialize an `OKPJwk` from its private key, as `bytes`.
 
-        The public key will be automatically derived from the supplied private key,
+        The public key will be automatically derived from the supplied private key, according to the OKP curve.
 
         The appropriate curve will be guessed based on the key length or supplied `crv`/`use` hints:
-        - 56 bytes will use X448
-        - 57 bytes will use Ed448
-        - 32 bytes will use Ed25519 or X25519. Since there is no way to guess which one you want, it needs an hint with either a `crv` or `use` parameter.
+
+        - 56 bytes will use `X448`
+        - 57 bytes will use `Ed448`
+        - 32 bytes will use `Ed25519` or `X25519`. Since there is no way to guess which one you want,
+          it needs a hint with either a `crv` or `use` parameter.
 
         Args:
-            private_key: the 32, 56 or 57 bytes private key, as raw bytes
-            crv: the curve to use
+            private_key: the 32, 56 or 57 bytes private key, as raw `bytes`
+            crv: the curve identifier to use
             use: the key usage
-            **kwargs: additional members to include in the Jwk
+            **kwargs: additional members to include in the `Jwk`
 
         Returns:
-            the matching OKPJwk
+            the matching `OKPJwk`
 
         """
         if crv and use:
@@ -166,7 +155,9 @@ class OKPJwk(Jwk):
                 crv in ("X25519", "X448") and use != "enc"
             ):
                 raise ValueError(
-                    f"Inconsistent `crv={crv}` and `use={use}` parameters."
+                    f"Inconsistent `crv={crv}` and `use={use}` parameters. "
+                    "Ed25519 and Ed448 are used for signing (use='sig'). "
+                    "X25519 and X448 are used for encryption (use='enc'). "
                 )
         elif crv:
             if crv in ("Ed25519", "Ed448"):
@@ -177,7 +168,9 @@ class OKPJwk(Jwk):
                 raise UnsupportedOKPCurve(crv)
         elif use:
             if use not in ("sig", "enc"):
-                raise ValueError(f"Invalid `use={use}` parameter, need 'sig' or 'enc'.")
+                raise ValueError(
+                    f"Invalid `use={use}` parameter, it must be either 'sig' or 'enc'."
+                )
 
         cryptography_key: Any
         if len(private_key) == 32:
@@ -191,29 +184,33 @@ class OKPJwk(Jwk):
                 )
             else:
                 raise ValueError(
-                    "You need to specify either crv={'Ed25519', 'X25519'} or use={'sig', 'enc'} when providing a 32 bytes private key."
+                    "You provided a 32 bytes private key, which is appropriate for both Ed25519 and X25519 curves. "
+                    "There is no way to guess which curve you need, "
+                    "so please specify either `crv='Ed25519'` or `use='sig'` for an Ed25519 key, "
+                    "or either `crv='X25519'` or `use='enc'` for a X25519 key."
                 )
         elif len(private_key) == 56:
             cryptography_key = x448.X448PrivateKey.from_private_bytes(private_key)
             if use and use != "enc":
                 raise ValueError(
-                    f"Invalid `use={use}` parameter. Keys of length 56 bytes are for curve X448."
+                    f"Invalid `use='{use}'` parameter. Keys of length 56 bytes are only suitable for curve 'X448'."
                 )
             use = "enc"
         elif len(private_key) == 57:
             cryptography_key = ed448.Ed448PrivateKey.from_private_bytes(private_key)
             if use and use != "sig":
                 raise ValueError(
-                    f"Invalid `use={use}` parameter. Keys of length 57 bytes are for curve Ed448."
+                    f"Invalid `use='{use}'` parameter. Keys of length 57 bytes are only suitable for curve 'Ed448'."
                 )
             use = "sig"
         else:
             raise ValueError(
-                "Invalid private key. It must be bytes of length 32, 56 or 57."
+                "Invalid private key. It must be `bytes`, of length 32, 56 or 57 bytes."
             )
 
         return OKPJwk.from_cryptography_key(cryptography_key, use=use, **kwargs)
 
+    @override
     @classmethod
     def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> OKPJwk:
         """Initialize an `OKPJwk` from a `cryptography` key.
@@ -263,11 +260,12 @@ class OKPJwk(Jwk):
                 )
             )
 
+    @override
     def _to_cryptography_key(self) -> Any:
-        """Intialize a `cryptography` key based on this Jwk.
+        """Initialize a `cryptography` key based on this `Jwk`.
 
         Returns:
-            a Ed25519PrivateKey or a Ed25519PublicKey or a Ed448PrivateKey or a Ed448PublicKey based on the current Jwk
+            a `Ed25519PrivateKey` or a `Ed25519PublicKey` or a `Ed448PrivateKey` or a `Ed448PublicKey` based on the current Jwk
 
         Raises:
             UnsupportedOKPCurve: if this Jwk curve is not supported.
@@ -298,31 +296,31 @@ class OKPJwk(Jwk):
 
     @classmethod
     def public(cls, crv: str, x: bytes, **params: Any) -> OKPJwk:
-        """Initialize a public OKPJwk based on the provided parameters.
+        """Initialize a public `OKPJwk` based on the provided parameters.
 
         Args:
           crv: the key curve
           x: the public key
-          **params: additional members to include in the Jwk
+          **params: additional members to include in the `Jwk`
 
         Returns:
-            the resulting OKPJwk
+            the resulting `OKPJwk`
 
         """
         return cls(dict(kty=cls.KTY, crv=crv, x=BinaPy(x).to("b64u").ascii(), **params))
 
     @classmethod
     def private(cls, crv: str, x: bytes, d: bytes, **params: Any) -> OKPJwk:
-        """Initialize a private OKPJwk based on the provided parameters.
+        """Initialize a private `OKPJwk` based on the provided parameters.
 
         Args:
           crv: the OKP curve
           x: the public key
           d: the private key
-          **params: additional members to include in the Jwk
+          **params: additional members to include in the `Jwk`
 
         Returns:
-            the resulting OKPJwk
+            the resulting `OKPJwk`
 
         """
         return cls(
@@ -335,15 +333,16 @@ class OKPJwk(Jwk):
             )
         )
 
+    @override
     @classmethod
     def generate(
         cls, crv: Optional[str] = None, alg: Optional[str] = None, **params: Any
     ) -> OKPJwk:
-        """Generate a private OKPJwk on a given curve.
+        """Generate a private `OKPJwk` on a given curve.
 
         You can specify either a curve or an algorithm identifier, or both.
-        If using an alg identifier, crv will default to Ed25519 for signature algs,
-        or X25519 for encryption algs.
+        If using an alg identifier, crv will default to 'Ed25519' for signature algs,
+        or `X25519` for encryption algs.
 
         Args:
           crv: the curve to use
@@ -366,21 +365,18 @@ class OKPJwk(Jwk):
         else:
             raise ValueError(
                 "You must supply at least a Curve identifier (crv) or an Algorithm identifier (alg) "
-                "in order to generate an OKP JWK."
+                "in order to generate an OKPJwk."
             )
 
         x, d = curve.generate()
         return cls.private(crv=curve.name, x=x, d=d, alg=alg, **params)
 
     @cached_property
+    @override
     def use(self) -> Optional[str]:
-        """Return the key use.
-
-        For OKP keys, this can be directly deduced from the curve.
-
-        """
+        """Return the key use. For OKP keys, this can be directly deduced from the curve."""
         if self.curve in (Ed25519, Ed448):
             return "sig"
         elif self.curve in (X25519, X448):
             return "enc"
-        return None  # pragma: no cover
+        raise UnsupportedOKPCurve(self.curse)  # pragma: no-cover

@@ -8,6 +8,7 @@ from typing import Any, List, Mapping, Optional, Type, Union
 from backports.cached_property import cached_property
 from binapy import BinaPy
 from cryptography.hazmat.primitives.asymmetric import ec
+from typing_extensions import override
 
 from jwskate.jwa import (
     ES256,
@@ -31,11 +32,11 @@ from .base import Jwk, JwkParameter
 
 
 class UnsupportedEllipticCurve(KeyError):
-    """Raised when an unsupported Elliptic curve is requested."""
+    """Raised when an unsupported Elliptic Curve is requested."""
 
 
 class ECJwk(Jwk):
-    """Represent an Elliptic Curve Jwk, with `kty=EC`."""
+    """Represent an Elliptic Curve key, with `kty=EC`."""
 
     KTY = KeyTypes.EC
 
@@ -57,7 +58,7 @@ class ECJwk(Jwk):
     }
 
     CURVES: Mapping[str, EllipticCurve] = {
-        curve.name: curve for curve in [P_256, P_384, P_521, secp256k1]  # type: ignore[has-type]
+        curve.name: curve for curve in [P_256, P_384, P_521, secp256k1]
     }
 
     SIGNATURE_ALGORITHMS: Mapping[str, Type[BaseECSignatureAlg]] = {
@@ -70,9 +71,11 @@ class ECJwk(Jwk):
     }
 
     @property
+    @override
     def is_private(self) -> bool:  # noqa: D102
         return "d" in self
 
+    @override
     def _validate(self) -> None:
         self.get_curve(self.crv)
         super()._validate()
@@ -85,7 +88,7 @@ class ECJwk(Jwk):
           crv: the curve identifier
 
         Returns:
-            the matching EllipticCurve instance
+            the matching `EllipticCurve` instance
 
         Raises:
             UnsupportedEllipticCurve: if the curve identifier is not supported
@@ -98,17 +101,17 @@ class ECJwk(Jwk):
 
     @property
     def curve(self) -> EllipticCurve:
-        """Get the EllipticCurve instance for this key.
+        """Get the `EllipticCurve` instance for this key.
 
         Returns:
-            the EllipticCurve instance
+            the `EllipticCurve` instance
 
         """
         return self.get_curve(self.crv)
 
     @classmethod
-    def public(cls, crv: str, x: int, y: int, **params: str) -> "ECJwk":
-        """Initialize a public ECJwk from its public parameters.
+    def public(cls, crv: str, x: int, y: int, **params: str) -> ECJwk:
+        """Initialize a public `ECJwk` from its public parameters.
 
         Args:
           crv: the curve to use
@@ -132,7 +135,7 @@ class ECJwk(Jwk):
         )
 
     @classmethod
-    def private(cls, crv: str, x: int, y: int, d: int, **params: Any) -> "ECJwk":
+    def private(cls, crv: str, x: int, y: int, d: int, **params: Any) -> ECJwk:
         """Initialize a private ECJwk from its private parameters.
 
         Args:
@@ -168,51 +171,12 @@ class ECJwk(Jwk):
         """
         return self.curve.coordinate_size
 
-    @classmethod
-    def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> ECJwk:
-        """Initialize an ECJwk from a `cryptography` key.
-
-        Args:
-          cryptography_key: `cryptography` key
-          **kwargs: additional members to include in the Jwk
-
-        Returns:
-            an ECJwk initialized from the provided `cryptography` key
-
-        """
-        parameters = EllipticCurve.get_jwk_parameters(cryptography_key)
-        return cls(parameters)
-
-    def _to_cryptography_key(
-        self,
-    ) -> Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey,]:
-        """Initialize a `cryptography` key based on this Jwk.
-
-        Returns:
-            an EllipticCurvePublicKey or EllipticCurvePrivateKey
-
-        """
-        if self.is_private:
-            return ec.EllipticCurvePrivateNumbers(
-                private_value=self.ecc_private_key,
-                public_numbers=ec.EllipticCurvePublicNumbers(
-                    x=self.x_coordinate,
-                    y=self.y_coordinate,
-                    curve=self.curve.cryptography_curve,
-                ),
-            ).private_key()
-        else:
-            return ec.EllipticCurvePublicNumbers(
-                x=self.x_coordinate,
-                y=self.y_coordinate,
-                curve=self.curve.cryptography_curve,
-            ).public_key()
-
+    @override
     @classmethod
     def generate(
         cls, crv: Optional[str] = None, alg: Optional[str] = None, **params: str
-    ) -> "ECJwk":
-        """Generate a random ECJwk.
+    ) -> ECJwk:
+        """Generate a random `ECJwk` with a specific curve (default to `"P-256"`).
 
         Args:
           alg: the alg
@@ -220,7 +184,7 @@ class ECJwk(Jwk):
           **params:
 
         Returns:
-          a generated ECJwk
+          a generated `ECJwk`
 
         Raises:
             UnsupportedEllipticCurve: if the provided curve identifier is not supported.
@@ -256,9 +220,51 @@ class ECJwk(Jwk):
             **params,
         )
 
+    @classmethod
+    @override
+    def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> ECJwk:
+        """Initialize an `ECJwk` from a `cryptography` key.
+
+        Args:
+          cryptography_key: `cryptography` key
+          **kwargs: additional members to include in the `Jwk`
+
+        Returns:
+            an `ECJwk` initialized from the provided `cryptography` key
+
+        """
+        parameters = EllipticCurve.get_jwk_parameters(cryptography_key)
+        return cls(parameters)
+
+    @override
+    def _to_cryptography_key(
+        self,
+    ) -> Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey,]:
+        """Initialize a `cryptography` key based on this `Jwk`.
+
+        Returns:
+            an EllipticCurvePublicKey or EllipticCurvePrivateKey
+
+        """
+        if self.is_private:
+            return ec.EllipticCurvePrivateNumbers(
+                private_value=self.ecc_private_key,
+                public_numbers=ec.EllipticCurvePublicNumbers(
+                    x=self.x_coordinate,
+                    y=self.y_coordinate,
+                    curve=self.curve.cryptography_curve,
+                ),
+            ).private_key()
+        else:
+            return ec.EllipticCurvePublicNumbers(
+                x=self.x_coordinate,
+                y=self.y_coordinate,
+                curve=self.curve.cryptography_curve,
+            ).public_key()
+
     @cached_property
     def x_coordinate(self) -> int:
-        """Return the x coordinate from this ECJwk.
+        """Return the *x coordinate* from this `ECJwk`.
 
         Returns:
          the x coordinate (from parameter `x`)
@@ -268,7 +274,7 @@ class ECJwk(Jwk):
 
     @cached_property
     def y_coordinate(self) -> int:
-        """Return the y coordinate from this ECJwk.
+        """Return the *y coordinate* from this `ECJwk`.
 
         Returns:
             the y coordinate (from parameter `y`)
@@ -278,7 +284,7 @@ class ECJwk(Jwk):
 
     @cached_property
     def ecc_private_key(self) -> int:
-        """Return the ECC private key from this ECJwk.
+        """Return the *ECC private key* from this `ECJwk`.
 
         Returns:
              the ECC private key (from parameter `d`)
@@ -286,6 +292,7 @@ class ECJwk(Jwk):
         """
         return BinaPy(self.d).decode_from("b64u").to_int()
 
+    @override
     def supported_signing_algorithms(self) -> List[str]:
         """Return the list of supported signature algorithms for this key.
 
@@ -299,6 +306,7 @@ class ECJwk(Jwk):
             if alg.curve == self.curve
         ]
 
+    @override
     def supported_key_management_algorithms(self) -> List[str]:
         """Return the list of supported Key Management algorithms for this key.
 
@@ -308,6 +316,7 @@ class ECJwk(Jwk):
         """
         return list(self.KEY_MANAGEMENT_ALGORITHMS)
 
+    @override
     def supported_encryption_algorithms(self) -> List[str]:
         """Return the list of support Encryption algorithms for this key.
 

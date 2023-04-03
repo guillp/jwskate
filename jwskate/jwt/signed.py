@@ -1,9 +1,9 @@
 """This modules contains classes and utilities to generate and validate signed JWT."""
 
 from datetime import datetime, timedelta, timezone
+from functools import cached_property
 from typing import Any, Dict, Iterable, List, Optional, Union
 
-from backports.cached_property import cached_property
 from binapy import BinaPy
 
 from jwskate.jwk import Jwk, to_jwk

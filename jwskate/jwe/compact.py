@@ -1,9 +1,9 @@
 """This module implements the JWE Compact format."""
 
 import warnings
+from functools import cached_property
 from typing import Any, Dict, Mapping, Optional, SupportsBytes, Type, Union
 
-from backports.cached_property import cached_property
 from binapy import BinaPy
 
 from jwskate.jwa import (

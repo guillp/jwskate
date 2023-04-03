@@ -6,9 +6,9 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any, Mapping, Optional
 
-from backports.cached_property import cached_property
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519

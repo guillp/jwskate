@@ -25,7 +25,6 @@ from typing import (
     Union,
 )
 
-from backports.cached_property import cached_property
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 
@@ -348,7 +347,7 @@ class Jwk(BaseJsonDict):
             raise TypeError(f"invalid kid type {type(kid)}", kid)
         return kid
 
-    @cached_property
+    @property
     def use(self) -> Optional[str]:
         """Return the key use.
 
@@ -362,7 +361,7 @@ class Jwk(BaseJsonDict):
         else:
             return self.get("use")
 
-    @cached_property
+    @property
     def key_ops(self) -> Tuple[str, ...]:
         """Return the key operations.
 

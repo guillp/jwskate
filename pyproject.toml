@@ -13,7 +13,6 @@ classifiers=[
     'License :: OSI Approved :: MIT License',
     'Natural Language :: English',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
@@ -25,10 +24,9 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.7,<3.12"
+python = ">=3.8,<3.12"
 cryptography = ">=3.4"
 typing-extensions = ">=4.3.0"
-"backports.cached-property" = "^1"
 binapy = "^0.6.0"
 mypy = "^1.1.1"
 

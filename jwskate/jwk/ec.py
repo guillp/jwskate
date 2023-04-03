@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import warnings
+from functools import cached_property
 from typing import Any, List, Mapping, Optional, Type, Union
 
-from backports.cached_property import cached_property
 from binapy import BinaPy
 from cryptography.hazmat.primitives.asymmetric import ec
 from typing_extensions import override

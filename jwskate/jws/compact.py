@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, SupportsBytes, Union
 
-from backports.cached_property import cached_property
 from binapy import BinaPy
 
 from jwskate.jwk.base import Jwk, to_jwk

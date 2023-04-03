@@ -79,7 +79,7 @@ class ES256(BaseECSignatureAlg):
 
     name = "ES256"
     description = __doc__
-    curve = P_256  # type: ignore[has-type]
+    curve = P_256
     hashing_alg = hashes.SHA256()
 
 
@@ -88,7 +88,7 @@ class ES384(BaseECSignatureAlg):
 
     name = "ES384"
     description = __doc__
-    curve = P_384  # type: ignore[has-type]
+    curve = P_384
     hashing_alg = hashes.SHA384()
 
 
@@ -97,7 +97,7 @@ class ES512(BaseECSignatureAlg):
 
     name = "ES512"
     description = __doc__
-    curve = P_521  # type: ignore[has-type]
+    curve = P_521
     hashing_alg = hashes.SHA512()
 
 
@@ -106,5 +106,5 @@ class ES256K(BaseECSignatureAlg):
 
     name = "ES256k"
     description = __doc__
-    curve = secp256k1  # type: ignore[has-type]
+    curve = secp256k1
     hashing_alg = hashes.SHA256()

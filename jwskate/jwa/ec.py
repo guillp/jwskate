@@ -114,28 +114,28 @@ class EllipticCurve:
         return parameters
 
 
-P_256 = EllipticCurve(
+P_256: EllipticCurve = EllipticCurve(
     name="P-256",
     cryptography_curve=ec.SECP256R1(),
     coordinate_size=32,
 )
 """P-256 curve."""
 
-P_384 = EllipticCurve(
+P_384: EllipticCurve = EllipticCurve(
     name="P-384",
     cryptography_curve=ec.SECP384R1(),
     coordinate_size=48,
 )
 """P-384 curve."""
 
-P_521 = EllipticCurve(
+P_521: EllipticCurve = EllipticCurve(
     name="P-521",
     cryptography_curve=ec.SECP521R1(),
     coordinate_size=66,
 )
 """P-521 curve."""
 
-secp256k1 = EllipticCurve(
+secp256k1: EllipticCurve = EllipticCurve(
     name="secp256k1",
     cryptography_curve=ec.SECP256K1(),
     coordinate_size=32,

@@ -31,7 +31,10 @@ from .base import Jwk, JwkParameter
 
 
 class SymmetricJwk(Jwk):
-    """Implement Symmetric keys, with `kty=oct`."""
+    """Represent a Symmetric key in JWK format.
+
+    Symmetric keys have key type `"oct"`.
+    """
 
     KTY = KeyTypes.OCT
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (bytes,)

@@ -36,7 +36,10 @@ class UnsupportedEllipticCurve(KeyError):
 
 
 class ECJwk(Jwk):
-    """Represent an Elliptic Curve key, with `kty=EC`."""
+    """Represent an Elliptic Curve key in JWK format.
+
+    Elliptic Curve keys have Key Type `"EC"`.
+    """
 
     KTY = KeyTypes.EC
 

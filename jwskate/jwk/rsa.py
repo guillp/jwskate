@@ -27,7 +27,10 @@ from .base import Jwk, JwkParameter
 
 
 class RSAJwk(Jwk):
-    """Represent a RSA `Jwk`, with `kty=RSA`."""
+    """Represent an RSA key in JWK format.
+
+    RSA (Rivest-Shamir-Adleman) keys have Key Type `"RSA"`.
+    """
 
     KTY = KeyTypes.RSA
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (rsa.RSAPrivateKey,)

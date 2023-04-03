@@ -37,7 +37,10 @@ class UnsupportedOKPCurve(KeyError):
 
 
 class OKPJwk(Jwk):
-    """Represent an OKP Jwk, with `kty=OKP`."""
+    """Represent an Octet Key Pair keys in JWK format.
+
+    Octet Key Pair keys have Key Type `"OKP"`.
+    """
 
     KTY = KeyTypes.OKP
 

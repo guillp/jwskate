@@ -1,10 +1,11 @@
 """This module implements RSA based Key Management algorithms."""
 
-from typing import Any, SupportsBytes, Union
+from typing import Any, Self, SupportsBytes, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from typing_extensions import override
 
 from ..base import BaseAsymmetricAlg, BaseKeyManagementAlg
 
@@ -28,8 +29,17 @@ class BaseRsaKeyWrap(
     private_key_class = rsa.RSAPrivateKey
     public_key_class = rsa.RSAPublicKey
 
-    def __init__(self, key: Union[rsa.RSAPublicKey, rsa.RSAPrivateKey]):
-        self.key = key
+    min_key_size: int = 2048
+
+    # def __init__(self, key: Union[rsa.RSAPublicKey, rsa.RSAPrivateKey]):
+    #    self.key = key
+
+    @classmethod
+    @override
+    def with_random_key(cls) -> Self:
+        return cls(
+            rsa.generate_private_key(public_exponent=65537, key_size=cls.min_key_size)
+        )
 
     def wrap_key(self, plainkey: bytes) -> BinaPy:
         """Wrap a symmetric key using this algorithm.

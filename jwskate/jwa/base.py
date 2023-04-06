@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Generic, Iterator, SupportsBytes, Tuple, Type, TypeVar, Union
+from typing import Generic, Iterator, Self, SupportsBytes, Tuple, Type, TypeVar, Union
 
 import cryptography.exceptions
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes
+from typing_extensions import override
 
 
 class PrivateKeyRequired(AttributeError):
@@ -41,6 +42,11 @@ class BaseAlg:
     def __repr__(self) -> str:
         """Use the name of the alg as repr."""
         return self.name
+
+    @classmethod
+    def with_random_key(cls) -> Self:
+        """Initialize an instance of this alg with a randomly-generated key."""
+        raise NotImplementedError()
 
 
 class BaseSymmetricAlg(BaseAlg):
@@ -159,6 +165,17 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
         if not isinstance(self.key, self.public_key_class):
             raise PublicKeyRequired()
         yield self.key  # type: ignore
+
+    def public_key(self) -> Kpub:
+        """Return the public key matching the private key."""
+        if hasattr(self.key, "public_key"):
+            return self.key.public_key()  # type: ignore[no-any-return]
+        raise NotImplementedError()
+
+    def public_alg(self) -> Self:
+        """Return an alg instance initialised with the public key."""
+        with self.private_key_required():
+            return self.__class__(self.public_key())
 
 
 class BaseSignatureAlg(BaseAlg):
@@ -296,7 +313,8 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         raise NotImplementedError
 
     @classmethod
-    def init_random_key(cls) -> BaseAESEncryptionAlg:
+    @override
+    def with_random_key(cls) -> Self:
         """Initialize this alg with a random key.
 
         Returns:

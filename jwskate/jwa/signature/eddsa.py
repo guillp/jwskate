@@ -1,11 +1,12 @@
 """This module implements the Edwards-curve Digital Signature Algorithm (EdDSA)."""
 
-from typing import SupportsBytes, Union
+from typing import Self, SupportsBytes, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519
+from typing_extensions import override
 
 from ..base import BaseAsymmetricAlg, BaseSignatureAlg
 
@@ -24,6 +25,11 @@ class EdDsa(
 
     name = "EdDSA"
     description = __doc__
+
+    @classmethod
+    @override
+    def with_random_key(cls) -> Self:
+        return cls(ed25519.Ed25519PrivateKey.generate())
 
     def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:  # noqa: D102
         if not isinstance(data, bytes):

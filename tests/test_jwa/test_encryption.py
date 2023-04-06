@@ -28,7 +28,7 @@ class SupportsBytesTester:
     "alg", [A128GCM, A192GCM, A256GCM, A128CBC_HS256, A192CBC_HS384, A256CBC_HS512]
 )
 def test_encryption(alg: BaseAESEncryptionAlg) -> None:
-    jwa = alg.init_random_key()
+    jwa = alg.with_random_key()
     plaintext = b"this is a test"
     iv = alg.generate_iv()
     assert len(iv) * 8 == alg.iv_size

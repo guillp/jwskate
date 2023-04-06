@@ -101,7 +101,7 @@ warn_redundant_casts = true
 [tool.pydocstyle]
 convention = "google"
 match_dir = 'jwskate'
-
+ignore_decorators = 'override'
 
 [tool.docformatter]
 recursive = true

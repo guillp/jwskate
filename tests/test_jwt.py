@@ -14,6 +14,7 @@ from jwskate import (
     Jwk,
     Jwt,
     JwtSigner,
+    JwtVerifier,
     SignatureAlgs,
     SignedJwt,
     SymmetricJwk,
@@ -119,6 +120,7 @@ def test_invalid_signed_jwt() -> None:
 def test_empty_jwt(private_jwk: Jwk) -> None:
     jwt = Jwt.sign({}, private_jwk)
     assert jwt.is_expired() is None
+    assert jwt.issued_at is None
     assert jwt.expires_at is None
     assert jwt.not_before is None
     assert jwt.issuer is None
@@ -336,7 +338,7 @@ def test_sign_and_encrypt() -> None:
         Jwk.generate_for_alg(enc_alg).with_kid_thumbprint().with_usage_parameters()
     )
 
-    claims = {"iat": 1661759343, "exp": 1661759403, "sub": "mysub"}
+    claims = {"iat": 1661759343, "exp": 1661759403, "nbf": 1661759323, "sub": "mysub"}
     enc_jwt = Jwt.sign_and_encrypt(claims, sign_jwk, enc_jwk.public_jwk(), enc)
     assert isinstance(enc_jwt, JweCompact)
     assert enc_jwt.cty == "JWT"
@@ -431,8 +433,10 @@ def test_invalid_headers() -> None:
 
 def test_invalid_claims() -> None:
     jwt = SignedJwt(
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImlhdCI6ImZvbyIsImV4cCI6ImZvbyIsIm5iZiI6ImZvbyIsImF1ZCI6MSwianRpIjoxfQ.lcNMSH9LNXbIpQUAqtbIjMv-kSWXeC0VamsrHNESTq0"
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImlhdCI6ImZvbyIsImV4cCI6ImZvbyIsIm5iZiI6ImZvbyIsImlzcyI6MTExMSwiYXVkIjoxLCJqdGkiOjF9.XeKnvnirIE7LmkTVwVyWOVTKLawybdolAZTFtM4NfoI"
     )
+    with pytest.raises(AttributeError):
+        jwt.issuer
     with pytest.raises(AttributeError):
         jwt.subject
     with pytest.raises(AttributeError):
@@ -458,3 +462,160 @@ def test_timestamp() -> None:
 
     assert Jwt.timestamp(+60) == 1665139275
     assert Jwt.timestamp(-60) == 1665139155
+
+
+@freeze_time("2023-04-03 11:56:20 UTC")
+def test_verifier() -> None:
+    issuer = "https://my.issuer.local"
+    audience = "myaudience"
+    subject = "mysubject"
+    private_jwk = Jwk(
+        {
+            "kty": "EC",
+            "crv": "P-256",
+            "alg": "ES256",
+            "kid": "MUBAl25sdPAIlnA_8-BnMcIe5e8LnlI5pHF6Zy-icvw",
+            "x": "ftZqn6yrLR_4AytQz8Q_badHRTQ2Vc6Eg46ICsMuuMM",
+            "y": "C4wIeHH0aIW5Tf1_EPnJkse-vcoDNd-kh8P6-Ci2MI8",
+            "d": "3vyhseJLd51ZXdlrCHAPH1uv5Bp9IvnA8UB92ksu4MU",
+        }
+    )
+    jwks = private_jwk.public_jwk().as_jwks()
+
+    def suject_verifier(jwt: SignedJwt) -> None:
+        if jwt.subject != subject:
+            raise ValueError("Invalid Subject", jwt)
+
+    def not_foo(jwt: SignedJwt) -> None:
+        if "foo" in jwt.claims:
+            raise ValueError("Token is foo!", jwt)
+
+    verifier = JwtVerifier(
+        jwks,
+        issuer=issuer,
+        audience=audience,
+        alg="ES256",
+        verifiers=[suject_verifier, not_foo],
+    )
+
+    verifier.verify(
+        Jwt.sign(
+            {
+                "iss": "https://my.issuer.local",
+                "aud": "myaudience",
+                "iat": 1680523071,
+                "exp": 1680523131,
+                "sub": "mysubject",
+            },
+            private_jwk,
+        )
+    )
+
+    with pytest.raises(InvalidClaim, match="issuer"):
+        verifier.verify(
+            Jwt.sign(
+                {
+                    "iss": "https://wrong.issuer.local",
+                    "aud": "myaudience",
+                    "iat": 1680522980,
+                    "exp": 1680523040,
+                    "sub": "mysubject",
+                },
+                private_jwk,
+            )
+        )
+
+    with pytest.raises(InvalidClaim, match="audience"):
+        verifier.verify(
+            Jwt.sign(
+                {
+                    "iss": "https://my.issuer.local",
+                    "aud": "wrong_audience",
+                    "iat": 1680522980,
+                    "exp": 1680523040,
+                    "sub": "mysubject",
+                },
+                private_jwk,
+            )
+        )
+
+    with pytest.raises(InvalidSignature):
+        jwt = Jwt.sign(
+            {
+                "iss": "https://my.issuer.local",
+                "aud": "myaudience",
+                "iat": 1680523071,
+                "exp": 1680523131,
+                "sub": "mysubject",
+            },
+            private_jwk,
+        )
+        verifier.verify(str(jwt)[:-17] + "--wrong_signature")
+
+    with pytest.raises(ExpiredJwt):
+        verifier.verify(
+            Jwt.sign(
+                {
+                    "iss": "https://my.issuer.local",
+                    "aud": "myaudience",
+                    "iat": 1680522860,  # expired
+                    "exp": 1680522920,
+                    "sub": "mysubject",
+                },
+                private_jwk,
+            )
+        )
+
+    with pytest.raises(ValueError):
+        verifier.verify(
+            Jwt.sign(
+                {
+                    "iss": "https://my.issuer.local",
+                    "aud": "wrong_audience",
+                    "iat": 1680522980,
+                    "exp": 1680523040,
+                    "sub": "wrong_subject",
+                },
+                private_jwk,
+            )
+        )
+
+    with pytest.raises(ValueError):
+        verifier.verify(
+            Jwt.sign(
+                {
+                    "iss": "https://my.issuer.local",
+                    "aud": "myaudience",
+                    "iat": 1680522860,
+                    "exp": 1680522920,
+                    "sub": "mysubject",
+                    "foo": "bar",
+                },
+                private_jwk,
+            )
+        )
+
+    valid_jwt_without_kid = Jwt.sign(
+        {
+            "iss": "https://my.issuer.local",
+            "aud": "myaudience",
+            "iat": 1680523071,
+            "exp": 1680523131,
+            "sub": "mysubject",
+        },
+        private_jwk.minimize(),
+        alg="ES256",
+    )
+
+    verifier.verify(valid_jwt_without_kid)
+
+    with pytest.raises(InvalidSignature):
+        verifier.verify(str(valid_jwt_without_kid)[:-17] + "--wrong-signature")
+
+    JwtVerifier(
+        private_jwk.public_jwk(),
+        issuer=issuer,
+        audience=audience,
+        alg="ES256",
+        verifiers=[suject_verifier, not_foo],
+    ).verify(valid_jwt_without_kid)

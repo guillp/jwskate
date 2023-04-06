@@ -236,8 +236,8 @@ class Jwk(BaseJsonDict):
 
         try:
             self.cryptography_key = self._to_cryptography_key()
-        except AttributeError as exc:
-            raise InvalidJwk("Invalid JWK parameter", *exc.args) from exc
+        except Exception as exc:
+            raise InvalidJwk(params) from exc
 
     @classmethod
     def _get_alg_class(cls, alg: str) -> Type[BaseAlg]:
@@ -925,8 +925,8 @@ class Jwk(BaseJsonDict):
         from jwskate import SymmetricJwk
 
         if not self.is_symmetric and not self.is_private:
-            warnings.warn(
-                "You are using a public key for recipient key unwrapping. Key wrapping should always be done using the recipient private key."
+            raise ValueError(
+                "You are using a public key for recipient key unwrapping. Key unwrapping must always be done using the recipient private key."
             )
 
         key_alg_wrapper = self.key_management_wrapper(alg)

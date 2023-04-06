@@ -251,17 +251,9 @@ class OKPJwk(Jwk):
                 crv=crv.name,
                 x=pub,
             )
-        else:
-            raise TypeError(
-                f"Unsupported key type for OKP: {type(cryptography_key)}. Supported key types are: "
-                + ", ".join(
-                    kls.__name__
-                    for kls in (
-                        cls.CRYPTOGRAPHY_PRIVATE_KEY_CLASSES
-                        + cls.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES
-                    )
-                )
-            )
+        raise TypeError(
+            "Unsupported key type", type(cryptography_key)
+        )  # pragma: no-cover
 
     @override
     def _to_cryptography_key(self) -> Any:

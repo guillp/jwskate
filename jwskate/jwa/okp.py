@@ -111,7 +111,15 @@ class OKPCurve:
                 key, (c.cryptography_private_key_class, c.cryptography_public_key_class)
             ):
                 return c
-        raise TypeError(f"Unsupported OKP key {type(key)}")
+        raise TypeError(
+            f"""\
+Unsupported key type for OKP: {type(key)}. Supported key types are: "
+{', '.join(
+    name
+    for curve in cls.instances.values()
+    for name in (curve.cryptography_private_key_class.__name__, curve.cryptography_public_key_class.__name__)
+)}"""
+        )
 
 
 Ed25519 = OKPCurve(

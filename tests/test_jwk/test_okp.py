@@ -184,6 +184,9 @@ def test_unknown_curve() -> None:
     with pytest.raises(UnsupportedOKPCurve):
         Jwk({"kty": "OKP", "crv": "foobar", "x": "abcd"})
 
+    with pytest.raises(UnsupportedOKPCurve):
+        OKPJwk.get_curve("foobar")
+
 
 @pytest.mark.parametrize(
     "crv,private_key_class,public_key_class",
@@ -305,3 +308,8 @@ def test_from_bytes(private_key: bytes, crv: str, use: str) -> None:
     # trying to initialize an OKPJwk with a wrong key size will not work
     with pytest.raises(ValueError):
         OKPJwk.from_bytes(private_key + b"bb")
+
+    # key of length 56 with use != "enc", or len 57 with use != "sig"
+    if len(private_key) != 32:
+        with pytest.raises(ValueError):
+            OKPJwk.from_bytes(private_key, use="sig" if use == "enc" else "enc")

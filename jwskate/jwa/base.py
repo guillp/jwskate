@@ -300,7 +300,7 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         """Initialize this alg with a random key.
 
         Returns:
-            a subclass of BaseAESEncryptionAlg initialized with a randomly generated key
+            a subclass of `BaseAESEncryptionAlg` initialized with a randomly generated key
 
         """
         return cls(cls.generate_key())

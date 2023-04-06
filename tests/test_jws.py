@@ -13,6 +13,7 @@ from jwskate import (
     RSAJwk,
     SymmetricJwk,
 )
+from jwskate.jws.signature import JwsSignature
 
 
 def test_jws_compact(private_jwk: Jwk) -> None:
@@ -562,3 +563,29 @@ def test_invalid_jws_json() -> None:
         JwsJsonGeneral({}).payload
     with pytest.raises(AttributeError):
         JwsJsonGeneral({}).signatures
+    with pytest.raises(AttributeError):
+        JwsSignature({}).protected
+    with pytest.raises(AttributeError):
+        JwsSignature({}).signature
+
+
+def test_jws_from_parts() -> None:
+    assert JwsCompact.from_parts(
+        "eyJhbGciOm51bGx9.dGhpc19pc19hX3Rlc3Q",
+        BinaPy(
+            "xZdQ-v6xqUpJGeuRIGVTs9gv56eQ_T_q-4OQdFS3IkkC3o-QM6vP39wHf5iNoHrZww9SrXHXb0oaF4RQZyKRGg"
+        ).decode_from("b64u"),
+    ) == JwsCompact(
+        "eyJhbGciOm51bGx9.dGhpc19pc19hX3Rlc3Q.xZdQ-v6xqUpJGeuRIGVTs9gv56eQ_T_q-4OQdFS3IkkC3o-QM6vP39wHf5iNoHrZww9SrXHXb0oaF4RQZyKRGg"
+    )
+
+    assert JwsCompact.from_parts(
+        bytearray(b"eyJhbGciOm51bGx9.dGhpc19pc19hX3Rlc3Q"),
+        bytearray(
+            BinaPy(
+                b"xZdQ-v6xqUpJGeuRIGVTs9gv56eQ_T_q-4OQdFS3IkkC3o-QM6vP39wHf5iNoHrZww9SrXHXb0oaF4RQZyKRGg"
+            ).decode_from("b64u")
+        ),
+    ) == JwsCompact(
+        "eyJhbGciOm51bGx9.dGhpc19pc19hX3Rlc3Q.xZdQ-v6xqUpJGeuRIGVTs9gv56eQ_T_q-4OQdFS3IkkC3o-QM6vP39wHf5iNoHrZww9SrXHXb0oaF4RQZyKRGg"
+    )

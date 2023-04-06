@@ -4,7 +4,7 @@ from typing import Type, Union
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec, x448, x25519
 
-from jwskate import EcdhEs
+from jwskate import BasePbes2, EcdhEs
 
 
 @pytest.mark.parametrize(
@@ -39,3 +39,13 @@ def test_ecdhes(
 
     with pytest.raises(ValueError):
         sender_ecdhes.ecdh(private_key, b"foo")  # type: ignore[arg-type]
+
+
+def test_pbes2_salt() -> None:
+    assert isinstance(BasePbes2.generate_salt(), bytes)
+    assert len(BasePbes2.generate_salt()) == 12
+    assert isinstance(BasePbes2.generate_salt(8), bytes)
+    assert isinstance(BasePbes2.generate_salt(16), bytes)
+
+    with pytest.raises(ValueError, match="at least 8 bytes long"):
+        BasePbes2.generate_salt(7)

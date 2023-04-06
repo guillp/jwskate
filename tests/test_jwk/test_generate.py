@@ -15,7 +15,7 @@ from jwskate import (
 
 
 @pytest.mark.parametrize(
-    "alg", SignatureAlgs.ALL + EncryptionAlgs.ALL + KeyManagementAlgs.ALL_KEY_BASED
+    "alg", SignatureAlgs.ALL | EncryptionAlgs.ALL | KeyManagementAlgs.ALL_KEY_BASED
 )
 def test_generate_for_alg(alg: str) -> None:
     jwk = Jwk.generate_for_alg(alg).with_usage_parameters()
@@ -86,7 +86,7 @@ def test_generate_for_kty() -> None:
 
 
 def test_generate() -> None:
-    for alg in SignatureAlgs.ALL + KeyManagementAlgs.ALL_KEY_BASED + EncryptionAlgs.ALL:
+    for alg in SignatureAlgs.ALL | KeyManagementAlgs.ALL_KEY_BASED | EncryptionAlgs.ALL:
         assert Jwk.generate(alg=alg).alg == alg
 
     assert Jwk.generate(kty=KeyTypes.EC).kty == KeyTypes.EC
@@ -98,16 +98,16 @@ def test_generate() -> None:
 def test_unsupported_alg() -> None:
     # trying to generate a Jwk with an unsupported alg raises a UnsupportedAlg
     with pytest.raises(UnsupportedAlg):
-        Jwk.generate_for_alg("unknown_alg")
+        Jwk.generate(alg="unknown_alg")
 
 
 def test_symmetric_key_size() -> None:
     with pytest.warns():
-        Jwk.generate_for_alg("HS256", key_size=64)
+        Jwk.generate(alg="HS256", key_size=64)
 
-    assert Jwk.generate_for_alg(
-        "HS256", key_size=384
-    )  # no warning when key_size > hash_size
+    # no warning when key_size > hash_size
+    assert Jwk.generate(alg="HS256", key_size=384)
 
+    # warn when keysize is not appropriate for a given alg
     with pytest.raises(ValueError):
-        Jwk.generate_for_alg("A128GCM", key_size=100)
+        Jwk.generate(alg="A128GCM", key_size=100)

@@ -71,21 +71,19 @@ assert jwt.headers == {"alg": "ES256", "kid": "my_key"}  # headers too
 assert jwt.sub == "some_sub"  # individual claims can be accessed as attributes
 assert jwt["claim1"] == "value1"  # or as dict items (with "subscription")
 assert jwt.alg == "ES256"  # alg and kid headers are also accessible as attributes
-assert (
-    jwt.kid == private_jwk.kid
-)  # notice that those 2 headers are automatically set with appropriate values
+assert jwt.kid == private_jwk.kid
+# notice that alg and kid are automatically set with appropriate values
+assert isinstance(jwt.signature, bytes)  # signature is accessible too
 # verifying the jwt signature is as easy as:
 assert jwt.verify_signature(private_jwk.public_jwk())
-# since our jwk does contain an 'alg' parameter (here 'ES256'), the signature is automatically verified using that alg
-# you could also specify an alg manually, useful for key with no "alg" hint:
+# since our jwk contains an 'alg' parameter (here 'ES256'), the signature is automatically verified using that alg
+# you could also specify an alg manually, useful for keys with no "alg" hint:
 assert jwt.verify_signature(private_jwk.public_jwk(), alg="ES256")
 
 print(jwt)
 # eyJhbGciOiJFUzI1NiIsImtpZCI6Im15a2V5In0.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.C1KcDyDT8qXwUqcWzPKkQD7f6xai-gCgaRFMdKPe80Vk7XeYNa8ovuLwvdXgGW4ZZ_lL73QIyncY7tHGXUthag
 # This will output the full JWT compact representation. You can inspect it for example at <https://jwt.io>
 ```
-
-Note above that the JWT headers are automatically generated with the appropriate values.
 
 Or let's sign a JWT with the standardised lifetime, subject, audience and ID claims, plus arbitrary custom claims:
 
@@ -121,12 +119,12 @@ The generated JWT claims will include the standardised claims:
 
 - Simple, Clean, Pythonic interface
 - Convenience wrappers around `cryptography` for all algorithms described in JWA
-- Json Web Keys (JWK) loading and generation
+- Json Web Keys (JWK) loading, dumping and generation
 - Arbitrary data signature and verification using Json Web Keys
 - Json Web Signatures (JWS) signing and verification
 - Json Web Encryption (JWE) encryption and decryption
 - Json Web Tokens (JWT) signing, verification and validation
-- 100% type annotated
+- 100% type annotated, verified with `mypy --strict`
 - nearly 100% code coverage
 - Relies on [cryptography](https://cryptography.io) for all cryptographic operations
 - Relies on [BinaPy](https://guillp.github.io/binapy/) for binary data manipulations
@@ -234,14 +232,15 @@ to use.
 
 JWK are specified as JSON objects, which are parsed as `dict` in Python. The `Jwk` class in `jwskate` is actually a
 `dict` subclass, so you can use it exactly like you would use a dict: you can access its members, dump it back as JSON,
-etc. The same is true for Signed or Encrypted Json Web tokens in JSON format.
+etc. The same is true for Signed or Encrypted Json Web tokens in JSON format. You cannot change the key cryptographic
+material, however, since that would lead to unusable keys.
 
 ### JWA Wrappers
 
 You can use `cryptography` to do the cryptographic operations that are described in
 [JWA](https://www.rfc-editor.org/info/rfc7518), but since `cryptography` is a general purpose library, its usage is not
-straightforward and gives you plenty of options to carefully select and combine, leaving room for errors. It has also a
-quite inconsistent API to handle the different type of keys and algorithms. To work around
+straightforward and gives you plenty of options to carefully select and combine, leaving room for mistakes, errors and
+confusion. It has also a quite inconsistent API to handle the different type of keys and algorithms. To work around
 this, `jwskate` comes with a set of consistent wrappers that implement the exact JWA specifications, with minimum risk
 of mistakes.
 

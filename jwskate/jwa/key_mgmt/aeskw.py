@@ -1,9 +1,9 @@
 """This module implements AES based Key Management algorithms."""
-from typing import Self, SupportsBytes, Union
+from typing import SupportsBytes, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import keywrap
-from typing_extensions import override
+from typing_extensions import Self, override
 
 from ..base import BaseKeyManagementAlg, BaseSymmetricAlg
 

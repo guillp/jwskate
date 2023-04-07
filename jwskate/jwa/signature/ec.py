@@ -1,11 +1,11 @@
 """This module implement Elliptic Curve signature algorithms."""
-from typing import Self, SupportsBytes, Union
+from typing import SupportsBytes, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.asymmetric import ec
-from typing_extensions import override
+from typing_extensions import Self, override
 
 from ..base import BaseAsymmetricAlg, BaseSignatureAlg
 from ..ec import P_256, P_384, P_521, EllipticCurve, secp256k1

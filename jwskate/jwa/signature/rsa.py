@@ -1,11 +1,11 @@
 """This module implements RSA signature algorithms."""
-from typing import Self, SupportsBytes, Union
+from typing import SupportsBytes, Union
 
 from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
-from typing_extensions import override
+from typing_extensions import Self, override
 
 from ..base import BaseAsymmetricAlg, BaseSignatureAlg
 

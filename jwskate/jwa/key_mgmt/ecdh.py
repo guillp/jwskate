@@ -1,12 +1,12 @@
 """This module implements Elliptic Curve Diffie-Hellman based Key Management algorithms."""
 
-from typing import Any, Self, SupportsBytes, Type, Union
+from typing import Any, SupportsBytes, Type, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec, x448, x25519
 from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
-from typing_extensions import override
+from typing_extensions import Self, override
 
 from ..base import BaseAsymmetricAlg, BaseKeyManagementAlg
 from .aeskw import A128KW, A192KW, A256KW, BaseAesKeyWrap

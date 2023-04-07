@@ -1,11 +1,11 @@
 """This module implements RSA based Key Management algorithms."""
 
-from typing import Any, Self, SupportsBytes, Union
+from typing import Any, SupportsBytes, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
-from typing_extensions import override
+from typing_extensions import Self, override
 
 from ..base import BaseAsymmetricAlg, BaseKeyManagementAlg
 

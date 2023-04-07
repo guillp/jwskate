@@ -1,10 +1,10 @@
 """This module implements HMAC based signature algorithms."""
 
-from typing import Self, SupportsBytes, Type, Union
+from typing import SupportsBytes, Type, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes, hmac
-from typing_extensions import override
+from typing_extensions import Self, override
 
 from ..base import BaseSignatureAlg, BaseSymmetricAlg
 

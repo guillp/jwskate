@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Generic, Iterator, Self, SupportsBytes, Tuple, Type, TypeVar, Union
+from typing import Generic, Iterator, SupportsBytes, Tuple, Type, TypeVar, Union
 
 import cryptography.exceptions
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes
-from typing_extensions import override
+from typing_extensions import Self, override
 
 
 class PrivateKeyRequired(AttributeError):

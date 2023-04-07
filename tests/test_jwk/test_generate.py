@@ -1,3 +1,5 @@
+from typing import Dict
+
 import pytest
 
 from jwskate import (
@@ -81,7 +83,7 @@ def test_generate_for_alg(alg: str) -> None:
         (KeyTypes.OKP, {"crv": "Ed25519"}),
     ),
 )
-def test_generate_for_kty(kty: str, kwargs: dict[str, str]) -> None:
+def test_generate_for_kty(kty: str, kwargs: Dict[str, str]) -> None:
     jwk = Jwk.generate_for_kty(kty, **kwargs)
     assert jwk.kty == kty
 

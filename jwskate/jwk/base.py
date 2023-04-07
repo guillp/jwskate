@@ -1067,49 +1067,50 @@ class Jwk(BaseJsonDict):
     @classmethod
     def from_pem(
         cls,
-        data: Union[bytes, str],
+        der: Union[bytes, str],
         password: Union[bytes, str, None] = None,
         **kwargs: Any,
     ) -> Jwk:
-        """Load a Jwk from a PEM encoded private or public key.
+        """Load a `Jwk` from a PEM encoded private or public key.
 
         Args:
-          data: the PEM encoded data to load
+          der: the PEM encoded data to load
           password: the password to decrypt the PEM, if required. Should be bytes. If it is a string, it will be encoded with UTF-8.
-          **kwargs: additional members to include in the Jwk (e.g. kid, use)
+          **kwargs: additional members to include in the `Jwk` (e.g. `kid`, `use`)
 
         Returns:
-            a Jwk instance from the loaded key
+            a `Jwk` instance from the loaded key
 
         """
-        data = data.encode() if isinstance(data, str) else data
+        der = der.encode() if isinstance(der, str) else der
         password = password.encode("UTF-8") if isinstance(password, str) else password
 
         try:
-            cryptography_key = serialization.load_pem_private_key(data, password)
+            cryptography_key = serialization.load_pem_private_key(der, password)
         except Exception as private_exc:
             try:
-                cryptography_key = serialization.load_pem_public_key(data)
-                if password is not None:
-                    raise ValueError(
-                        "A public key was loaded from PEM, while a password was provided for decryption."
-                        "Only private keys are encrypted using a password."
-                    )
+                cryptography_key = serialization.load_pem_public_key(der)
+
             except Exception:
                 raise ValueError(
                     "The provided data is not a private or a public PEM encoded key."
                 ) from private_exc
+            if password is not None:
+                raise ValueError(
+                    "A public key was loaded from PEM, while a password was provided for decryption."
+                    "Only private keys are encrypted using a password."
+                )
 
         return cls.from_cryptography_key(cryptography_key, **kwargs)
 
     def to_pem(self, password: Union[bytes, str, None] = None) -> str:
         """Serialize this key to PEM format.
 
-        For private keys, you can provide a password for encryption. This password should be bytes. A `str` is also
+        For private keys, you can provide a password for encryption. This password should be `bytes`. A `str` is also
         accepted, and will be encoded to `bytes` using UTF-8 before it is used as encryption key.
 
         Args:
-          password: password to use to encrypt the PEM. Should be bytes. If it is a string, it will be encoded to bytes with UTF-8.
+          password: password to use to encrypt the PEM.
 
         Returns:
             the PEM serialized key
@@ -1130,13 +1131,76 @@ class Jwk(BaseJsonDict):
             ).decode()
         else:
             if password:
-                raise ValueError(
-                    "Public keys cannot be encrypted when serialized in PEM format."
-                )
+                raise ValueError("Public keys cannot be encrypted when serialized.")
             return self.cryptography_key.public_bytes(  # type: ignore[no-any-return]
                 serialization.Encoding.PEM,
                 serialization.PublicFormat.SubjectPublicKeyInfo,
             ).decode()
+
+    @classmethod
+    def from_der(
+        cls,
+        der: bytes,
+        password: Union[bytes, str, None] = None,
+        **kwargs: Any,
+    ) -> Jwk:
+        """Load a `Jwk` from DER."""
+        password = password.encode("UTF-8") if isinstance(password, str) else password
+
+        try:
+            cryptography_key = serialization.load_der_private_key(der, password)
+        except Exception as private_exc:
+            try:
+                cryptography_key = serialization.load_der_public_key(der)
+            except Exception:
+                raise ValueError(
+                    "The provided data is not a private or a public DER encoded key."
+                ) from private_exc
+            if password is not None:
+                raise ValueError(
+                    "A public key was loaded from DER, while a password was provided for decryption."
+                    "Only private keys are encrypted using a password."
+                )
+
+        return cls.from_cryptography_key(cryptography_key, **kwargs)
+
+    def to_der(self, password: Union[bytes, str, None] = None) -> BinaPy:
+        """Serialize this key to DER.
+
+        For private keys, you can provide a password for encryption. This password should be bytes. A `str` is also
+        accepted, and will be encoded to `bytes` using UTF-8 before it is used as encryption key.
+
+        Args:
+          password: password to use to encrypt the PEM. Should be bytes. If it is a string, it will be encoded to bytes with UTF-8.
+
+        Returns:
+            the DER serialized key
+
+        """
+        password = password.encode("UTF-8") if isinstance(password, str) else password
+
+        if self.is_private:
+            encryption: serialization.KeySerializationEncryption
+            if password:
+                encryption = serialization.BestAvailableEncryption(password)
+            else:
+                encryption = serialization.NoEncryption()
+            return BinaPy(
+                self.cryptography_key.private_bytes(
+                    serialization.Encoding.DER,
+                    serialization.PrivateFormat.PKCS8,
+                    encryption,
+                )
+            )
+        else:
+            if password:
+                raise ValueError("Public keys cannot be encrypted when serialized.")
+            return BinaPy(
+                self.cryptography_key.public_bytes(
+                    serialization.Encoding.DER,
+                    serialization.PublicFormat.SubjectPublicKeyInfo,
+                )
+            )
 
     @classmethod
     def generate(cls, **kwargs: Any) -> Jwk:

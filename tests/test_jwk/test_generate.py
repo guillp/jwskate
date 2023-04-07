@@ -1,3 +1,4 @@
+import secrets
 from typing import Dict
 
 import pytest
@@ -72,6 +73,18 @@ def test_generate_for_alg(alg: str) -> None:
     # cannot guess usage parameters if there is no 'alg' parameter in the Jwk
     with pytest.raises(ExpectedAlgRequired):
         jwk_mini.with_usage_parameters()
+
+    # check to_pem() and from_pem(), to_der() and from_der()
+    if not jwk.is_symmetric:
+        assert Jwk.from_pem(jwk.to_pem()) == jwk
+        assert Jwk.from_der(jwk.to_der()) == jwk
+
+        password = secrets.token_urlsafe(16)
+        assert Jwk.from_pem(jwk.to_pem(password), password=password) == jwk
+        assert Jwk.from_der(jwk.to_der(password), password=password) == jwk
+
+        assert Jwk.from_pem(jwk.public_jwk().to_pem()) == jwk.public_jwk()
+        assert Jwk.from_der(jwk.public_jwk().to_der()) == jwk.public_jwk()
 
 
 @pytest.mark.parametrize(

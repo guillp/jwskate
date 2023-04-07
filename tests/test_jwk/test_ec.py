@@ -31,6 +31,9 @@ def test_jwk_ec_generate() -> None:
     with pytest.raises(UnsupportedEllipticCurve):
         ECJwk.generate(crv="foo")
 
+    with pytest.warns(match="'P-256' is used by default"):
+        ECJwk.generate()
+
 
 def test_ecdh_es() -> None:
     alg = "ECDH-ES+A128KW"

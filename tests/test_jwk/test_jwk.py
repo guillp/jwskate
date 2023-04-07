@@ -1,3 +1,4 @@
+import secrets
 from typing import Tuple
 
 import pytest
@@ -368,7 +369,9 @@ def test_sender_receiver_key(alg: str, enc: str) -> None:
             )
 
 
-@pytest.mark.parametrize("alg", KeyManagementAlgs.ALL_AES)
+@pytest.mark.parametrize(
+    "alg", KeyManagementAlgs.ALL_AES | KeyManagementAlgs.ALL_AESGCM
+)
 @pytest.mark.parametrize("enc", EncryptionAlgs.ALL)
 def test_aeskw_with_choosen_cek(alg: str, enc: str) -> None:
     recipient_jwk = Jwk.generate(alg=alg)
@@ -380,3 +383,30 @@ def test_aeskw_with_choosen_cek(alg: str, enc: str) -> None:
         enc=enc, cek=choosen_cek
     )
     assert sender_cek.key == choosen_cek
+
+
+def test_der_pem() -> None:
+    jwk = Jwk.generate_for_alg("ES256")
+    password = secrets.token_urlsafe(16)
+    der = jwk.to_der(password)
+    assert Jwk.from_der(der, password) == jwk
+
+    pem = jwk.to_pem(password)
+    assert Jwk.from_pem(pem, password) == jwk
+
+    with pytest.raises(ValueError, match="public key was loaded"):
+        Jwk.from_der(jwk.public_jwk().to_der(), password=password)
+    with pytest.raises(ValueError, match="not a private or a public DER encoded key"):
+        Jwk.from_der(secrets.token_bytes(512))
+
+    with pytest.raises(ValueError, match="public key was loaded"):
+        Jwk.from_pem(jwk.public_jwk().to_pem(), password=password)
+    with pytest.raises(ValueError, match="not a private or a public PEM encoded key"):
+        Jwk.from_pem(
+            """\
+-----BEGIN PRIVATE KEY-----
+MIGHAgRandomGarbage/zrsfsdfsdfszer
+lJPkaLBw
+-----END PRIVATE KEY-----
+"""
+        )

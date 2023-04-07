@@ -164,35 +164,11 @@ class ECJwk(Jwk):
             )
         )
 
-    @property
-    def coordinate_size(self) -> int:
-        """The coordinate size to use with the key curve.
-
-        Returns:
-          32, 48, or 66 (bits)
-
-        """
-        return self.curve.coordinate_size
-
-    @override
     @classmethod
+    @override
     def generate(
-        cls, crv: Optional[str] = None, alg: Optional[str] = None, **params: str
+        cls, *, crv: Optional[str] = None, alg: Optional[str] = None, **kwargs: Any
     ) -> ECJwk:
-        """Generate a random `ECJwk` with a specific curve (default to `"P-256"`).
-
-        Args:
-          alg: the alg
-          crv: the curve to use
-          **params:
-
-        Returns:
-          a generated `ECJwk`
-
-        Raises:
-            UnsupportedEllipticCurve: if the provided curve identifier is not supported.
-
-        """
         if crv is None and alg is None:
             warnings.warn(
                 "No Curve identifier (crv) or an Algorithm identifier (alg) have been provided "
@@ -220,7 +196,7 @@ class ECJwk(Jwk):
             x=x,
             y=y,
             d=d,
-            **params,
+            **kwargs,
         )
 
     @classmethod

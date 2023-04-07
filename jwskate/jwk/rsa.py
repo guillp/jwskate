@@ -224,7 +224,7 @@ class RSAJwk(Jwk):
 
         Args:
           key_size: the key size to use for the generated key, in bits
-          **params: additional members to include in the `Jwk`
+          **params: additional parameters to include in the `Jwk`
 
         Returns:
           a generated `RSAJwk`

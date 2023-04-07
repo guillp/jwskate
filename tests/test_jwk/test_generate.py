@@ -113,6 +113,9 @@ def test_generate() -> None:
     with pytest.raises(ValueError, match="Incompatible .* parameters"):
         Jwk.generate(kty="RSA", alg="ES512")
 
+    with pytest.raises(ValueError, match="must provide a hint"):
+        Jwk.generate()
+
 
 def test_unsupported_alg() -> None:
     # trying to generate a Jwk with an unsupported alg raises a UnsupportedAlg

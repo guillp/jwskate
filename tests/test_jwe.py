@@ -276,7 +276,7 @@ def ec_p384_private_jwk() -> Jwk:
 
 @pytest.fixture(scope="module")
 def ec_p256_private_jwk() -> Jwk:
-    return ECJwk.generate("P-256")
+    return ECJwk.generate(crv="P-256")
 
 
 @pytest.fixture(scope="module")

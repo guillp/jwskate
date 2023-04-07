@@ -1203,30 +1203,32 @@ class Jwk(BaseJsonDict):
             )
 
     @classmethod
-    def generate(cls, **kwargs: Any) -> Jwk:
+    def generate(
+        cls, *, alg: Optional[str] = None, kty: Optional[str] = None, **kwargs: Any
+    ) -> Jwk:
         """Generate a Private Key and return it as a `Jwk` instance.
 
         This method is implemented by subclasses for specific Key Types and returns an instance of that subclass.
 
         Args:
-          **kwargs: specific parameters depending on the type of key, or additional members to include in the Jwk
+            alg: intended algorithm to use with the generated key
+            kty: key type identifier
+            **kwargs: specific parameters depending on the type of key, or additional members to include in the `Jwk`
 
         Returns:
-            a Jwk instance with a generated key
+            a `Jwk` instance with a generated key
 
         """
-        if "alg" in kwargs:
-            alg = kwargs["alg"]
-            kty = kwargs.pop("kty") if "kty" in kwargs else None
-            key = cls.generate_for_alg(**kwargs)
+        if alg:
+            key = cls.generate_for_alg(alg=alg, **kwargs)
             if kty is not None and key.kty != kty:
                 raise ValueError(
                     f"Incompatible `{alg=}` and `{kty=}` parameters. "
                     f"`{alg=}` points to key with `kty='{key.kty}'`."
                 )
             return key
-        if "kty" in kwargs:
-            return cls.generate_for_kty(**kwargs)
+        if kty:
+            return cls.generate_for_kty(kty=kty, **kwargs)
         raise ValueError(
             "You must provide a hint for jwskate to know what kind of key it must generate. "
             "You can either provide an 'alg' identifier as keyword parameter, and/or a 'kty'."

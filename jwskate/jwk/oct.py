@@ -103,19 +103,9 @@ class SymmetricJwk(Jwk):
         """
         return cls(dict(kty=cls.KTY, k=BinaPy(k).to("b64u").ascii(), **params))
 
-    @override
     @classmethod
-    def generate(cls, key_size: int = 128, **params: Any) -> SymmetricJwk:
-        """Generate a random `SymmetricJwk`, with a given key size.
-
-        Args:
-          key_size: size of the generated key, in bits
-          **params: additional members to include in the `Jwk`
-
-        Returns:
-            a `SymmetricJwk` with a randomly generated key
-
-        """
+    @override
+    def generate(cls, *, key_size: int = 128, **params: Any) -> SymmetricJwk:
         key = BinaPy.random_bits(key_size)
         return cls.from_bytes(key, **params)
 

@@ -71,16 +71,19 @@ class Jwk(BaseJsonDict):
     """Represents a Json Web Key (JWK), as specified in RFC7517.
 
     A JWK is a JSON object that represents a cryptographic key.  The
-    members of the object represent properties of the key, including its
-    value. Just like a parsed JSON object, a :class:`Jwk` is a dict, so
-    you can do with a Jwk anything you can do with a `dict`. In
+    members of the object represent properties of the key, also called
+    parameters, which are name and value pairs.
+
+    Just like a parsed JSON object, a `Jwk` is a `dict`, so
+    you can do with a `Jwk` anything you can do with a `dict`. In
     addition, all keys parameters are exposed as attributes. There are
-    subclasses of `Jwk` for each specific Key Type, but you shouldn't
+    subclasses of `Jwk` for each specific Key Type, but unless you are
+    dealing with specific parameters for a given key type, you shouldn't
     have to use the subclasses directly since they all present a common
-    interface.
+    interface for cryptographic operations.
 
     Args:
-        params: a dict with the parsed Jwk parameters, or a `cryptography key`, or another `Jwk`
+        params: a `dict` parsed from a JSON JWK, or a `cryptography key`, or another `Jwk`, or a `str` containing the JSON representation of a JWK, or raw `bytes`
         include_kid_thumbprint: if `True` (default), and there is no kid in the provided params, generate a kid based on the key thumbprint
 
     """
@@ -94,7 +97,7 @@ class Jwk(BaseJsonDict):
             **kwargs: specific parameters, depending on the key type, or additional members to include in the `Jwk`
 
         Returns:
-            the resulting `Jwk`
+            the generated `Jwk`
 
         """
         for kty, jwk_class in cls.subclasses.items():
@@ -151,13 +154,10 @@ class Jwk(BaseJsonDict):
 
     subclasses: Dict[str, Type[Jwk]] = {}
     cryptography_key_types: Dict[Any, Type[Jwk]] = {}
-    """A dict of cryptography key classes to its specific 'kty' value."""
 
     PARAMS: Mapping[str, JwkParameter]
-    """A dict of parameters. Key is parameter name, value is a tuple (description, is_private, is_required, kind)."""
 
     KTY: ClassVar[str]
-    """The Key Type associated with this JWK."""
 
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES: ClassVar[Iterable[Any]]
     CRYPTOGRAPHY_PUBLIC_KEY_CLASSES: ClassVar[Iterable[Any]]

@@ -81,7 +81,7 @@ class OKPJwk(Jwk):
 
     @property
     @override
-    def is_private(self) -> bool:  # noqa: D102
+    def is_private(self) -> bool:
         return "d" in self
 
     @override
@@ -213,19 +213,9 @@ class OKPJwk(Jwk):
 
         return OKPJwk.from_cryptography_key(cryptography_key, use=use, **kwargs)
 
-    @override
     @classmethod
+    @override
     def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> OKPJwk:
-        """Initialize an `OKPJwk` from a `cryptography` key.
-
-        Args:
-          cryptography_key: a `cryptography` key
-          **kwargs: additional members to include in the Jwk
-
-        Returns:
-            the matching OKPJwk
-
-        """
         crv = OKPCurve.get_curve(cryptography_key)
         if isinstance(cryptography_key, cls.CRYPTOGRAPHY_PRIVATE_KEY_CLASSES):
             priv = cryptography_key.private_bytes(
@@ -257,15 +247,6 @@ class OKPJwk(Jwk):
 
     @override
     def _to_cryptography_key(self) -> Any:
-        """Initialize a `cryptography` key based on this `Jwk`.
-
-        Returns:
-            a `Ed25519PrivateKey` or a `Ed25519PublicKey` or a `Ed448PrivateKey` or a `Ed448PublicKey` based on the current Jwk
-
-        Raises:
-            UnsupportedOKPCurve: if this Jwk curve is not supported.
-
-        """
         if self.curve.name == "Ed25519":
             if self.is_private:
                 return ed25519.Ed25519PrivateKey.from_private_bytes(self.private_key)
@@ -328,26 +309,11 @@ class OKPJwk(Jwk):
             )
         )
 
-    @override
     @classmethod
+    @override
     def generate(
-        cls, crv: Optional[str] = None, alg: Optional[str] = None, **params: Any
+        cls, *, crv: Optional[str] = None, alg: Optional[str] = None, **params: Any
     ) -> OKPJwk:
-        """Generate a private `OKPJwk` on a given curve.
-
-        You can specify either a curve or an algorithm identifier, or both.
-        If using an alg identifier, crv will default to 'Ed25519' for signature algs,
-        or `X25519` for encryption algs.
-
-        Args:
-          crv: the curve to use
-          alg: algorithm to use
-          **params: additional members to include in the Jwk
-
-        Returns:
-            the resulting OKPJwk
-
-        """
         if crv:
             curve = cls.get_curve(crv)
         elif alg:
@@ -369,7 +335,6 @@ class OKPJwk(Jwk):
     @cached_property
     @override
     def use(self) -> Optional[str]:
-        """Return the key use. For OKP keys, this can be directly deduced from the curve."""
         if self.curve in (Ed25519, Ed448):
             return "sig"
         elif self.curve in (X25519, X448):

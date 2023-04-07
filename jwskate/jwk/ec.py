@@ -75,7 +75,7 @@ class ECJwk(Jwk):
 
     @property
     @override
-    def is_private(self) -> bool:  # noqa: D102
+    def is_private(self) -> bool:
         return "d" in self
 
     @override
@@ -202,16 +202,6 @@ class ECJwk(Jwk):
     @classmethod
     @override
     def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> ECJwk:
-        """Initialize an `ECJwk` from a `cryptography` key.
-
-        Args:
-          cryptography_key: `cryptography` key
-          **kwargs: additional members to include in the `Jwk`
-
-        Returns:
-            an `ECJwk` initialized from the provided `cryptography` key
-
-        """
         parameters = EllipticCurve.get_jwk_parameters(cryptography_key)
         return cls(parameters)
 
@@ -219,12 +209,6 @@ class ECJwk(Jwk):
     def _to_cryptography_key(
         self,
     ) -> Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey,]:
-        """Initialize a `cryptography` key based on this `Jwk`.
-
-        Returns:
-            an EllipticCurvePublicKey or EllipticCurvePrivateKey
-
-        """
         if self.is_private:
             return ec.EllipticCurvePrivateNumbers(
                 private_value=self.ecc_private_key,
@@ -240,6 +224,16 @@ class ECJwk(Jwk):
                 y=self.y_coordinate,
                 curve=self.curve.cryptography_curve,
             ).public_key()
+
+    @property
+    def coordinate_size(self) -> int:
+        """The coordinate size to use with the key curve.
+
+        Returns:
+          32, 48, or 66 (bits)
+
+        """
+        return self.curve.coordinate_size
 
     @cached_property
     def x_coordinate(self) -> int:
@@ -273,12 +267,6 @@ class ECJwk(Jwk):
 
     @override
     def supported_signing_algorithms(self) -> List[str]:
-        """Return the list of supported signature algorithms for this key.
-
-        Returns:
-            a list of supported algorithms identifiers
-
-        """
         return [
             name
             for name, alg in self.SIGNATURE_ALGORITHMS.items()
@@ -287,20 +275,8 @@ class ECJwk(Jwk):
 
     @override
     def supported_key_management_algorithms(self) -> List[str]:
-        """Return the list of supported Key Management algorithms for this key.
-
-        Returns:
-             a list of supported algorithms identifiers
-
-        """
         return list(self.KEY_MANAGEMENT_ALGORITHMS)
 
     @override
     def supported_encryption_algorithms(self) -> List[str]:
-        """Return the list of support Encryption algorithms for this key.
-
-        Returns:
-             a list of supported algorithms identifiers
-
-        """
         return list(self.ENCRYPTION_ALGORITHMS)

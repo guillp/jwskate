@@ -74,7 +74,6 @@ class SymmetricJwk(Jwk):
     @property
     @override
     def is_symmetric(self) -> bool:
-        """Always returns `True`."""
         return True
 
     @override
@@ -109,48 +108,19 @@ class SymmetricJwk(Jwk):
         key = BinaPy.random_bits(key_size)
         return cls.from_bytes(key, **params)
 
-    @override
     @classmethod
+    @override
     def from_cryptography_key(
         cls, cryptography_key: Any, **params: Any
     ) -> SymmetricJwk:
-        """Alias for `from_bytes()` since symmetric keys are simply `bytes`.
-
-        Args:
-            cryptography_key: the key to use
-            **params: additional members to include in the `Jwk`
-
-        Returns:
-            the resulting `SymmetricJwk`
-
-        """
         return cls.from_bytes(cryptography_key, **params)
 
     @override
     def _to_cryptography_key(self) -> BinaPy:
-        """Convert this `Jwk` into a key from the `cryptography` module.
-
-        For `SymmetricJwk` instances, those are just `bytes` values.
-
-        Returns:
-            the raw private key, as `bytes`
-
-        """
         return BinaPy(self.k).decode_from("b64u")
 
     @override
     def thumbprint(self, hashalg: str = "SHA256") -> str:
-        """Return the key thumbprint as specified by [RFC7638](https://www.rfc-editor.org/rfc/rfc7638).
-
-        This is reimplemented for `SymmetricJwk` because the private parameter `k` must be included.
-
-        Args:
-          hashalg: A hash function (defaults to SHA256)
-
-        Returns:
-            the calculated thumbprint
-
-        """
         return (
             BinaPy.serialize_to("json", {"k": self.k, "kty": self.kty})
             .to("sha256")
@@ -160,17 +130,6 @@ class SymmetricJwk(Jwk):
 
     @override
     def to_pem(self, password: Union[bytes, str, None] = None) -> str:
-        """Serialize this key to PEM format.
-
-        Symmetric keys are not serializable to PEM so this will raise a TypeError.
-
-        Args:
-          password: password to use to encrypt the PEM.
-
-        Raises:
-            TypeError: always
-
-        """
         raise TypeError("Symmetric keys are not serializable to PEM.")
 
     @property
@@ -258,14 +217,6 @@ class SymmetricJwk(Jwk):
 
     @override
     def supported_key_management_algorithms(self) -> List[str]:
-        """Return the list of Key Management algorithms that this key supports.
-
-        Key Management algorithms are used to generate or wrap a *Content Encryption Keys (CEK)*.
-
-        Returns:
-            a list of supported algorithms identifiers
-
-        """
         return [
             name
             for name, alg in self.KEY_MANAGEMENT_ALGORITHMS.items()
@@ -274,12 +225,6 @@ class SymmetricJwk(Jwk):
 
     @override
     def supported_encryption_algorithms(self) -> List[str]:
-        """Return the list of supported Encryption/Decryption algorithms with this key.
-
-        Returns:
-            a list of supported encryption algorithms identifiers
-
-        """
         return [
             name
             for name, alg in self.ENCRYPTION_ALGORITHMS.items()

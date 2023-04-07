@@ -14,12 +14,7 @@ class BaseRsaKeyWrap(
     BaseKeyManagementAlg,
     BaseAsymmetricAlg[rsa.RSAPrivateKey, rsa.RSAPublicKey],
 ):
-    """Base class for RSA Key Wrapping algorithms.
-
-    Args:
-        key: the private or public key to use
-
-    """
+    """Base class for RSA Key Wrapping algorithms."""
 
     padding: Any
 
@@ -30,9 +25,6 @@ class BaseRsaKeyWrap(
     public_key_class = rsa.RSAPublicKey
 
     min_key_size: int = 2048
-
-    # def __init__(self, key: Union[rsa.RSAPublicKey, rsa.RSAPrivateKey]):
-    #    self.key = key
 
     @classmethod
     @override

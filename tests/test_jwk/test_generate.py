@@ -1,8 +1,7 @@
-from typing import Any
-
 import pytest
 
 from jwskate import (
+    P_521,
     EncryptionAlgs,
     ExpectedAlgRequired,
     Jwk,
@@ -73,23 +72,27 @@ def test_generate_for_alg(alg: str) -> None:
         jwk_mini.with_usage_parameters()
 
 
-def test_generate_for_kty() -> None:
-    kty2args: dict[str, dict[str, Any]] = {
-        KeyTypes.EC: {},
-        KeyTypes.OCT: {},
-        KeyTypes.RSA: {},
-        KeyTypes.OKP: {"crv": "Ed25519"},
-    }
-    for kty, kwargs in kty2args.items():
-        jwk = Jwk.generate_for_kty(kty, **kwargs)
-        assert jwk.kty == kty
+@pytest.mark.parametrize(
+    "kty, kwargs",
+    (
+        (KeyTypes.EC, {"crv": "P-256"}),
+        (KeyTypes.OCT, {}),
+        (KeyTypes.RSA, {}),
+        (KeyTypes.OKP, {"crv": "Ed25519"}),
+    ),
+)
+def test_generate_for_kty(kty: str, kwargs: dict[str, str]) -> None:
+    jwk = Jwk.generate_for_kty(kty, **kwargs)
+    assert jwk.kty == kty
 
 
 def test_generate() -> None:
     for alg in SignatureAlgs.ALL | KeyManagementAlgs.ALL_KEY_BASED | EncryptionAlgs.ALL:
         assert Jwk.generate(alg=alg).alg == alg
 
-    assert Jwk.generate(kty=KeyTypes.EC).kty == KeyTypes.EC
+    ec_jwk = Jwk.generate(kty=KeyTypes.EC, crv="P-521")
+    assert ec_jwk.kty == KeyTypes.EC
+    assert ec_jwk.curve == P_521
 
     assert Jwk.generate(kty="RSA", alg="RS256")
     assert Jwk.generate(kty="RSA", alg="ES512")

@@ -87,14 +87,14 @@ class Jwk(BaseJsonDict):
 
     @classmethod
     def generate_for_alg(cls, alg: str, **kwargs: Any) -> Jwk:
-        """Generate a key for usage with a specific alg and return the resulting Jwk.
+        """Generate a key for usage with a specific `alg` and return the resulting `Jwk`.
 
         Args:
-            alg: a signature or key management alg
-            **kwargs: specific parameters depending on the key type, or additional members to include in the Jwk
+            alg: a signature or key management algorithm identifier
+            **kwargs: specific parameters, depending on the key type, or additional members to include in the `Jwk`
 
         Returns:
-            the resulting Jwk
+            the resulting `Jwk`
 
         """
         for kty, jwk_class in cls.subclasses.items():
@@ -1152,9 +1152,15 @@ class Jwk(BaseJsonDict):
 
         """
         if "alg" in kwargs:
-            if "kty" in kwargs:
-                del kwargs["kty"]
-            return cls.generate_for_alg(**kwargs)
+            alg = kwargs["alg"]
+            kty = kwargs.pop("kty") if "kty" in kwargs else None
+            key = cls.generate_for_alg(**kwargs)
+            if kty is not None and key.kty != kty:
+                raise ValueError(
+                    f"Incompatible `{alg=}` and `{kty=}` parameters. "
+                    f"`{alg=}` points to key with `kty='{key.kty}'`."
+                )
+            return key
         if "kty" in kwargs:
             return cls.generate_for_kty(**kwargs)
         raise ValueError(

@@ -97,7 +97,8 @@ def test_generate() -> None:
     assert ec_jwk.curve == P_521
 
     assert Jwk.generate(kty="RSA", alg="RS256")
-    assert Jwk.generate(kty="RSA", alg="ES512")
+    with pytest.raises(ValueError, match="Incompatible .* parameters"):
+        Jwk.generate(kty="RSA", alg="ES512")
 
 
 def test_unsupported_alg() -> None:

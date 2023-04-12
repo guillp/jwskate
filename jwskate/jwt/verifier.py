@@ -1,5 +1,5 @@
 """High-Level facility to verify JWT tokens signature, validity dates, issuer, audiences, etc."""
-from typing import Callable, Iterable, Optional, Union
+from typing import Any, Callable, Dict, Iterable, Optional, Union
 
 from jwskate import Jwk, JwkSet
 
@@ -42,7 +42,7 @@ class JwtVerifier:
 
     def __init__(
         self,
-        jwkset: Union[JwkSet, Jwk],
+        jwkset: Union[JwkSet, Jwk, Dict[str, Any]],
         *,
         issuer: Optional[str],
         audience: Optional[str] = None,
@@ -53,10 +53,18 @@ class JwtVerifier:
     ) -> None:
         if isinstance(jwkset, Jwk):
             jwkset = jwkset.as_jwks()
-        elif not isinstance(jwkset, JwkSet):
-            raise TypeError(
-                "Please provide either a JwkSet or a single Jwk for signature verification."
+        elif isinstance(jwkset, dict):
+            if "keys" in jwkset:
+                jwkset = JwkSet(jwkset)
+            else:
+                jwkset = Jwk(jwkset).as_jwks()
+
+        if not isinstance(jwkset, JwkSet) or jwkset.is_private:
+            raise ValueError(
+                "Please provide either a `JwkSet` or a single `Jwk` for signature verification. "
+                "Signature verification keys must be public."
             )
+
         self.issuer = issuer
         self.jwkset = jwkset
         self.audience = audience

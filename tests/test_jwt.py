@@ -52,6 +52,7 @@ def test_signed_jwt() -> None:
     assert jwt.nonce == jwt["nonce"]
 
     # validating with the appropriate key must work
+
     jwt.validate(
         jwk={
             "kty": "RSA",
@@ -612,6 +613,7 @@ def test_verifier() -> None:
     with pytest.raises(InvalidSignature):
         verifier.verify(str(valid_jwt_without_kid)[:-17] + "--wrong-signature")
 
+    # init with a single Jwk
     JwtVerifier(
         private_jwk.public_jwk(),
         issuer=issuer,
@@ -619,3 +621,31 @@ def test_verifier() -> None:
         alg="ES256",
         verifiers=[suject_verifier, not_foo],
     ).verify(valid_jwt_without_kid)
+
+    # init with a single Jwk as a dict
+    JwtVerifier(
+        dict(private_jwk.public_jwk()),
+        issuer=issuer,
+        audience=audience,
+        alg="ES256",
+        verifiers=[suject_verifier, not_foo],
+    ).verify(valid_jwt_without_kid)
+
+    # init with a JwkSet as a dict
+    JwtVerifier(
+        dict(private_jwk.public_jwk().as_jwks()),
+        issuer=issuer,
+        audience=audience,
+        alg="ES256",
+        verifiers=[suject_verifier, not_foo],
+    ).verify(valid_jwt_without_kid)
+
+    # init with a private key
+    with pytest.raises(ValueError):
+        JwtVerifier(
+            dict(private_jwk),
+            issuer=issuer,
+            audience=audience,
+            alg="ES256",
+            verifiers=[suject_verifier, not_foo],
+        ).verify(valid_jwt_without_kid)

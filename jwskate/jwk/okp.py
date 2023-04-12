@@ -271,7 +271,7 @@ class OKPJwk(Jwk):
             raise UnsupportedOKPCurve(self.curve)  # pragma: no cover
 
     @classmethod
-    def public(cls, crv: str, x: bytes, **params: Any) -> OKPJwk:
+    def public(cls, *, crv: str, x: bytes, **params: Any) -> OKPJwk:
         """Initialize a public `OKPJwk` based on the provided parameters.
 
         Args:
@@ -286,7 +286,7 @@ class OKPJwk(Jwk):
         return cls(dict(kty=cls.KTY, crv=crv, x=BinaPy(x).to("b64u").ascii(), **params))
 
     @classmethod
-    def private(cls, crv: str, x: bytes, d: bytes, **params: Any) -> OKPJwk:
+    def private(cls, *, crv: str, x: bytes, d: bytes, **params: Any) -> OKPJwk:
         """Initialize a private `OKPJwk` based on the provided parameters.
 
         Args:

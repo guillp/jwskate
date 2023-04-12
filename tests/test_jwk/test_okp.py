@@ -37,9 +37,12 @@ def test_generate_no_crv_no_alg() -> None:
         OKPJwk.generate()
 
 
-def test_generate_unsuppored_alg() -> None:
+def test_generate_unsupported() -> None:
     with pytest.raises(UnsupportedAlg):
         OKPJwk.generate(alg="foo")
+
+    with pytest.raises(UnsupportedOKPCurve):
+        OKPJwk.generate(crv="foo")
 
 
 def test_rfc8037_ed25519() -> None:
@@ -313,3 +316,31 @@ def test_from_bytes(private_key: bytes, crv: str, use: str) -> None:
     if len(private_key) != 32:
         with pytest.raises(ValueError):
             OKPJwk.from_bytes(private_key, use="sig" if use == "enc" else "enc")
+
+
+def test_public_private() -> None:
+    jwk = Jwk(
+        {
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "x": "SghwA3Kg8e1Z2v1xnfnexH7OE4G-cd1z__Q64RQR4EQ",
+            "d": "V7P8eIm8sZsvIlhOXMLiamWTUW68wpyFyW_1QrnzkAI",
+        }
+    )
+
+    assert (
+        OKPJwk.public(
+            crv="Ed25519",
+            x=b"J\x08p\x03r\xa0\xf1\xedY\xda\xfdq\x9d\xf9\xde\xc4~\xce\x13\x81\xbeq\xdds\xff\xf4:\xe1\x14\x11\xe0D",
+        )
+        == jwk.public_jwk()
+    )
+
+    assert (
+        OKPJwk.private(
+            crv="Ed25519",
+            x=b"J\x08p\x03r\xa0\xf1\xedY\xda\xfdq\x9d\xf9\xde\xc4~\xce\x13\x81\xbeq\xdds\xff\xf4:\xe1\x14\x11\xe0D",
+            d=b'W\xb3\xfcx\x89\xbc\xb1\x9b/"XN\\\xc2\xe2je\x93Qn\xbc\xc2\x9c\x85\xc9o\xf5B\xb9\xf3\x90\x02',
+        )
+        == jwk
+    )

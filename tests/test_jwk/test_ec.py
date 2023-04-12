@@ -1,6 +1,13 @@
 import pytest
 
-from jwskate import A128CBC_HS256, EcdhEs, ECJwk, Jwk, UnsupportedEllipticCurve
+from jwskate import (
+    A128CBC_HS256,
+    EcdhEs,
+    ECJwk,
+    Jwk,
+    UnsupportedAlg,
+    UnsupportedEllipticCurve,
+)
 
 
 def test_ec_jwk() -> None:
@@ -31,7 +38,12 @@ def test_jwk_ec_generate() -> None:
     with pytest.raises(UnsupportedEllipticCurve):
         ECJwk.generate(crv="foo")
 
-    with pytest.warns(match="'P-256' is used by default"):
+    with pytest.raises(UnsupportedAlg):
+        ECJwk.generate(alg="foo")
+
+    with pytest.raises(
+        ValueError, match=r"No Curve identifier \(crv\) or Algorithm identifier \(alg\)"
+    ):
         ECJwk.generate()
 
 
@@ -97,3 +109,34 @@ def test_pem_key(crv: str) -> None:
 
     with pytest.raises(ValueError):
         assert Jwk.from_pem(public_pem, password) == public_jwk
+
+
+def test_public_private() -> None:
+    jwk = Jwk(
+        {
+            "kty": "EC",
+            "crv": "P-256",
+            "x": "WtjnvHG9b_IKBLn4QYTHz-AdoAiO_ork5LH1BL_5tyI",
+            "y": "C0YfOUDuCOvTCt7hAqO-f9z8_JdOnOPbfYmUk-RosHA",
+            "d": "EnGZlkoa4VUsnl72LcRRychNJ2FFknm_ph855tNuPZ8",
+        }
+    )
+
+    assert (
+        ECJwk.public(
+            crv="P-256",
+            x=41091394722340406951651919287101979028566994134304719828008599584440827098914,
+            y=5099336126642036233987555101153084413345413137896124327269101893088581300336,
+        )
+        == jwk.public_jwk()
+    )
+
+    assert (
+        ECJwk.private(
+            crv="P-256",
+            x=41091394722340406951651919287101979028566994134304719828008599584440827098914,
+            y=5099336126642036233987555101153084413345413137896124327269101893088581300336,
+            d=8342345011805978907621665437908035545366143771247820774310445528411160853919,
+        )
+        == jwk
+    )

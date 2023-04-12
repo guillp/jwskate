@@ -28,6 +28,7 @@ from jwskate.jwa import (
 )
 
 from .. import KeyTypes
+from .alg import UnsupportedAlg
 from .base import Jwk, JwkParameter
 
 
@@ -113,7 +114,7 @@ class ECJwk(Jwk):
         return self.get_curve(self.crv)
 
     @classmethod
-    def public(cls, crv: str, x: int, y: int, **params: str) -> ECJwk:
+    def public(cls, *, crv: str, x: int, y: int, **params: str) -> ECJwk:
         """Initialize a public `ECJwk` from its public parameters.
 
         Args:
@@ -129,16 +130,16 @@ class ECJwk(Jwk):
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(
             dict(
-                key=cls.KTY,
+                kty=cls.KTY,
                 crv=crv,
-                x=BinaPy.from_int(x, length=coord_size).to("b64u"),
-                y=BinaPy.from_int(y, length=coord_size).to("b64u"),
+                x=BinaPy.from_int(x, length=coord_size).to("b64u").ascii(),
+                y=BinaPy.from_int(y, length=coord_size).to("b64u").ascii(),
                 **{k: v for k, v in params.items() if v is not None},
             )
         )
 
     @classmethod
-    def private(cls, crv: str, x: int, y: int, d: int, **params: Any) -> ECJwk:
+    def private(cls, *, crv: str, x: int, y: int, d: int, **params: Any) -> ECJwk:
         """Initialize a private ECJwk from its private parameters.
 
         Args:
@@ -169,25 +170,27 @@ class ECJwk(Jwk):
     def generate(
         cls, *, crv: Optional[str] = None, alg: Optional[str] = None, **kwargs: Any
     ) -> ECJwk:
+        curve: EllipticCurve = P_256
+
         if crv is None and alg is None:
-            warnings.warn(
-                "No Curve identifier (crv) or an Algorithm identifier (alg) have been provided "
+            raise ValueError(
+                "No Curve identifier (crv) or Algorithm identifier (alg) have been provided "
                 "when generating an Elliptic Curve JWK. So there is no hint to determine which curve to use. "
-                "Curve 'P-256' is used by default. You should explicitly pass an 'alg' or 'crv' parameter "
-                "to explicitly select the appropriate Curve and avoid this warning."
+                "You must explicitly pass an 'alg' or 'crv' parameter to select the appropriate Curve."
             )
-            crv = P_256.name
-        curve: Optional[EllipticCurve] = None
-        if crv:
+        elif crv:
             curve = cls.get_curve(crv)
         elif alg:
             if alg in cls.SIGNATURE_ALGORITHMS:
                 curve = cls.SIGNATURE_ALGORITHMS[alg].curve
             elif alg in cls.KEY_MANAGEMENT_ALGORITHMS:
-                curve = P_256
-
-        if curve is None:
-            raise UnsupportedEllipticCurve(crv)
+                warnings.warn(
+                    "No Curve identifier (crv) specified when generating an Elliptic Curve Jwk for Key Management. "
+                    "Curve 'P-256' is used by default. You should explicitly pass a 'crv' parameter "
+                    "to select the appropriate Curve and avoid this warning."
+                )
+            else:
+                raise UnsupportedAlg(alg)
 
         x, y, d = curve.generate()
         return cls.private(
@@ -227,42 +230,22 @@ class ECJwk(Jwk):
 
     @property
     def coordinate_size(self) -> int:
-        """The coordinate size to use with the key curve.
-
-        Returns:
-          32, 48, or 66 (bits)
-
-        """
+        """The coordinate size to use with the key curve. This is 32, 48, or 66 bits."""
         return self.curve.coordinate_size
 
     @cached_property
     def x_coordinate(self) -> int:
-        """Return the *x coordinate* from this `ECJwk`.
-
-        Returns:
-         the x coordinate (from parameter `x`)
-
-        """
+        """Return the *x coordinate*, parameter `x` from this `ECJwk`."""
         return BinaPy(self.x).decode_from("b64u").to_int()
 
     @cached_property
     def y_coordinate(self) -> int:
-        """Return the *y coordinate* from this `ECJwk`.
-
-        Returns:
-            the y coordinate (from parameter `y`)
-
-        """
+        """Return the *y coordinate*, parameter `y` from this `ECJwk`."""
         return BinaPy(self.y).decode_from("b64u").to_int()
 
     @cached_property
     def ecc_private_key(self) -> int:
-        """Return the *ECC private key* from this `ECJwk`.
-
-        Returns:
-             the ECC private key (from parameter `d`)
-
-        """
+        """Return the *ECC private key*, parameter `d` from this `ECJwk`."""
         return BinaPy(self.d).decode_from("b64u").to_int()
 
     @override

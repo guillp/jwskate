@@ -127,7 +127,7 @@ class RSAJwk(Jwk):
             return rsa.RSAPublicNumbers(e=self.exponent, n=self.modulus).public_key()
 
     @classmethod
-    def public(cls, n: int, e: int, **params: Any) -> RSAJwk:
+    def public(cls, *, n: int, e: int = 65537, **params: Any) -> RSAJwk:
         """Initialize a public `RsaJwk` from a modulus and an exponent.
 
         Args:
@@ -151,8 +151,9 @@ class RSAJwk(Jwk):
     @classmethod
     def private(
         cls,
+        *,
         n: int,
-        e: int,
+        e: int = 65537,
         d: int,
         p: Optional[int] = None,
         q: Optional[int] = None,

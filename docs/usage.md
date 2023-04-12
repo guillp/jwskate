@@ -10,19 +10,19 @@ from jwskate import *
 
 ## Generating new keys
 
-| Usage                    | Method                    |
-|--------------------------|---------------------------|
-| For a specific algorithm | Jwk.generate(alg='ES256') |
-| For a specific key type  | Jwk.generate(kty='RSA')   |
+| Usage                    | Method                      |
+|--------------------------|-----------------------------|
+| For a specific algorithm | `Jwk.generate(alg='ES256')` |
+| For a specific key type  | `Jwk.generate(kty='RSA')`   |
 
 ## Loading keys
 
-| From                           | Method                                                                                                                                                                               |
-|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| A JWK in Python dict           | `jwk = Jwk({'kty': 'RSA', 'n': '...', ...})`                                                                                                                                         |
-| A JWK in JSON formatted string | `jwk = Jwk('{"kty": "RSA", "n": "...", ...}')`                                                                                                                                       |
-| A `cryptography` key           | `jwk = Jwk(cryptography_key, password='mypassword')`                                                                                                                                  |
-| A PEM formatted string         | `jwk = Jwk.from_pem(<br/>'''-----BEGIN PUBLIC KEY----- MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp0VYc2zc/6yNzQUSFprv<br/> ... 3QIDAQAB<br/>-----END PUBLIC KEY----- '''<br/>)` |
+| From                           | Method                                                                                                                                                                                   |
+|--------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| A JWK in Python dict           | `jwk = Jwk({'kty': 'RSA', 'n': '...', ...})`                                                                                                                                             |
+| A JWK in JSON formatted string | `jwk = Jwk('{"kty": "RSA", "n": "...", ...}')`                                                                                                                                           |
+| A `cryptography` key           | `jwk = Jwk(cryptography_key, password='mypassword')`                                                                                                                                     |
+| A PEM formatted string         | `jwk = Jwk.from_pem(`<br/>`'''-----BEGIN PUBLIC KEY----- MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp0VYc2zc/6yNzQUSFprv`<br/>`... 3QIDAQAB`<br/>`-----END PUBLIC KEY----- '''`<br/>`)` |
 
 ## Saving keys
 
@@ -39,17 +39,17 @@ From an instance of a `Jwk` named `jwk`:
 
 ## Inspecting keys
 
-| Usage                     | Method                                                                                                                  | Returns                                                                                             |
-|---------------------------|-------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
-| Check privateness         | jwk.is_private()                                                                                                        | `bool`                                                                                              |
-| Check symmetricness       | jwk.is_symmetric()                                                                                                      | `bool`                                                                                              |
-| Get Key Type              | jwk.kty                                                                                                                 | key type, as `str`                                                                                  |
-| Get Alg (if present)      | jwk.alg                                                                                                                 | intended algorithm identifier, as `str`                                                             |
-| Get Use                   | jwk.use                                                                                                                 | intended key use, if present, or deduced from `alg`                                                 |
-| Get Key Ops               | jwk.key_ops                                                                                                             | intended key operations, if present,<br>or deduced from `use`, `kty`, privateness and symmetricness |
-| Get attributes            | jwk\['attribute'\]<br>jwk.attribute                                                                                      | attribute value                                                                                     |
-| Get thumbprint            | jwk.thumbprint()<br>jwk.thumbprint_uri()                                                                                | Computed thumbprint or thumbprint URI                                                               |
-| Get supported algorithms  | jwk.supported_signing_algorithms()<br>jwk.supported_key_management_algorithms()<br>jwk.supported_encryption_algorithms() | List of supported algorithms identifiers, as `str`.                                                 |
+| Usage                    | Method                                                                                                                       | Returns                                                                                             |
+|--------------------------|------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| Check privateness        | `jwk.is_private()`                                                                                                           | `bool`                                                                                              |
+| Check symmetricness      | `jwk.is_symmetric()`                                                                                                         | `bool`                                                                                              |
+| Get Key Type             | `jwk.kty`                                                                                                                    | key type, as `str`                                                                                  |
+| Get Alg (if present)     | `jwk.alg`                                                                                                                    | intended algorithm identifier, as `str`                                                             |
+| Get Use                  | `jwk.use`                                                                                                                    | intended key use, if present, or deduced from `alg`                                                 |
+| Get Key Ops              | `jwk.key_ops`                                                                                                                | intended key operations, if present,<br>or deduced from `use`, `kty`, privateness and symmetricness |
+| Get attributes           | `jwk['attribute']`<br>`jwk.attribute`                                                                                        | attribute value                                                                                     |
+| Get thumbprint           | `jwk.thumbprint()`<br>`jwk.thumbprint_uri()`                                                                                 | Computed thumbprint or thumbprint URI                                                               |
+| Get supported algorithms | `jwk.supported_signing_algorithms()`<br>`jwk.supported_key_management_algorithms()`<br>`jwk.supported_encryption_algorithms()` | List of supported algorithms identifiers, as `str`.                                                 |
 
 # JWK
 

@@ -263,6 +263,14 @@ To specify which signature algorithms are accepted, each signature verification 
 Note that you cannot use `alg` and `algs` at the same time. If your `Jwk` contains an `alg` parameter, and you provide
 an `alg` or `algs` which does not match that value, a `Warning` will be emitted.
 
+## TODO
+
+- Complete/enhance/proof-read documentation
+- Better exceptions (create dedicated exception classes, better messages, etc.)
+- Support for JWE in JSON format
+- Better tests
+- Support for Selective-Disclosure JWT
+
 ## Credits
 
 All cryptographic operations are handled by [cryptography](https://cryptography.io).

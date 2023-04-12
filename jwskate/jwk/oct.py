@@ -23,6 +23,7 @@ from jwskate.jwa import (
     HS256,
     HS384,
     HS512,
+    BaseSymmetricAlg,
     DirectKeyUse,
 )
 
@@ -135,7 +136,7 @@ class SymmetricJwk(Jwk):
     @property
     def key(self) -> BinaPy:
         """Returns the raw symmetric key, from the `k` parameter, base64u-decoded."""
-        return self.cryptography_key  # type: ignore
+        return self.cryptography_key  # type: ignore[no-any-return]
 
     @property
     def key_size(self) -> int:
@@ -220,7 +221,8 @@ class SymmetricJwk(Jwk):
         return [
             name
             for name, alg in self.KEY_MANAGEMENT_ALGORITHMS.items()
-            if alg.supports_key(self.cryptography_key)  # type: ignore
+            if issubclass(alg, BaseSymmetricAlg)
+            and alg.supports_key(self.cryptography_key)
         ]
 
     @override

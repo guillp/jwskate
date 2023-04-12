@@ -149,7 +149,7 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
         """
         if not isinstance(self.key, self.private_key_class):
             raise PrivateKeyRequired()
-        yield self.key  # type: ignore
+        yield self.key  # type: ignore[misc]
 
     @contextmanager
     def public_key_required(self) -> Iterator[Kpub]:
@@ -164,7 +164,7 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
         """
         if not isinstance(self.key, self.public_key_class):
             raise PublicKeyRequired()
-        yield self.key  # type: ignore
+        yield self.key  # type: ignore[misc]
 
     def public_key(self) -> Kpub:
         """Return the public key matching the private key."""

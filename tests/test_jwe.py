@@ -430,7 +430,7 @@ def encryption_alg(request: pytest.FixtureRequest) -> str:
     ],
 )
 def password(request: pytest.FixtureRequest) -> bytes:
-    return request.param  # type: ignore
+    return request.param  # type: ignore[no-any-return]
 
 
 @pytest.fixture(scope="module")

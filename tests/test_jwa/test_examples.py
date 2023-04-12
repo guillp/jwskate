@@ -40,7 +40,7 @@ def test_aes_128_hmac_sha256() -> None:
             "4b 65 72 63 6b 68 6f 66 66 73"
         ).replace(" ", "")
     )
-    al = bytes.fromhex("00 00 00 00 00 00 01 50".replace(" ", ""))  # noqa
+    al = bytes.fromhex("00 00 00 00 00 00 01 50".replace(" ", ""))  # noqa: F841
     ciphertext = bytes.fromhex(
         (
             "c8 0e df a3 2d df 39 d5 ef 00 c0 b4 68 83 42 79"
@@ -55,7 +55,7 @@ def test_aes_128_hmac_sha256() -> None:
         ).replace(" ", "")
     )
 
-    mac = bytes.fromhex(  # noqa
+    mac = bytes.fromhex(  # noqa: F841
         (
             "65 2c 3f a3 6b 0a 7c 5b 32 19 fa b3 a3 0b c1 c4"
             "e6 e5 45 82 47 65 15 f0 ad 9f 75 a2 b7 1c 73 ef"
@@ -115,7 +115,7 @@ def test_aes_192_hmac_sha384() -> None:
             "4b 65 72 63 6b 68 6f 66 66 73"
         ).replace(" ", "")
     )
-    al = bytes.fromhex("00 00 00 00 00 00 01 50".replace(" ", ""))  # noqa
+    al = bytes.fromhex("00 00 00 00 00 00 01 50".replace(" ", ""))  # noqa: F841
     ciphertext = bytes.fromhex(
         (
             "ea 65 da 6b 59 e6 1e db 41 9b e6 2d 19 71 2a e5"
@@ -130,7 +130,7 @@ def test_aes_192_hmac_sha384() -> None:
         ).replace(" ", "")
     )
 
-    mac = bytes.fromhex(  # noqa
+    mac = bytes.fromhex(  # noqa: F841
         (
             "84 90 ac 0e 58 94 9b fe 51 87 5d 73 3f 93 ac 20"
             "75 16 80 39 cc c7 33 d7 45 94 f8 86 b3 fa af d4"

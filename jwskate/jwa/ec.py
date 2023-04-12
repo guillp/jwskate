@@ -45,7 +45,7 @@ class EllipticCurve:
 
         """
         key = ec.generate_private_key(self.cryptography_curve)
-        pn = key.private_numbers()  # type: ignore
+        pn = key.private_numbers()  # type: ignore[attr-defined]
         x = pn.public_numbers.x
         y = pn.public_numbers.y
         d = pn.private_value
@@ -104,7 +104,7 @@ class EllipticCurve:
         y = BinaPy.from_int(public_numbers.y, crv.coordinate_size).to("b64u").ascii()
         parameters = {"kty": KeyTypes.EC, "crv": crv.name, "x": x, "y": y}
         if isinstance(key, ec.EllipticCurvePrivateKey):
-            pn = key.private_numbers()  # type: ignore
+            pn = key.private_numbers()  # type: ignore[attr-defined]
             d = (
                 BinaPy.from_int(pn.private_value, crv.coordinate_size)
                 .to("b64u")

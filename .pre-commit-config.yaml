@@ -14,6 +14,14 @@ repos:
     - id: check-merge-conflict
     - id: check-yaml
       args: [--unsafe]
+-   repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+    - id: python-check-blanket-noqa
+    - id: python-check-blanket-type-ignore
+    - id: python-no-eval
+    - id: python-use-type-annotations
+    - id: text-unicode-replacement-char
 -   repo: https://github.com/hadialqattan/pycln
     rev: v2.1.3
     hooks:
@@ -51,7 +59,7 @@ repos:
     -   id: mypy
         args: [--strict]
         additional_dependencies:
-            - types-cryptography==3.3.21
-            - pytest-mypy==0.9.1
+            - types-cryptography==3.3.23.2
+            - pytest-mypy==0.10.3
             - binapy==0.6.0
             - freezegun==1.2.2

@@ -386,7 +386,7 @@ def test_aeskw_with_choosen_cek(alg: str, enc: str) -> None:
 
 
 def test_der_pem() -> None:
-    jwk = Jwk.generate_for_alg("ES256")
+    jwk = Jwk.generate(alg="ES256")
     password = secrets.token_urlsafe(16)
     der = jwk.to_der(password)
     assert Jwk.from_der(der, password) == jwk

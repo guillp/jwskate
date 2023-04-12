@@ -23,12 +23,24 @@ from jwskate import (
 
 
 def test_signed_jwt() -> None:
+    jwk = Jwk(
+        {
+            "kty": "EC",
+            "alg": "ES256",
+            "kid": "my_key",
+            "crv": "P-256",
+            "x": "WtjnvHG9b_IKBLn4QYTHz-AdoAiO_ork5LH1BL_5tyI",
+            "y": "C0YfOUDuCOvTCt7hAqO-f9z8_JdOnOPbfYmUk-RosHA",
+            "d": "EnGZlkoa4VUsnl72LcRRychNJ2FFknm_ph855tNuPZ8",
+        }
+    )
+
     jwt = Jwt(
-        "eyJhbGciOiJSUzI1NiIsImtpZCI6Im15X2tleSJ9.eyJhY3IiOiIyIiwiYW1yIjpbInB3ZCIsIm90cCJdLCJhdWQiOiJjbGllbnRfaWQiLCJhdXRoX3RpbWUiOjE2MjkyMDQ1NjAsImV4cCI6MTYyOTIwNDYyMCwiaWF0IjoxNjI5MjA0NTYwLCJpc3MiOiJodHRwczovL215YXMubG9jYWwiLCJub25jZSI6Im5vbmNlIiwic3ViIjoiMTIzNDU2In0.wUfjMyjlOSdvbFGFP8O8wGcNBK7akeyOUBMvYcNZclFUtokOyxhLUPxmo1THo1DV1BHUVd6AWfeKUnyTxl_8-G3E_a9u5wJfDyfghPDhCmfkYARvqQnnV_3aIbfTfUBC4f0bHr08d_q0fED88RLu77wESIPCVqQYy2bk4FLucc63yGBvaCskqzthZ85DbBJYWLlR8qBUk_NA8bWATYEtjwTrxoZe-uA-vB6NwUv1h8DKRsDF-9HSVHeWXXAeoG9UW7zgxoY3KbDIVzemvGzs2R9OgDBRRafBBVeAkDV6CdbdMNJDmHzcjase5jX6LE-3YCy7c7AMM1uWRCnK3f-azA"
+        "eyJhbGciOiJFUzI1NiIsImtpZCI6Im15X2tleSJ9.eyJhY3IiOiIyIiwiYW1yIjpbInB3ZCIsIm90cCJdLCJhdWQiOiJjbGllbnRfaWQiLCJhdXRoX3RpbWUiOjE2MjkyMDQ1NjAsImV4cCI6MTYyOTIwNDYyMCwiaWF0IjoxNjI5MjA0NTYwLCJuYmYiOjE2MjkyMDQ1NjAsImlzcyI6Imh0dHBzOi8vbXlhcy5sb2NhbCIsIm5vbmNlIjoibm9uY2UiLCJzdWIiOiIxMjM0NTYifQ.RhLqE8VGBjIRag4w9ps1oUQlxumma1fQzFH2UTrMDCjW2iTGdqhkOjpzb5bdI6tkQRRP64IGP4_CBa2BR7p26Q"
     )
 
     assert isinstance(jwt, SignedJwt)
-    assert jwt.headers == {"alg": "RS256", "kid": "my_key"}
+    assert jwt.headers == {"alg": "ES256", "kid": "my_key"}
     assert jwt.claims == {
         "acr": "2",
         "amr": ["pwd", "otp"],
@@ -36,6 +48,7 @@ def test_signed_jwt() -> None:
         "auth_time": 1629204560,
         "exp": 1629204620,
         "iat": 1629204560,
+        "nbf": 1629204560,
         "iss": "https://myas.local",
         "nonce": "nonce",
         "sub": "123456",
@@ -49,18 +62,13 @@ def test_signed_jwt() -> None:
     assert jwt.exp == 1629204620
     assert jwt.expires_at == datetime.fromtimestamp(1629204620, tz=timezone.utc)
     assert jwt.issued_at == datetime.fromtimestamp(1629204560, tz=timezone.utc)
+    assert jwt.not_before == datetime.fromtimestamp(1629204560, tz=timezone.utc)
     assert jwt.nonce == jwt["nonce"]
 
     # validating with the appropriate key must work
 
     jwt.validate(
-        jwk={
-            "kty": "RSA",
-            "alg": "RS256",
-            "kid": "my_key",
-            "n": "2m4QVSHdUo2DFSbGY24cJbxE10KbgdkSCtm0YZ1q0Zmna8pJg8YhaWCJHV7D5AxQ_L1b1PK0jsdpGYWc5-Pys0FB2hyABGPxXIdg1mjxn6geHLpWzsA3MHD29oqfl0Rt7g6AFc5St3lBgJCyWtci6QYBmBkX9oIMOx9pgv4BaT6y1DdrNh27-oSMXZ0a58KwnC6jbCpdA3V3Eume-Be1Tx9lJN3j6S8ydT7CGY1Xd-sc3oB8pXfkr1_EYf0Sgb9EwOJfqlNK_kVjT3GZ-1JJMKJ6zkU7H0yXe2SKXAzfayvJaIcYrk-sYwmf-u7yioOLLvjlGjysN7SOSM8socACcw",
-            "e": "AQAB",
-        },
+        jwk=jwk.public_jwk(),
         issuer="https://myas.local",
         audience="client_id",
         check_exp=False,
@@ -69,6 +77,13 @@ def test_signed_jwt() -> None:
     # validating with another key must fail
     with pytest.raises(InvalidSignature):
         jwt.validate(Jwk.generate_for_alg("RS256").public_jwk())
+
+    # invalid audience
+    with pytest.raises(InvalidClaim, match="audience"):
+        jwt.validate(
+            jwk.public_jwk(),
+            audience="foo",
+        )
 
 
 def test_unprotected() -> None:
@@ -264,6 +279,21 @@ def test_encrypted_jwt() -> None:
         "exp": 1300819380,
         "http://example.com/is_root": True,
     }
+
+
+def test_audience() -> None:
+    assert SignedJwt(
+        "eyJhbGciOiJFUzI1NiJ9.eyJhdWQiOiJjbGllbnRfaWQifQ.S1FheqDgFtSCUg2YLvBjyTp7U_oTAdNeBU5DWJWG7nhdQ94kPEjz1aP8ALfHQI-V-SPA34FTm6a3NkG6C1opsg"
+    ).audiences == ["client_id"]
+    assert SignedJwt(
+        "eyJhbGciOiJFUzI1NiJ9.eyJhdWQiOlsiY2xpZW50X2lkIl19.eLuTnfzUXE09-SwUfL70py-SlESZHom3SPK0deiy27QX5iCDjSk2rlSVAfcNpAO5DjnKKua3HHtAv6oE7Ox9vg"
+    ).audiences == ["client_id"]
+    assert (
+        SignedJwt(
+            "eyJhbGciOiJFUzI1NiJ9.e30.b7t6qRWXypeNf2GE2BnBqjfLbQ5FTcMFVGm6zjgbXSVZIKXNvkK-K4oRYurDD2YY8955JtnpajcVurns1PH-1Q"
+        ).audiences
+        == []
+    )
 
 
 def test_decrypt_nested_jwt() -> None:

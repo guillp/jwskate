@@ -43,6 +43,7 @@ class Jwt(BaseCompactToken):
                 from ..jwe import JweCompact
 
                 return JweCompact(value)
+
         return super().__new__(cls)
 
     @classmethod

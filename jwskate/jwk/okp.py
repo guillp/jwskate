@@ -95,7 +95,7 @@ class OKPJwk(Jwk):
         """Get the `OKPCurve` instance from a curve identifier.
 
         Args:
-          crv: a crv identifier
+          crv: a curve identifier
 
         Returns:
             the matching `OKPCurve` instance

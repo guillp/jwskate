@@ -9,11 +9,11 @@ from jwskate import (
     JwsCompact,
     JwsJsonFlat,
     JwsJsonGeneral,
+    JwsSignature,
     OKPJwk,
     RSAJwk,
     SymmetricJwk,
 )
-from jwskate.jws.signature import JwsSignature
 
 
 def test_jws_compact(private_jwk: Jwk) -> None:

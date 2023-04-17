@@ -699,7 +699,7 @@ class Jwk(BaseJsonDict):
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
-        """Verify a signature using this Jwk, and return `True` if valid.
+        """Verify a signature using this `Jwk`, and return `True` if valid.
 
         Args:
           data: the data to verify

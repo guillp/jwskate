@@ -2,6 +2,7 @@
 
 from .alg import (
     ExpectedAlgRequired,
+    MismatchingAlg,
     UnsupportedAlg,
     select_alg_class,
     select_alg_classes,
@@ -19,6 +20,7 @@ __all__ = [
     "InvalidJwk",
     "Jwk",
     "JwkSet",
+    "MismatchingAlg",
     "OKPJwk",
     "RSAJwk",
     "SymmetricJwk",

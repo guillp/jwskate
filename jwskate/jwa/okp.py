@@ -15,19 +15,19 @@ from typing_extensions import Protocol, runtime_checkable
 
 
 @runtime_checkable
-class PublicKeyProtocol(Protocol):  # noqa
+class PublicKeyProtocol(Protocol):
     """A protocol that each `cryptography` ECDH public key class implements."""
 
     def public_bytes(
         self,
         encoding: serialization.Encoding,
         format: serialization.PublicFormat,
-    ) -> bytes:  # noqa
+    ) -> bytes:  # noqa: D102
         ...
 
 
 @runtime_checkable
-class PrivateKeyProtocol(Protocol):  # noqa
+class PrivateKeyProtocol(Protocol):
     """A protocol that each `cryptography` ECDH private key class implements."""
 
     def private_bytes(
@@ -35,14 +35,14 @@ class PrivateKeyProtocol(Protocol):  # noqa
         encoding: serialization.Encoding,
         format: serialization.PrivateFormat,
         encryption_algorithm: serialization.KeySerializationEncryption,
-    ) -> bytes:  # noqa
+    ) -> bytes:  # noqa: D102
         ...
 
-    def public_key(self) -> PublicKeyProtocol:  # noqa
+    def public_key(self) -> PublicKeyProtocol:  # noqa: D102
         ...
 
     @classmethod
-    def generate(self) -> PrivateKeyProtocol:  # noqa
+    def generate(self) -> PrivateKeyProtocol:  # noqa: D102
         ...
 
 
@@ -111,7 +111,15 @@ class OKPCurve:
                 key, (c.cryptography_private_key_class, c.cryptography_public_key_class)
             ):
                 return c
-        raise TypeError(f"Unsupported OKP key {type(key)}")
+        raise TypeError(
+            f"""\
+Unsupported key type for OKP: {type(key)}. Supported key types are: "
+{', '.join(
+    name
+    for curve in cls.instances.values()
+    for name in (curve.cryptography_private_key_class.__name__, curve.cryptography_public_key_class.__name__)
+)}"""
+        )
 
 
 Ed25519 = OKPCurve(

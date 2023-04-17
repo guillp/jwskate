@@ -1,8 +1,7 @@
 """This module contains base classes for all tokens types handled by `jwskate`."""
 import json
+from functools import cached_property
 from typing import Any, Dict, Type, TypeVar, Union
-
-from backports.cached_property import cached_property
 
 
 class BaseCompactToken:

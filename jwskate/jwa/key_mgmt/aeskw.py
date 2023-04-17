@@ -3,6 +3,7 @@ from typing import SupportsBytes, Union
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import keywrap
+from typing_extensions import Self, override
 
 from ..base import BaseKeyManagementAlg, BaseSymmetricAlg
 
@@ -14,6 +15,7 @@ class BaseAesKeyWrap(BaseKeyManagementAlg, BaseSymmetricAlg):
     """Required AES key size in bits."""
 
     @classmethod
+    @override
     def check_key(cls, key: bytes) -> None:
         """Check that a key is valid for usage with this algorithm.
 
@@ -28,6 +30,11 @@ class BaseAesKeyWrap(BaseKeyManagementAlg, BaseSymmetricAlg):
         """
         if not isinstance(key, bytes) or len(key) * 8 != cls.key_size:
             raise ValueError(f"Key must be {cls.key_size} bits.")
+
+    @classmethod
+    @override
+    def with_random_key(cls) -> Self:
+        return cls(BinaPy.random_bits(cls.key_size))
 
     def wrap_key(self, plainkey: bytes) -> BinaPy:
         """Wrap a key.

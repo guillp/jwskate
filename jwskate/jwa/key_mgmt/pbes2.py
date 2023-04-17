@@ -30,7 +30,8 @@ class BasePbes2(BaseKeyManagementAlg):
             password = bytes(password)
         self.password = password
 
-    def generate_salt(self, size: int = 12) -> BinaPy:
+    @classmethod
+    def generate_salt(cls, size: int = 12) -> BinaPy:
         """Generate a salt that is suitable for use for encryption.
 
         Args:

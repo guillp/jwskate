@@ -1,8 +1,10 @@
-from typing import Any
+import secrets
+from typing import Dict
 
 import pytest
 
 from jwskate import (
+    P_521,
     EncryptionAlgs,
     ExpectedAlgRequired,
     Jwk,
@@ -15,7 +17,7 @@ from jwskate import (
 
 
 @pytest.mark.parametrize(
-    "alg", SignatureAlgs.ALL + EncryptionAlgs.ALL + KeyManagementAlgs.ALL_KEY_BASED
+    "alg", SignatureAlgs.ALL | EncryptionAlgs.ALL | KeyManagementAlgs.ALL_KEY_BASED
 )
 def test_generate_for_alg(alg: str) -> None:
     jwk = Jwk.generate_for_alg(alg).with_usage_parameters()
@@ -72,39 +74,62 @@ def test_generate_for_alg(alg: str) -> None:
     with pytest.raises(ExpectedAlgRequired):
         jwk_mini.with_usage_parameters()
 
+    # check to_pem() and from_pem(), to_der() and from_der()
+    if not jwk.is_symmetric:
+        assert Jwk.from_pem(jwk.to_pem()) == jwk
+        assert Jwk.from_der(jwk.to_der()) == jwk
 
-def test_generate_for_kty() -> None:
-    kty2args: dict[str, dict[str, Any]] = {
-        KeyTypes.EC: {},
-        KeyTypes.OCT: {},
-        KeyTypes.RSA: {},
-        KeyTypes.OKP: {"crv": "Ed25519"},
-    }
-    for kty, kwargs in kty2args.items():
-        jwk = Jwk.generate_for_kty(kty, **kwargs)
-        assert jwk.kty == kty
+        password = secrets.token_urlsafe(16)
+        assert Jwk.from_pem(jwk.to_pem(password), password=password) == jwk
+        assert Jwk.from_der(jwk.to_der(password), password=password) == jwk
+
+        assert Jwk.from_pem(jwk.public_jwk().to_pem()) == jwk.public_jwk()
+        assert Jwk.from_der(jwk.public_jwk().to_der()) == jwk.public_jwk()
+
+
+@pytest.mark.parametrize(
+    "kty, kwargs",
+    (
+        (KeyTypes.EC, {"crv": "P-256"}),
+        (KeyTypes.OCT, {}),
+        (KeyTypes.RSA, {}),
+        (KeyTypes.OKP, {"crv": "Ed25519"}),
+    ),
+)
+def test_generate_for_kty(kty: str, kwargs: Dict[str, str]) -> None:
+    jwk = Jwk.generate_for_kty(kty, **kwargs)
+    assert jwk.kty == kty
 
 
 def test_generate() -> None:
-    for alg in SignatureAlgs.ALL + KeyManagementAlgs.ALL_KEY_BASED + EncryptionAlgs.ALL:
+    for alg in SignatureAlgs.ALL | KeyManagementAlgs.ALL_KEY_BASED | EncryptionAlgs.ALL:
         assert Jwk.generate(alg=alg).alg == alg
 
-    assert Jwk.generate(kty=KeyTypes.EC).kty == KeyTypes.EC
+    ec_jwk = Jwk.generate(kty=KeyTypes.EC, crv="P-521")
+    assert ec_jwk.kty == KeyTypes.EC
+    assert ec_jwk.curve == P_521
+
+    assert Jwk.generate(kty="RSA", alg="RS256")
+    with pytest.raises(ValueError, match="Incompatible .* parameters"):
+        Jwk.generate(kty="RSA", alg="ES512")
+
+    with pytest.raises(ValueError, match="must provide a hint"):
+        Jwk.generate()
 
 
 def test_unsupported_alg() -> None:
     # trying to generate a Jwk with an unsupported alg raises a UnsupportedAlg
     with pytest.raises(UnsupportedAlg):
-        Jwk.generate_for_alg("unknown_alg")
+        Jwk.generate(alg="unknown_alg")
 
 
 def test_symmetric_key_size() -> None:
     with pytest.warns():
-        Jwk.generate_for_alg("HS256", key_size=64)
+        Jwk.generate(alg="HS256", key_size=64)
 
-    assert Jwk.generate_for_alg(
-        "HS256", key_size=384
-    )  # no warning when key_size > hash_size
+    # no warning when key_size > hash_size
+    assert Jwk.generate(alg="HS256", key_size=384)
 
+    # warn when keysize is not appropriate for a given alg
     with pytest.raises(ValueError):
-        Jwk.generate_for_alg("A128GCM", key_size=100)
+        Jwk.generate(alg="A128GCM", key_size=100)

@@ -84,6 +84,7 @@ from .jwk import (
     InvalidJwk,
     Jwk,
     JwkSet,
+    MismatchingAlg,
     OKPJwk,
     RSAJwk,
     SymmetricJwk,
@@ -95,7 +96,7 @@ from .jwk import (
     select_alg_classes,
     to_jwk,
 )
-from .jws import InvalidJws, JwsCompact, JwsJsonFlat, JwsJsonGeneral
+from .jws import InvalidJws, JwsCompact, JwsJsonFlat, JwsJsonGeneral, JwsSignature
 from .jwt import (
     ExpiredJwt,
     InvalidClaim,
@@ -161,11 +162,13 @@ __all__ = [
     "JwsCompact",
     "JwsJsonFlat",
     "JwsJsonGeneral",
+    "JwsSignature",
     "Jwt",
     "JwtSigner",
     "JwtVerifier",
     "KeyManagementAlgs",
     "KeyTypes",
+    "MismatchingAlg",
     "MismatchingAuthTag",
     "OKPCurve",
     "OKPJwk",

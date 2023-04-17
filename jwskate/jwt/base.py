@@ -22,7 +22,7 @@ class InvalidJwt(ValueError):
 class Jwt(BaseCompactToken):
     """Represents a Json Web Token."""
 
-    def __new__(cls, value: Union[bytes, str]):  # type: ignore
+    def __new__(cls, value: Union[bytes, str]) -> Union[SignedJwt, JweCompact, Jwt]:  # type: ignore[misc]
         """Allow parsing both Signed and Encrypted JWTs.
 
         This returns the appropriate subclass or instance depending on the number of dots (.) in the serialized JWT.
@@ -43,6 +43,7 @@ class Jwt(BaseCompactToken):
                 from ..jwe import JweCompact
 
                 return JweCompact(value)
+
         return super().__new__(cls)
 
     @classmethod
@@ -52,7 +53,7 @@ class Jwt(BaseCompactToken):
         jwk: Union[Jwk, Dict[str, Any]],
         alg: Optional[str] = None,
         extra_headers: Optional[Dict[str, Any]] = None,
-    ) -> "SignedJwt":
+    ) -> SignedJwt:
         """Sign a JSON payload with a `Jwk` and returns the resulting `SignedJwt`.
 
         This method cannot generate a token without a signature. If you want to use an unsigned token (with alg=none),
@@ -93,7 +94,7 @@ class Jwt(BaseCompactToken):
         cls,
         claims: Dict[str, Any],
         extra_headers: Optional[Dict[str, Any]] = None,
-    ) -> "SignedJwt":
+    ) -> SignedJwt:
         """Generate a JWT that is not signed and not encrypted (with alg=none).
 
         Args:

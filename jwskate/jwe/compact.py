@@ -1,9 +1,9 @@
 """This module implements the JWE Compact format."""
 
 import warnings
-from typing import Any, Dict, Mapping, Optional, SupportsBytes, Type, Union
+from functools import cached_property
+from typing import Any, Dict, Iterable, Mapping, Optional, SupportsBytes, Type, Union
 
-from backports.cached_property import cached_property
 from binapy import BinaPy
 
 from jwskate.jwa import (
@@ -13,7 +13,7 @@ from jwskate.jwa import (
     Pbes2_HS512_A256KW,
 )
 from jwskate.jwk import Jwk, SymmetricJwk, to_jwk
-from jwskate.jwk.alg import UnsupportedAlg, select_alg_class
+from jwskate.jwk.alg import UnsupportedAlg, select_alg_class, select_alg_classes
 from jwskate.token import BaseCompactToken
 
 
@@ -26,6 +26,7 @@ class JweCompact(BaseCompactToken):
 
     Args:
         value: the compact representation for this Jwe
+
     """
 
     def __init__(self, value: Union[bytes, str]):
@@ -100,6 +101,7 @@ class JweCompact(BaseCompactToken):
 
         Returns:
             the initialized JweCompact instance
+
         """
         return cls(
             b".".join(
@@ -124,6 +126,7 @@ class JweCompact(BaseCompactToken):
 
         Raises:
             AttributeError: if there is no enc header or it is not a string
+
         """
         return self.get_header("enc")  # type: ignore[no-any-return]
         # header has been checked at init time
@@ -155,6 +158,7 @@ class JweCompact(BaseCompactToken):
 
         Returns:
             the generated JweCompact instance
+
         """
         extra_headers = extra_headers or {}
         jwk = to_jwk(jwk)
@@ -184,37 +188,55 @@ class JweCompact(BaseCompactToken):
     }
 
     def unwrap_cek(
-        self, jwk_or_password: Union[Jwk, Dict[str, Any], bytes, str]
+        self,
+        jwk_or_password: Union[Jwk, Dict[str, Any], bytes, str],
+        alg: Optional[str] = None,
+        algs: Optional[Iterable[str]] = None,
     ) -> Jwk:
-        """Unwrap the CEK from this JWE token using the provided key or password.
+        """Unwrap the CEK from this `Jwe` using the provided key or password.
 
         Args:
           jwk_or_password: the decryption JWK or password
+          alg: allowed key management algorithm, if there is only 1
+          algs: allowed key managements algorithms, if there are several
 
         Returns:
             the unwrapped CEK, as a SymmetricJwk
+
         """
         if isinstance(jwk_or_password, (bytes, str)):
             password = jwk_or_password
             return self.unwrap_cek_with_password(password)
 
         jwk = Jwk(jwk_or_password)
+        select_alg_classes(
+            jwk.KEY_MANAGEMENT_ALGORITHMS,
+            jwk_alg=self.alg,
+            alg=alg,
+            algs=algs,
+            strict=True,
+        )
         cek = jwk.recipient_key(self.wrapped_cek, **self.headers)
         return cek
 
     def decrypt(
         self,
         jwk: Union[Jwk, Dict[str, Any]],
+        alg: Optional[str] = None,
+        algs: Optional[Iterable[str]] = None,
     ) -> BinaPy:
-        """Decrypts this Jwe payload using a JWK.
+        """Decrypts this `Jwe` payload using a `Jwk`.
 
         Args:
           jwk: the decryption key
+          alg: allowed key management algorithm, if there is only 1
+          algs: allowed keys management algorithms, if there are several
 
         Returns:
           the decrypted payload
+
         """
-        cek_jwk = self.unwrap_cek(jwk)
+        cek_jwk = self.unwrap_cek(jwk, alg=alg, algs=algs)
 
         plaintext = cek_jwk.decrypt(
             ciphertext=self.ciphertext,
@@ -258,6 +280,7 @@ class JweCompact(BaseCompactToken):
         Raises:
             UnsupportedAlg: if the key management alg is not supported
             ValueError: if the `count` parameter is not a positive integer
+
         """
         keyalg = cls.PBES2_ALGORITHMS.get(alg)
         if keyalg is None:
@@ -307,6 +330,7 @@ class JweCompact(BaseCompactToken):
         Raises:
             UnsupportedAlg: if the token key management algorithm is not supported
             AttributeError: if the token misses the PBES2-related headers
+
         """
         keyalg = self.PBES2_ALGORITHMS.get(self.alg)
         if keyalg is None:
@@ -337,6 +361,7 @@ class JweCompact(BaseCompactToken):
 
         Returns:
             the unencrypted payload
+
         """
         cek_jwk = self.unwrap_cek_with_password(password)
         plaintext = cek_jwk.decrypt(

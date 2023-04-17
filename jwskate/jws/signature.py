@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any, Dict, Iterable, Mapping, Optional, Type, TypeVar, Union
 
-from backports.cached_property import cached_property
 from binapy import BinaPy
 
 from jwskate.jwk import Jwk, to_jwk
@@ -68,7 +68,7 @@ class JwsSignature(BaseJsonDict):
         protected = self.get("protected")
         if protected is None:
             raise AttributeError("This Jws JSON does not contain a 'protected' member")
-        return BinaPy(protected).decode_from("b64u").parse_from("json")  # type: ignore
+        return BinaPy(protected).decode_from("b64u").parse_from("json")  # type: ignore[no-any-return]
 
     @property
     def header(self) -> Any:

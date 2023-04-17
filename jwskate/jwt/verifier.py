@@ -1,13 +1,22 @@
 """High-Level facility to verify JWT tokens signature, validity dates, issuer, audiences, etc."""
-from typing import Callable, Iterable, Optional, Union
+from typing import Any, Callable, Dict, Iterable, Optional, Union
 
-from jwskate import JwkSet
+from jwskate import Jwk, JwkSet
 
 from .signed import ExpiredJwt, InvalidClaim, InvalidSignature, SignedJwt
 
 
 class JwtVerifier:
     """A helper class to validate JWTs tokens in a real application.
+
+    Args:
+        jwkset: a `JwkSet` or `Jwk` which will verify the token signatures
+        issuer: expected issuer value
+        audience: expected audience value
+        alg: expected signature alg, if there is only one
+        algs: expected signature algs, if there are several
+        leeway: number of seconds to allow when verifying token validity period
+        verifiers: additional verifiers to implement custom checks on the tokens
 
     Usage:
         ```python
@@ -33,7 +42,8 @@ class JwtVerifier:
 
     def __init__(
         self,
-        jwkset: JwkSet,
+        jwkset: Union[JwkSet, Jwk, Dict[str, Any]],
+        *,
         issuer: Optional[str],
         audience: Optional[str] = None,
         alg: Optional[str] = None,
@@ -41,6 +51,20 @@ class JwtVerifier:
         leeway: int = 10,
         verifiers: Optional[Iterable[Callable[[SignedJwt], None]]] = None,
     ) -> None:
+        if isinstance(jwkset, Jwk):
+            jwkset = jwkset.as_jwks()
+        elif isinstance(jwkset, dict):
+            if "keys" in jwkset:
+                jwkset = JwkSet(jwkset)
+            else:
+                jwkset = Jwk(jwkset).as_jwks()
+
+        if not isinstance(jwkset, JwkSet) or jwkset.is_private:
+            raise ValueError(
+                "Please provide either a `JwkSet` or a single `Jwk` for signature verification. "
+                "Signature verification keys must be public."
+            )
+
         self.issuer = issuer
         self.jwkset = jwkset
         self.audience = audience
@@ -50,9 +74,10 @@ class JwtVerifier:
         self.verifiers = list(verifiers) if verifiers else []
 
     def verify(self, jwt: Union[SignedJwt, str]) -> None:
-        """Verify a given Jwt token.
+        """Verify a given JWT token.
 
-        This checks the token signature, issuer, audience and expiration date as configured.
+        This checks the token signature, issuer, audience and expiration date, plus any custom verification,
+        as configured at init time.
 
         Args:
             jwt: the JWT token to verify

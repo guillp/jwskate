@@ -1,8 +1,8 @@
 site_name: jwskate
-# site_url: http://www.jieyu.ai
+site_url: https://guillp.github.io/jwskate/
 repo_url: https://github.com/guillp/jwskate
 repo_name: jwskate
-#strict: true
+strict: true
 nav:
   - home: index.md
   - installation: installation.md
@@ -43,7 +43,7 @@ markdown_extensions:
   - toc:
       baselevel: 2
       permalink: true
-      slugify: !!python/name:pymdownx.slugs.uslugify
+      slugify: !!python/object/apply:pymdownx.slugs.slugify {kwds: {case: lower}}
   - meta
 plugins:
   - include-markdown
@@ -51,8 +51,6 @@ plugins:
       lang: en
   - mkdocstrings:
       enable_inventory: true
-      watch:
-        - jwskate
 extra:
   social:
     - icon: fontawesome/brands/github
@@ -60,3 +58,5 @@ extra:
       name: Github
     - icon: material/email
       link: "mailto:guill.p.linux@gmail.com"
+watch:
+- jwskate

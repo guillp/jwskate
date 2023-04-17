@@ -9,21 +9,16 @@ A Pythonic implementation of the JOSE set of IETF specifications: [Json Web Sign
 and with respect to [JWT Best Current Practices][rfc8725].
 
 - Free software: MIT
-- Documentation: <https://guillp.github.io/jwskate/>
+- Documentation: [https://guillp.github.io/jwskate/](https://guillp.github.io/jwskate/)
 
 A quick usage example, generating an RSA private key, signing some data, then validating that signature:
 
 ```python
 from jwskate import Jwk
 
-# let's generate a random private key
-rsa_private_jwk = (
-    Jwk.generate_for_alg(  # generated key will automatically be RSA, based on the required 'alg'
-        alg="RS256", key_size=2048
-    )
-    .with_kid_thumbprint()  # include an RFC7638 thumbprint as key id
-    .with_usage_parameters()  # include the appropriate 'use' and 'key_ops' parameters in the JWK, based on the 'alg'
-)
+# Let's generate a random private key, to use with alg 'RS256'.
+# Based on that alg, jwskate knows it must be an RSA key.
+rsa_private_jwk = Jwk.generate(alg="RS256", key_size=2048)
 
 data = b"Signing is easy!"
 signature = rsa_private_jwk.sign(data)
@@ -35,7 +30,7 @@ assert rsa_public_jwk.verify(data, signature)
 # let's see what a Jwk looks like:
 assert isinstance(rsa_private_jwk, dict)  # Jwk are dict
 
-print(rsa_private_jwk)
+print(rsa_private_jwk.with_usage_parameters())
 ```
 
 The result of this print will look like this (with the random parts abbreviated to `...` for display purposes only):
@@ -61,36 +56,41 @@ Now let's sign a JWT containing arbitrary claims, this time using an EC key:
 ```python
 from jwskate import Jwk, Jwt
 
-private_jwk = Jwk.generate_for_alg(
-    "ES256", kid="my_key"
-)  # let's specify a kid manually
+# This time let's try an EC key, based on `alg` parameter,
+# and let's specigy an arbitrary Key ID (kid).
+private_jwk = Jwk.generate(alg="ES256", kid="my_key")
+
+# here are claims to sign in a JWT:
 claims = {"sub": "some_sub", "claim1": "value1"}
 
 jwt = Jwt.sign(claims, private_jwk)
 # that's it! we have a signed JWT
+assert isinstance(jwt, Jwt)  # Jwt are objects
 assert jwt.claims == claims  # claims can be accessed as a dict
-assert jwt.sub == "some_sub"  # or individual claims can be accessed as attributes
-assert jwt["claim1"] == "value1"  # or as dict items
+assert jwt.headers == {"alg": "ES256", "kid": "my_key"}  # headers too
+assert jwt.sub == "some_sub"  # individual claims can be accessed as attributes
+assert jwt["claim1"] == "value1"  # or as dict items (with "subscription")
 assert jwt.alg == "ES256"  # alg and kid headers are also accessible as attributes
 assert jwt.kid == private_jwk.kid
+# notice that alg and kid are automatically set with appropriate values
+assert isinstance(jwt.signature, bytes)  # signature is accessible too
+# verifying the jwt signature is as easy as:
 assert jwt.verify_signature(private_jwk.public_jwk())
+# since our jwk contains an 'alg' parameter (here 'ES256'), the signature is automatically verified using that alg
+# you could also specify an alg manually, useful for keys with no "alg" hint:
+assert jwt.verify_signature(private_jwk.public_jwk(), alg="ES256")
 
 print(jwt)
 # eyJhbGciOiJFUzI1NiIsImtpZCI6Im15a2V5In0.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.C1KcDyDT8qXwUqcWzPKkQD7f6xai-gCgaRFMdKPe80Vk7XeYNa8ovuLwvdXgGW4ZZ_lL73QIyncY7tHGXUthag
 # This will output the full JWT compact representation. You can inspect it for example at <https://jwt.io>
-
-print(jwt.headers)
-# {'alg': 'ES256', 'kid': 'my_key'}
 ```
 
-Note above that the JWT headers are automatically generated with the appropriate values.
-
-Or let's sign a JWT with the standardised lifetime, subject, audience and ID claims:
+Or let's sign a JWT with the standardised lifetime, subject, audience and ID claims, plus arbitrary custom claims:
 
 ```python
 from jwskate import Jwk, JwtSigner
 
-private_jwk = Jwk.generate_for_alg("ES256")
+private_jwk = Jwk.generate(alg="ES256")
 signer = JwtSigner(issuer="https://myissuer.com", jwk=private_jwk)
 jwt = signer.sign(
     subject="some_sub",
@@ -119,30 +119,30 @@ The generated JWT claims will include the standardised claims:
 
 - Simple, Clean, Pythonic interface
 - Convenience wrappers around `cryptography` for all algorithms described in JWA
-- Json Web Keys (JWK) loading and generation
+- Json Web Keys (JWK) loading, dumping and generation
 - Arbitrary data signature and verification using Json Web Keys
 - Json Web Signatures (JWS) signing and verification
 - Json Web Encryption (JWE) encryption and decryption
 - Json Web Tokens (JWT) signing, verification and validation
-- 100% type annotated
+- 100% type annotated, verified with `mypy --strict`
 - nearly 100% code coverage
 - Relies on [cryptography](https://cryptography.io) for all cryptographic operations
 - Relies on [BinaPy](https://guillp.github.io/binapy/) for binary data manipulations
 
 ### Supported Token Types
 
-| Token Type                | Support                                                                  |
-|---------------------------|--------------------------------------------------------------------------|
-| Json Web Signature (JWS)  | ☑ Compact <br/> ☑ JSON Flat <br/> ☑ JSON General <br/> |
-| Json Web Encryption (JWE) | ☑ Compact <br/> ☐ JSON Flat <br/> ☐ JSON General <br/> |
-| Json Web Tokens (JWT)     | ☑ Signed <br/> ☑ Signed and Encrypted                        |
+
+| Token Type                | Support                                                  |
+| ------------------------- | -------------------------------------------------------- |
+| Json Web Signature (JWS)  | ☑ Compact<br/> ☑ JSON Flat <br/> ☑ JSON General <br/> |
+| Json Web Encryption (JWE) | ☑ Compact<br/> ☐ JSON Flat <br/> ☐ JSON General <br/> |
+| Json Web Tokens (JWT)     | ☑ Signed<br/> ☑ Signed and Encrypted                   |
 
 ### Supported Signature algorithms
 
-`jwskate` supports the following signature algorithms:
 
 | Signature Alg | Description                                    | Key Type | Reference                          | Note                           |
-|---------------|------------------------------------------------|----------|------------------------------------|--------------------------------|
+| ------------- | ---------------------------------------------- | -------- | ---------------------------------- | ------------------------------ |
 | HS256         | HMAC using SHA-256                             | oct      | [RFC7518, Section 3.2]             |                                |
 | HS384         | HMAC using SHA-384                             | oct      | [RFC7518, Section 3.2]             |                                |
 | HS512         | HMAC using SHA-512                             | oct      | [RFC7518, Section 3.2]             |                                |
@@ -163,49 +163,46 @@ The generated JWT claims will include the standardised claims:
 
 ### Supported Key Management algorithms
 
-`jwskate` supports the following key management algorithms:
 
-| Signature Alg      | Description                                     | Key Type | Reference                          | Note        |
-|--------------------|-------------------------------------------------|----------|------------------------------------|-------------|
-| RSA1_5             | RSAES-PKCS1-v1_5                                | RSA      | [RFC7518, Section 4.2]             | Unwrap Only |
-| RSA-OAEP           | RSAES OAEP using default parameters             | RSA      | [RFC7518, Section 4.3]             |             |
-| RSA-OAEP-256       | RSAES OAEP using SHA-256 and MGF1 with SHA-256  | RSA      | [RFC7518, Section 4.3]             |             |
-| RSA-OAEP-384       | RSA-OAEP using SHA-384 and MGF1 with SHA-384    | RSA      | https://www.w3.org/TR/WebCryptoAPI |             |
-| RSA-OAEP-512       | RSA-OAEP using SHA-512 and MGF1 with SHA-512    | RSA      | https://www.w3.org/TR/WebCryptoAPI |             |
-| A128KW             | AES Key Wrap using 128-bit key                  | oct      | [RFC7518, Section 4.4]             |             |
-| A192KW             | AES Key Wrap using 192-bit key                  | oct      | [RFC7518, Section 4.4]             |             |
-| A256KW             | AES Key Wrap using 256-bit key                  | oct      | [RFC7518, Section 4.4]             |             |
-| dir                | Direct use of a shared symmetric key            | oct      | [RFC7518, Section 4.5]             |             |
-| ECDH-ES            | ECDH-ES using Concat KDF                        | EC       | [RFC7518, Section 4.6]             |             |
-| ECDH-ES+A128KW     | ECDH-ES using Concat KDF and "A128KW" wrapping  | EC       | [RFC7518, Section 4.6]             |             |
-| ECDH-ES+A192KW     | ECDH-ES using Concat KDF and "A192KW" wrapping  | EC       | [RFC7518, Section 4.6]             |             |
-| ECDH-ES+A256KW     | ECDH-ES using Concat KDF and "A256KW" wrapping  | EC       | [RFC7518, Section 4.6]             |             |
-| A128GCMKW          | Key wrapping with AES GCM using 128-bit key     | oct      | [RFC7518, Section 4.7]             |             |
-| A192GCMKW          | Key wrapping with AES GCM using 192-bit key     | oct      | [RFC7518, Section 4.7]             |             |
-| A256GCMKW          | Key wrapping with AES GCM using 256-bit key     | oct      | [RFC7518, Section 4.7]             |             |
-| PBES2-HS256+A128KW | PBES2 with HMAC SHA-256 and "A128KW" wrapping   | password | [RFC7518, Section 4.8]             |             |
-| PBES2-HS384+A192KW | PBES2 with HMAC SHA-384 and "A192KW" wrapping   | password | [RFC7518, Section 4.8]             |             |
-| PBES2-HS512+A256KW | PBES2 with HMAC SHA-512 and "A256KW" wrapping   | password | [RFC7518, Section 4.8]             |             |
+| Signature Alg      | Description                                    | Key Type | Reference                          | Note        |
+| ------------------ | ---------------------------------------------- | -------- | ---------------------------------- | ----------- |
+| RSA1_5             | RSAES-PKCS1-v1_5                               | RSA      | [RFC7518, Section 4.2]             | Unwrap Only |
+| RSA-OAEP           | RSAES OAEP using default parameters            | RSA      | [RFC7518, Section 4.3]             |             |
+| RSA-OAEP-256       | RSAES OAEP using SHA-256 and MGF1 with SHA-256 | RSA      | [RFC7518, Section 4.3]             |             |
+| RSA-OAEP-384       | RSA-OAEP using SHA-384 and MGF1 with SHA-384   | RSA      | https://www.w3.org/TR/WebCryptoAPI |             |
+| RSA-OAEP-512       | RSA-OAEP using SHA-512 and MGF1 with SHA-512   | RSA      | https://www.w3.org/TR/WebCryptoAPI |             |
+| A128KW             | AES Key Wrap using 128-bit key                 | oct      | [RFC7518, Section 4.4]             |             |
+| A192KW             | AES Key Wrap using 192-bit key                 | oct      | [RFC7518, Section 4.4]             |             |
+| A256KW             | AES Key Wrap using 256-bit key                 | oct      | [RFC7518, Section 4.4]             |             |
+| dir                | Direct use of a shared symmetric key           | oct      | [RFC7518, Section 4.5]             |             |
+| ECDH-ES            | ECDH-ES using Concat KDF                       | EC       | [RFC7518, Section 4.6]             |             |
+| ECDH-ES+A128KW     | ECDH-ES using Concat KDF and "A128KW" wrapping | EC       | [RFC7518, Section 4.6]             |             |
+| ECDH-ES+A192KW     | ECDH-ES using Concat KDF and "A192KW" wrapping | EC       | [RFC7518, Section 4.6]             |             |
+| ECDH-ES+A256KW     | ECDH-ES using Concat KDF and "A256KW" wrapping | EC       | [RFC7518, Section 4.6]             |             |
+| A128GCMKW          | Key wrapping with AES GCM using 128-bit key    | oct      | [RFC7518, Section 4.7]             |             |
+| A192GCMKW          | Key wrapping with AES GCM using 192-bit key    | oct      | [RFC7518, Section 4.7]             |             |
+| A256GCMKW          | Key wrapping with AES GCM using 256-bit key    | oct      | [RFC7518, Section 4.7]             |             |
+| PBES2-HS256+A128KW | PBES2 with HMAC SHA-256 and "A128KW" wrapping  | password | [RFC7518, Section 4.8]             |             |
+| PBES2-HS384+A192KW | PBES2 with HMAC SHA-384 and "A192KW" wrapping  | password | [RFC7518, Section 4.8]             |             |
+| PBES2-HS512+A256KW | PBES2 with HMAC SHA-512 and "A256KW" wrapping  | password | [RFC7518, Section 4.8]             |             |
 
 ### Supported Encryption algorithms
 
-`jwskate` supports the following encryption algorithms:
 
-| Signature Alg  | Description                                                 | Reference                |
-|----------------|-------------------------------------------------------------|--------------------------|
-| A128CBC-HS256  | AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm | [RFC7518, Section 5.2.3] |
-| A192CBC-HS384  | AES_192_CBC_HMAC_SHA_384 authenticated encryption algorithm | [RFC7518, Section 5.2.4] |
-| A256CBC-HS512  | AES_256_CBC_HMAC_SHA_512 authenticated encryption algorithm | [RFC7518, Section 5.2.5] |
-| A128GCM        | AES GCM using 128-bit key                                   | [RFC7518, Section 5.3]   |
-| A192GCM        | AES GCM using 192-bit key                                   | [RFC7518, Section 5.3]   |
-| A256GCM        | AES GCM using 256-bit key                                   | [RFC7518, Section 5.3]   |
+| Signature Alg | Description                                                 | Reference                |
+| ------------- | ----------------------------------------------------------- | ------------------------ |
+| A128CBC-HS256 | AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm | [RFC7518, Section 5.2.3] |
+| A192CBC-HS384 | AES_192_CBC_HMAC_SHA_384 authenticated encryption algorithm | [RFC7518, Section 5.2.4] |
+| A256CBC-HS512 | AES_256_CBC_HMAC_SHA_512 authenticated encryption algorithm | [RFC7518, Section 5.2.5] |
+| A128GCM       | AES GCM using 128-bit key                                   | [RFC7518, Section 5.3]   |
+| A192GCM       | AES GCM using 192-bit key                                   | [RFC7518, Section 5.3]   |
+| A256GCM       | AES GCM using 256-bit key                                   | [RFC7518, Section 5.3]   |
 
 ### Supported Elliptic Curves
 
-`jwskate` supports the following Elliptic Curves:
 
 | Curve     | Description                           | Key Type | Usage                 | Reference                  |
-|-----------|---------------------------------------|----------|-----------------------|----------------------------|
+| --------- | ------------------------------------- | -------- | --------------------- | -------------------------- |
 | P-256     | P-256 Curve                           | EC       | signature, encryption | [RFC7518, Section 6.2.1.1] |
 | P-384     | P-384 Curve                           | EC       | signature, encryption | [RFC7518, Section 6.2.1.1] |
 | P-521     | P-521 Curve                           | EC       | signature, encryption | [RFC7518, Section 6.2.1.1] |
@@ -235,14 +232,15 @@ to use.
 
 JWK are specified as JSON objects, which are parsed as `dict` in Python. The `Jwk` class in `jwskate` is actually a
 `dict` subclass, so you can use it exactly like you would use a dict: you can access its members, dump it back as JSON,
-etc. The same is true for Signed or Encrypted Json Web tokens in JSON format.
+etc. The same is true for Signed or Encrypted Json Web tokens in JSON format. You cannot change the key cryptographic
+material, however, since that would lead to unusable keys.
 
 ### JWA Wrappers
 
 You can use `cryptography` to do the cryptographic operations that are described in
 [JWA](https://www.rfc-editor.org/info/rfc7518), but since `cryptography` is a general purpose library, its usage is not
-straightforward and gives you plenty of options to carefully select and combine, leaving room for errors. It has also a
-quite inconsistent API to handle the different type of keys and algorithms. To work around
+straightforward and gives you plenty of options to carefully select and combine, leaving room for mistakes, errors and
+confusion. It has also a quite inconsistent API to handle the different type of keys and algorithms. To work around
 this, `jwskate` comes with a set of consistent wrappers that implement the exact JWA specifications, with minimum risk
 of mistakes.
 
@@ -264,6 +262,14 @@ To specify which signature algorithms are accepted, each signature verification 
 
 Note that you cannot use `alg` and `algs` at the same time. If your `Jwk` contains an `alg` parameter, and you provide
 an `alg` or `algs` which does not match that value, a `Warning` will be emitted.
+
+## TODO
+
+- Complete/enhance/proof-read documentation
+- Better exceptions (create dedicated exception classes, better messages, etc.)
+- Support for JWE in JSON format
+- Better tests
+- Support for Selective-Disclosure JWT
 
 ## Credits
 

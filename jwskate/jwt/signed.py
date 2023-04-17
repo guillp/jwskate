@@ -1,9 +1,9 @@
 """This modules contains classes and utilities to generate and validate signed JWT."""
 
 from datetime import datetime, timedelta, timezone
+from functools import cached_property
 from typing import Any, Dict, Iterable, List, Optional, Union
 
-from backports.cached_property import cached_property
 from binapy import BinaPy
 
 from jwskate.jwk import Jwk, to_jwk
@@ -118,7 +118,7 @@ class SignedJwt(Jwt):
 
     @cached_property
     def expires_at(self) -> Optional[datetime]:
-        """Get the "Expires At" (exp) date from this token.
+        """Get the *Expires At* (`exp`) date from this token.
 
         Returns:
           a `datetime` initialized from the `exp` claim, or `None` if there is no `exp` claim
@@ -138,7 +138,7 @@ class SignedJwt(Jwt):
 
     @cached_property
     def issued_at(self) -> Optional[datetime]:
-        """Get the "Issued At" (iat) date from this token.
+        """Get the *Issued At* (`iat`) date from this token.
 
         Returns:
           a `datetime` initialized from the `iat` claim, or `None` if there is no `iat` claim
@@ -158,7 +158,7 @@ class SignedJwt(Jwt):
 
     @cached_property
     def not_before(self) -> Optional[datetime]:
-        """Get the "Not Before" (nbf) date from this token.
+        """Get the *Not Before* (nbf) date from this token.
 
         Returns:
           a `datetime` initialized from the `nbf` claim, or `None` if there is no `nbf` claim
@@ -178,7 +178,7 @@ class SignedJwt(Jwt):
 
     @cached_property
     def issuer(self) -> Optional[str]:
-        """Get the Issuer (iss) claim from this token.
+        """Get the *Issuer* (`iss`) claim from this token.
 
         Returns:
           the issuer, as `str`, or `None` if there is no `ìss` claim
@@ -194,7 +194,7 @@ class SignedJwt(Jwt):
 
     @cached_property
     def audiences(self) -> List[str]:
-        """Get the audience(s) (aud) claim from this token.
+        """Get the *Audience(s)* (`aud`) claim from this token.
 
         If this token has a single audience, this will return a `list` anyway.
 
@@ -216,7 +216,7 @@ class SignedJwt(Jwt):
 
     @cached_property
     def subject(self) -> Optional[str]:
-        """Get the Subject (sub) from this token claims.
+        """Get the *Subject* (`sub`) from this token.
 
         Returns:
           the subject, as `str`, or `None` if there is no `sub` claim
@@ -232,7 +232,7 @@ class SignedJwt(Jwt):
 
     @cached_property
     def jwt_token_id(self) -> Optional[str]:
-        """Get the JWT Token ID (jti) from this token claims.
+        """Get the *JWT Token ID* (`jti`) from this token.
 
         Returns:
           the token identifier, as `str`, or `None` if there is no `jti` claim
@@ -247,7 +247,7 @@ class SignedJwt(Jwt):
         raise AttributeError("jti has an unexpected type", type(jti))
 
     def get_claim(self, key: str, default: Any = None) -> Any:
-        """Get a claim from this Jwt.
+        """Get a claim by name from this Jwt.
 
         Args:
           key: the claim name.
@@ -260,7 +260,7 @@ class SignedJwt(Jwt):
         return self.claims.get(key, default)
 
     def __getitem__(self, item: str) -> Any:
-        """Allow claim access with subscription.
+        """Allow access to claim by name with subscription.
 
         Args:
           item: the claim name

@@ -6,6 +6,7 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec, x448, x25519
 from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
+from typing_extensions import Self, override
 
 from ..base import BaseAsymmetricAlg, BaseKeyManagementAlg
 from .aeskw import A128KW, A192KW, A256KW, BaseAesKeyWrap
@@ -32,6 +33,11 @@ class EcdhEs(
         x25519.X25519PrivateKey,
         x448.X448PrivateKey,
     )
+
+    @classmethod
+    @override
+    def with_random_key(cls) -> Self:
+        return cls(x25519.X25519PrivateKey.generate())
 
     @classmethod
     def otherinfo(cls, alg: str, apu: bytes, apv: bytes, key_size: int) -> BinaPy:

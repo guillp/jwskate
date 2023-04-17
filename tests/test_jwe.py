@@ -276,7 +276,7 @@ def ec_p384_private_jwk() -> Jwk:
 
 @pytest.fixture(scope="module")
 def ec_p256_private_jwk() -> Jwk:
-    return ECJwk.generate("P-256")
+    return ECJwk.generate(crv="P-256")
 
 
 @pytest.fixture(scope="module")
@@ -430,7 +430,7 @@ def encryption_alg(request: pytest.FixtureRequest) -> str:
     ],
 )
 def password(request: pytest.FixtureRequest) -> bytes:
-    return request.param  # type: ignore
+    return request.param  # type: ignore[no-any-return]
 
 
 @pytest.fixture(scope="module")

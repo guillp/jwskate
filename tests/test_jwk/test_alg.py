@@ -2,6 +2,7 @@ import pytest
 
 from jwskate import (
     ExpectedAlgRequired,
+    MismatchingAlg,
     RSAJwk,
     UnsupportedAlg,
     select_alg_class,
@@ -55,6 +56,12 @@ def test_select_alg_class() -> None:
     # no supported algs: raise a ValueError
     with pytest.raises(ValueError):
         select_alg_class({}, alg="HS256")
+
+    # strict mode
+    with pytest.raises(MismatchingAlg):
+        select_alg_class(
+            RSAJwk.SIGNATURE_ALGORITHMS, jwk_alg="RS512", alg="RS256", strict=True
+        )
 
 
 def test_select_alg_classes() -> None:
@@ -113,3 +120,12 @@ def test_select_alg_classes() -> None:
     # if no algs are supported, a ValueError is raised
     with pytest.raises(ValueError):
         select_alg_classes({}, alg="HS256")
+
+    # strict mode
+    with pytest.raises(MismatchingAlg):
+        select_alg_classes(
+            RSAJwk.SIGNATURE_ALGORITHMS,
+            jwk_alg="RS512",
+            algs=("RS256", "RS384"),
+            strict=True,
+        )

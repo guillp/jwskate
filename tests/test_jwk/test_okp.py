@@ -37,9 +37,12 @@ def test_generate_no_crv_no_alg() -> None:
         OKPJwk.generate()
 
 
-def test_generate_unsuppored_alg() -> None:
+def test_generate_unsupported() -> None:
     with pytest.raises(UnsupportedAlg):
         OKPJwk.generate(alg="foo")
+
+    with pytest.raises(UnsupportedOKPCurve):
+        OKPJwk.generate(crv="foo")
 
 
 def test_rfc8037_ed25519() -> None:
@@ -184,6 +187,9 @@ def test_unknown_curve() -> None:
     with pytest.raises(UnsupportedOKPCurve):
         Jwk({"kty": "OKP", "crv": "foobar", "x": "abcd"})
 
+    with pytest.raises(UnsupportedOKPCurve):
+        OKPJwk.get_curve("foobar")
+
 
 @pytest.mark.parametrize(
     "crv,private_key_class,public_key_class",
@@ -217,23 +223,23 @@ def test_from_to_cryptography(
 def test_pem_key(crv: str) -> None:
     private_jwk = OKPJwk.generate(crv=crv)
     private_pem = private_jwk.to_pem()
-    assert Jwk.from_pem_key(private_pem) == private_jwk
+    assert Jwk.from_pem(private_pem) == private_jwk
 
     public_jwk = private_jwk.public_jwk()
     public_pem = public_jwk.to_pem()
-    assert Jwk.from_pem_key(public_pem) == public_jwk
+    assert Jwk.from_pem(public_pem) == public_jwk
 
     # serialize private key with password
     password = b"th1s_i5_a_p4ssW0rd!"
     private_pem = private_jwk.to_pem(password)
-    assert Jwk.from_pem_key(private_pem, password) == private_jwk
+    assert Jwk.from_pem(private_pem, password) == private_jwk
 
     # try to serialize the public key with password
     with pytest.raises(ValueError):
         public_jwk.to_pem(password)
 
     with pytest.raises(ValueError):
-        assert Jwk.from_pem_key(public_pem, password) == public_jwk
+        assert Jwk.from_pem(public_pem, password) == public_jwk
 
 
 def test_from_cryptography_key_unknown_type() -> None:
@@ -305,3 +311,36 @@ def test_from_bytes(private_key: bytes, crv: str, use: str) -> None:
     # trying to initialize an OKPJwk with a wrong key size will not work
     with pytest.raises(ValueError):
         OKPJwk.from_bytes(private_key + b"bb")
+
+    # key of length 56 with use != "enc", or len 57 with use != "sig"
+    if len(private_key) != 32:
+        with pytest.raises(ValueError):
+            OKPJwk.from_bytes(private_key, use="sig" if use == "enc" else "enc")
+
+
+def test_public_private() -> None:
+    jwk = Jwk(
+        {
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "x": "SghwA3Kg8e1Z2v1xnfnexH7OE4G-cd1z__Q64RQR4EQ",
+            "d": "V7P8eIm8sZsvIlhOXMLiamWTUW68wpyFyW_1QrnzkAI",
+        }
+    )
+
+    assert (
+        OKPJwk.public(
+            crv="Ed25519",
+            x=b"J\x08p\x03r\xa0\xf1\xedY\xda\xfdq\x9d\xf9\xde\xc4~\xce\x13\x81\xbeq\xdds\xff\xf4:\xe1\x14\x11\xe0D",
+        )
+        == jwk.public_jwk()
+    )
+
+    assert (
+        OKPJwk.private(
+            crv="Ed25519",
+            x=b"J\x08p\x03r\xa0\xf1\xedY\xda\xfdq\x9d\xf9\xde\xc4~\xce\x13\x81\xbeq\xdds\xff\xf4:\xe1\x14\x11\xe0D",
+            d=b'W\xb3\xfcx\x89\xbc\xb1\x9b/"XN\\\xc2\xe2je\x93Qn\xbc\xc2\x9c\x85\xc9o\xf5B\xb9\xf3\x90\x02',
+        )
+        == jwk
+    )

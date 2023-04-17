@@ -148,6 +148,25 @@ class JwkSet(BaseJsonDict):
         """
         return JwkSet(keys=(key.public_jwk() for key in self.jwks))
 
+    def verification_keys(self) -> List[Jwk]:
+        """Return the list of keys from this JWKS that are usable for signature verification.
+
+        To be usable for signature verification, a key must:
+
+        - be asymmetric
+        - be public
+        - be flagged for signature, either with `use=sig` or an `alg` that is compatible with signature
+
+        Returns:
+            a list of `Jwk` that are usable for signature verification
+
+        """
+        return [
+            jwk
+            for jwk in self.jwks
+            if not jwk.is_symmetric and not jwk.is_private and jwk.use == "sig"
+        ]
+
     def verify(
         self,
         data: bytes,
@@ -156,13 +175,10 @@ class JwkSet(BaseJsonDict):
         algs: Optional[Iterable[str]] = None,
         kid: Optional[str] = None,
     ) -> bool:
-        """Verify a signature with the key from this key set.
+        """Verify a signature with the keys from this key set.
 
-        It implements multiple techniques to avoid trying all keys:
-        If a `kid` is provided, only the key with this `kid` will be tried.
-        Otherwise, if an `alg` or several `algs` are provided, only keys that are compatible with the supplied `alg` will be tried.
-        Otherwise, keys that have use = signature will be tried.
-        And if the signature is still not verified at that point, the keys with no specified alg and use will be tried.
+        If a `kid` is provided, only that Key ID will be tried. Otherwise, all keys that are compatible with the
+        specified alg(s) will be tried.
 
         Args:
           data: the signed data to verify
@@ -170,7 +186,7 @@ class JwkSet(BaseJsonDict):
           alg: alg to verify the signature, if there is only 1
           algs: list of allowed signature algs, if there are several
           kid: the kid of the Jwk that will be used to validate the signature. If no kid is provided, multiple keys
-        from this key set may be tried.
+            from this key set may be tried.
 
         Returns:
           `True` if the signature validates with any of the tried keys, `False` otherwise
@@ -200,31 +216,14 @@ class JwkSet(BaseJsonDict):
         # no key matches, so consider the signature invalid
         return False
 
-    def verification_keys(self) -> List[Jwk]:
-        """Return the list of keys from this JWKS that a usable for signature verification.
-
-        To be usable for signature verification, a key must:
-        - be asymmetric
-        - be public
-        - have an "alg" parameter that is a signature alg
-
-        Returns:
-            a list of `Jwk` that are usable for signature verification
-
-        """
-        return [
-            jwk
-            for jwk in self.jwks
-            if not jwk.is_symmetric and not jwk.is_private and jwk.use == "sig"
-        ]
-
     def encryption_keys(self) -> List[Jwk]:
         """Return the list of keys from this JWKS that are usable for encryption.
 
         To be usable for encryption, a key must:
+
         - be asymmetric
         - be public
-        - have an "alg" parameter that is an encryption alg
+        - be flagged for encryption, either with `use=enc` or an `alg` parameter that is an encryption alg
 
         Returns:
             a list of `Jwk` that are suitable for encryption

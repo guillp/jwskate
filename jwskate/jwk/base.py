@@ -25,7 +25,6 @@ from typing import (
     Union,
 )
 
-from backports.cached_property import cached_property
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
 
@@ -72,30 +71,33 @@ class Jwk(BaseJsonDict):
     """Represents a Json Web Key (JWK), as specified in RFC7517.
 
     A JWK is a JSON object that represents a cryptographic key.  The
-    members of the object represent properties of the key, including its
-    value. Just like a parsed JSON object, a :class:`Jwk` is a dict, so
-    you can do with a Jwk anything you can do with a `dict`. In
+    members of the object represent properties of the key, also called
+    parameters, which are name and value pairs.
+
+    Just like a parsed JSON object, a `Jwk` is a `dict`, so
+    you can do with a `Jwk` anything you can do with a `dict`. In
     addition, all keys parameters are exposed as attributes. There are
-    subclasses of `Jwk` for each specific Key Type, but you shouldn't
+    subclasses of `Jwk` for each specific Key Type, but unless you are
+    dealing with specific parameters for a given key type, you shouldn't
     have to use the subclasses directly since they all present a common
-    interface.
+    interface for cryptographic operations.
 
     Args:
-        params: a dict with the parsed Jwk parameters, or a `cryptography key`, or another `Jwk`
+        params: a `dict` parsed from a JSON JWK, or a `cryptography key`, or another `Jwk`, or a `str` containing the JSON representation of a JWK, or raw `bytes`
         include_kid_thumbprint: if `True` (default), and there is no kid in the provided params, generate a kid based on the key thumbprint
 
     """
 
     @classmethod
     def generate_for_alg(cls, alg: str, **kwargs: Any) -> Jwk:
-        """Generate a key for usage with a specific alg and return the resulting Jwk.
+        """Generate a key for usage with a specific `alg` and return the resulting `Jwk`.
 
         Args:
-            alg: a signature or key management alg
-            **kwargs: specific parameters depending on the key type, or additional members to include in the Jwk
+            alg: a signature or key management algorithm identifier
+            **kwargs: specific parameters, depending on the key type, or additional members to include in the `Jwk`
 
         Returns:
-            the resulting Jwk
+            the generated `Jwk`
 
         """
         for kty, jwk_class in cls.subclasses.items():
@@ -152,13 +154,10 @@ class Jwk(BaseJsonDict):
 
     subclasses: Dict[str, Type[Jwk]] = {}
     cryptography_key_types: Dict[Any, Type[Jwk]] = {}
-    """A dict of cryptography key classes to its specific 'kty' value."""
 
     PARAMS: Mapping[str, JwkParameter]
-    """A dict of parameters. Key is parameter name, value is a tuple (description, is_private, is_required, kind)."""
 
     KTY: ClassVar[str]
-    """The Key Type associated with this JWK."""
 
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES: ClassVar[Iterable[Any]]
     CRYPTOGRAPHY_PUBLIC_KEY_CLASSES: ClassVar[Iterable[Any]]
@@ -237,8 +236,8 @@ class Jwk(BaseJsonDict):
 
         try:
             self.cryptography_key = self._to_cryptography_key()
-        except AttributeError as exc:
-            raise InvalidJwk("Invalid JWK parameter", *exc.args) from exc
+        except Exception as exc:
+            raise InvalidJwk(params) from exc
 
     @classmethod
     def _get_alg_class(cls, alg: str) -> Type[BaseAlg]:
@@ -348,7 +347,7 @@ class Jwk(BaseJsonDict):
             raise TypeError(f"invalid kid type {type(kid)}", kid)
         return kid
 
-    @cached_property
+    @property
     def use(self) -> Optional[str]:
         """Return the key use.
 
@@ -362,7 +361,7 @@ class Jwk(BaseJsonDict):
         else:
             return self.get("use")
 
-    @cached_property
+    @property
     def key_ops(self) -> Tuple[str, ...]:
         """Return the key operations.
 
@@ -700,7 +699,7 @@ class Jwk(BaseJsonDict):
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
-        """Verify a signature using this Jwk, and return `True` if valid.
+        """Verify a signature using this `Jwk`, and return `True` if valid.
 
         Args:
           data: the data to verify
@@ -926,8 +925,8 @@ class Jwk(BaseJsonDict):
         from jwskate import SymmetricJwk
 
         if not self.is_symmetric and not self.is_private:
-            warnings.warn(
-                "You are using a public key for recipient key unwrapping. Key wrapping should always be done using the recipient private key."
+            raise ValueError(
+                "You are using a public key for recipient key unwrapping. Key unwrapping must always be done using the recipient private key."
             )
 
         key_alg_wrapper = self.key_management_wrapper(alg)
@@ -1066,59 +1065,58 @@ class Jwk(BaseJsonDict):
         raise NotImplementedError
 
     @classmethod
-    def from_pem_key(
+    def from_pem(
         cls,
-        data: Union[bytes, str],
+        der: Union[bytes, str],
         password: Union[bytes, str, None] = None,
         **kwargs: Any,
     ) -> Jwk:
-        """Load a Jwk from a PEM encoded private or public key.
+        """Load a `Jwk` from a PEM encoded private or public key.
 
         Args:
-          data: the PEM encoded data to load
+          der: the PEM encoded data to load
           password: the password to decrypt the PEM, if required. Should be bytes. If it is a string, it will be encoded with UTF-8.
-          **kwargs: additional members to include in the Jwk (e.g. kid, use)
+          **kwargs: additional members to include in the `Jwk` (e.g. `kid`, `use`)
 
         Returns:
-            a Jwk instance from the loaded key
+            a `Jwk` instance from the loaded key
 
         """
-        data = data.encode() if isinstance(data, str) else data
+        der = der.encode() if isinstance(der, str) else der
         password = password.encode("UTF-8") if isinstance(password, str) else password
 
         try:
-            cryptography_key = serialization.load_pem_private_key(data, password)
+            cryptography_key = serialization.load_pem_private_key(der, password)
         except Exception as private_exc:
             try:
-                cryptography_key = serialization.load_pem_public_key(data)
-                if password is not None:
-                    raise ValueError(
-                        "A public key was loaded from PEM, while a password was provided for decryption."
-                        "Only private keys are encrypted in PEM."
-                    )
+                cryptography_key = serialization.load_pem_public_key(der)
+
             except Exception:
                 raise ValueError(
                     "The provided data is not a private or a public PEM encoded key."
                 ) from private_exc
+            if password is not None:
+                raise ValueError(
+                    "A public key was loaded from PEM, while a password was provided for decryption."
+                    "Only private keys are encrypted using a password."
+                )
 
         return cls.from_cryptography_key(cryptography_key, **kwargs)
 
-    def to_pem(self, password: Union[bytes, str, None] = None) -> bytes:
+    def to_pem(self, password: Union[bytes, str, None] = None) -> str:
         """Serialize this key to PEM format.
 
-        For private keys, you can provide a password for encryption. This password should be bytes. A `str` is also
+        For private keys, you can provide a password for encryption. This password should be `bytes`. A `str` is also
         accepted, and will be encoded to `bytes` using UTF-8 before it is used as encryption key.
 
         Args:
-          password: password to use to encrypt the PEM. Should be bytes. If it is a string, it will be encoded with UTF-8.
+          password: password to use to encrypt the PEM.
 
         Returns:
             the PEM serialized key
 
         """
-        password = (
-            str(password).encode("UTF-8") if isinstance(password, str) else password
-        )
+        password = password.encode("UTF-8") if isinstance(password, str) else password
 
         if self.is_private:
             encryption: serialization.KeySerializationEncryption
@@ -1130,34 +1128,107 @@ class Jwk(BaseJsonDict):
                 serialization.Encoding.PEM,
                 serialization.PrivateFormat.PKCS8,
                 encryption,
-            )
+            ).decode()
         else:
             if password:
-                raise ValueError(
-                    "Public keys cannot be encrypted when serialized in PEM format."
-                )
+                raise ValueError("Public keys cannot be encrypted when serialized.")
             return self.cryptography_key.public_bytes(  # type: ignore[no-any-return]
                 serialization.Encoding.PEM,
                 serialization.PublicFormat.SubjectPublicKeyInfo,
+            ).decode()
+
+    @classmethod
+    def from_der(
+        cls,
+        der: bytes,
+        password: Union[bytes, str, None] = None,
+        **kwargs: Any,
+    ) -> Jwk:
+        """Load a `Jwk` from DER."""
+        password = password.encode("UTF-8") if isinstance(password, str) else password
+
+        try:
+            cryptography_key = serialization.load_der_private_key(der, password)
+        except Exception as private_exc:
+            try:
+                cryptography_key = serialization.load_der_public_key(der)
+            except Exception:
+                raise ValueError(
+                    "The provided data is not a private or a public DER encoded key."
+                ) from private_exc
+            if password is not None:
+                raise ValueError(
+                    "A public key was loaded from DER, while a password was provided for decryption."
+                    "Only private keys are encrypted using a password."
+                )
+
+        return cls.from_cryptography_key(cryptography_key, **kwargs)
+
+    def to_der(self, password: Union[bytes, str, None] = None) -> BinaPy:
+        """Serialize this key to DER.
+
+        For private keys, you can provide a password for encryption. This password should be bytes. A `str` is also
+        accepted, and will be encoded to `bytes` using UTF-8 before it is used as encryption key.
+
+        Args:
+          password: password to use to encrypt the PEM. Should be bytes. If it is a string, it will be encoded to bytes with UTF-8.
+
+        Returns:
+            the DER serialized key
+
+        """
+        password = password.encode("UTF-8") if isinstance(password, str) else password
+
+        if self.is_private:
+            encryption: serialization.KeySerializationEncryption
+            if password:
+                encryption = serialization.BestAvailableEncryption(password)
+            else:
+                encryption = serialization.NoEncryption()
+            return BinaPy(
+                self.cryptography_key.private_bytes(
+                    serialization.Encoding.DER,
+                    serialization.PrivateFormat.PKCS8,
+                    encryption,
+                )
+            )
+        else:
+            if password:
+                raise ValueError("Public keys cannot be encrypted when serialized.")
+            return BinaPy(
+                self.cryptography_key.public_bytes(
+                    serialization.Encoding.DER,
+                    serialization.PublicFormat.SubjectPublicKeyInfo,
+                )
             )
 
     @classmethod
-    def generate(cls, **kwargs: Any) -> Jwk:
+    def generate(
+        cls, *, alg: Optional[str] = None, kty: Optional[str] = None, **kwargs: Any
+    ) -> Jwk:
         """Generate a Private Key and return it as a `Jwk` instance.
 
         This method is implemented by subclasses for specific Key Types and returns an instance of that subclass.
 
         Args:
-          **kwargs: specific parameters depending on the type of key, or additional members to include in the Jwk
+            alg: intended algorithm to use with the generated key
+            kty: key type identifier
+            **kwargs: specific parameters depending on the type of key, or additional members to include in the `Jwk`
 
         Returns:
-            a Jwk instance with a generated key
+            a `Jwk` instance with a generated key
 
         """
-        if "alg" in kwargs:
-            return cls.generate_for_alg(**kwargs)
-        if "kty" in kwargs:
-            return cls.generate_for_kty(**kwargs)
+        if alg:
+            key = cls.generate_for_alg(alg=alg, **kwargs)
+            if kty is not None and key.kty != kty:
+                raise ValueError(
+                    f"Incompatible `{alg=}` and `{kty=}` parameters. "
+                    f"`{alg=}` points to key with `kty='{key.kty}'`."
+                )
+            return key
+        if kty:
+            return cls.generate_for_kty(kty=kty, **kwargs)
         raise ValueError(
             "You must provide a hint for jwskate to know what kind of key it must generate. "
             "You can either provide an 'alg' identifier as keyword parameter, and/or a 'kty'."

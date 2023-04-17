@@ -171,7 +171,7 @@ with open("my_public_key.pem", "wb") as foutput:
 with open("my_private_key.pem", "rb") as finput:
     private_pem_from_file = finput.read()
 private_jwk_from_file = (
-    Jwk.from_pem_key(private_pem_from_file, password="Th1s_P@ssW0rD_iS_5o_5tr0nG!")
+    Jwk.from_pem(private_pem_from_file, password="Th1s_P@ssW0rD_iS_5o_5tr0nG!")
     .with_usage_parameters(alg="ES256")  # adds back the alg, use and key_ops parameters
     .with_kid_thumbprint()  # adds back the thumbprint as kid
 )
@@ -181,7 +181,7 @@ assert private_jwk_from_file == private_jwk
 with open("my_public_key.pem", "rb") as finput:
     public_pem_from_file = finput.read()
 public_jwk_from_file = (
-    Jwk.from_pem_key(public_pem_from_file)
+    Jwk.from_pem(public_pem_from_file)
     .with_usage_parameters(alg="ES256")  # adds back the alg, use and key_ops parameters
     .with_kid_thumbprint()  # adds back the thumbprint as kid
 )

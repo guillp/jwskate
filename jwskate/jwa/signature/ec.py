@@ -5,6 +5,7 @@ from binapy import BinaPy
 from cryptography import exceptions
 from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.asymmetric import ec
+from typing_extensions import Self, override
 
 from ..base import BaseAsymmetricAlg, BaseSignatureAlg
 from ..ec import P_256, P_384, P_521, EllipticCurve, secp256k1
@@ -28,6 +29,11 @@ class BaseECSignatureAlg(
             raise ValueError(
                 f"This key is on curve {key.curve.name}. An EC key on curve {cls.curve.name} is expected."
             )
+
+    @classmethod
+    @override
+    def with_random_key(cls) -> Self:
+        return cls(ec.generate_private_key(cls.curve.cryptography_curve))
 
     def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:  # noqa: D102
         if not isinstance(data, bytes):
@@ -74,7 +80,7 @@ class BaseECSignatureAlg(
                 return False
 
 
-class ES256(BaseECSignatureAlg):  # noqa: D415
+class ES256(BaseECSignatureAlg):
     """ECDSA using P-256 and SHA-256."""
 
     name = "ES256"
@@ -83,7 +89,7 @@ class ES256(BaseECSignatureAlg):  # noqa: D415
     hashing_alg = hashes.SHA256()
 
 
-class ES384(BaseECSignatureAlg):  # noqa: D415
+class ES384(BaseECSignatureAlg):
     """ECDSA using P-384 and SHA-384."""
 
     name = "ES384"
@@ -92,7 +98,7 @@ class ES384(BaseECSignatureAlg):  # noqa: D415
     hashing_alg = hashes.SHA384()
 
 
-class ES512(BaseECSignatureAlg):  # noqa: D415
+class ES512(BaseECSignatureAlg):
     """ECDSA using P-521 and SHA-512."""
 
     name = "ES512"
@@ -101,7 +107,7 @@ class ES512(BaseECSignatureAlg):  # noqa: D415
     hashing_alg = hashes.SHA512()
 
 
-class ES256K(BaseECSignatureAlg):  # noqa: D415
+class ES256K(BaseECSignatureAlg):
     """ECDSA using secp256k1 and SHA-256."""
 
     name = "ES256k"

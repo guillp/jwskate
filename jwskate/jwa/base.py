@@ -8,6 +8,7 @@ from typing import Generic, Iterator, SupportsBytes, Tuple, Type, TypeVar, Union
 import cryptography.exceptions
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes
+from typing_extensions import Self, override
 
 
 class PrivateKeyRequired(AttributeError):
@@ -41,6 +42,11 @@ class BaseAlg:
     def __repr__(self) -> str:
         """Use the name of the alg as repr."""
         return self.name
+
+    @classmethod
+    def with_random_key(cls) -> Self:
+        """Initialize an instance of this alg with a randomly-generated key."""
+        raise NotImplementedError()
 
 
 class BaseSymmetricAlg(BaseAlg):
@@ -143,7 +149,7 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
         """
         if not isinstance(self.key, self.private_key_class):
             raise PrivateKeyRequired()
-        yield self.key  # type: ignore
+        yield self.key  # type: ignore[misc]
 
     @contextmanager
     def public_key_required(self) -> Iterator[Kpub]:
@@ -158,7 +164,18 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
         """
         if not isinstance(self.key, self.public_key_class):
             raise PublicKeyRequired()
-        yield self.key  # type: ignore
+        yield self.key  # type: ignore[misc]
+
+    def public_key(self) -> Kpub:
+        """Return the public key matching the private key."""
+        if hasattr(self.key, "public_key"):
+            return self.key.public_key()  # type: ignore[no-any-return]
+        raise NotImplementedError()
+
+    def public_alg(self) -> Self:
+        """Return an alg instance initialised with the public key."""
+        with self.private_key_required():
+            return self.__class__(self.public_key())
 
 
 class BaseSignatureAlg(BaseAlg):
@@ -247,12 +264,14 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         iv: Union[bytes, SupportsBytes],
         aad: Union[bytes, SupportsBytes, None] = None,
     ) -> Tuple[BinaPy, BinaPy]:
-        """Encrypt arbitrary data, with [Authenticated Encryption (with optional Associated Data)][AEAD].
+        """Encrypt arbitrary data, with optional [Authenticated Encryption](https://wikipedia.org/wiki/Authenticated_encryption).
 
         This needs:
+
         - the raw data to encrypt (`plaintext`)
         - a given random Initialisation Vector (`iv`) of the appropriate size
         - optional Additional Authentication Data (`aad`)
+
         And returns a tuple (ciphered_data, authentication_tag).
 
         Args:
@@ -262,8 +281,6 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
           a tuple of ciphered data and authentication tag
-
-        [AEAD]: https://wikipedia.org/wiki/Authenticated_encryption
 
         """
         raise NotImplementedError
@@ -296,11 +313,12 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         raise NotImplementedError
 
     @classmethod
-    def init_random_key(cls) -> BaseAESEncryptionAlg:
+    @override
+    def with_random_key(cls) -> Self:
         """Initialize this alg with a random key.
 
         Returns:
-            a subclass of BaseAESEncryptionAlg initialized with a randomly generated key
+            a subclass of `BaseAESEncryptionAlg` initialized with a randomly generated key
 
         """
         return cls(cls.generate_key())

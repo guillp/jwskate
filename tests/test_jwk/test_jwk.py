@@ -1,3 +1,4 @@
+import secrets
 from typing import Tuple
 
 import pytest
@@ -7,11 +8,15 @@ from jwskate import (
     A128GCM,
     ES256,
     EcdhEs_A128KW,
+    EncryptionAlgs,
     InvalidJwk,
     Jwk,
+    KeyManagementAlgs,
     RSAJwk,
+    SignatureAlgs,
     SymmetricJwk,
     UnsupportedKeyType,
+    select_alg_class,
     to_jwk,
 )
 
@@ -146,6 +151,18 @@ def test_invalid_params() -> None:
 
     with pytest.raises(TypeError):
         Jwk({"kty": "oct", "k": "foobar", "kid": 1.34}).kid
+
+    with pytest.raises(InvalidJwk):
+        Jwk(
+            {
+                "kty": "EC",
+                "crv": "P-256",
+                "x": "SOlwe9_nRwz2f9Y2aSB9d7D-AXTSSBlAQd5HZUIEGLA",
+                "y": "Pzk9Gd4wwbx9STkK_RfWqxnfU9AwpvWZzf_K0GpaQZo",
+                "d": "Invalid-private-key--EHzgbRaNKRCMhk6jiCT-ZQ",
+                "alg": "ES256",
+            }
+        )
 
 
 def test_invalid_class_for_kty() -> None:
@@ -309,3 +326,87 @@ def test_to_jwk() -> None:
 
     with pytest.raises(ValueError):
         to_jwk(GOOGLE_KEY, is_symmetric=True)
+
+
+@pytest.mark.parametrize("alg", SignatureAlgs.ALL)
+def test_sign_verify(alg: str) -> None:
+    payload = b"this_is_a_payload"
+    jwk = Jwk.generate(alg=alg)
+    signature = jwk.sign(payload)
+    if not jwk.is_symmetric:
+        assert jwk.public_jwk().verify(payload, signature)
+        with pytest.warns(match="private key"):
+            assert jwk.verify(payload, signature)
+    else:
+        assert jwk.verify(payload, signature)
+
+
+@pytest.mark.parametrize(
+    "alg",
+    KeyManagementAlgs.ALL_KEY_BASED - {KeyManagementAlgs.RSA1_5, KeyManagementAlgs.dir},
+)
+@pytest.mark.parametrize("enc", EncryptionAlgs.ALL)
+def test_sender_receiver_key(alg: str, enc: str) -> None:
+    recipient_jwk = Jwk.generate(alg=alg)
+    if recipient_jwk.is_symmetric:
+        sender_cek, wrapped_cek, extra_headers = recipient_jwk.sender_key(enc=enc)
+    else:
+        sender_cek, wrapped_cek, extra_headers = recipient_jwk.public_jwk().sender_key(
+            enc=enc
+        )
+        with pytest.warns(match="private key"):
+            recipient_jwk.sender_key(enc=enc)
+
+    if recipient_jwk.is_symmetric:
+        recipient_cek = recipient_jwk.recipient_key(
+            wrapped_cek, enc=enc, **extra_headers
+        )
+        assert sender_cek == recipient_cek
+    else:
+        with pytest.raises(ValueError):
+            recipient_jwk.public_jwk().recipient_key(
+                wrapped_cek, enc=enc, **extra_headers
+            )
+
+
+@pytest.mark.parametrize(
+    "alg", KeyManagementAlgs.ALL_AES | KeyManagementAlgs.ALL_AESGCM
+)
+@pytest.mark.parametrize("enc", EncryptionAlgs.ALL)
+def test_aeskw_with_choosen_cek(alg: str, enc: str) -> None:
+    recipient_jwk = Jwk.generate(alg=alg)
+    choosen_cek = select_alg_class(
+        SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc
+    ).generate_key()
+
+    sender_cek, wrapped_cek, extra_headers = recipient_jwk.sender_key(
+        enc=enc, cek=choosen_cek
+    )
+    assert sender_cek.key == choosen_cek
+
+
+def test_der_pem() -> None:
+    jwk = Jwk.generate(alg="ES256")
+    password = secrets.token_urlsafe(16)
+    der = jwk.to_der(password)
+    assert Jwk.from_der(der, password) == jwk
+
+    pem = jwk.to_pem(password)
+    assert Jwk.from_pem(pem, password) == jwk
+
+    with pytest.raises(ValueError, match="public key was loaded"):
+        Jwk.from_der(jwk.public_jwk().to_der(), password=password)
+    with pytest.raises(ValueError, match="not a private or a public DER encoded key"):
+        Jwk.from_der(secrets.token_bytes(512))
+
+    with pytest.raises(ValueError, match="public key was loaded"):
+        Jwk.from_pem(jwk.public_jwk().to_pem(), password=password)
+    with pytest.raises(ValueError, match="not a private or a public PEM encoded key"):
+        Jwk.from_pem(
+            """\
+-----BEGIN PRIVATE KEY-----
+MIGHAgRandomGarbage/zrsfsdfsdfszer
+lJPkaLBw
+-----END PRIVATE KEY-----
+"""
+        )

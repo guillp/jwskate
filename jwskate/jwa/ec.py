@@ -8,6 +8,8 @@ from typing import Any, ClassVar, Dict, Tuple, Union
 from binapy import BinaPy
 from cryptography.hazmat.primitives.asymmetric import ec
 
+from jwskate import KeyTypes
+
 
 @dataclass
 class EllipticCurve:
@@ -43,7 +45,7 @@ class EllipticCurve:
 
         """
         key = ec.generate_private_key(self.cryptography_curve)
-        pn = key.private_numbers()  # type: ignore
+        pn = key.private_numbers()  # type: ignore[attr-defined]
         x = pn.public_numbers.x
         y = pn.public_numbers.y
         d = pn.private_value
@@ -100,9 +102,9 @@ class EllipticCurve:
             public_numbers = key.public_numbers()
         x = BinaPy.from_int(public_numbers.x, crv.coordinate_size).to("b64u").ascii()
         y = BinaPy.from_int(public_numbers.y, crv.coordinate_size).to("b64u").ascii()
-        parameters = {"kty": "EC", "crv": crv.name, "x": x, "y": y}
+        parameters = {"kty": KeyTypes.EC, "crv": crv.name, "x": x, "y": y}
         if isinstance(key, ec.EllipticCurvePrivateKey):
-            pn = key.private_numbers()  # type: ignore
+            pn = key.private_numbers()  # type: ignore[attr-defined]
             d = (
                 BinaPy.from_int(pn.private_value, crv.coordinate_size)
                 .to("b64u")
@@ -112,28 +114,28 @@ class EllipticCurve:
         return parameters
 
 
-P_256 = EllipticCurve(
+P_256: EllipticCurve = EllipticCurve(
     name="P-256",
     cryptography_curve=ec.SECP256R1(),
     coordinate_size=32,
 )
 """P-256 curve."""
 
-P_384 = EllipticCurve(
+P_384: EllipticCurve = EllipticCurve(
     name="P-384",
     cryptography_curve=ec.SECP384R1(),
     coordinate_size=48,
 )
 """P-384 curve."""
 
-P_521 = EllipticCurve(
+P_521: EllipticCurve = EllipticCurve(
     name="P-521",
     cryptography_curve=ec.SECP521R1(),
     coordinate_size=66,
 )
 """P-521 curve."""
 
-secp256k1 = EllipticCurve(
+secp256k1: EllipticCurve = EllipticCurve(
     name="secp256k1",
     cryptography_curve=ec.SECP256K1(),
     coordinate_size=32,

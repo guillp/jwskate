@@ -62,9 +62,6 @@ def select_alg_class(
     Returns:
       the alg to use
 
-    Warnings:
-        A warning is emitted if `jwk_alg` is supplied and `alg` doesn't match its value.
-
     Raises:
         UnsupportedAlg: if the requested `alg` is not supported
         ValueError: if `supported_algs` is empty
@@ -138,9 +135,6 @@ def select_alg_classes(
     Raises:
         ValueError: if both 'alg' and 'algs' parameters are used
         UnsupportedAlg: if none of the requested alg are supported
-
-    Warnings:
-        if the requested 'alg' is different that the 'jwk_alg', or the 'jwk_alg' is not in the 'algs'
 
     """
     if alg and algs:

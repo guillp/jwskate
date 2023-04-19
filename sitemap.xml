@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>None</loc>
-         <lastmod>2023-01-11</lastmod>
+         <loc>https://guillp.github.io/jwskate/</loc>
+         <lastmod>2023-04-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
-         <lastmod>2023-01-11</lastmod>
+         <loc>https://guillp.github.io/jwskate/api/</loc>
+         <lastmod>2023-04-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
-         <lastmod>2023-01-11</lastmod>
+         <loc>https://guillp.github.io/jwskate/authors/</loc>
+         <lastmod>2023-04-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
-         <lastmod>2023-01-11</lastmod>
+         <loc>https://guillp.github.io/jwskate/contributing/</loc>
+         <lastmod>2023-04-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
-         <lastmod>2023-01-11</lastmod>
+         <loc>https://guillp.github.io/jwskate/history/</loc>
+         <lastmod>2023-04-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
-         <lastmod>2023-01-11</lastmod>
+         <loc>https://guillp.github.io/jwskate/installation/</loc>
+         <lastmod>2023-04-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
-         <lastmod>2023-01-11</lastmod>
+         <loc>https://guillp.github.io/jwskate/recipes/</loc>
+         <lastmod>2023-04-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
-         <lastmod>2023-01-11</lastmod>
+         <loc>https://guillp.github.io/jwskate/usage/</loc>
+         <lastmod>2023-04-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>

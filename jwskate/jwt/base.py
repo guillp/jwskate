@@ -22,14 +22,13 @@ class InvalidJwt(ValueError):
 class Jwt(BaseCompactToken):
     """Represents a Json Web Token."""
 
-    def __new__(cls, value: Union[bytes, str]) -> Union[SignedJwt, JweCompact, Jwt]:  # type: ignore[misc]
+    def __new__(cls, value: Union[bytes, str], max_size: int = 16 * 1024) -> Union[SignedJwt, JweCompact, Jwt]:  # type: ignore[misc]
         """Allow parsing both Signed and Encrypted JWTs.
 
         This returns the appropriate subclass or instance depending on the number of dots (.) in the serialized JWT.
 
         Args:
             value: the token value
-
         """
         if not isinstance(value, bytes):
             value = value.encode("ascii")
@@ -42,7 +41,7 @@ class Jwt(BaseCompactToken):
             elif value.count(b".") == 4:
                 from ..jwe import JweCompact
 
-                return JweCompact(value)
+                return JweCompact(value, max_size)
 
         return super().__new__(cls)
 
@@ -67,7 +66,6 @@ class Jwt(BaseCompactToken):
 
         Returns:
           the resulting token
-
         """
         from .signed import SignedJwt
 
@@ -103,7 +101,6 @@ class Jwt(BaseCompactToken):
 
         Returns:
             the resulting token
-
         """
         from .signed import SignedJwt
 
@@ -144,7 +141,6 @@ class Jwt(BaseCompactToken):
 
         Returns:
           the resulting JWE token, with the signed JWT as payload
-
         """
         enc_extra_headers = enc_extra_headers or {}
         enc_extra_headers.setdefault("cty", "JWT")
@@ -174,7 +170,6 @@ class Jwt(BaseCompactToken):
 
         Raises:
             InvalidJwt: if the inner JWT is not valid
-
         """
         if not isinstance(jwe, JweCompact):
             jwe = JweCompact(jwe)
@@ -207,7 +202,6 @@ class Jwt(BaseCompactToken):
         Raises:
             InvalidJwt: if the JWT is not valid
             InvalidSignature: if the nested JWT signature is not valid
-
         """
         from .signed import InvalidSignature, SignedJwt
 
@@ -223,7 +217,8 @@ class Jwt(BaseCompactToken):
 
     @classmethod
     def timestamp(cls, delta_seconds: int = 0) -> int:
-        """Return an integer timestamp that is suitable for use in Jwt tokens `iat`, `exp` and `nbf` claims.
+        """Return an integer timestamp that is suitable for use in Jwt tokens `iat`, `exp` and `nbf`
+        claims.
 
         A timestamp is a number of seconds since January 1st, 1970 00:00:00 UTC, ignoring leap seconds.
 
@@ -235,7 +230,6 @@ class Jwt(BaseCompactToken):
 
         Returns:
             An integer timestamp
-
         """
         return int(datetime.now(timezone.utc).timestamp()) + delta_seconds
 
@@ -250,6 +244,5 @@ class Jwt(BaseCompactToken):
 
         Returns:
             the corresponding `datetime` in UTC timezone
-
         """
         return datetime.fromtimestamp(timestamp, tz=timezone.utc)

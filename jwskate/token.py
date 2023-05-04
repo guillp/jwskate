@@ -108,9 +108,9 @@ class BaseCompactToken:
         """Get the Type (typ) from this token headers.
 
         Returns:
-            the `typ` value
+            the `cty` value
         Raises:
-            AttributeError: if the `typ` header value is not a string
+            AttributeError: if the `cty` header value is not a string
         """
         cty = self.get_header("cty")
         if cty is None or not isinstance(cty, str):  # pragma: no branch

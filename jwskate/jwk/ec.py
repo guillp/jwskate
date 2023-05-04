@@ -96,7 +96,6 @@ class ECJwk(Jwk):
 
         Raises:
             UnsupportedEllipticCurve: if the curve identifier is not supported
-
         """
         curve = cls.CURVES.get(crv)
         if curve is None:
@@ -109,7 +108,6 @@ class ECJwk(Jwk):
 
         Returns:
             the `EllipticCurve` instance
-
         """
         return self.get_curve(self.crv)
 
@@ -125,7 +123,6 @@ class ECJwk(Jwk):
 
         Returns:
           an ECJwk initialized with the supplied parameters
-
         """
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(
@@ -151,7 +148,6 @@ class ECJwk(Jwk):
 
         Returns:
           an ECJwk initialized with the supplied parameters
-
         """
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(
@@ -230,7 +226,10 @@ class ECJwk(Jwk):
 
     @property
     def coordinate_size(self) -> int:
-        """The coordinate size to use with the key curve. This is 32, 48, or 66 bits."""
+        """The coordinate size to use with the key curve.
+
+        This is 32, 48, or 66 bits.
+        """
         return self.curve.coordinate_size
 
     @cached_property

@@ -604,7 +604,6 @@ def test_decrypt_by_jwcrypto(
         decryption_jwk: the Jwk containing the decryption key
         key_management_alg: the key management alg
         encryption_alg: the encryption alg
-
     """
     import jwcrypto.jwe  # type: ignore[import]
     import jwcrypto.jwk  # type: ignore[import]
@@ -644,7 +643,6 @@ def jwcrypto_encrypted_jwe(
 
     Returns:
         a JWE token
-
     """
     import jwcrypto.jwe
     import jwcrypto.jwk
@@ -685,7 +683,6 @@ def test_decrypt_from_jwcrypto(
         decryption_jwk: the decryption key
         key_management_alg: the key management alg
         encryption_alg: the encryption alg
-
     """
     jwe = JweCompact(jwcrypto_encrypted_jwe)
     assert jwe.alg == key_management_alg

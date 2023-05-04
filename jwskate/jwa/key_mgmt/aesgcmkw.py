@@ -36,7 +36,6 @@ class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
 
         Returns:
           a tuple (wrapped_key, authentication_tag)
-
         """
         return self.encrypt(plainkey, iv=iv)
 
@@ -62,7 +61,6 @@ class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
 
         Returns:
           the unwrapped key.
-
         """
         return self.decrypt(cipherkey, auth_tag=tag, iv=iv)
 

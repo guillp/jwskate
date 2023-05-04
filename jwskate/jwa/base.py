@@ -1,4 +1,5 @@
-"""This module implement base classes used by Signature, Encryption and Key Management JWA algorithms."""
+"""This module implement base classes used by Signature, Encryption and Key Management JWA
+algorithms."""
 
 from __future__ import annotations
 
@@ -12,11 +13,13 @@ from typing_extensions import Self, override
 
 
 class PrivateKeyRequired(AttributeError):
-    """Raised when a cryptographic operation requires a private key, and a public key has been provided instead."""
+    """Raised when a cryptographic operation requires a private key, and a public key has been
+    provided instead."""
 
 
 class PublicKeyRequired(AttributeError):
-    """Raised when a cryptographic operation requires a public key, and a private key has been provided instead."""
+    """Raised when a cryptographic operation requires a public key, and a private key has been
+    provided instead."""
 
 
 class BaseAlg:
@@ -25,7 +28,6 @@ class BaseAlg:
     An algorithm has a `name` and a `description`, whose reference is found in [IANA JOSE registry][IANA].
 
     [IANA]: https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-algorithms
-
     """
 
     use: str
@@ -36,8 +38,8 @@ class BaseAlg:
     description: str
     """Description of the algorithm (human readable)"""
     read_only: bool = False
-    """For algs that are considered insecure, set to True to allow only signature verification or decryption of existing
-    data, but don't allow new signatures or encryption."""
+    """For algs that are considered insecure, set to True to allow only signature verification or
+    decryption of existing data, but don't allow new signatures or encryption."""
 
     def __repr__(self) -> str:
         """Use the name of the alg as repr."""
@@ -54,7 +56,6 @@ class BaseSymmetricAlg(BaseAlg):
 
     Args:
         key: the key to use for cryptographic operations
-
     """
 
     def __init__(self, key: bytes):
@@ -73,7 +74,6 @@ class BaseSymmetricAlg(BaseAlg):
 
         Returns:
           Returns `None`. Raises an exception if the key is not suitable
-
         """
         pass
 
@@ -88,7 +88,6 @@ class BaseSymmetricAlg(BaseAlg):
 
         Returns:
           `True` if the key is suitable for this alg class, `False` otherwise
-
         """
         try:
             cls.check_key(key)
@@ -109,7 +108,6 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
     Args:
         key: the key to use.
-
     """
 
     private_key_class: Union[Type[Kpriv], Tuple[Type[Kpriv], ...]]
@@ -133,7 +131,6 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
         Raises:
             Exception: if the key is not suitable for use with this alg class
-
         """
 
     @contextmanager
@@ -145,7 +142,6 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
         Raises:
             PrivateKeyRequired: if the configured key is not private
-
         """
         if not isinstance(self.key, self.private_key_class):
             raise PrivateKeyRequired()
@@ -160,7 +156,6 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
         Raises:
             PublicKeyRequired: if the configured key is private
-
         """
         if not isinstance(self.key, self.public_key_class):
             raise PublicKeyRequired()
@@ -192,7 +187,6 @@ class BaseSignatureAlg(BaseAlg):
 
         Returns:
           the raw signature
-
         """
         raise NotImplementedError
 
@@ -207,7 +201,6 @@ class BaseSignatureAlg(BaseAlg):
 
         Returns:
           `True` if the signature matches, `False` otherwise.
-
         """
         raise NotImplementedError
 
@@ -230,7 +223,6 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Raises:
             ValueError: if the key is not suitable
-
         """
         if len(key) * 8 != cls.key_size:
             raise ValueError(
@@ -243,7 +235,6 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
             a random AES key
-
         """
         return BinaPy.random_bits(cls.key_size)
 
@@ -253,7 +244,6 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
             a random IV
-
         """
         return BinaPy.random_bits(cls.iv_size)
 
@@ -264,7 +254,8 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         iv: Union[bytes, SupportsBytes],
         aad: Union[bytes, SupportsBytes, None] = None,
     ) -> Tuple[BinaPy, BinaPy]:
-        """Encrypt arbitrary data, with optional [Authenticated Encryption](https://wikipedia.org/wiki/Authenticated_encryption).
+        """Encrypt arbitrary data, with optional [Authenticated
+        Encryption](https://wikipedia.org/wiki/Authenticated_encryption).
 
         This needs:
 
@@ -281,7 +272,6 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
           a tuple of ciphered data and authentication tag
-
         """
         raise NotImplementedError
 
@@ -308,7 +298,6 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
           the deciphered data
-
         """
         raise NotImplementedError
 
@@ -319,7 +308,6 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
             a subclass of `BaseAESEncryptionAlg` initialized with a randomly generated key
-
         """
         return cls(cls.generate_key())
 
@@ -331,4 +319,5 @@ class BaseKeyManagementAlg(BaseAlg):
 
 
 class MismatchingAuthTag(cryptography.exceptions.InvalidTag):
-    """Raised when trying to decrypt with an Authentication Tag that doesn't match the expected value."""
+    """Raised when trying to decrypt with an Authentication Tag that doesn't match the expected
+    value."""

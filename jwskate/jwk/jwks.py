@@ -21,7 +21,6 @@ class JwkSet(BaseJsonDict):
     Args:
         jwks: a dict, containing the JwkSet, parsed as a JSON object.
         keys: a list of `Jwk`, that will be added to this JwkSet
-
     """
 
     def __init__(
@@ -50,7 +49,6 @@ class JwkSet(BaseJsonDict):
 
         Returns:
             a list of `Jwk`
-
         """
         return self.get("keys", [])
 
@@ -65,7 +63,6 @@ class JwkSet(BaseJsonDict):
 
         Raises:
             KeyError: if no key matches
-
         """
         jwk = next(filter(lambda jwk: jwk.get("kid") == kid, self.jwks), None)
         if isinstance(jwk, Jwk):
@@ -77,7 +74,6 @@ class JwkSet(BaseJsonDict):
 
         Returns:
             the number of keys
-
         """
         return len(self.jwks)
 
@@ -96,7 +92,6 @@ class JwkSet(BaseJsonDict):
 
         Returns:
           the kid from the added Jwk (it may be generated if no kid is provided)
-
         """
         jwk = to_jwk(jwk)
 
@@ -121,7 +116,6 @@ class JwkSet(BaseJsonDict):
 
         Raises:
             KeyError: if no key matches
-
         """
         try:
             jwk = self.get_jwk_by_kid(kid)
@@ -135,7 +129,6 @@ class JwkSet(BaseJsonDict):
 
         Returns:
             `True` if this JwkSet contains at least one private key
-
         """
         return any(key.is_private for key in self.jwks)
 
@@ -144,7 +137,6 @@ class JwkSet(BaseJsonDict):
 
         Returns:
             a public JwkSet
-
         """
         return JwkSet(keys=(key.public_jwk() for key in self.jwks))
 
@@ -159,7 +151,6 @@ class JwkSet(BaseJsonDict):
 
         Returns:
             a list of `Jwk` that are usable for signature verification
-
         """
         return [
             jwk
@@ -190,7 +181,6 @@ class JwkSet(BaseJsonDict):
 
         Returns:
           `True` if the signature validates with any of the tried keys, `False` otherwise
-
         """
         if not alg and not algs:
             raise ValueError("Please provide either 'alg' or 'algs' parameter")
@@ -227,7 +217,6 @@ class JwkSet(BaseJsonDict):
 
         Returns:
             a list of `Jwk` that are suitable for encryption
-
         """
         return [
             jwk

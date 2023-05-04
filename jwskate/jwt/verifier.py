@@ -37,7 +37,6 @@ class JwtVerifier:
         except ValueError:
             print("token failed verification :(")
         ```
-
     """
 
     def __init__(
@@ -81,7 +80,6 @@ class JwtVerifier:
 
         Args:
             jwt: the JWT token to verify
-
         """
         if not isinstance(jwt, SignedJwt):
             jwt = SignedJwt(jwt)

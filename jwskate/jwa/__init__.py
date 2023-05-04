@@ -5,7 +5,6 @@ cryptographic operations as methods. The cryptographic operations themselves are
 `cryptography`.
 
 [RFC7518]: https://www.rfc-editor.org/rfc/rfc7518
-
 """
 
 from .base import (

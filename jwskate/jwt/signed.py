@@ -32,7 +32,6 @@ class SignedJwt(Jwt):
 
     Args:
         value: the token value.
-
     """
 
     def __init__(self, value: Union[bytes, str]) -> None:
@@ -74,7 +73,6 @@ class SignedJwt(Jwt):
 
         Returns:
           the signed part as bytes
-
         """
         return b".".join(self.value.split(b".", 2)[:2])
 
@@ -93,7 +91,6 @@ class SignedJwt(Jwt):
 
         Returns:
             `True` if the token signature is verified, `False` otherwise
-
         """
         jwk = to_jwk(jwk)
 
@@ -109,7 +106,6 @@ class SignedJwt(Jwt):
 
         Returns:
             `True` if the token is expired, `False` if it's not, `None` if there is no `exp` claim.
-
         """
         exp = self.expires_at
         if exp is None:
@@ -125,7 +121,6 @@ class SignedJwt(Jwt):
 
         Raises:
             AttributeError: if the `exp` claim cannot be parsed to a date
-
         """
         exp = self.get_claim("exp")
         if not exp:
@@ -145,7 +140,6 @@ class SignedJwt(Jwt):
 
         Raises:
             AttributeError: if the `iss` claim cannot be parsed to a date
-
         """
         iat = self.get_claim("iat")
         if not iat:
@@ -165,7 +159,6 @@ class SignedJwt(Jwt):
 
         Raises:
             AttributeError: if the `nbf` claim cannot be parsed to a date
-
         """
         nbf = self.get_claim("nbf")
         if not nbf:
@@ -185,7 +178,6 @@ class SignedJwt(Jwt):
 
         Raises:
             AttributeError: if the `ìss` claim value is not a string
-
         """
         iss = self.get_claim("iss")
         if iss is None or isinstance(iss, str):
@@ -203,7 +195,6 @@ class SignedJwt(Jwt):
 
         Raises:
             AttributeError: if the audience is an unexpected type
-
         """
         aud = self.get_claim("aud")
         if aud is None:
@@ -223,7 +214,6 @@ class SignedJwt(Jwt):
 
         Raises:
             AttributeError: if the `sub` value is not a string
-
         """
         sub = self.get_claim("sub")
         if sub is None or isinstance(sub, str):
@@ -239,7 +229,6 @@ class SignedJwt(Jwt):
 
         Raises:
           AttributeError: if the `jti` value is not a string
-
         """
         jti = self.get_claim("jti")
         if jti is None or isinstance(jti, str):
@@ -255,7 +244,6 @@ class SignedJwt(Jwt):
 
         Returns:
           the claim value if found, or `default` if not found
-
         """
         return self.claims.get(key, default)
 
@@ -267,7 +255,6 @@ class SignedJwt(Jwt):
 
         Returns:
          the claim value
-
         """
         value = self.get_claim(item)
         if value is None:
@@ -282,7 +269,6 @@ class SignedJwt(Jwt):
 
         Returns:
             the claim value
-
         """
         value = self.get_claim(item)
         if value is None:
@@ -294,7 +280,6 @@ class SignedJwt(Jwt):
 
         Returns:
             the serialized token value.
-
         """
         return self.value.decode()
 
@@ -303,7 +288,6 @@ class SignedJwt(Jwt):
 
         Returns:
             the serialized token value.
-
         """
         return self.value
 
@@ -342,7 +326,6 @@ class SignedJwt(Jwt):
           InvalidSignature: if the signature is not valid
           InvalidClaim: if a claim doesn't validate
           ExpiredJwt: if the expiration date is passed
-
         """
         if not self.verify_signature(jwk, alg, algs):
             raise InvalidSignature("Signature is not valid.")

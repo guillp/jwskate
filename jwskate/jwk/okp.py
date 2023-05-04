@@ -1,7 +1,6 @@
 """This module implements JWK representing Octet Key Pairs from [RFC8037].
 
 [RFC8037]: https://www.rfc-editor.org/rfc/rfc8037.html
-
 """
 
 from __future__ import annotations
@@ -102,7 +101,6 @@ class OKPJwk(Jwk):
 
         Raises:
             UnsupportedOKPCurve: if the curve is not supported
-
         """
         curve = cls.CURVES.get(crv)
         if curve is None:
@@ -151,7 +149,6 @@ class OKPJwk(Jwk):
 
         Returns:
             the matching `OKPJwk`
-
         """
         if crv and use:
             if (crv in ("Ed25519", "Ed448") and use != "sig") or (
@@ -281,7 +278,6 @@ class OKPJwk(Jwk):
 
         Returns:
             the resulting `OKPJwk`
-
         """
         return cls(dict(kty=cls.KTY, crv=crv, x=BinaPy(x).to("b64u").ascii(), **params))
 
@@ -297,7 +293,6 @@ class OKPJwk(Jwk):
 
         Returns:
             the resulting `OKPJwk`
-
         """
         return cls(
             dict(

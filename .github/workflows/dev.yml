@@ -41,6 +41,11 @@ jobs:
         run:
           tox
 
+      - name: Build documentation
+        run: |
+          poetry install
+          poetry run mkdocs build
+
       - name: list files
         run: ls -l .
 

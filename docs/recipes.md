@@ -8,7 +8,7 @@ This is a collection of recipes related to `jwskate` usage.
 from jwskate import Jwk
 
 private_jwk = (
-    Jwk.generate_for_alg("ES256")  # select the signature or encryption alg here
+    Jwk.generate(alg="ES256")  # select the signature or encryption alg here
     .with_kid_thumbprint()  # optionally, include a RFC7638 compliant thumbprint as kid
     .with_usage_parameters()  # optionally, include 'use' and 'key_ops'
 )
@@ -99,7 +99,7 @@ from jwskate import Jwk
 
 # generate a sample JWK, any asymmetric type will do:
 private_jwk = (
-    Jwk.generate_for_alg("ES256")  # generates the key
+    Jwk.generate(alg="ES256")  # generates the key
     .with_usage_parameters()  # adds use and key_ops
     .with_kid_thumbprint()  # adds the key thumbprint as kid
 )
@@ -186,4 +186,45 @@ public_jwk_from_file = (
     .with_kid_thumbprint()  # adds back the thumbprint as kid
 )
 assert public_jwk_from_file == public_jwk
+```
+
+# JWT
+
+## Parsing a JWT
+
+```python
+from jwskate import Jwt
+from datetime import datetime, timezone
+
+# you may recognize the default JWT value from https://jwt.io
+jwt = Jwt(
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+    "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ."
+    "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+)
+# access the parsed header, as a dict
+print(jwt.headers)
+# {'alg': 'HS256', 'typ': 'JWT'}
+# access the parsed claims, as a dict
+print(jwt.claims)
+# {'sub': '1234567890', 'name': 'John Doe', 'iat': 1516239022}
+# access the signature, as bytes
+print(jwt.signature.hex())
+# 49f94ac7044948c78a285d904f87f0a4c7897f7e8f3a4eb2255fda750b2cc397
+
+# alg and typ from the headers are accessible as attributes
+assert jwt.alg == "HS256"
+assert jwt.typ == "JWT"
+
+# some registered claims are accessible, pre-parsed and validated according to RFC7519
+assert jwt.issuer is None
+assert jwt.subject == "1234567890"
+assert jwt.audiences == []
+assert jwt.expires_at is None # this would be a datetime if token had a valid 'exp' claim
+assert jwt.not_before is None # this would be a datetime if token had a valid 'nbf' claim
+assert jwt.issued_at == datetime(2018, 1, 18, 1, 30, 22, tzinfo=timezone.utc)
+assert jwt.jwt_token_id is None
+
+# checking the signature is as easy as
+jwt.verify_signature(b'your-256-bit-secret', alg='HS256')
 ```

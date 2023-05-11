@@ -346,8 +346,9 @@ class JweCompact(BaseCompactToken):
         return SymmetricJwk.from_bytes(cek)
 
     def decrypt_with_password(self, password: Union[bytes, str]) -> bytes:
-        """Decrypt the JWE token with a password. This only works for tokens encrypted with a
-        password.
+        """Decrypt this JWE with a password.
+
+        This only works for tokens encrypted with a password.
 
         Args:
           password: the password to use

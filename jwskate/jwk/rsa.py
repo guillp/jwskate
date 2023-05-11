@@ -282,8 +282,9 @@ class RSAJwk(Jwk):
         return rsa.rsa_crt_iqmp(self.first_prime_factor, self.second_prime_factor)
 
     def with_optional_private_parameters(self) -> RSAJwk:
-        """Compute the optional RSA private parameters and return a new `Jwk` with those additional
-        params included.
+        """Compute the optional RSA private parameters.
+
+        This returns a new `Jwk` with those additional params included.
 
         The optional parameters are:
 

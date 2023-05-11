@@ -194,8 +194,7 @@ class EcdhEs(
         key_size: int,
         **headers: Any,
     ) -> BinaPy:
-        """Compute a shared key. This method is meant for use by the recipient of an encrypted
-        message.
+        """Compute a shared key, for use by the recipient of an encrypted message.
 
         Args:
           ephemeral_public_key: the EPK, as received from sender

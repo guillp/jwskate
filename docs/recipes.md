@@ -220,11 +220,13 @@ assert jwt.typ == "JWT"
 assert jwt.issuer is None
 assert jwt.subject == "1234567890"
 assert jwt.audiences == []
-assert jwt.expires_at is None # this would be a datetime if token had a valid 'exp' claim
-assert jwt.not_before is None # this would be a datetime if token had a valid 'nbf' claim
+# this would be a datetime if token had a valid 'exp' claim
+assert jwt.expires_at is None
+# this would be a datetime if token had a valid 'nbf' claim
+assert jwt.not_before is None
 assert jwt.issued_at == datetime(2018, 1, 18, 1, 30, 22, tzinfo=timezone.utc)
 assert jwt.jwt_token_id is None
 
 # checking the signature is as easy as
-jwt.verify_signature(b'your-256-bit-secret', alg='HS256')
+jwt.verify_signature(b"your-256-bit-secret", alg="HS256")
 ```

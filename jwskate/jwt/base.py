@@ -29,6 +29,7 @@ class Jwt(BaseCompactToken):
 
         Args:
             value: the token value
+            max_size: maximum allowed size for the token
         """
         if not isinstance(value, bytes):
             value = value.encode("ascii")
@@ -217,8 +218,9 @@ class Jwt(BaseCompactToken):
 
     @classmethod
     def timestamp(cls, delta_seconds: int = 0) -> int:
-        """Return an integer timestamp that is suitable for use in Jwt tokens `iat`, `exp` and `nbf`
-        claims.
+        """Return an integer timestamp that is suitable for use in Jwt tokens.
+
+        Timestamps are used in particular for `iat`, `exp` and `nbf` claims.
 
         A timestamp is a number of seconds since January 1st, 1970 00:00:00 UTC, ignoring leap seconds.
 

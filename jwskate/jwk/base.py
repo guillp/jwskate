@@ -1,5 +1,6 @@
-"""This module implements the `Jwk` class, which provides the main interface for using or
-interacting with a JWK key.
+"""This module contains the `Jwk` class and associated helpers.
+
+`Jwk` provides the main interface for using or interacting with JWK keys.
 
 Subclasses of `Jwk` will implement the specific key types, like RSA, EC, OKP, and will provide an
 interface to access the specific attributes for each key type. Unless you are dealing with a
@@ -430,8 +431,9 @@ class Jwk(BaseJsonDict):
         is_symmetric: Optional[bool] = None,
         kty: Optional[str] = None,
     ) -> Jwk:
-        """Check this key for type, privateness and/or symmetricness. Raise a ValueError if it not
-        as expected.
+        """Check this key for type, privateness and/or symmetricness.
+
+        This raises a `ValueError` if the key is not as expected.
 
         Args:
             is_private: if `True`, check if the key is private, if `False`, check if it is public, if `None`, do nothing
@@ -530,8 +532,9 @@ class Jwk(BaseJsonDict):
                 raise InvalidJwk(f"Key Operation is '{op}' but the key is public")
 
     def signature_class(self, alg: Optional[str] = None) -> Type[BaseSignatureAlg]:
-        """Return the appropriate signature algorithm class (a `BaseSignatureAlg` subclass) to use
-        with this key.
+        """Return the appropriate signature algorithm class to use with this key.
+
+        The returned class is a `BaseSignatureAlg` subclass.
 
         If this key doesn't have an `alg` parameter, you must supply one as parameter to this method.
 
@@ -544,8 +547,9 @@ class Jwk(BaseJsonDict):
         return select_alg_class(self.SIGNATURE_ALGORITHMS, jwk_alg=self.alg, alg=alg)
 
     def encryption_class(self, alg: Optional[str] = None) -> Type[BaseAESEncryptionAlg]:
-        """Return the appropriate encryption algorithm class (a `BaseAESEncryptionAlg` subclass) to
-        use with this key.
+        """Return the appropriate encryption algorithm class to use with this key.
+
+        The returned class is a subclass of `BaseAESEncryptionAlg`.
 
         If this key doesn't have an `alg` parameter, you must supply one as parameter to this method.
 
@@ -575,8 +579,9 @@ class Jwk(BaseJsonDict):
         )
 
     def signature_wrapper(self, alg: Optional[str] = None) -> BaseSignatureAlg:
-        """Initialize a  key management wrapper (an instance of a `BaseKeyManagementAlg` subclass)
-        with this key.
+        """Initialize a  key management wrapper with this key.
+
+        This returns an instance of a `BaseSignatureAlg` subclass.
 
         If this key doesn't have an `alg` parameter, you must supply one as parameter to this method.
 
@@ -584,7 +589,7 @@ class Jwk(BaseJsonDict):
             alg: the algorithm identifier, if not already present in this Jwk
 
         Returns:
-            a `BaseKeyManagementAlg` instance initialized with the current key
+            a `BaseSignatureAlg` instance initialized with the current key
         """
         alg_class = self.signature_class(alg)
         if issubclass(alg_class, BaseSymmetricAlg):
@@ -594,8 +599,9 @@ class Jwk(BaseJsonDict):
         raise UnsupportedAlg(alg)  # pragma: no cover
 
     def encryption_wrapper(self, alg: Optional[str] = None) -> BaseAESEncryptionAlg:
-        """Initialize an encryption wrapper (an instance of a `BaseAESEncryptionAlg` subclass) with
-        this key.
+        """Initialize an encryption wrapper with this key.
+
+        This returns an instance of a `BaseAESEncryptionAlg` subclass.
 
         If this key doesn't have an `alg` parameter, you must supply one as parameter to this method.
 
@@ -613,8 +619,9 @@ class Jwk(BaseJsonDict):
         raise UnsupportedAlg(alg)  # pragma: no cover
 
     def key_management_wrapper(self, alg: Optional[str] = None) -> BaseKeyManagementAlg:
-        """Initialize a key management wrapper (an instance of a `BaseKeyManagementAlg` subclass)
-        with this key.
+        """Initialize a key management wrapper with this key.
+
+        This returns an instance of a `BaseKeyManagementAlg` subclass.
 
         If this key doesn't have an `alg` parameter, you must supply one as parameter to this method.
 
@@ -1297,8 +1304,9 @@ def to_jwk(
     is_private: Optional[bool] = None,
     is_symmetric: Optional[bool] = None,
 ) -> Jwk:
-    """Convert any supported kind of key to a Jwk, and optionally check if that key is private or
-    symmetric.
+    """Convert any supported kind of key to a `Jwk`.
+
+    This optionally check if that key is private or symmetric.
 
     The key can be any type supported by Jwk:
     - a `cryptography` key instance

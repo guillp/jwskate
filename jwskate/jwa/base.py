@@ -1,5 +1,4 @@
-"""This module implement base classes used by Signature, Encryption and Key Management JWA
-algorithms."""
+"""This module implement base classes for the algorithms defined in JWA."""
 
 from __future__ import annotations
 
@@ -13,13 +12,11 @@ from typing_extensions import Self, override
 
 
 class PrivateKeyRequired(AttributeError):
-    """Raised when a cryptographic operation requires a private key, and a public key has been
-    provided instead."""
+    """Raised when a public key is provided for an operation that requires a private key."""
 
 
 class PublicKeyRequired(AttributeError):
-    """Raised when a cryptographic operation requires a public key, and a private key has been
-    provided instead."""
+    """Raised when a private key is provided for an operation that requires a public key."""
 
 
 class BaseAlg:
@@ -254,16 +251,15 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         iv: Union[bytes, SupportsBytes],
         aad: Union[bytes, SupportsBytes, None] = None,
     ) -> Tuple[BinaPy, BinaPy]:
-        """Encrypt arbitrary data, with optional [Authenticated
-        Encryption](https://wikipedia.org/wiki/Authenticated_encryption).
+        """Encrypt arbitrary data, with optional Authenticated Encryption.
 
-        This needs:
+        This needs as parameters:
 
         - the raw data to encrypt (`plaintext`)
         - a given random Initialisation Vector (`iv`) of the appropriate size
         - optional Additional Authentication Data (`aad`)
 
-        And returns a tuple (ciphered_data, authentication_tag).
+        And returns a tuple `(ciphered_data, authentication_tag)`.
 
         Args:
           plaintext: the data to encrypt
@@ -319,5 +315,4 @@ class BaseKeyManagementAlg(BaseAlg):
 
 
 class MismatchingAuthTag(cryptography.exceptions.InvalidTag):
-    """Raised when trying to decrypt with an Authentication Tag that doesn't match the expected
-    value."""
+    """Raised during decryption, when the Authentication Tag doesn't match the expected value."""

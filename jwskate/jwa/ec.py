@@ -55,8 +55,10 @@ class EllipticCurve:
     def get_curve(
         cls, key: Union[ec.EllipticCurvePublicKey, ec.EllipticCurvePrivateKey]
     ) -> "EllipticCurve":
-        """Get the appropriate `EllipticCurve` instance for a given `cryptography`
-        `EllipticCurvePublicKey`.
+        """Get the appropriate `EllipticCurve` instance for a given key.
+
+        The provided key must be an `EllipticCurvePublicKey` or `EllipticCurvePrivateKey`
+        from the `cryptography` module.
 
         Args:
           key: an Elliptic Curve private or public key from `cryptography`.

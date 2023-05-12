@@ -41,7 +41,7 @@ class PrivateKeyProtocol(Protocol):
         ...
 
     @classmethod
-    def generate(self) -> PrivateKeyProtocol:  # noqa: D102
+    def generate(cls) -> PrivateKeyProtocol:  # noqa: D102
         ...
 
 

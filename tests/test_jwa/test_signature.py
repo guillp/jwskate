@@ -1,7 +1,6 @@
 """Tests for jwskate.jwa.signature submodule."""
 
 import pytest
-from cryptography.hazmat.primitives.asymmetric import ec
 
 from jwskate import ES256
 

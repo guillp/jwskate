@@ -338,7 +338,7 @@ def test_supportsbytes(
         alg=signature_alg,
     )
     if signature_alg not in ("ES256", "ES384", "ES512", "PS256", "PS384", "PS512"):
-        # those algs have non deterministic signatures
+        # those algs have non-deterministic signatures
         assert jws == signed_jws_compact
 
     assert jws.payload == signed_jws_compact.payload

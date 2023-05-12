@@ -64,7 +64,7 @@ class JwkSet(BaseJsonDict):
         Raises:
             KeyError: if no key matches
         """
-        jwk = next(filter(lambda jwk: jwk.get("kid") == kid, self.jwks), None)
+        jwk = next(filter(lambda j: j.get("kid") == kid, self.jwks), None)
         if isinstance(jwk, Jwk):
             return jwk
         raise KeyError(kid)

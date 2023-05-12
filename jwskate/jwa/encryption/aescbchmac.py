@@ -3,7 +3,6 @@
 from typing import SupportsBytes, Tuple, Union
 
 from binapy import BinaPy
-from cryptography import exceptions
 from cryptography.hazmat.primitives import ciphers, constant_time, hashes, hmac, padding
 from cryptography.hazmat.primitives.ciphers import algorithms, modes
 

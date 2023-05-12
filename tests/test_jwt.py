@@ -106,14 +106,14 @@ def test_jwt_signer_and_verifier(issuer: str) -> None:
     verifier = signer.verifier(audience=audience)
 
     @verifier.custom_verifier
-    def foobar_verifier(jwt: SignedJwt) -> None:
-        if jwt.foo != "bar":
+    def foobar_verifier(j: SignedJwt) -> None:
+        if j.foo != "bar":
             raise ValueError("This JWT is not FooBar compliant!")
 
     verifier.verify(jwt)
 
     @verifier.custom_verifier
-    def failing_verifier(jwt: SignedJwt) -> None:
+    def failing_verifier(j: SignedJwt) -> None:
         raise ValueError("This token will never be valid")
 
     with pytest.raises(ValueError):
@@ -513,12 +513,12 @@ def test_verifier() -> None:
     )
     jwks = private_jwk.public_jwk().as_jwks()
 
-    def suject_verifier(jwt: SignedJwt) -> None:
-        if jwt.subject != subject:
+    def suject_verifier(j: SignedJwt) -> None:
+        if j.subject != subject:
             raise ValueError("Invalid Subject", jwt)
 
-    def not_foo(jwt: SignedJwt) -> None:
-        if "foo" in jwt.claims:
+    def not_foo(j: SignedJwt) -> None:
+        if "foo" in j.claims:
             raise ValueError("Token is foo!", jwt)
 
     verifier = JwtVerifier(

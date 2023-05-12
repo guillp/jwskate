@@ -91,16 +91,17 @@ class EllipticCurve:
         Raises:
             TypeError: if the provided key is not an EllipticCurvePrivateKey or EllipticCurvePublicKey
         """
-        if not isinstance(key, (ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey)):
-            raise TypeError(
-                "A EllipticCurvePrivateKey or a EllipticCurvePublicKey is required."
-            )
-        crv = cls.get_curve(key)
         public_numbers: ec.EllipticCurvePublicNumbers
         if isinstance(key, ec.EllipticCurvePrivateKey):
             public_numbers = key.public_key().public_numbers()
         elif isinstance(key, ec.EllipticCurvePublicKey):
             public_numbers = key.public_numbers()
+        else:
+            raise TypeError(
+                "A EllipticCurvePrivateKey or a EllipticCurvePublicKey is required."
+            )
+
+        crv = cls.get_curve(key)
         x = BinaPy.from_int(public_numbers.x, crv.coordinate_size).to("b64u").ascii()
         y = BinaPy.from_int(public_numbers.y, crv.coordinate_size).to("b64u").ascii()
         parameters = {"kty": KeyTypes.EC, "crv": crv.name, "x": x, "y": y}

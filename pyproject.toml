@@ -49,8 +49,8 @@ pytest  = ">=7.3"
 pytest-cov  = ">=4.0"
 pytest-mypy = ">=0.10"
 toml = ">=0.10"
-tomli = "^2.0.1"
-tox  = ">=3.25,<4.0"
+tomli = ">=2.0.1"
+tox  = ">=4.5.1"
 tox-poetry = ">=0.4.1"
 types-cryptography = ">=3.3"
 virtualenv  = ">=20.14.1"
@@ -103,3 +103,6 @@ recursive = true
 wrap-summaries = 120
 wrap-descriptions = 120
 blank = true
+
+[tool.isort]
+profile = "black"

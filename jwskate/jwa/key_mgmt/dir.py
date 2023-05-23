@@ -21,7 +21,6 @@ class DirectKeyUse(BaseKeyManagementAlg, BaseSymmetricAlg):
 
         Returns:
           the current configured key, as-is
-
         """
         aesalg.check_key(self.key)
         return BinaPy(self.key)

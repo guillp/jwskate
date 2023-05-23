@@ -1,7 +1,6 @@
 """This module contains enums for the various identifiers used in JWA and JWK.
 
 See [IANA JOSE](https://www.iana.org/assignments/jose/jose.xhtml).
-
 """
 
 

@@ -3,7 +3,6 @@
 from typing import SupportsBytes, Tuple, Union
 
 from binapy import BinaPy
-from cryptography import exceptions
 from cryptography.hazmat.primitives import ciphers, constant_time, hashes, hmac, padding
 from cryptography.hazmat.primitives.ciphers import algorithms, modes
 
@@ -30,7 +29,6 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         Args:
             key: the key to use for encryption and decryption.
-
         """
         super().__init__(key)
         self.mac_key = self.key[: self.mac_key_size // 8]
@@ -53,7 +51,6 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         Returns:
           the resulting MAC.
-
         """
         if not isinstance(ciphertext, bytes):
             ciphertext = bytes(ciphertext)
@@ -92,7 +89,6 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         Returns:
           a tuple (encrypted_data, authentication_tag)
-
         """
         if not isinstance(plaintext, bytes):
             plaintext = bytes(plaintext)
@@ -133,7 +129,6 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         Returns:
           the decrypted data
-
         """
         if not isinstance(ciphertext, bytes):
             ciphertext = bytes(ciphertext)

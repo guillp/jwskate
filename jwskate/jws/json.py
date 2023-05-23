@@ -23,7 +23,6 @@ class JwsJsonFlat(JwsSignature):
 
         Returns:
             The raw JWS payload.
-
         """
         payload = self.get("payload")
         if payload is None:
@@ -36,7 +35,6 @@ class JwsJsonFlat(JwsSignature):
 
         Returns:
             The JWS signature.
-
         """
         content = {
             "protected": self["protected"],
@@ -69,7 +67,6 @@ class JwsJsonFlat(JwsSignature):
 
         Returns:
             The JWS with the payload, signature, header and extra claims.
-
         """
         signature = super().sign(
             payload, jwk, alg, extra_protected_headers, header, **kwargs
@@ -82,7 +79,6 @@ class JwsJsonFlat(JwsSignature):
 
         Returns:
             A JwsJsonGeneral with the same payload and signature.
-
         """
         content = self.copy()
         protected = content.pop("protected")
@@ -101,7 +97,6 @@ class JwsJsonFlat(JwsSignature):
 
         Returns:
             The signed data part.
-
         """
         return JwsSignature.assemble_signed_part(self.protected, self.payload)
 
@@ -110,7 +105,6 @@ class JwsJsonFlat(JwsSignature):
 
         Returns:
             A `JwsCompact` with the same payload and signature.
-
         """
         return JwsCompact.from_parts(self.signed_part(), self.signature)
 
@@ -130,7 +124,6 @@ class JwsJsonFlat(JwsSignature):
 
         Returns:
             `True` if the signature is verified, `False` otherwise.
-
         """
         return self.jws_signature.verify(self.payload, jwk, alg=alg, algs=algs)
 
@@ -144,7 +137,6 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             The signed data.
-
         """
         payload = self.get("payload")
         if payload is None:
@@ -187,7 +179,6 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             A JwsJsonGeneral with the generated signatures.
-
         """
         jws = cls({"payload": BinaPy(payload).to("b64u").ascii()})
         for parameters in signature_parameters:
@@ -200,7 +191,6 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             The list of signatures from this JWS.
-
         """
         signatures = self.get("signatures")
         if signatures is None:
@@ -224,7 +214,6 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             the same JWS with the new signature included.
-
         """
         self.setdefault("signatures", [])
         self["signatures"].append(
@@ -250,7 +239,6 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             The raw signed part from the chosen signature.
-
         """
         signature = signature_chooser(self.signatures)
         return JwsSignature.assemble_signed_part(signature.protected, self.payload)
@@ -268,7 +256,6 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             A JwsCompact with the payload and the chosen signature from this JWS.
-
         """
         signature = signature_chooser(self.signatures)
         return JwsCompact.from_parts(
@@ -289,7 +276,6 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             A JwsJsonFlat with the payload and the chosen signature from this JWS.
-
         """
         signature = signature_chooser(self.signatures)
         return JwsJsonFlat.from_parts(
@@ -316,7 +302,6 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             `True` if any of the signature verifies with the given key, `False` otherwise.
-
         """
         for signature in self.signatures:
             if signature.verify(self.payload, jwk, alg=alg, algs=algs):

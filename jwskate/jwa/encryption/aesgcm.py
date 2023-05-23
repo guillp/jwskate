@@ -34,7 +34,6 @@ class BaseAESGCM(BaseAESEncryptionAlg):
 
         Raises:
             ValueError: if the IV size is not appropriate
-
         """
         if not isinstance(iv, bytes):
             iv = bytes(iv)
@@ -71,7 +70,6 @@ class BaseAESGCM(BaseAESEncryptionAlg):
 
         Raises:
             ValueError: if the IV size is not appropriate
-
         """
         if not isinstance(ciphertext, bytes):
             ciphertext = bytes(ciphertext)

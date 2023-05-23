@@ -26,11 +26,10 @@ class JweCompact(BaseCompactToken):
 
     Args:
         value: the compact representation for this Jwe
-
     """
 
-    def __init__(self, value: Union[bytes, str]):
-        super().__init__(value)
+    def __init__(self, value: Union[bytes, str], max_size: int = 16 * 1024):
+        super().__init__(value, max_size)
 
         if self.value.count(b".") != 4:
             raise InvalidJwe(
@@ -40,44 +39,44 @@ class JweCompact(BaseCompactToken):
         header, cek, iv, ciphertext, auth_tag = self.value.split(b".")
         try:
             headers = BinaPy(header).decode_from("b64u").parse_from("json")
-            enc = headers.get("enc")
-            if enc is None or not isinstance(enc, str):
-                raise InvalidJwe(
-                    "Invalid JWE header: this JWE doesn't have a valid 'enc' header."
-                )
-            self.headers = headers
-            self.additional_authenticated_data = header
         except ValueError:
             raise InvalidJwe(
                 "Invalid JWE header: it must be a Base64URL-encoded JSON object."
             )
+        enc = headers.get("enc")
+        if enc is None or not isinstance(enc, str):
+            raise InvalidJwe(
+                "Invalid JWE header: this JWE doesn't have a valid 'enc' header."
+            )
+        self.headers = headers
+        self.additional_authenticated_data = header
 
         try:
             self.wrapped_cek = BinaPy(cek).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
-                "Invalid JWE CEK: it must be a Base64URL-encoded binary data (bytes)."
+                "Invalid JWE CEK: it must be a Base64URL-encoded binary data."
             )
 
         try:
             self.initialization_vector = BinaPy(iv).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
-                "Invalid JWE IV: it must be a Base64URL-encoded binary data (bytes)"
+                "Invalid JWE IV: it must be a Base64URL-encoded binary data."
             )
 
         try:
             self.ciphertext = BinaPy(ciphertext).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
-                "Invalid JWE ciphertext: it must be a Base64URL-encoded binary data (bytes)"
+                "Invalid JWE ciphertext: it must be a Base64URL-encoded binary data."
             )
 
         try:
             self.authentication_tag = BinaPy(auth_tag).decode_from("b64u")
         except ValueError:
             raise InvalidJwe(
-                "Invalid JWE authentication tag: it must be a Base64URL-encoded binary data (bytes)"
+                "Invalid JWE authentication tag: it must be a Base64URL-encoded binary data."
             )
 
     @classmethod
@@ -90,7 +89,7 @@ class JweCompact(BaseCompactToken):
         ciphertext: bytes,
         tag: bytes,
     ) -> "JweCompact":
-        """Initialize a JWE from its different parts (header, cek, iv, ciphertext, tag).
+        """Initialize a `JweCompact` from its different parts (header, cek, iv, ciphertext, tag).
 
         Args:
           headers: the headers (as a mapping of name: value)
@@ -100,8 +99,7 @@ class JweCompact(BaseCompactToken):
           tag: the authentication tag
 
         Returns:
-            the initialized JweCompact instance
-
+            the initialized `JweCompact` instance
         """
         return cls(
             b".".join(
@@ -126,7 +124,6 @@ class JweCompact(BaseCompactToken):
 
         Raises:
             AttributeError: if there is no enc header or it is not a string
-
         """
         return self.get_header("enc")  # type: ignore[no-any-return]
         # header has been checked at init time
@@ -158,7 +155,6 @@ class JweCompact(BaseCompactToken):
 
         Returns:
             the generated JweCompact instance
-
         """
         extra_headers = extra_headers or {}
         jwk = to_jwk(jwk)
@@ -202,7 +198,6 @@ class JweCompact(BaseCompactToken):
 
         Returns:
             the unwrapped CEK, as a SymmetricJwk
-
         """
         if isinstance(jwk_or_password, (bytes, str)):
             password = jwk_or_password
@@ -234,7 +229,6 @@ class JweCompact(BaseCompactToken):
 
         Returns:
           the decrypted payload
-
         """
         cek_jwk = self.unwrap_cek(jwk, alg=alg, algs=algs)
 
@@ -280,7 +274,6 @@ class JweCompact(BaseCompactToken):
         Raises:
             UnsupportedAlg: if the key management alg is not supported
             ValueError: if the `count` parameter is not a positive integer
-
         """
         keyalg = cls.PBES2_ALGORITHMS.get(alg)
         if keyalg is None:
@@ -330,7 +323,6 @@ class JweCompact(BaseCompactToken):
         Raises:
             UnsupportedAlg: if the token key management algorithm is not supported
             AttributeError: if the token misses the PBES2-related headers
-
         """
         keyalg = self.PBES2_ALGORITHMS.get(self.alg)
         if keyalg is None:
@@ -354,14 +346,15 @@ class JweCompact(BaseCompactToken):
         return SymmetricJwk.from_bytes(cek)
 
     def decrypt_with_password(self, password: Union[bytes, str]) -> bytes:
-        """Decrypt the JWE token with a password. This only works for tokens encrypted with a password.
+        """Decrypt this JWE with a password.
+
+        This only works for tokens encrypted with a password.
 
         Args:
           password: the password to use
 
         Returns:
             the unencrypted payload
-
         """
         cek_jwk = self.unwrap_cek_with_password(password)
         plaintext = cek_jwk.decrypt(

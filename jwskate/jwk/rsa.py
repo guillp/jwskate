@@ -137,7 +137,6 @@ class RSAJwk(Jwk):
 
         Returns:
           a `RsaJwk` initialized from the provided parameters
-
         """
         return cls(
             dict(
@@ -177,7 +176,6 @@ class RSAJwk(Jwk):
 
         Returns:
             a `RSAJwk` initialized from the given parameters
-
         """
         return cls(
             dict(
@@ -209,7 +207,6 @@ class RSAJwk(Jwk):
 
         Returns:
           a generated `RSAJwk`
-
         """
         private_key = rsa.generate_private_key(65537, key_size=key_size)
         pn = private_key.private_numbers()
@@ -285,7 +282,9 @@ class RSAJwk(Jwk):
         return rsa.rsa_crt_iqmp(self.first_prime_factor, self.second_prime_factor)
 
     def with_optional_private_parameters(self) -> RSAJwk:
-        """Compute the optional RSA private parameters and return a new `Jwk` with those additional params included.
+        """Compute the optional RSA private parameters.
+
+        This returns a new `Jwk` with those additional params included.
 
         The optional parameters are:
 
@@ -294,7 +293,6 @@ class RSAJwk(Jwk):
         - dp: first factor Chinese Remainder Theorem exponent
         - dq: second factor Chinese Remainder Theorem exponent
         - qi: first Chinese Remainder Theorem coefficient
-
         """
         if not self.is_private:
             raise ValueError(

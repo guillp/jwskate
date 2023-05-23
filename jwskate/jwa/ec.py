@@ -16,11 +16,12 @@ class EllipticCurve:
     """A descriptive class for Elliptic Curves.
 
     Elliptic Curves have a name, a `cryptography.ec.EllipticCurve`, and a coordinate size.
-
     """
 
     name: str
-    """Curve name as defined in [IANA JOSE](https://www.iana.org/assignments/jose/jose.xhtml#web- key-elliptic-curve).
+    """Curve name as defined in [IANA JOSE](https://www.iana.org/assignments/jose/jose.xhtml#web-
+    key-elliptic-curve).
+
     This name will appear in `alg` or `enc` fields in JOSE headers.
     """
 
@@ -42,7 +43,6 @@ class EllipticCurve:
 
         Returns:
              a tuple of 4 `int`s: `x` and `y` coordinates (public key) and `d` (private key)
-
         """
         key = ec.generate_private_key(self.cryptography_curve)
         pn = key.private_numbers()  # type: ignore[attr-defined]
@@ -55,7 +55,10 @@ class EllipticCurve:
     def get_curve(
         cls, key: Union[ec.EllipticCurvePublicKey, ec.EllipticCurvePrivateKey]
     ) -> "EllipticCurve":
-        """Get the appropriate `EllipticCurve` instance for a given `cryptography` `EllipticCurvePublicKey`.
+        """Get the appropriate `EllipticCurve` instance for a given key.
+
+        The provided key must be an `EllipticCurvePublicKey` or `EllipticCurvePrivateKey`
+        from the `cryptography` module.
 
         Args:
           key: an Elliptic Curve private or public key from `cryptography`.
@@ -65,7 +68,6 @@ class EllipticCurve:
 
         Raises:
             NotImplementedError: if the curve is not supported
-
         """
         for c in cls.instances.values():
             if c.cryptography_curve.name == key.curve.name:
@@ -88,18 +90,18 @@ class EllipticCurve:
 
         Raises:
             TypeError: if the provided key is not an EllipticCurvePrivateKey or EllipticCurvePublicKey
-
         """
-        if not isinstance(key, (ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey)):
-            raise TypeError(
-                "A EllipticCurvePrivateKey or a EllipticCurvePublicKey is required."
-            )
-        crv = cls.get_curve(key)
         public_numbers: ec.EllipticCurvePublicNumbers
         if isinstance(key, ec.EllipticCurvePrivateKey):
             public_numbers = key.public_key().public_numbers()
         elif isinstance(key, ec.EllipticCurvePublicKey):
             public_numbers = key.public_numbers()
+        else:
+            raise TypeError(
+                "A EllipticCurvePrivateKey or a EllipticCurvePublicKey is required."
+            )
+
+        crv = cls.get_curve(key)
         x = BinaPy.from_int(public_numbers.x, crv.coordinate_size).to("b64u").ascii()
         y = BinaPy.from_int(public_numbers.y, crv.coordinate_size).to("b64u").ascii()
         parameters = {"kty": KeyTypes.EC, "crv": crv.name, "x": x, "y": y}

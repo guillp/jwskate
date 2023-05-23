@@ -1,4 +1,5 @@
 import pytest
+from cryptography.hazmat.primitives.asymmetric import ec
 
 from jwskate import (
     A128CBC_HS256,
@@ -140,3 +141,12 @@ def test_public_private() -> None:
         )
         == jwk
     )
+
+
+def test_from_cryptography_key() -> None:
+    key = ec.generate_private_key(curve=ec.SECP256R1())
+
+    assert Jwk.from_cryptography_key(key) == Jwk(key)
+
+    with pytest.raises(TypeError):
+        ECJwk.from_cryptography_key(object())

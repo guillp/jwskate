@@ -1,7 +1,6 @@
-"""This module contains classes that describe CFRG Elliptic Curve Diffie-Hellman algorithms as specified in [RFC8037].
+"""This module implements CFRG Elliptic Curve Diffie-Hellman algorithms as specified in [RFC8037].
 
 [RFC8037]: https://www.rfc-editor.org/rfc/rfc8037.html
-
 """
 
 from __future__ import annotations
@@ -42,7 +41,7 @@ class PrivateKeyProtocol(Protocol):
         ...
 
     @classmethod
-    def generate(self) -> PrivateKeyProtocol:  # noqa: D102
+    def generate(cls) -> PrivateKeyProtocol:  # noqa: D102
         ...
 
 
@@ -51,7 +50,9 @@ class OKPCurve:
     """Represent an Octet Key Pair (OKP) Curve."""
 
     name: str
-    """Curve name as defined in [IANA JOSE](https://www.iana.org/assignments/jose/jose.xhtml#web- key-elliptic-curve).
+    """Curve name as defined in [IANA JOSE](https://www.iana.org/assignments/jose/jose.xhtml#web-
+    key-elliptic-curve).
+
     This name will appear in `crv` headers.
     """
 
@@ -79,7 +80,6 @@ class OKPCurve:
 
         Returns:
             a tuple of `x` (public  part), and `d` (private part), as bytes
-
         """
         key = self.cryptography_private_key_class.generate()
         x = key.public_key().public_bytes(
@@ -94,7 +94,9 @@ class OKPCurve:
 
     @classmethod
     def get_curve(cls, key: Union[PublicKeyProtocol, PrivateKeyProtocol]) -> OKPCurve:
-        """Return the appropriate `OKPCurve` instance for a given `cryptography` private or public key.
+        """Return the appropriate `OKPCurve` instance for a given key.
+
+        This takes a `cryptography` private or public key as parameter. If the key type matches an OKP curve
 
         Args:
           key: `cryptography` private or public OKP key.
@@ -104,7 +106,6 @@ class OKPCurve:
 
         Raises:
             NotImplementedError: if the required OKP curve is not supported
-
         """
         for c in cls.instances.values():
             if isinstance(

@@ -41,6 +41,11 @@ jobs:
         run:
           tox
 
+      - name: Build documentation
+        run: |
+          poetry install
+          poetry run mkdocs build
+
       - name: list files
         run: ls -l .
 
@@ -82,5 +87,5 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN}}
-          repository_url: https://test.pypi.org/legacy/
-          skip_existing: true
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true

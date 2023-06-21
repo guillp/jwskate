@@ -51,12 +51,11 @@ pytest-mypy = ">=0.10"
 toml = ">=0.10"
 tomli = ">=2.0.1"
 tox  = ">=4.5.1"
-tox-poetry = ">=0.4.1"
 types-cryptography = ">=3.3"
 virtualenv  = ">=20.14.1"
 
 [tool.poetry.extras]
-test = ["pytest", "pytest-cov", "jwcrypto"]
+test = ["pytest", "pytest-cov", "jwcrypto", "freezegun"]
 doc = ["mkdocs"]
 
 

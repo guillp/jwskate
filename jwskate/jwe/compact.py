@@ -1,5 +1,7 @@
 """This module implements the JWE Compact format."""
 
+from __future__ import annotations
+
 import warnings
 from functools import cached_property
 from typing import Any, Dict, Iterable, Mapping, Optional, SupportsBytes, Type, Union
@@ -89,7 +91,7 @@ class JweCompact(BaseCompactToken):
         iv: bytes,
         ciphertext: bytes,
         tag: bytes,
-    ) -> "JweCompact":
+    ) -> JweCompact:
         """Initialize a `JweCompact` from its different parts (header, cek, iv, ciphertext, tag).
 
         Args:
@@ -133,7 +135,7 @@ class JweCompact(BaseCompactToken):
     def encrypt(
         cls,
         plaintext: Union[bytes, SupportsBytes],
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         *,
         enc: str,
         alg: Optional[str] = None,
@@ -141,12 +143,12 @@ class JweCompact(BaseCompactToken):
         cek: Optional[bytes] = None,
         iv: Optional[bytes] = None,
         epk: Optional[Jwk] = None,
-    ) -> "JweCompact":
-        """Encrypt an arbitrary plaintext into a JweCompact.
+    ) -> JweCompact:
+        """Encrypt an arbitrary plaintext into a `JweCompact`.
 
         Args:
           plaintext: the raw plaintext to encrypt
-          jwk: the public or symmetric key to use for encryption
+          key: the public or symmetric key to use for encryption
           enc: the encryption algorithm to use
           alg: the Key Management algorithm to use, if there is no 'alg' header defined in the Jwk
           extra_headers: additional headers to include in the generated token
@@ -158,18 +160,18 @@ class JweCompact(BaseCompactToken):
             the generated JweCompact instance
         """
         extra_headers = extra_headers or {}
-        jwk = to_jwk(jwk)
+        key = to_jwk(key)
         alg = select_alg_class(
-            jwk.KEY_MANAGEMENT_ALGORITHMS, jwk_alg=jwk.alg, alg=alg
+            key.KEY_MANAGEMENT_ALGORITHMS, jwk_alg=key.alg, alg=alg
         ).name
 
-        cek_jwk, wrapped_cek, cek_headers = jwk.sender_key(
+        cek_jwk, wrapped_cek, cek_headers = key.sender_key(
             enc=enc, alg=alg, cek=cek, epk=epk, **extra_headers
         )
 
         headers = dict(extra_headers, **cek_headers, alg=alg, enc=enc)
-        if jwk.kid is not None:
-            headers["kid"] = jwk.kid
+        if key.kid is not None:
+            headers["kid"] = key.kid
 
         aad = BinaPy.serialize_to("json", headers).to("b64u")
 
@@ -186,25 +188,25 @@ class JweCompact(BaseCompactToken):
 
     def unwrap_cek(
         self,
-        jwk_or_password: Union[Jwk, Dict[str, Any], bytes, str],
+        key_or_password: Union[Jwk, Dict[str, Any], bytes, str],
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> Jwk:
         """Unwrap the CEK from this `Jwe` using the provided key or password.
 
         Args:
-          jwk_or_password: the decryption JWK or password
+          key_or_password: the decryption JWK or password
           alg: allowed key management algorithm, if there is only 1
           algs: allowed key managements algorithms, if there are several
 
         Returns:
             the unwrapped CEK, as a SymmetricJwk
         """
-        if isinstance(jwk_or_password, (bytes, str)):
-            password = jwk_or_password
+        if isinstance(key_or_password, (bytes, str)):
+            password = key_or_password
             return self.unwrap_cek_with_password(password)
 
-        jwk = Jwk(jwk_or_password)
+        jwk = to_jwk(key_or_password)
         select_alg_classes(
             jwk.KEY_MANAGEMENT_ALGORITHMS,
             jwk_alg=self.alg,
@@ -217,21 +219,21 @@ class JweCompact(BaseCompactToken):
 
     def decrypt(
         self,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> BinaPy:
         """Decrypts this `Jwe` payload using a `Jwk`.
 
         Args:
-          jwk: the decryption key
+          key: the decryption key
           alg: allowed key management algorithm, if there is only 1
           algs: allowed keys management algorithms, if there are several
 
         Returns:
           the decrypted payload
         """
-        cek_jwk = self.unwrap_cek(jwk, alg=alg, algs=algs)
+        cek_jwk = self.unwrap_cek(key, alg=alg, algs=algs)
 
         plaintext = cek_jwk.decrypt(
             ciphertext=self.ciphertext,

@@ -80,14 +80,14 @@ class SignedJwt(Jwt):
 
     def verify_signature(
         self,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
         """Verify this JWT signature using a given key and algorithm(s).
 
         Args:
-          jwk: the private Jwk to use to verify the signature
+          key: the private Jwk to use to verify the signature
           alg: the alg to use to verify the signature, if only 1 is allowed
           algs: the allowed signature algs, if there are several
 
@@ -95,9 +95,9 @@ class SignedJwt(Jwt):
             `True` if the token signature is verified, `False` otherwise
 
         """
-        jwk = to_jwk(jwk)
+        key = to_jwk(key)
 
-        return jwk.verify(
+        return key.verify(
             data=self.signed_part, signature=self.signature, alg=alg, algs=algs
         )
 
@@ -300,7 +300,7 @@ class SignedJwt(Jwt):
 
     def validate(
         self,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
@@ -318,7 +318,7 @@ class SignedJwt(Jwt):
         - a callable, taking the claim value as parameter: if that callable returns `True`, the claim is considered as valid
 
         Args:
-          jwk: the signing key to use to verify the signature.
+          key: the signing key to use to verify the signature.
           alg: the signature alg to use to verify the signature.
           algs: allowed signature algs, if several
           issuer: the expected issuer for this token.
@@ -334,7 +334,7 @@ class SignedJwt(Jwt):
           InvalidClaim: if a claim doesn't validate
           ExpiredJwt: if the expiration date is passed
         """
-        if not self.verify_signature(jwk, alg, algs):
+        if not self.verify_signature(key, alg, algs):
             raise InvalidSignature("Signature is not valid.")
 
         if issuer is not None:

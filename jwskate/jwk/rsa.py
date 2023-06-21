@@ -31,6 +31,7 @@ class RSAJwk(Jwk):
     """Represent an RSA key in JWK format.
 
     RSA (Rivest-Shamir-Adleman) keys have Key Type `"RSA"`.
+
     """
 
     KTY = KeyTypes.RSA
@@ -293,6 +294,7 @@ class RSAJwk(Jwk):
         - dp: first factor Chinese Remainder Theorem exponent
         - dq: second factor Chinese Remainder Theorem exponent
         - qi: first Chinese Remainder Theorem coefficient
+
         """
         if not self.is_private:
             raise ValueError(

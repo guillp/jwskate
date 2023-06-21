@@ -35,6 +35,7 @@ class SymmetricJwk(Jwk):
     """Represent a Symmetric key in JWK format.
 
     Symmetric keys have key type `"oct"`.
+
     """
 
     KTY = KeyTypes.OCT
@@ -83,6 +84,7 @@ class SymmetricJwk(Jwk):
 
         Raises:
             ValueError: symmetric keys are always private, it makes no sense to use them as public keys
+
         """
         raise ValueError("Symmetric keys don't have a public key")
 
@@ -169,6 +171,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             a (ciphertext, authentication_tag, iv) tuple
+
         """
         wrapper = self.encryption_wrapper(alg)
         if iv is None:
@@ -198,6 +201,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             the decrypted clear-text
+
         """
         aad = b"" if aad is None else aad
         if not isinstance(aad, bytes):

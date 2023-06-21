@@ -40,6 +40,7 @@ class ECJwk(Jwk):
     """Represent an Elliptic Curve key in JWK format.
 
     Elliptic Curve keys have Key Type `"EC"`.
+
     """
 
     KTY = KeyTypes.EC
@@ -96,6 +97,7 @@ class ECJwk(Jwk):
 
         Raises:
             UnsupportedEllipticCurve: if the curve identifier is not supported
+
         """
         curve = cls.CURVES.get(crv)
         if curve is None:
@@ -148,6 +150,7 @@ class ECJwk(Jwk):
 
         Returns:
           an ECJwk initialized with the supplied parameters
+
         """
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(
@@ -229,6 +232,7 @@ class ECJwk(Jwk):
         """The coordinate size to use with the key curve.
 
         This is 32, 48, or 66 bits.
+
         """
         return self.curve.coordinate_size
 

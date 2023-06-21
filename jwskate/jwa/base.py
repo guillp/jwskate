@@ -25,6 +25,7 @@ class BaseAlg:
     An algorithm has a `name` and a `description`, whose reference is found in [IANA JOSE registry][IANA].
 
     [IANA]: https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-algorithms
+
     """
 
     use: str
@@ -53,6 +54,7 @@ class BaseSymmetricAlg(BaseAlg):
 
     Args:
         key: the key to use for cryptographic operations
+
     """
 
     def __init__(self, key: bytes):
@@ -71,6 +73,7 @@ class BaseSymmetricAlg(BaseAlg):
 
         Returns:
           Returns `None`. Raises an exception if the key is not suitable
+
         """
         pass
 
@@ -105,6 +108,7 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
     Args:
         key: the key to use.
+
     """
 
     private_key_class: Union[Type[Kpriv], Tuple[Type[Kpriv], ...]]
@@ -128,6 +132,7 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
         Raises:
             Exception: if the key is not suitable for use with this alg class
+
         """
 
     @contextmanager
@@ -139,6 +144,7 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
         Raises:
             PrivateKeyRequired: if the configured key is not private
+
         """
         if not isinstance(self.key, self.private_key_class):
             raise PrivateKeyRequired()
@@ -153,6 +159,7 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
         Raises:
             PublicKeyRequired: if the configured key is private
+
         """
         if not isinstance(self.key, self.public_key_class):
             raise PublicKeyRequired()
@@ -184,6 +191,7 @@ class BaseSignatureAlg(BaseAlg):
 
         Returns:
           the raw signature
+
         """
         raise NotImplementedError
 
@@ -198,6 +206,7 @@ class BaseSignatureAlg(BaseAlg):
 
         Returns:
           `True` if the signature matches, `False` otherwise.
+
         """
         raise NotImplementedError
 
@@ -220,6 +229,7 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Raises:
             ValueError: if the key is not suitable
+
         """
         if len(key) * 8 != cls.key_size:
             raise ValueError(
@@ -232,6 +242,7 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
             a random AES key
+
         """
         return BinaPy.random_bits(cls.key_size)
 
@@ -241,6 +252,7 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
             a random IV
+
         """
         return BinaPy.random_bits(cls.iv_size)
 
@@ -268,6 +280,7 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
           a tuple of ciphered data and authentication tag
+
         """
         raise NotImplementedError
 
@@ -294,6 +307,7 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
           the deciphered data
+
         """
         raise NotImplementedError
 
@@ -304,6 +318,7 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
         Returns:
             a subclass of `BaseAESEncryptionAlg` initialized with a randomly generated key
+
         """
         return cls(cls.generate_key())
 

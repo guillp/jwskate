@@ -32,6 +32,7 @@ class SignedJwt(Jwt):
 
     Args:
         value: the token value.
+
     """
 
     def __init__(self, value: Union[bytes, str]) -> None:
@@ -73,6 +74,7 @@ class SignedJwt(Jwt):
 
         Returns:
           the signed part as bytes
+
         """
         return b".".join(self.value.split(b".", 2)[:2])
 
@@ -91,6 +93,7 @@ class SignedJwt(Jwt):
 
         Returns:
             `True` if the token signature is verified, `False` otherwise
+
         """
         jwk = to_jwk(jwk)
 
@@ -159,6 +162,7 @@ class SignedJwt(Jwt):
 
         Raises:
             AttributeError: if the `nbf` claim cannot be parsed to a date
+
         """
         nbf = self.get_claim("nbf")
         if not nbf:
@@ -244,6 +248,7 @@ class SignedJwt(Jwt):
 
         Returns:
           the claim value if found, or `default` if not found
+
         """
         return self.claims.get(key, default)
 
@@ -255,6 +260,7 @@ class SignedJwt(Jwt):
 
         Returns:
          the claim value
+
         """
         value = self.get_claim(item)
         if value is None:
@@ -269,6 +275,7 @@ class SignedJwt(Jwt):
 
         Returns:
             the claim value
+
         """
         value = self.get_claim(item)
         if value is None:

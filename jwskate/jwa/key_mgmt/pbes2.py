@@ -17,6 +17,7 @@ class BasePbes2(BaseKeyManagementAlg):
 
     Args:
         password: the encryption/decryption password to use
+
     """
 
     kwalg: Type[BaseAesKeyWrap]
@@ -41,6 +42,7 @@ class BasePbes2(BaseKeyManagementAlg):
 
         Raises:
             ValueError: if the salt is less than 8 bytes long
+
         """
         if size < 8:
             raise ValueError("salts used for PBES2 must be at least 8 bytes long")
@@ -58,6 +60,7 @@ class BasePbes2(BaseKeyManagementAlg):
 
         Returns:
             the generated encryption/decryption key
+
         """
         full_salt = self.name.encode() + b"\0" + salt
         pbkdf = pbkdf2.PBKDF2HMAC(
@@ -78,6 +81,7 @@ class BasePbes2(BaseKeyManagementAlg):
 
         Returns:
             the wrapped key
+
         """
         aes_key = self.derive(salt=salt, count=count)
         return BinaPy(self.kwalg(aes_key).wrap_key(plainkey))
@@ -92,6 +96,7 @@ class BasePbes2(BaseKeyManagementAlg):
 
         Returns:
             the unwrapped key
+
         """
         aes_key = self.derive(salt=salt, count=count)
         return BinaPy(self.kwalg(aes_key).unwrap_key(cipherkey))

@@ -1,6 +1,8 @@
 """This module implements CFRG Elliptic Curve Diffie-Hellman algorithms as specified in [RFC8037].
 
-[RFC8037]: https://www.rfc-editor.org/rfc/rfc8037.html
+[RFC8037]
+: https: //www.rfc-editor.org/rfc/rfc8037.html
+
 """
 
 from __future__ import annotations
@@ -80,6 +82,7 @@ class OKPCurve:
 
         Returns:
             a tuple of `x` (public  part), and `d` (private part), as bytes
+
         """
         key = self.cryptography_private_key_class.generate()
         x = key.public_key().public_bytes(

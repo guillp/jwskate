@@ -63,7 +63,7 @@ class JwsCompact(BaseCompactToken):
     def sign(
         cls,
         payload: Union[bytes, SupportsBytes],
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         alg: Optional[str] = None,
         extra_headers: Optional[Dict[str, Any]] = None,
     ) -> JwsCompact:
@@ -71,7 +71,7 @@ class JwsCompact(BaseCompactToken):
 
         Args:
           payload: the payload to sign
-          jwk: the jwk to use to sign this payload
+          key: the jwk to use to sign this payload
           alg: the alg to use
           extra_headers: additional headers to add to the Jws Headers
 
@@ -79,18 +79,18 @@ class JwsCompact(BaseCompactToken):
           the resulting token
 
         """
-        jwk = to_jwk(jwk)
+        key = to_jwk(key)
 
         if not isinstance(payload, bytes):
             payload = bytes(payload)
 
         headers = dict(extra_headers or {}, alg=alg)
-        kid = jwk.get("kid")
+        kid = key.get("kid")
         if kid:
             headers["kid"] = kid
 
         signed_part = JwsSignature.assemble_signed_part(headers, payload)
-        signature = jwk.sign(signed_part, alg=alg)
+        signature = key.sign(signed_part, alg=alg)
         return cls.from_parts(signed_part, signature)
 
     @classmethod
@@ -135,7 +135,7 @@ class JwsCompact(BaseCompactToken):
 
     def verify_signature(
         self,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
@@ -143,7 +143,7 @@ class JwsCompact(BaseCompactToken):
         """Verify the signature from this JwsCompact using a Jwk.
 
         Args:
-          jwk: the Jwk to use to validate this signature
+          key: the Jwk to use to validate this signature
           alg: the alg to use, if there is only 1 allowed
           algs: the allowed algs, if here are several
 
@@ -151,8 +151,8 @@ class JwsCompact(BaseCompactToken):
          `True` if the signature matches, `False` otherwise
 
         """
-        jwk = to_jwk(jwk)
-        return jwk.verify(self.signed_part, self.signature, alg=alg, algs=algs)
+        key = to_jwk(key)
+        return key.verify(self.signed_part, self.signature, alg=alg, algs=algs)
 
     def flat_json(self, unprotected_header: Any = None) -> JwsJsonFlat:
         """Create a JWS in JSON flat format based on this Compact JWS.

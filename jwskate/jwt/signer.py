@@ -125,7 +125,7 @@ class JwtSigner:
             ).items()
             if value is not None
         }
-        return Jwt.sign(claims, jwk=self.jwk, alg=self.alg, extra_headers=extra_headers)
+        return Jwt.sign(claims, key=self.jwk, alg=self.alg, extra_headers=extra_headers)
 
     def generate_jti(self) -> str:
         """Generate Jwt Token ID (jti) values.

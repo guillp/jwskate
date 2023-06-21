@@ -17,7 +17,7 @@ from jwskate import (
 
 
 def test_jws_compact(private_jwk: Jwk) -> None:
-    jws = JwsCompact.sign(payload=b"Hello World!", jwk=private_jwk, alg="RS256")
+    jws = JwsCompact.sign(payload=b"Hello World!", key=private_jwk, alg="RS256")
     assert (
         str(jws)
         == "eyJhbGciOiJSUzI1NiIsImtpZCI6IkpXSy1BQkNEIn0.SGVsbG8gV29ybGQh.1eucS9ZaTnAJyfVNhxLJ_phFN1rexm0l"
@@ -309,7 +309,7 @@ def signed_jws_compact(
     signature_payload: bytes, signature_jwk: Jwk, signature_alg: str
 ) -> JwsCompact:
     jws = JwsCompact.sign(
-        payload=signature_payload, jwk=signature_jwk, alg=signature_alg
+        payload=signature_payload, key=signature_jwk, alg=signature_alg
     )
     assert isinstance(jws, JwsCompact)
     return jws
@@ -334,7 +334,7 @@ def test_supportsbytes(
 ) -> None:
     jws = JwsCompact.sign(
         payload=SupportsBytesTester(signature_payload),
-        jwk=signature_jwk,
+        key=signature_jwk,
         alg=signature_alg,
     )
     if signature_alg not in ("ES256", "ES384", "ES512", "PS256", "PS384", "PS512"):
@@ -354,7 +354,7 @@ def signed_jws_json_flat(
     signature_payload: bytes, signature_jwk: Jwk, signature_alg: str
 ) -> JwsJsonFlat:
     jws = JwsJsonFlat.sign(
-        payload=signature_payload, jwk=signature_jwk, alg=signature_alg
+        payload=signature_payload, key=signature_jwk, alg=signature_alg
     )
     assert isinstance(jws, JwsJsonFlat)
     return jws

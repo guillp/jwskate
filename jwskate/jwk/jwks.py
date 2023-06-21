@@ -82,14 +82,14 @@ class JwkSet(BaseJsonDict):
 
     def add_jwk(
         self,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         kid: Optional[str] = None,
         use: Optional[str] = None,
     ) -> str:
         """Add a Jwk in this JwkSet.
 
         Args:
-          jwk: the Jwk to add (either a `Jwk` instance, or a dict containing the Jwk parameters)
+          key: the Jwk to add (either a `Jwk` instance, or a dict containing the Jwk parameters)
           kid: the kid to use, if `jwk` doesn't contain one
           use: the defined use for the added Jwk
 
@@ -97,18 +97,18 @@ class JwkSet(BaseJsonDict):
           the kid from the added Jwk (it may be generated if no kid is provided)
 
         """
-        jwk = to_jwk(jwk)
+        key = to_jwk(key)
 
         self.setdefault("keys", [])
 
-        kid = jwk.get("kid", kid)
+        kid = key.get("kid", kid)
         if not kid:
-            kid = jwk.thumbprint()
-        jwk["kid"] = kid
-        use = jwk.get("use", use)
+            kid = key.thumbprint()
+        key["kid"] = kid
+        use = key.get("use", use)
         if use:
-            jwk["use"] = use
-        self.jwks.append(jwk)
+            key["use"] = use
+        self.jwks.append(key)
 
         return kid
 

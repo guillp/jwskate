@@ -79,7 +79,7 @@ def test_rfc8037_ed25519() -> None:
 
     payload = "Example of Ed25519 signing".encode()
 
-    jws = JwsCompact.sign(payload, jwk=jwk, alg="EdDSA")
+    jws = JwsCompact.sign(payload, key=jwk, alg="EdDSA")
     assert jws.alg == "EdDSA"
     assert jws.headers == {"alg": "EdDSA"}
     assert jws.payload == payload
@@ -88,7 +88,7 @@ def test_rfc8037_ed25519() -> None:
         == "eyJhbGciOiJFZERTQSJ9.RXhhbXBsZSBvZiBFZDI1NTE5IHNpZ25pbmc.hgyY0il_MGCjP0JzlnLWG1PPOt7-09PGcvMg3AIbQR6dWbhijcNR4ki4iylGjg5BhVsPt9g7sVvpAr_MuM0KAg"
     )
 
-    assert jws.verify_signature(jwk=jwk.public_jwk(), alg="EdDSA")
+    assert jws.verify_signature(key=jwk.public_jwk(), alg="EdDSA")
 
 
 def test_rfc8037_x25519() -> None:

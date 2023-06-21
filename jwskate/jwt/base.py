@@ -78,8 +78,39 @@ class Jwt(BaseCompactToken):
 
         extra_headers = extra_headers or {}
         headers = dict(alg=alg, **extra_headers)
-        if jwk.kid:
-            headers["kid"] = jwk.kid
+        if key.kid:
+            headers["kid"] = key.kid
+
+        return cls.sign_arbitrary(claims=claims, headers=headers, key=key, alg=alg)
+
+    @classmethod
+    def sign_arbitrary(
+        self,
+        claims: Dict[str, Any],
+        headers: Dict[str, Any],
+        key: Union[Jwk, Dict[str, Any], Any],
+        alg: Optional[str] = None,
+    ) -> SignedJwt:
+        """Sign provided headers and claims with a private key and return the resulting `SignedJwt`.
+
+        This does not check the consistency between headers, key, alg and kid.
+        DO NOT USE THIS METHOD UNLESS YOU KNOW WHAT YOU ARE DOING!!!
+        Use `Jwt.sign()` to make sure you are signing tokens properly.
+
+        Args:
+             claims: the payload to sign
+             headers: the headers to sign
+             key: the key to use for signing
+             alg: the alg to use for signing
+        """
+        from .signed import SignedJwt
+
+        key = to_jwk(key)
+
+        alg = alg or key.get("alg")
+
+        if alg is None:
+            raise ValueError("a signing alg is required")
 
         headers_part = BinaPy.serialize_to("json", headers).to("b64u")
         claims_part = BinaPy.serialize_to("json", claims).to("b64u")

@@ -26,6 +26,7 @@ class BaseAesKeyWrap(BaseKeyManagementAlg, BaseSymmetricAlg):
 
         Raises:
             ValueError: if the key is not appropriate
+
         """
         if not isinstance(key, bytes) or len(key) * 8 != cls.key_size:
             raise ValueError(f"Key must be {cls.key_size} bits.")
@@ -43,6 +44,7 @@ class BaseAesKeyWrap(BaseKeyManagementAlg, BaseSymmetricAlg):
 
         Returns:
           BinaPy: the wrapped key.
+
         """
         return BinaPy(keywrap.aes_key_wrap(self.key, plainkey))
 
@@ -54,6 +56,7 @@ class BaseAesKeyWrap(BaseKeyManagementAlg, BaseSymmetricAlg):
 
         Returns:
           BinaPy: the unwrapped key.
+
         """
         if not isinstance(cipherkey, bytes):
             cipherkey = bytes(cipherkey)

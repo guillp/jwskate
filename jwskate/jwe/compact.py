@@ -26,6 +26,7 @@ class JweCompact(BaseCompactToken):
 
     Args:
         value: the compact representation for this Jwe
+
     """
 
     def __init__(self, value: Union[bytes, str], max_size: int = 16 * 1024):
@@ -274,6 +275,7 @@ class JweCompact(BaseCompactToken):
         Raises:
             UnsupportedAlg: if the key management alg is not supported
             ValueError: if the `count` parameter is not a positive integer
+
         """
         keyalg = cls.PBES2_ALGORITHMS.get(alg)
         if keyalg is None:
@@ -323,6 +325,7 @@ class JweCompact(BaseCompactToken):
         Raises:
             UnsupportedAlg: if the token key management algorithm is not supported
             AttributeError: if the token misses the PBES2-related headers
+
         """
         keyalg = self.PBES2_ALGORITHMS.get(self.alg)
         if keyalg is None:
@@ -355,6 +358,7 @@ class JweCompact(BaseCompactToken):
 
         Returns:
             the unencrypted payload
+
         """
         cek_jwk = self.unwrap_cek_with_password(password)
         plaintext = cek_jwk.decrypt(

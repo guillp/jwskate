@@ -22,6 +22,7 @@ class JwsSignature(BaseJsonDict):
      - a signature value (as raw data)
      - an unprotected header (as arbitrary JSON data)
      - optional extra JSON attributes
+
     """
 
     @classmethod
@@ -42,6 +43,7 @@ class JwsSignature(BaseJsonDict):
 
         Returns:
             A `JwsSignature` based on the provided parts.
+
         """
         content = dict(
             kwargs,
@@ -61,6 +63,7 @@ class JwsSignature(BaseJsonDict):
 
         Raises:
             AttributeError: if this signature doesn't have protected headers.
+
         """
         protected = self.get("protected")
         if protected is None:
@@ -73,6 +76,7 @@ class JwsSignature(BaseJsonDict):
 
         Returns:
             The unprotected header
+
         """
         return self.get("header")
 
@@ -85,6 +89,7 @@ class JwsSignature(BaseJsonDict):
 
         Raises:
             AttributeError: if no 'signature' member is present
+
         """
         signature = self.get("signature")
         if signature is None:
@@ -113,6 +118,7 @@ class JwsSignature(BaseJsonDict):
 
         Returns:
             The generated signature.
+
         """
         jwk = to_jwk(jwk)
 
@@ -142,6 +148,7 @@ class JwsSignature(BaseJsonDict):
 
         Returns:
             the raw data to sign
+
         """
         return b".".join(
             (
@@ -168,6 +175,7 @@ class JwsSignature(BaseJsonDict):
 
         Returns:
             `True` if the signature is verifier, `False` otherwise
+
         """
         jwk = to_jwk(jwk)
         signed_part = self.assemble_signed_part(self.protected, payload)

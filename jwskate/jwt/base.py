@@ -30,6 +30,7 @@ class Jwt(BaseCompactToken):
         Args:
             value: the token value
             max_size: maximum allowed size for the token
+
         """
         if not isinstance(value, bytes):
             value = value.encode("ascii")
@@ -61,7 +62,7 @@ class Jwt(BaseCompactToken):
 
         Args:
           claims: the payload to sign
-          jwk: the Jwk to use for signing
+          key: the key to use for signing
           alg: the alg to use for signing
           extra_headers: additional headers to include in the Jwt
 
@@ -102,6 +103,7 @@ class Jwt(BaseCompactToken):
 
         Returns:
             the resulting token
+
         """
         from .signed import SignedJwt
 
@@ -142,6 +144,7 @@ class Jwt(BaseCompactToken):
 
         Returns:
           the resulting JWE token, with the signed JWT as payload
+
         """
         enc_extra_headers = enc_extra_headers or {}
         enc_extra_headers.setdefault("cty", "JWT")
@@ -171,6 +174,7 @@ class Jwt(BaseCompactToken):
 
         Raises:
             InvalidJwt: if the inner JWT is not valid
+
         """
         if not isinstance(jwe, JweCompact):
             jwe = JweCompact(jwe)
@@ -203,6 +207,7 @@ class Jwt(BaseCompactToken):
         Raises:
             InvalidJwt: if the JWT is not valid
             InvalidSignature: if the nested JWT signature is not valid
+
         """
         from .signed import InvalidSignature, SignedJwt
 
@@ -232,6 +237,7 @@ class Jwt(BaseCompactToken):
 
         Returns:
             An integer timestamp
+
         """
         return int(datetime.now(timezone.utc).timestamp()) + delta_seconds
 

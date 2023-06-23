@@ -97,7 +97,7 @@ class JwsCompact(BaseCompactToken):
     def from_parts(
         cls,
         signed_part: Union[bytes, SupportsBytes, str],
-        signature: Union[bytes, SupportsBytes, str],
+        signature: Union[bytes, SupportsBytes],
     ) -> JwsCompact:
         """Construct a JWS token based on its signed part and signature values.
 
@@ -116,8 +116,6 @@ class JwsCompact(BaseCompactToken):
         if not isinstance(signed_part, bytes):
             signed_part = bytes(signed_part)
 
-        if isinstance(signature, str):
-            signature = signature.encode("ascii")
         if not isinstance(signature, bytes):
             signature = bytes(signature)
 

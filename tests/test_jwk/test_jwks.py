@@ -61,7 +61,12 @@ def test_jwkset() -> None:
         ]
     }
 
-    jwks.remove_jwk("foo")  # this is a no op since there is not key 'foo'
+    jwks.remove_jwk("foo")  # this is a no op since there is no key 'foo'
+
+    jwks.add_jwk(jwk.with_usage_parameters())
+
+    assert jwks.get_jwk_by_kid(jwk.kid) == jwk
+    assert jwks.get_jwk_by_kid(jwk.kid).use == "sig"
 
 
 def test_empty_jwkset() -> None:

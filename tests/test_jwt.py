@@ -2,6 +2,7 @@ from builtins import ValueError
 from datetime import datetime, timezone
 
 import pytest
+from binapy import BinaPy
 from freezegun import freeze_time
 
 from jwskate import (
@@ -411,17 +412,20 @@ def test_sign_and_encrypt() -> None:
 
 
 def test_sign_without_alg() -> None:
-    jwk = Jwk.generate_for_kty("RSA")
-    with pytest.raises(ValueError):
+    jwk = Jwk.generate_for_kty("EC", crv="P-256")
+    with pytest.raises(ValueError, match="signing alg is required"):
         Jwt.sign({"foo": "bar"}, jwk)
+
+    with pytest.raises(ValueError, match="signing alg is required"):
+        Jwt.sign_arbitrary(claims={"foo": "bar"}, headers={}, key=jwk)
 
 
 def test_large_jwt() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="is abnormally big"):
         Jwt(
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
-            f"{'alargevalue' * 16 * 1024}"
-            "bl5iNgXfkbmgDXItaUx7_1lUMNtOffihsShVP8MeE1g"
+            f'{BinaPy.serialize_to("json", {f"claim{i}": f"value{i}" for i in range(16_000)}).ascii()}'
+            ".bl5iNgXfkbmgDXItaUx7_1lUMNtOffihsShVP8MeE1g"
         )
 
 

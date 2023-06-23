@@ -44,6 +44,9 @@ def test_jwkset() -> None:
     assert not jwks.verify(data, signature, "ES256")
     assert not jwks.verify(data, signature, "ES256")
 
+    with pytest.raises(ValueError, match="provide either 'alg' or 'algs' parameter"):
+        jwks.verify(data, signature)
+
     assert jwks.public_jwks() == {
         "keys": [
             {

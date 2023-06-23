@@ -17,7 +17,7 @@
         <link rel="next" href="../api/">
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.6">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ded33207.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.a0c5b2b5.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -61,7 +61,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="light-blue" data-md-color-accent="">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="light-blue" data-md-color-accent="indigo">
   
     
     
@@ -112,6 +112,8 @@
         </div>
       </div>
     </div>
+    
+      
     
     
     
@@ -409,6 +411,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#jwt" class="md-nav__link">
+    JWT
+  </a>
+  
+    <nav class="md-nav" aria-label="JWT">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parsing-a-jwt" class="md-nav__link">
+    Parsing a JWT
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -505,6 +527,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#jwt" class="md-nav__link">
+    JWT
+  </a>
+  
+    <nav class="md-nav" aria-label="JWT">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parsing-a-jwt" class="md-nav__link">
+    Parsing a JWT
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -586,7 +628,7 @@
 <span class="normal">56</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span>
 
 <span class="n">private_jwk</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">Jwk</span><span class="o">.</span><span class="n">generate_for_alg</span><span class="p">(</span><span class="s2">&quot;ES256&quot;</span><span class="p">)</span>  <span class="c1"># select the signature or encryption alg here</span>
+    <span class="n">Jwk</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">alg</span><span class="o">=</span><span class="s2">&quot;ES256&quot;</span><span class="p">)</span>  <span class="c1"># select the signature or encryption alg here</span>
     <span class="o">.</span><span class="n">with_kid_thumbprint</span><span class="p">()</span>  <span class="c1"># optionally, include a RFC7638 compliant thumbprint as kid</span>
     <span class="o">.</span><span class="n">with_usage_parameters</span><span class="p">()</span>  <span class="c1"># optionally, include &#39;use&#39; and &#39;key_ops&#39;</span>
 <span class="p">)</span>
@@ -784,7 +826,7 @@
 
 <span class="c1"># generate a sample JWK, any asymmetric type will do:</span>
 <span class="n">private_jwk</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">Jwk</span><span class="o">.</span><span class="n">generate_for_alg</span><span class="p">(</span><span class="s2">&quot;ES256&quot;</span><span class="p">)</span>  <span class="c1"># generates the key</span>
+    <span class="n">Jwk</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">alg</span><span class="o">=</span><span class="s2">&quot;ES256&quot;</span><span class="p">)</span>  <span class="c1"># generates the key</span>
     <span class="o">.</span><span class="n">with_usage_parameters</span><span class="p">()</span>  <span class="c1"># adds use and key_ops</span>
     <span class="o">.</span><span class="n">with_kid_thumbprint</span><span class="p">()</span>  <span class="c1"># adds the key thumbprint as kid</span>
 <span class="p">)</span>
@@ -872,6 +914,80 @@
 <span class="p">)</span>
 <span class="k">assert</span> <span class="n">public_jwk_from_file</span> <span class="o">==</span> <span class="n">public_jwk</span>
 </code></pre></div></td></tr></table></div>
+<h2 id="jwt">JWT<a class="headerlink" href="#jwt" title="Permanent link">&para;</a></h2>
+<h3 id="parsing-a-jwt">Parsing a JWT<a class="headerlink" href="#parsing-a-jwt" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwt</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+
+<span class="c1"># you may recognize the default JWT value from https://jwt.io</span>
+<span class="n">jwt</span> <span class="o">=</span> <span class="n">Jwt</span><span class="p">(</span>
+    <span class="s2">&quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.&quot;</span>
+    <span class="s2">&quot;eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.&quot;</span>
+    <span class="s2">&quot;SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c&quot;</span>
+<span class="p">)</span>
+<span class="c1"># access the parsed header, as a dict</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+<span class="c1"># {&#39;alg&#39;: &#39;HS256&#39;, &#39;typ&#39;: &#39;JWT&#39;}</span>
+<span class="c1"># access the parsed claims, as a dict</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="o">.</span><span class="n">claims</span><span class="p">)</span>
+<span class="c1"># {&#39;sub&#39;: &#39;1234567890&#39;, &#39;name&#39;: &#39;John Doe&#39;, &#39;iat&#39;: 1516239022}</span>
+<span class="c1"># access the signature, as bytes</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="o">.</span><span class="n">signature</span><span class="o">.</span><span class="n">hex</span><span class="p">())</span>
+<span class="c1"># 49f94ac7044948c78a285d904f87f0a4c7897f7e8f3a4eb2255fda750b2cc397</span>
+
+<span class="c1"># alg and typ from the headers are accessible as attributes</span>
+<span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">alg</span> <span class="o">==</span> <span class="s2">&quot;HS256&quot;</span>
+<span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">typ</span> <span class="o">==</span> <span class="s2">&quot;JWT&quot;</span>
+
+<span class="c1"># some registered claims are accessible, pre-parsed and validated according to RFC7519</span>
+<span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">issuer</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">subject</span> <span class="o">==</span> <span class="s2">&quot;1234567890&quot;</span>
+<span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">audiences</span> <span class="o">==</span> <span class="p">[]</span>
+<span class="c1"># this would be a datetime if token had a valid &#39;exp&#39; claim</span>
+<span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">expires_at</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="c1"># this would be a datetime if token had a valid &#39;nbf&#39; claim</span>
+<span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">not_before</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">issued_at</span> <span class="o">==</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2018</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">jwt_token_id</span> <span class="ow">is</span> <span class="kc">None</span>
+
+<span class="c1"># checking the signature is as easy as</span>
+<span class="n">jwt</span><span class="o">.</span><span class="n">verify_signature</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;your-256-bit-secret&quot;</span><span class="p">,</span> <span class="n">alg</span><span class="o">=</span><span class="s2">&quot;HS256&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
 
 
 
@@ -932,7 +1048,7 @@
     <script id="__config" type="application/json">{"base": "..", "features": ["navigation.indexes", "navigation.tabs", "navigation.instant", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.51198bba.min.js"></script>
+      <script src="../assets/javascripts/bundle.a51614de.min.js"></script>
       
     
   </body>

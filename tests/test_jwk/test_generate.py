@@ -1,4 +1,5 @@
 import secrets
+import warnings
 from typing import Dict
 
 import pytest
@@ -20,7 +21,8 @@ from jwskate import (
     "alg", SignatureAlgs.ALL | EncryptionAlgs.ALL | KeyManagementAlgs.ALL_KEY_BASED
 )
 def test_generate_for_alg(alg: str) -> None:
-    jwk = Jwk.generate_for_alg(alg).with_usage_parameters()
+    with warnings.catch_warnings():
+        jwk = Jwk.generate(alg=alg).with_usage_parameters()
     assert jwk.is_private
     if alg in SignatureAlgs.ALL_SYMMETRIC:
         assert jwk.kty == "oct"

@@ -76,7 +76,7 @@ def test_signed_jwt() -> None:
 
     # validating with another key must fail
     with pytest.raises(InvalidSignature):
-        jwt.validate(Jwk.generate_for_alg("RS256").public_jwk())
+        jwt.validate(Jwk.generate(alg="ES256").public_jwk())
 
     # invalid audience
     with pytest.raises(InvalidClaim, match="audience"):
@@ -362,12 +362,8 @@ def test_sign_and_encrypt() -> None:
     enc_alg = "RSA-OAEP-256"
     enc = "A128GCM"
 
-    sign_jwk = (
-        Jwk.generate_for_alg(sign_alg).with_kid_thumbprint().with_usage_parameters()
-    )
-    enc_jwk = (
-        Jwk.generate_for_alg(enc_alg).with_kid_thumbprint().with_usage_parameters()
-    )
+    sign_jwk = Jwk.generate(alg=sign_alg).with_kid_thumbprint().with_usage_parameters()
+    enc_jwk = Jwk.generate(alg=enc_alg).with_kid_thumbprint().with_usage_parameters()
 
     claims = {"iat": 1661759343, "exp": 1661759403, "nbf": 1661759323, "sub": "mysub"}
     enc_jwt = Jwt.sign_and_encrypt(claims, sign_jwk, enc_jwk.public_jwk(), enc)
@@ -404,7 +400,7 @@ def test_sign_and_encrypt() -> None:
     # trying to decrypt and verify a JWE nested in a JWE will raise a ValueError
     inner_jwe = JweCompact.encrypt(
         b"this_is_a_test",
-        key=Jwk.generate_for_alg("ECDH-ES+A128KW").public_jwk(),
+        key=Jwk.generate(alg="ECDH-ES+A128KW", crv="P-256").public_jwk(),
         enc="A128GCM",
     )
     nested_inner_jwe = JweCompact.encrypt(inner_jwe, key=enc_jwk.public_jwk(), enc=enc)

@@ -142,8 +142,8 @@ def test_public_jwkset() -> None:
 
 
 def test_contains() -> None:
-    key1 = Jwk.generate_for_alg("RS256")
-    key2 = Jwk.generate_for_alg("ES256")
+    key1 = Jwk.generate(alg="RS256")
+    key2 = Jwk.generate(alg="ES256")
 
     jwkset = JwkSet(keys=(key1, key2.public_jwk()))
     assert key1 in jwkset.jwks
@@ -154,7 +154,7 @@ def test_contains() -> None:
         key2.public_jwk().with_kid_thumbprint().with_usage_parameters() in jwkset.jwks
     )
 
-    key3 = Jwk.generate_for_alg("HS256")
+    key3 = Jwk.generate(alg="HS256")
     assert key3 not in jwkset.jwks
 
     assert key1.public_jwk() not in jwkset.jwks

@@ -15,7 +15,7 @@ from jwskate import Jwk, SymmetricJwk
 def symmetric_jwk(request: pytest.FixtureRequest) -> SymmetricJwk:
     alg, min_key_size = request.param
     kid = f"my_{alg}_jwk"
-    jwk = Jwk.generate_for_alg(alg, kid=kid)
+    jwk = Jwk.generate(alg=alg, kid=kid)
     assert isinstance(jwk, SymmetricJwk)
     assert jwk.kty == "oct"
     assert jwk.alg == alg
@@ -48,7 +48,7 @@ def test_pem_key() -> None:
 def test_aesgcmkw() -> None:
     alg = "A128GCMKW"
     enc = "A128GCM"
-    jwk = Jwk.generate_for_alg(alg)
+    jwk = Jwk.generate(alg=alg)
     sender_cek, wrapped_cek, headers = jwk.sender_key(enc)
     assert sender_cek
     assert wrapped_cek
@@ -88,4 +88,4 @@ def test_aesgcmkw() -> None:
     ],
 )
 def test_generate_for_alg(alg: str, key_size: int) -> None:
-    assert SymmetricJwk.generate_for_alg(alg).key_size == key_size
+    assert SymmetricJwk.generate(alg=alg).key_size == key_size

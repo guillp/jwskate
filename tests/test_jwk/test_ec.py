@@ -51,7 +51,7 @@ def test_jwk_ec_generate() -> None:
 def test_ecdh_es() -> None:
     alg = "ECDH-ES+A128KW"
     enc = "A128CBC-HS256"
-    private_jwk = Jwk.generate_for_alg(alg)
+    private_jwk = Jwk.generate(alg=alg, crv="P-256")
     assert private_jwk.crv == "P-256"
     public_jwk = private_jwk.public_jwk()
     sender_cek, wrapped_cek, headers = public_jwk.sender_key(enc)

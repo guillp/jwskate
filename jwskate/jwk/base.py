@@ -102,50 +102,27 @@ class Jwk(BaseJsonDict):
             the generated `Jwk`
         """
         for kty, jwk_class in cls.subclasses.items():
-            alg_class: Optional[Type[BaseAlg]]
             try:
-                alg_class = jwk_class._get_alg_class(alg)
-                # special cases for AES or HMAC based algs which require a specific key size
-                if issubclass(alg_class, (BaseAESEncryptionAlg, BaseAesKeyWrap)):
-                    key_size = kwargs.get("key_size")
-                    if key_size is not None and key_size != alg_class.key_size:
-                        raise ValueError(
-                            f"Key for {alg} must be exactly {alg_class.key_size} bits. "
-                            "You should remove the `key_size` parameter to generate a key of the appropriate length."
-                        )
-                    kwargs.setdefault("key_size", alg_class.key_size)
-                elif issubclass(alg_class, BaseHMACSigAlg):
-                    key_size = kwargs.get("key_size")
-                    if key_size is not None and key_size < alg_class.min_key_size:
-                        warnings.warn(
-                            f"Symmetric keys to use with {alg} should be at least {alg_class.min_key_size} bits "
-                            "in order to make the key at least as hard to brute-force as the signature. "
-                            f"You requested a key size of {key_size} bits."
-                        )
-                    else:
-                        kwargs.setdefault("key_size", alg_class.min_key_size)
-
+                jwk_class._get_alg_class(alg)
                 return jwk_class.generate(alg=alg, **kwargs)
             except UnsupportedAlg:
                 continue
 
         raise UnsupportedAlg(alg)
 
-    """A dict of 'kty' values to subclasses implementing each specific Key Type."""
-
     @classmethod
     def generate_for_kty(cls, kty: str, **kwargs: Any) -> Jwk:
-        """Generate a key with a specific type and return the resulting Jwk.
+        """Generate a key with a specific type and return the resulting `Jwk`.
 
         Args:
           kty: key type to generate
-          **kwargs: specific parameters depending on the key type, or additional members to include in the Jwk
+          **kwargs: specific parameters depending on the key type, or additional members to include in the `Jwk`
 
         Returns:
-            the resulting Jwk
+            the resulting `Jwk`
 
         Raises:
-            UnsupportedKeyType: if the key type is not supported
+            UnsupportedKeyType: if the specified key type (`kty`) is not supported
 
         """
         jwk_class = cls.subclasses.get(kty)
@@ -154,7 +131,9 @@ class Jwk(BaseJsonDict):
         return jwk_class.generate(**kwargs)
 
     subclasses: Dict[str, Type[Jwk]] = {}
+    """A dict of 'kty' values to `Jwk` subclasses implementing each specific Key Type."""
     cryptography_key_types: Dict[Any, Type[Jwk]] = {}
+    """A dict of cryptography classes to equivalent `Jwk` subclasses."""
 
     PARAMS: Mapping[str, JwkParameter]
 

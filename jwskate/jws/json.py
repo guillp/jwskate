@@ -23,6 +23,7 @@ class JwsJsonFlat(JwsSignature):
 
         Returns:
             The raw JWS payload.
+
         """
         payload = self.get("payload")
         if payload is None:
@@ -35,6 +36,7 @@ class JwsJsonFlat(JwsSignature):
 
         Returns:
             The JWS signature.
+
         """
         content = {
             "protected": self["protected"],
@@ -49,7 +51,7 @@ class JwsJsonFlat(JwsSignature):
     def sign(
         cls,
         payload: bytes,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         alg: Optional[str] = None,
         extra_protected_headers: Optional[Mapping[str, Any]] = None,
         header: Optional[Any] = None,
@@ -59,7 +61,7 @@ class JwsJsonFlat(JwsSignature):
 
         Args:
             payload: the data to sign.
-            jwk: the key to use
+            key: the key to use
             alg: the signature alg to use
             extra_protected_headers: additional protected headers to include
             header: the unprotected header to include
@@ -67,9 +69,10 @@ class JwsJsonFlat(JwsSignature):
 
         Returns:
             The JWS with the payload, signature, header and extra claims.
+
         """
         signature = super().sign(
-            payload, jwk, alg, extra_protected_headers, header, **kwargs
+            payload, key, alg, extra_protected_headers, header, **kwargs
         )
         signature["payload"] = BinaPy(payload).to("b64u").ascii()
         return cls(signature)
@@ -79,6 +82,7 @@ class JwsJsonFlat(JwsSignature):
 
         Returns:
             A JwsJsonGeneral with the same payload and signature.
+
         """
         content = self.copy()
         protected = content.pop("protected")
@@ -97,6 +101,7 @@ class JwsJsonFlat(JwsSignature):
 
         Returns:
             The signed data part.
+
         """
         return JwsSignature.assemble_signed_part(self.protected, self.payload)
 
@@ -105,12 +110,13 @@ class JwsJsonFlat(JwsSignature):
 
         Returns:
             A `JwsCompact` with the same payload and signature.
+
         """
         return JwsCompact.from_parts(self.signed_part(), self.signature)
 
     def verify_signature(
         self,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
@@ -118,14 +124,15 @@ class JwsJsonFlat(JwsSignature):
         """Verify this JWS signature with a given key.
 
         Args:
-            jwk: the key to use to validate this signature.
+            key: the key to use to validate this signature.
             alg: the signature alg, if only 1 is allowed.
             algs: the allowed signature algs, if there are several.
 
         Returns:
             `True` if the signature is verified, `False` otherwise.
+
         """
-        return self.jws_signature.verify(self.payload, jwk, alg=alg, algs=algs)
+        return self.jws_signature.verify(self.payload, key, alg=alg, algs=algs)
 
 
 class JwsJsonGeneral(BaseJsonDict):
@@ -137,6 +144,7 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             The signed data.
+
         """
         payload = self.get("payload")
         if payload is None:
@@ -179,6 +187,7 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             A JwsJsonGeneral with the generated signatures.
+
         """
         jws = cls({"payload": BinaPy(payload).to("b64u").ascii()})
         for parameters in signature_parameters:
@@ -199,7 +208,7 @@ class JwsJsonGeneral(BaseJsonDict):
 
     def add_signature(
         self,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         alg: Optional[str] = None,
         extra_protected_headers: Optional[Mapping[str, Any]] = None,
         header: Optional[Mapping[str, Any]] = None,
@@ -207,17 +216,18 @@ class JwsJsonGeneral(BaseJsonDict):
         """Add a new signature in this JWS.
 
         Args:
-            jwk: the private key to use
+            key: the private key to use
             alg: the signature algorithm
             extra_protected_headers: additional headers to include, as a {key: value} mapping
             header: the raw unprotected header to include in the signature
 
         Returns:
             the same JWS with the new signature included.
+
         """
         self.setdefault("signatures", [])
         self["signatures"].append(
-            JwsSignature.sign(self.payload, jwk, alg, extra_protected_headers, header)
+            JwsSignature.sign(self.payload, key, alg, extra_protected_headers, header)
         )
         return self
 
@@ -239,6 +249,7 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             The raw signed part from the chosen signature.
+
         """
         signature = signature_chooser(self.signatures)
         return JwsSignature.assemble_signed_part(signature.protected, self.payload)
@@ -256,6 +267,7 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             A JwsCompact with the payload and the chosen signature from this JWS.
+
         """
         signature = signature_chooser(self.signatures)
         return JwsCompact.from_parts(
@@ -276,6 +288,7 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             A JwsJsonFlat with the payload and the chosen signature from this JWS.
+
         """
         signature = signature_chooser(self.signatures)
         return JwsJsonFlat.from_parts(
@@ -287,7 +300,7 @@ class JwsJsonGeneral(BaseJsonDict):
 
     def verify_signature(
         self,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
@@ -296,14 +309,15 @@ class JwsJsonGeneral(BaseJsonDict):
 
         It will try to validate each signature with the given key, and returns `True` if at least one signature verifies.
         Args:
-            jwk: the public key to use
+            key: the public key to use
             alg: the signature algorithm to use, if only 1 is allowed.
             algs: the allowed signature algorithms, if there are several.
 
         Returns:
             `True` if any of the signature verifies with the given key, `False` otherwise.
+
         """
         for signature in self.signatures:
-            if signature.verify(self.payload, jwk, alg=alg, algs=algs):
+            if signature.verify(self.payload, key, alg=alg, algs=algs):
                 return True
         return False

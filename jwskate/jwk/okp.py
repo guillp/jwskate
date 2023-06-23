@@ -1,6 +1,8 @@
 """This module implements JWK representing Octet Key Pairs from [RFC8037].
 
-[RFC8037]: https://www.rfc-editor.org/rfc/rfc8037.html
+[RFC8037]
+: https: //www.rfc-editor.org/rfc/rfc8037.html
+
 """
 
 from __future__ import annotations
@@ -39,6 +41,7 @@ class OKPJwk(Jwk):
     """Represent an Octet Key Pair keys in JWK format.
 
     Octet Key Pair keys have Key Type `"OKP"`.
+
     """
 
     KTY = KeyTypes.OKP

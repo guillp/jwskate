@@ -19,6 +19,7 @@ class MismatchingAlg(ValueError):
 
     Signature verification or a decryption operation with an algorithm that does not match the
     algorithm specified in the key or the token.
+
     """
 
     def __init__(
@@ -66,6 +67,7 @@ def select_alg_class(
         UnsupportedAlg: if the requested `alg` is not supported
         ValueError: if `supported_algs` is empty
         MismatchingAlg: if `alg` does not match `jwk_alg`
+
     """
     if not supported_algs:
         raise ValueError("No possible algorithms to choose from!")
@@ -134,6 +136,7 @@ def select_alg_classes(
     Raises:
         ValueError: if both 'alg' and 'algs' parameters are used
         UnsupportedAlg: if none of the requested alg are supported
+
     """
     if alg and algs:
         raise ValueError("Please use either parameter 'alg' or 'algs', not both.")

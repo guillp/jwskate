@@ -2,6 +2,7 @@ from builtins import ValueError
 from datetime import datetime, timezone
 
 import pytest
+from binapy import BinaPy
 from freezegun import freeze_time
 
 from jwskate import (
@@ -68,7 +69,7 @@ def test_signed_jwt() -> None:
     # validating with the appropriate key must work
 
     jwt.validate(
-        jwk=jwk.public_jwk(),
+        key=jwk.public_jwk(),
         issuer="https://myas.local",
         audience="client_id",
         check_exp=False,
@@ -76,7 +77,7 @@ def test_signed_jwt() -> None:
 
     # validating with another key must fail
     with pytest.raises(InvalidSignature):
-        jwt.validate(Jwk.generate_for_alg("RS256").public_jwk())
+        jwt.validate(Jwk.generate(alg="ES256").public_jwk())
 
     # invalid audience
     with pytest.raises(InvalidClaim, match="audience"):
@@ -159,10 +160,10 @@ def test_empty_jwt(private_jwk: Jwk) -> None:
     assert bytes(jwt) == str(jwt).encode()
     assert jwt.signed_part == b"eyJhbGciOiJSUzI1NiIsImtpZCI6IkpXSy1BQkNEIn0.e30"
 
-    jwt.validate(jwk=private_jwk.public_jwk(), check_exp=False)
+    jwt.validate(key=private_jwk.public_jwk(), check_exp=False)
 
     with pytest.raises(InvalidClaim):
-        jwt.validate(jwk=private_jwk.public_jwk())
+        jwt.validate(key=private_jwk.public_jwk())
 
 
 def test_validate() -> None:
@@ -362,12 +363,8 @@ def test_sign_and_encrypt() -> None:
     enc_alg = "RSA-OAEP-256"
     enc = "A128GCM"
 
-    sign_jwk = (
-        Jwk.generate_for_alg(sign_alg).with_kid_thumbprint().with_usage_parameters()
-    )
-    enc_jwk = (
-        Jwk.generate_for_alg(enc_alg).with_kid_thumbprint().with_usage_parameters()
-    )
+    sign_jwk = Jwk.generate(alg=sign_alg).with_kid_thumbprint().with_usage_parameters()
+    enc_jwk = Jwk.generate(alg=enc_alg).with_kid_thumbprint().with_usage_parameters()
 
     claims = {"iat": 1661759343, "exp": 1661759403, "nbf": 1661759323, "sub": "mysub"}
     enc_jwt = Jwt.sign_and_encrypt(claims, sign_jwk, enc_jwk.public_jwk(), enc)
@@ -385,7 +382,7 @@ def test_sign_and_encrypt() -> None:
     assert inner_jwt.kid == sign_jwk.kid
 
     verified_inner_jwt = Jwt.decrypt_and_verify(
-        enc_jwt, enc_jwk=enc_jwk, sig_jwk=sign_jwk.public_jwk()
+        enc_jwt, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk()
     )
     assert isinstance(verified_inner_jwt, SignedJwt)
 
@@ -394,38 +391,41 @@ def test_sign_and_encrypt() -> None:
         b"aaaa" if not verified_inner_jwt.value.endswith(b"aaaa") else b"bbbb"
     )
     enc_altered_jwe = JweCompact.encrypt(
-        altered_inner_jwt, jwk=enc_jwk.public_jwk(), enc=enc
+        altered_inner_jwt, key=enc_jwk.public_jwk(), enc=enc
     )
     with pytest.raises(InvalidSignature):
         Jwt.decrypt_and_verify(
-            enc_altered_jwe, enc_jwk=enc_jwk, sig_jwk=sign_jwk.public_jwk()
+            enc_altered_jwe, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk()
         )
 
     # trying to decrypt and verify a JWE nested in a JWE will raise a ValueError
     inner_jwe = JweCompact.encrypt(
         b"this_is_a_test",
-        jwk=Jwk.generate_for_alg("ECDH-ES+A128KW").public_jwk(),
+        key=Jwk.generate(alg="ECDH-ES+A128KW", crv="P-256").public_jwk(),
         enc="A128GCM",
     )
-    nested_inner_jwe = JweCompact.encrypt(inner_jwe, jwk=enc_jwk.public_jwk(), enc=enc)
+    nested_inner_jwe = JweCompact.encrypt(inner_jwe, key=enc_jwk.public_jwk(), enc=enc)
     with pytest.raises(ValueError):
         Jwt.decrypt_and_verify(
-            nested_inner_jwe, enc_jwk=enc_jwk, sig_jwk=sign_jwk.public_jwk()
+            nested_inner_jwe, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk()
         )
 
 
 def test_sign_without_alg() -> None:
-    jwk = Jwk.generate_for_kty("RSA")
-    with pytest.raises(ValueError):
+    jwk = Jwk.generate_for_kty("EC", crv="P-256")
+    with pytest.raises(ValueError, match="signing alg is required"):
         Jwt.sign({"foo": "bar"}, jwk)
+
+    with pytest.raises(ValueError, match="signing alg is required"):
+        Jwt.sign_arbitrary(claims={"foo": "bar"}, headers={}, key=jwk)
 
 
 def test_large_jwt() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="is abnormally big"):
         Jwt(
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
-            f"{'alargevalue' * 16 * 1024}"
-            "bl5iNgXfkbmgDXItaUx7_1lUMNtOffihsShVP8MeE1g"
+            f'{BinaPy.serialize_to("json", {f"claim{i}": f"value{i}" for i in range(16_000)}).ascii()}'
+            ".bl5iNgXfkbmgDXItaUx7_1lUMNtOffihsShVP8MeE1g"
         )
 
 

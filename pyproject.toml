@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "jwskate"
-version = "0.7.0"
+version = "0.8.0"
 homepage = "https://github.com/guillp/jwskate"
 description = "A Pythonic implementation of Json Web Signature, Keys, Algorithms, Tokens and Encryption (RFC7514 to 7519), on top of the `cryptography` module."
 authors = ["Guillaume Pujol <guill.p.linux@gmail.com>"]
@@ -27,7 +27,7 @@ packages = [
 python = ">=3.8,<3.12"
 cryptography = ">=3.4"
 typing-extensions = ">=4.3.0"
-binapy = "^0.6.0"
+binapy = ">=0.6.1"
 
 [tool.poetry.dev-dependencies]
 black  = ">=23.3"
@@ -51,12 +51,11 @@ pytest-mypy = ">=0.10"
 toml = ">=0.10"
 tomli = ">=2.0.1"
 tox  = ">=4.5.1"
-tox-poetry = ">=0.4.1"
 types-cryptography = ">=3.3"
 virtualenv  = ">=20.14.1"
 
 [tool.poetry.extras]
-test = ["pytest", "pytest-cov", "jwcrypto"]
+test = ["pytest", "pytest-cov", "jwcrypto", "freezegun"]
 doc = ["mkdocs"]
 
 

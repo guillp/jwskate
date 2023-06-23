@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import Any, List, Optional, SupportsBytes, Tuple, Union
 
 from binapy import BinaPy
@@ -23,11 +24,13 @@ from jwskate.jwa import (
     HS256,
     HS384,
     HS512,
+    BaseAesKeyWrap,
+    BaseHMACSigAlg,
     BaseSymmetricAlg,
     DirectKeyUse,
 )
 
-from .. import KeyTypes
+from .. import BaseAESEncryptionAlg, KeyTypes
 from .base import Jwk, JwkParameter
 
 
@@ -35,6 +38,7 @@ class SymmetricJwk(Jwk):
     """Represent a Symmetric key in JWK format.
 
     Symmetric keys have key type `"oct"`.
+
     """
 
     KTY = KeyTypes.OCT
@@ -83,6 +87,7 @@ class SymmetricJwk(Jwk):
 
         Raises:
             ValueError: symmetric keys are always private, it makes no sense to use them as public keys
+
         """
         raise ValueError("Symmetric keys don't have a public key")
 
@@ -103,9 +108,38 @@ class SymmetricJwk(Jwk):
 
     @classmethod
     @override
-    def generate(cls, *, key_size: int = 128, **params: Any) -> SymmetricJwk:
+    def generate(
+        cls, *, alg: Optional[str] = None, key_size: Optional[int] = None, **params: Any
+    ) -> SymmetricJwk:
+        if alg:
+            alg_class = cls._get_alg_class(alg)
+            # special cases for AES or HMAC based algs which require a specific key size
+            if issubclass(alg_class, (BaseAESEncryptionAlg, BaseAesKeyWrap)):
+                if key_size is not None and key_size != alg_class.key_size:
+                    raise ValueError(
+                        f"Key for {alg} must be exactly {alg_class.key_size} bits. "
+                        "You should remove the `key_size` parameter to generate a key of the appropriate length."
+                    )
+                key_size = alg_class.key_size
+            elif issubclass(alg_class, BaseHMACSigAlg):
+                if key_size is not None and key_size < alg_class.min_key_size:
+                    warnings.warn(
+                        f"Symmetric keys to use with {alg} should be at least {alg_class.min_key_size} bits "
+                        "in order to make the key at least as hard to brute-force as the signature. "
+                        f"You requested a key size of {key_size} bits."
+                    )
+                else:
+                    key_size = alg_class.min_key_size
+
+        if key_size is None:
+            warnings.warn(
+                "Please provide a key_size or an alg parameter for jwskate to know the number of bits to generate. "
+                "Defaulting to 128 bits."
+            )
+            key_size = 128
+
         key = BinaPy.random_bits(key_size)
-        return cls.from_bytes(key, **params)
+        return cls.from_bytes(key, alg=alg, **params)
 
     @classmethod
     @override
@@ -169,6 +203,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             a (ciphertext, authentication_tag, iv) tuple
+
         """
         wrapper = self.encryption_wrapper(alg)
         if iv is None:
@@ -198,6 +233,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
             the decrypted clear-text
+
         """
         aad = b"" if aad is None else aad
         if not isinstance(aad, bytes):

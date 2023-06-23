@@ -29,6 +29,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         Args:
             key: the key to use for encryption and decryption.
+
         """
         super().__init__(key)
         self.mac_key = self.key[: self.mac_key_size // 8]
@@ -129,6 +130,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         Returns:
           the decrypted data
+
         """
         if not isinstance(ciphertext, bytes):
             ciphertext = bytes(ciphertext)

@@ -19,6 +19,7 @@ jwt = signer.sign(subject="myuser", audience="myapp")
 # you can access the generated private key key, for example if you need to persist it:
 assert isinstance(signer.jwk, ECJwk) and signer.jwk.is_private
 ```
+
 """
 from __future__ import annotations
 
@@ -59,6 +60,7 @@ class JwtSigner:
             when calling `.sign()`
         default_leeway: the default leeway, in seconds, to use for claim `nbf`. If None, no `nbf` claim is
             included. This can be overridden when calling `.sign()`
+
     """
 
     def __init__(
@@ -100,6 +102,7 @@ class JwtSigner:
 
         Returns:
           the resulting signed token.
+
         """
         now = Jwt.timestamp()
         lifetime = lifetime or self.default_lifetime
@@ -122,7 +125,7 @@ class JwtSigner:
             ).items()
             if value is not None
         }
-        return Jwt.sign(claims, jwk=self.jwk, alg=self.alg, extra_headers=extra_headers)
+        return Jwt.sign(claims, key=self.jwk, alg=self.alg, extra_headers=extra_headers)
 
     def generate_jti(self) -> str:
         """Generate Jwt Token ID (jti) values.
@@ -131,6 +134,7 @@ class JwtSigner:
 
         Returns:
             A unique value suitable for use as JWT Token ID (jti) claim.
+
         """
         return str(uuid.uuid4())
 
@@ -154,6 +158,7 @@ class JwtSigner:
 
         Returns:
             a JwtSigner initialized with a random key
+
         """
         jwk = Jwk.generate_for_alg(alg, kid=kid).with_kid_thumbprint()
         return cls(issuer, jwk, alg, default_lifetime, default_leeway)

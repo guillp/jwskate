@@ -504,7 +504,7 @@ def encrypted_jwe(
     if isinstance(encryption_jwk, Jwk):
         jwe = JweCompact.encrypt(
             plaintext=encryption_plaintext,
-            jwk=encryption_jwk,
+            key=encryption_jwk,
             alg=key_management_alg,
             enc=encryption_alg,
         )
@@ -542,7 +542,7 @@ def test_supportsbytes(
     if isinstance(encryption_jwk, Jwk):
         jwe = JweCompact.encrypt(
             plaintext=SupportsBytesTester(encryption_plaintext),
-            jwk=encryption_jwk,
+            key=encryption_jwk,
             alg=key_management_alg,
             enc=encryption_alg,
         )

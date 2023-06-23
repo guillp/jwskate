@@ -32,6 +32,7 @@ class SignedJwt(Jwt):
 
     Args:
         value: the token value.
+
     """
 
     def __init__(self, value: Union[bytes, str]) -> None:
@@ -73,28 +74,30 @@ class SignedJwt(Jwt):
 
         Returns:
           the signed part as bytes
+
         """
         return b".".join(self.value.split(b".", 2)[:2])
 
     def verify_signature(
         self,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
     ) -> bool:
         """Verify this JWT signature using a given key and algorithm(s).
 
         Args:
-          jwk: the private Jwk to use to verify the signature
+          key: the private Jwk to use to verify the signature
           alg: the alg to use to verify the signature, if only 1 is allowed
           algs: the allowed signature algs, if there are several
 
         Returns:
             `True` if the token signature is verified, `False` otherwise
-        """
-        jwk = to_jwk(jwk)
 
-        return jwk.verify(
+        """
+        key = to_jwk(key)
+
+        return key.verify(
             data=self.signed_part, signature=self.signature, alg=alg, algs=algs
         )
 
@@ -159,6 +162,7 @@ class SignedJwt(Jwt):
 
         Raises:
             AttributeError: if the `nbf` claim cannot be parsed to a date
+
         """
         nbf = self.get_claim("nbf")
         if not nbf:
@@ -244,6 +248,7 @@ class SignedJwt(Jwt):
 
         Returns:
           the claim value if found, or `default` if not found
+
         """
         return self.claims.get(key, default)
 
@@ -255,6 +260,7 @@ class SignedJwt(Jwt):
 
         Returns:
          the claim value
+
         """
         value = self.get_claim(item)
         if value is None:
@@ -269,6 +275,7 @@ class SignedJwt(Jwt):
 
         Returns:
             the claim value
+
         """
         value = self.get_claim(item)
         if value is None:
@@ -293,7 +300,7 @@ class SignedJwt(Jwt):
 
     def validate(
         self,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
@@ -311,7 +318,7 @@ class SignedJwt(Jwt):
         - a callable, taking the claim value as parameter: if that callable returns `True`, the claim is considered as valid
 
         Args:
-          jwk: the signing key to use to verify the signature.
+          key: the signing key to use to verify the signature.
           alg: the signature alg to use to verify the signature.
           algs: allowed signature algs, if several
           issuer: the expected issuer for this token.
@@ -327,7 +334,7 @@ class SignedJwt(Jwt):
           InvalidClaim: if a claim doesn't validate
           ExpiredJwt: if the expiration date is passed
         """
-        if not self.verify_signature(jwk, alg, algs):
+        if not self.verify_signature(key, alg, algs):
             raise InvalidSignature("Signature is not valid.")
 
         if issuer is not None:

@@ -22,6 +22,7 @@ class JwsSignature(BaseJsonDict):
      - a signature value (as raw data)
      - an unprotected header (as arbitrary JSON data)
      - optional extra JSON attributes
+
     """
 
     @classmethod
@@ -42,6 +43,7 @@ class JwsSignature(BaseJsonDict):
 
         Returns:
             A `JwsSignature` based on the provided parts.
+
         """
         content = dict(
             kwargs,
@@ -61,6 +63,7 @@ class JwsSignature(BaseJsonDict):
 
         Raises:
             AttributeError: if this signature doesn't have protected headers.
+
         """
         protected = self.get("protected")
         if protected is None:
@@ -73,6 +76,7 @@ class JwsSignature(BaseJsonDict):
 
         Returns:
             The unprotected header
+
         """
         return self.get("header")
 
@@ -85,6 +89,7 @@ class JwsSignature(BaseJsonDict):
 
         Raises:
             AttributeError: if no 'signature' member is present
+
         """
         signature = self.get("signature")
         if signature is None:
@@ -95,7 +100,7 @@ class JwsSignature(BaseJsonDict):
     def sign(
         cls: Type[S],
         payload: bytes,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         alg: Optional[str] = None,
         extra_protected_headers: Optional[Mapping[str, Any]] = None,
         header: Optional[Any] = None,
@@ -105,7 +110,7 @@ class JwsSignature(BaseJsonDict):
 
         Args:
           payload: the raw data to sign
-          jwk: the signature key to use
+          key: the signature key to use
           alg: the signature algorithm to use
           extra_protected_headers: additional protected headers to include, if any
           header: the unprotected header, if any.
@@ -113,16 +118,17 @@ class JwsSignature(BaseJsonDict):
 
         Returns:
             The generated signature.
+
         """
-        jwk = to_jwk(jwk)
+        key = to_jwk(key)
 
         headers = dict(extra_protected_headers or {}, alg=alg)
-        kid = jwk.get("kid")
+        kid = key.get("kid")
         if kid:
             headers["kid"] = kid
 
         signed_part = JwsSignature.assemble_signed_part(headers, payload)
-        signature = jwk.sign(signed_part, alg=alg)
+        signature = key.sign(signed_part, alg=alg)
         return cls.from_parts(
             protected=headers, signature=signature, header=header, **kwargs
         )
@@ -142,6 +148,7 @@ class JwsSignature(BaseJsonDict):
 
         Returns:
             the raw data to sign
+
         """
         return b".".join(
             (
@@ -153,7 +160,7 @@ class JwsSignature(BaseJsonDict):
     def verify(
         self,
         payload: bytes,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
@@ -162,13 +169,14 @@ class JwsSignature(BaseJsonDict):
 
         Args:
           payload: the raw payload
-          jwk: the validation key to use
+          key: the validation key to use
           alg: the signature alg t if only 1 is allowed
           algs: the allowed signature algs, if there are several
 
         Returns:
             `True` if the signature is verifier, `False` otherwise
+
         """
-        jwk = to_jwk(jwk)
+        key = to_jwk(key)
         signed_part = self.assemble_signed_part(self.protected, payload)
-        return jwk.verify(signed_part, self.signature, alg=alg, algs=algs)
+        return key.verify(signed_part, self.signature, alg=alg, algs=algs)

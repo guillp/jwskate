@@ -41,6 +41,7 @@ class BaseRSASigAlg(
         Raises:
             NotImplementedError: for algorithms that are considered insecure, only signature verification is available
             PrivateKeyRequired: if the configured key is not private
+
         """
         if self.read_only:
             raise NotImplementedError
@@ -62,6 +63,7 @@ class BaseRSASigAlg(
 
         Returns:
             `True` if the signature is valid, `False` otherwise
+
         """
         if not isinstance(data, bytes):
             data = bytes(data)

@@ -25,6 +25,7 @@ class JwsCompact(BaseCompactToken):
 
     Args:
         value: the JWS token value
+
     """
 
     def __init__(self, value: Union[bytes, str], max_size: int = 16 * 1024):
@@ -62,7 +63,7 @@ class JwsCompact(BaseCompactToken):
     def sign(
         cls,
         payload: Union[bytes, SupportsBytes],
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         alg: Optional[str] = None,
         extra_headers: Optional[Dict[str, Any]] = None,
     ) -> JwsCompact:
@@ -70,32 +71,33 @@ class JwsCompact(BaseCompactToken):
 
         Args:
           payload: the payload to sign
-          jwk: the jwk to use to sign this payload
+          key: the jwk to use to sign this payload
           alg: the alg to use
           extra_headers: additional headers to add to the Jws Headers
 
         Returns:
           the resulting token
+
         """
-        jwk = to_jwk(jwk)
+        key = to_jwk(key)
 
         if not isinstance(payload, bytes):
             payload = bytes(payload)
 
         headers = dict(extra_headers or {}, alg=alg)
-        kid = jwk.get("kid")
+        kid = key.get("kid")
         if kid:
             headers["kid"] = kid
 
         signed_part = JwsSignature.assemble_signed_part(headers, payload)
-        signature = jwk.sign(signed_part, alg=alg)
+        signature = key.sign(signed_part, alg=alg)
         return cls.from_parts(signed_part, signature)
 
     @classmethod
     def from_parts(
         cls,
         signed_part: Union[bytes, SupportsBytes, str],
-        signature: Union[bytes, SupportsBytes, str],
+        signature: Union[bytes, SupportsBytes],
     ) -> JwsCompact:
         """Construct a JWS token based on its signed part and signature values.
 
@@ -107,14 +109,13 @@ class JwsCompact(BaseCompactToken):
 
         Returns:
             the resulting token
+
         """
         if isinstance(signed_part, str):
             signed_part = signed_part.encode("ascii")
         if not isinstance(signed_part, bytes):
             signed_part = bytes(signed_part)
 
-        if isinstance(signature, str):
-            signature = signature.encode("ascii")
         if not isinstance(signature, bytes):
             signature = bytes(signature)
 
@@ -126,12 +127,13 @@ class JwsCompact(BaseCompactToken):
 
         Returns:
             the signed part
+
         """
         return b".".join(self.value.split(b".", 2)[:2])
 
     def verify_signature(
         self,
-        jwk: Union[Jwk, Dict[str, Any]],
+        key: Union[Jwk, Dict[str, Any], Any],
         *,
         alg: Optional[str] = None,
         algs: Optional[Iterable[str]] = None,
@@ -139,15 +141,16 @@ class JwsCompact(BaseCompactToken):
         """Verify the signature from this JwsCompact using a Jwk.
 
         Args:
-          jwk: the Jwk to use to validate this signature
+          key: the Jwk to use to validate this signature
           alg: the alg to use, if there is only 1 allowed
           algs: the allowed algs, if here are several
 
         Returns:
          `True` if the signature matches, `False` otherwise
+
         """
-        jwk = to_jwk(jwk)
-        return jwk.verify(self.signed_part, self.signature, alg=alg, algs=algs)
+        key = to_jwk(key)
+        return key.verify(self.signed_part, self.signature, alg=alg, algs=algs)
 
     def flat_json(self, unprotected_header: Any = None) -> JwsJsonFlat:
         """Create a JWS in JSON flat format based on this Compact JWS.
@@ -157,6 +160,7 @@ class JwsCompact(BaseCompactToken):
 
         Returns:
             the resulting token
+
         """
         from .json import JwsJsonFlat
 
@@ -181,6 +185,7 @@ class JwsCompact(BaseCompactToken):
 
         Returns:
             the resulting token
+
         """
         jws = self.flat_json(unprotected_header)
         return jws.generalize()

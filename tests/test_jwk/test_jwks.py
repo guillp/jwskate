@@ -44,6 +44,9 @@ def test_jwkset() -> None:
     assert not jwks.verify(data, signature, "ES256")
     assert not jwks.verify(data, signature, "ES256")
 
+    with pytest.raises(ValueError, match="provide either 'alg' or 'algs' parameter"):
+        jwks.verify(data, signature)
+
     assert jwks.public_jwks() == {
         "keys": [
             {
@@ -61,7 +64,12 @@ def test_jwkset() -> None:
         ]
     }
 
-    jwks.remove_jwk("foo")  # this is a no op since there is not key 'foo'
+    jwks.remove_jwk("foo")  # this is a no op since there is no key 'foo'
+
+    jwks.add_jwk(jwk.with_usage_parameters())
+
+    assert jwks.get_jwk_by_kid(jwk.kid) == jwk
+    assert jwks.get_jwk_by_kid(jwk.kid).use == "sig"
 
 
 def test_empty_jwkset() -> None:
@@ -142,8 +150,8 @@ def test_public_jwkset() -> None:
 
 
 def test_contains() -> None:
-    key1 = Jwk.generate_for_alg("RS256")
-    key2 = Jwk.generate_for_alg("ES256")
+    key1 = Jwk.generate(alg="RS256")
+    key2 = Jwk.generate(alg="ES256")
 
     jwkset = JwkSet(keys=(key1, key2.public_jwk()))
     assert key1 in jwkset.jwks
@@ -154,7 +162,7 @@ def test_contains() -> None:
         key2.public_jwk().with_kid_thumbprint().with_usage_parameters() in jwkset.jwks
     )
 
-    key3 = Jwk.generate_for_alg("HS256")
+    key3 = Jwk.generate(alg="HS256")
     assert key3 not in jwkset.jwks
 
     assert key1.public_jwk() not in jwkset.jwks

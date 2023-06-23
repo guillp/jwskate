@@ -22,7 +22,7 @@ from jwskate import (
 
 
 def test_public_jwk() -> None:
-    private_jwk = Jwk.generate_for_alg("RS256")
+    private_jwk = Jwk.generate(alg="ES256")
     assert private_jwk.is_private
     public_jwk = private_jwk.public_jwk()
     assert not public_jwk.is_private
@@ -203,7 +203,7 @@ def test_use_key_ops_with_alg(
     alg: str, use: str, private_key_ops: Tuple[str], public_key_ops: Tuple[str]
 ) -> None:
     # if key has an 'alg' parameter, we can deduce the use and key ops
-    private_jwk = Jwk.generate_for_alg(alg)
+    private_jwk = Jwk.generate(alg=alg)
     assert "use" not in private_jwk
     assert "key_ops" not in private_jwk
     assert private_jwk.use == use
@@ -272,21 +272,21 @@ def test_generate_for_alg() -> None:
 
 
 def test_signature_wrapper() -> None:
-    signature_jwk = Jwk.generate_for_alg("ES256")
+    signature_jwk = Jwk.generate(alg="ES256")
     signature_wrapper = signature_jwk.signature_wrapper()
     assert isinstance(signature_wrapper, ES256)
     assert signature_wrapper.key == signature_jwk.cryptography_key
 
 
 def test_encryption_wrapper() -> None:
-    encryption_jwk = Jwk.generate_for_alg("A128GCM")
+    encryption_jwk = Jwk.generate(alg="A128GCM")
     encryption_wrapper = encryption_jwk.encryption_wrapper()
     assert isinstance(encryption_wrapper, A128GCM)
     assert encryption_wrapper.key == encryption_jwk.cryptography_key
 
 
 def test_key_management_wrapper() -> None:
-    key_mgmt_jwk = Jwk.generate_for_alg("ECDH-ES+A128KW")
+    key_mgmt_jwk = Jwk.generate(alg="ECDH-ES+A128KW")
     key_mgmt_wrapper = key_mgmt_jwk.key_management_wrapper()
     assert isinstance(key_mgmt_wrapper, EcdhEs_A128KW)
     assert key_mgmt_wrapper.key == key_mgmt_jwk.cryptography_key

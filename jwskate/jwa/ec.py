@@ -16,6 +16,7 @@ class EllipticCurve:
     """A descriptive class for Elliptic Curves.
 
     Elliptic Curves have a name, a `cryptography.ec.EllipticCurve`, and a coordinate size.
+
     """
 
     name: str
@@ -43,6 +44,7 @@ class EllipticCurve:
 
         Returns:
              a tuple of 4 `int`s: `x` and `y` coordinates (public key) and `d` (private key)
+
         """
         key = ec.generate_private_key(self.cryptography_curve)
         pn = key.private_numbers()  # type: ignore[attr-defined]

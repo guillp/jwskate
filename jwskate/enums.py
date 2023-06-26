@@ -12,6 +12,7 @@ class SignatureAlgs:
     RS384 = "RS384"
     RS512 = "RS512"
     ES256 = "ES256"
+    ES256k = "ES256k"
     ES384 = "ES384"
     ES512 = "ES512"
     PS256 = "PS256"
@@ -29,6 +30,7 @@ class SignatureAlgs:
         RS384,
         RS512,
         ES256,
+        ES256k,
         ES384,
         ES512,
         PS256,
@@ -112,7 +114,7 @@ class KeyManagementAlgs:
 
 
 class KeyTypes:
-    """Identifier for Key Types (kty)."""
+    """Identifiers for Key Types (kty)."""
 
     OCT = "oct"
     RSA = "RSA"

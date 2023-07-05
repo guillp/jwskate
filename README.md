@@ -67,7 +67,7 @@ jwt = Jwt.sign(claims, private_jwk)
 # that's it! we have a signed JWT
 assert isinstance(jwt, Jwt)  # Jwt are objects
 assert jwt.claims == claims  # claims can be accessed as a dict
-assert jwt.headers == {"alg": "ES256", "kid": "my_key"}  # headers too
+assert jwt.headers == {"typ": "JWT", "alg": "ES256", "kid": "my_key"}  # headers too
 assert jwt.sub == "some_sub"  # individual claims can be accessed as attributes
 assert jwt["claim1"] == "value1"  # or as dict items (with "subscription")
 assert jwt.alg == "ES256"  # alg and kid headers are also accessible as attributes
@@ -81,7 +81,7 @@ assert jwt.verify_signature(private_jwk.public_jwk())
 assert jwt.verify_signature(private_jwk.public_jwk(), alg="ES256")
 
 print(jwt)
-# eyJhbGciOiJFUzI1NiIsImtpZCI6Im15a2V5In0.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.C1KcDyDT8qXwUqcWzPKkQD7f6xai-gCgaRFMdKPe80Vk7XeYNa8ovuLwvdXgGW4ZZ_lL73QIyncY7tHGXUthag
+# eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Im15X2tleSJ9.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.3VVLoaMVvdsieKKXqKenR62-7FqzUx4mhHV_AXYkNaaEbuEhdI6ej7PTkxZGtdm8pIQljhajo8NOk7eA-Z1klQ
 # This will output the full JWT compact representation. You can inspect it for example at <https://jwt.io>
 ```
 

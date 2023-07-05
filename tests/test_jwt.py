@@ -155,7 +155,7 @@ def test_empty_jwt(private_jwk: Jwk) -> None:
 
     assert (
         str(jwt)
-        == "eyJhbGciOiJSUzI1NiIsImtpZCI6IkpXSy1BQkNEIn0.e30.iQ6eyP9QrNDQVfKYwHpIWvnTBb0SXNEItDxMQ0VmsB5CA5FaRYtGvj01VjoUAHEegGvwFI4YI35MDY_-DUR3UIXqxVMOe9Hk2hb9paTjJLpDIa7Ml6LKDh9-4xmAAPjZcra4IYrpDux8ohg0LUzgxHn0xnKDuxKmlh9shCyNWEOfN_i_JX4v8aSD-zDBteftrY9GzHU4Y0mlvlm4FaAwafPXovZilb_dTgTBkiFLmXY0y5ESurhQ4LrQqLzBz45lSONLElil5OQu0ySrrC72CBKp-HjdpCsLyG9F9p_X-1r9mmqlN38zIcgwkbhek04ieX-rumyzvHLO_UzttxDQOg"
+        == "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkpXSy1BQkNEIn0.e30.iQ6eyP9QrNDQVfKYwHpIWvnTBb0SXNEItDxMQ0VmsB5CA5FaRYtGvj01VjoUAHEegGvwFI4YI35MDY_-DUR3UIXqxVMOe9Hk2hb9paTjJLpDIa7Ml6LKDh9-4xmAAPjZcra4IYrpDux8ohg0LUzgxHn0xnKDuxKmlh9shCyNWEOfN_i_JX4v8aSD-zDBteftrY9GzHU4Y0mlvlm4FaAwafPXovZilb_dTgTBkiFLmXY0y5ESurhQ4LrQqLzBz45lSONLElil5OQu0ySrrC72CBKp-HjdpCsLyG9F9p_X-1r9mmqlN38zIcgwkbhek04ieX-rumyzvHLO_UzttxDQOg"
     )
     assert bytes(jwt) == str(jwt).encode()
     assert jwt.signed_part == b"eyJhbGciOiJSUzI1NiIsImtpZCI6IkpXSy1BQkNEIn0.e30"

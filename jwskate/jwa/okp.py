@@ -109,6 +109,7 @@ class OKPCurve:
 
         Raises:
             NotImplementedError: if the required OKP curve is not supported
+
         """
         for c in cls.instances.values():
             if isinstance(

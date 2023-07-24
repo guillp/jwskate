@@ -137,7 +137,8 @@ class RSAJwk(Jwk):
           **params: additional parameters to include in the `Jwk`
 
         Returns:
-          a `RsaJwk` initialized from the provided parameters
+          a `RSAJwk` initialized from the provided parameters
+
         """
         return cls(
             dict(
@@ -162,7 +163,7 @@ class RSAJwk(Jwk):
         qi: Optional[int] = None,
         **params: Any,
     ) -> RSAJwk:
-        """Initialize a private `RsaJwk` from its required parameters.
+        """Initialize a private `RSAJwk` from its required parameters.
 
         Args:
           n: the modulus
@@ -177,6 +178,7 @@ class RSAJwk(Jwk):
 
         Returns:
             a `RSAJwk` initialized from the given parameters
+
         """
         return cls(
             dict(
@@ -230,6 +232,7 @@ class RSAJwk(Jwk):
 
         Returns:
           a generated `RSAJwk`
+
         """
         private_key = rsa.generate_private_key(65537, key_size=key_size)
         pn = private_key.private_numbers()

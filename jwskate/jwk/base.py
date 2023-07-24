@@ -6,6 +6,7 @@ Subclasses of `Jwk` will implement the specific key types, like RSA, EC, OKP, an
 interface to access the specific attributes for each key type. Unless you are dealing with a
 specific key type and want to access the internal attributes, you should only ever need to use the
 interface from `Jwk`.
+
 """
 
 from __future__ import annotations
@@ -100,6 +101,7 @@ class Jwk(BaseJsonDict):
 
         Returns:
             the generated `Jwk`
+
         """
         for kty, jwk_class in cls.subclasses.items():
             try:
@@ -181,6 +183,7 @@ class Jwk(BaseJsonDict):
         Args:
             key: a dict containing JWK parameters, or another Jwk instance, or a `cryptography` key
             **kwargs: additional members to include in the Jwk
+
         """
         if cls == Jwk:
             if isinstance(key, Jwk):
@@ -251,6 +254,7 @@ class Jwk(BaseJsonDict):
 
         Returns:
             `True` if the key is private, `False` otherwise
+
         """
         return True
 
@@ -699,11 +703,12 @@ class Jwk(BaseJsonDict):
 
         Returns:
           `True` if the signature matches, `False` otherwise
+
         """
         if not self.is_symmetric and self.is_private:
             warnings.warn(
                 "You are trying to validate a signature with a private key. "
-                "Signature should always be verified with a public key."
+                "Signatures should always be verified with a public key."
             )
             public_jwk = self.public_jwk()
         else:
@@ -1032,6 +1037,7 @@ class Jwk(BaseJsonDict):
 
         Raises:
             TypeError: if the key type is not supported
+
         """
         for cryptography_class, jwk_class in cls.cryptography_key_types.items():
             if isinstance(cryptography_key, cryptography_class):
@@ -1048,6 +1054,7 @@ class Jwk(BaseJsonDict):
 
         Returns:
             a `cryptography`key instance initialized from the current key
+
         """
         raise NotImplementedError
 
@@ -1067,6 +1074,7 @@ class Jwk(BaseJsonDict):
 
         Returns:
             a `Jwk` instance from the loaded key
+
         """
         der = der.encode() if isinstance(der, str) else der
         password = password.encode("UTF-8") if isinstance(password, str) else password
@@ -1203,13 +1211,14 @@ class Jwk(BaseJsonDict):
 
         Returns:
             a `Jwk` instance with a generated key
+
         """
         if alg:
             key = cls.generate_for_alg(alg=alg, **kwargs)
             if kty is not None and key.kty != kty:
                 raise ValueError(
                     f"Incompatible `{alg=}` and `{kty=}` parameters. "
-                    f"`{alg=}` points to key with `kty='{key.kty}'`."
+                    f"`{alg=}` points to `kty='{key.kty}'`."
                 )
             return key
         if kty:
@@ -1270,6 +1279,7 @@ class Jwk(BaseJsonDict):
 
         Returns:
             a Jwk with the same key, with `alg`, `use` and `key_ops` parameters.
+
         """
         alg = alg or self.alg
 
@@ -1337,6 +1347,7 @@ def to_jwk(
 
     Returns:
         a Jwk key
+
     """
     jwk = key if isinstance(key, Jwk) else Jwk(key)
     return jwk.check(kty=kty, is_private=is_private, is_symmetric=is_symmetric)

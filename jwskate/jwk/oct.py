@@ -103,6 +103,7 @@ class SymmetricJwk(Jwk):
 
         Returns:
           the resulting `SymmetricJwk`
+
         """
         return cls(dict(kty=cls.KTY, k=BinaPy(k).to("b64u").ascii(), **params))
 

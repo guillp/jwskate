@@ -88,6 +88,7 @@ class BaseSymmetricAlg(BaseAlg):
 
         Returns:
           `True` if the key is suitable for this alg class, `False` otherwise
+
         """
         try:
             cls.check_key(key)

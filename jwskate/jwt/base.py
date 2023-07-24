@@ -70,6 +70,7 @@ class Jwt(BaseCompactToken):
 
         Returns:
           the resulting token
+
         """
         key = to_jwk(key)
 
@@ -106,6 +107,7 @@ class Jwt(BaseCompactToken):
              headers: the headers to sign
              key: the key to use for signing
              alg: the alg to use for signing
+
         """
         from .signed import SignedJwt
 
@@ -289,5 +291,6 @@ class Jwt(BaseCompactToken):
 
         Returns:
             the corresponding `datetime` in UTC timezone
+
         """
         return datetime.fromtimestamp(timestamp, tz=timezone.utc)

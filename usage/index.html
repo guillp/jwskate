@@ -17,7 +17,7 @@
         <link rel="next" href="../recipes/">
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.19">
     
     
       
@@ -25,7 +25,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.eebd395e.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
@@ -1017,12 +1017,20 @@
 <td><code>jwk = Jwk('{"kty": "RSA", "n": "...", ...}')</code></td>
 </tr>
 <tr>
-<td>A <code>cryptography</code> key</td>
-<td><code>jwk = Jwk(cryptography_key, password='mypassword')</code></td>
+<td>A<code>cryptography</code> key</td>
+<td><code>jwk = Jwk(cryptography_key)</code></td>
 </tr>
 <tr>
-<td>A PEM formatted string</td>
+<td>A public key in a PEM formatted string</td>
 <td><code>jwk = Jwk.from_pem(</code><br/><code>'''-----BEGIN PUBLIC KEY----- MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp0VYc2zc/6yNzQUSFprv</code><br/><code>... 3QIDAQAB</code><br/><code>-----END PUBLIC KEY----- '''</code><br/><code>)</code></td>
+</tr>
+<tr>
+<td>A private key in a PEM formatted string</td>
+<td><code>jwk = Jwk.from_pem(</code><br/><code>'''-----BEGIN PRIVATE KEY----- MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp0VYc2zc/6yNzQUSFprv</code><br/><code>... 3QIDAQAB</code><br/><code>-----END PRIVATE KEY----- ''',</code><br/> <code>password=b'password_if_any'</code><br/> <code>)</code></td>
+</tr>
+<tr>
+<td>A private key in a DER binary</td>
+<td><code>jwk = Jwk.from_der(b'der_formatted_binary')</code></td>
 </tr>
 </tbody>
 </table>
@@ -1040,7 +1048,7 @@
 <tr>
 <td>A JWK in Python dict</td>
 <td><code>jwk</code> # Jwk is a dict subclass</td>
-<td>you may also do <code>dict(jwk)</code></td>
+<td>you may also do<code>dict(jwk)</code></td>
 </tr>
 <tr>
 <td>A JWK in JSON formatted string</td>
@@ -1065,7 +1073,7 @@
 <tr>
 <td>A JWKS</td>
 <td><code>jwk.as_jwks()</code></td>
-<td>will contain <code>jwk</code> as single key</td>
+<td>will contain<code>jwk</code> as single key</td>
 </tr>
 </tbody>
 </table>
@@ -1092,17 +1100,17 @@
 <tr>
 <td>Get Key Type</td>
 <td><code>jwk.kty</code></td>
-<td>key type, as <code>str</code></td>
+<td>key type, as<code>str</code></td>
 </tr>
 <tr>
 <td>Get Alg (if present)</td>
 <td><code>jwk.alg</code></td>
-<td>intended algorithm identifier, as <code>str</code></td>
+<td>intended algorithm identifier, as<code>str</code></td>
 </tr>
 <tr>
 <td>Get Use</td>
 <td><code>jwk.use</code></td>
-<td>intended key use, if present, or deduced from <code>alg</code></td>
+<td>intended key use, if present, or deduced from<code>alg</code></td>
 </tr>
 <tr>
 <td>Get Key Ops</td>
@@ -1122,7 +1130,7 @@
 <tr>
 <td>Get supported algorithms</td>
 <td><code>jwk.supported_signing_algorithms()</code><br><code>jwk.supported_key_management_algorithms()</code><br><code>jwk.supported_encryption_algorithms()</code></td>
-<td>List of supported algorithms identifiers, as <code>str</code>.</td>
+<td>List of supported algorithms identifiers, as<code>str</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -1234,7 +1242,7 @@
 <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
 <h3 id="getting-key-parameters">Getting key parameters<a class="headerlink" href="#getting-key-parameters" title="Permanent link">&para;</a></h3>
-<p>Once you have a <code>Jwk</code> instance, you can get its parameters either with subscription or attribute access:</p>
+<p>Once you have a <code>Jwk</code> instance, you can access its parameters either by using subscription or attributes:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1265,8 +1273,8 @@
 <span class="k">assert</span> <span class="n">jwk</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="s2">&quot;WtjnvHG9b_IKBLn4QYTHz-AdoAiO_ork5LH1BL_5tyI&quot;</span>
 <span class="k">assert</span> <span class="n">jwk</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">jwk</span><span class="o">.</span><span class="n">x</span>
 </code></pre></div></td></tr></table></div>
-<p>Those will return the exact (usually base64url-encoded) value exactly as expressed in the JWK. You can also get the
-real, decoded parameters with some special attributes:</p>
+<p>Those will return the exact (usually base64url-encoded) value, exactly as expressed in the JWK. You can also get the
+real, decoded parameters with some special attributes, which depend on the key type (thus on the <code>Jwk</code> subclass):</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1317,8 +1325,8 @@ real, decoded parameters with some special attributes:</p>
 <h3 id="generating-keys">Generating keys<a class="headerlink" href="#generating-keys" title="Permanent link">&para;</a></h3>
 <p><code>jwskate</code> can generate private keys from any of it supported key types. To generate a key, use <code>Jwk.generate()</code>. It just
 needs some hints to know what kind of key to generate, either an identifier for the algorithm that will be used with
-that key (<code>alg</code>), or a key type (<code>kty</code>). An <code>alg</code> is preferred, since it gives more hints, like the Elliptic Curve to
-use, or the key size to generate. The specified <code>alg</code> will be part of the generated key, and will avoid having to
+that key (<code>alg</code>), or a key type (<code>kty</code>). An <code>alg</code> is preferred, since it gives more hints to generate a key that is suitable
+for its purpose. Those hints include the Elliptic Curve to use, or the key size to generate. The specified <code>alg</code> will be part of the generated key, and will avoid having to
 specify the alg for every cryptographic operation you will perform with that key.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -1337,7 +1345,8 @@ specify the alg for every cryptographic operation you will perform with that key
 <span class="normal">15</span>
 <span class="normal">16</span>
 <span class="normal">17</span>
-<span class="normal">18</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span>
+<span class="normal">18</span>
+<span class="normal">19</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwk</span>
 
 <span class="c1"># specifying an alg:</span>
 <span class="n">rsa_jwk_RS256</span> <span class="o">=</span> <span class="n">Jwk</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">alg</span><span class="o">=</span><span class="s2">&quot;RS256&quot;</span><span class="p">)</span>
@@ -1353,8 +1362,9 @@ specify the alg for every cryptographic operation you will perform with that key
 
 <span class="c1"># you may combine both if needed:</span>
 <span class="n">rsa_jwk</span> <span class="o">=</span> <span class="n">Jwk</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">kty</span><span class="o">=</span><span class="s2">&quot;RSA&quot;</span><span class="p">,</span> <span class="n">alg</span><span class="o">=</span><span class="s2">&quot;RS256&quot;</span><span class="p">)</span>
-<span class="c1"># alg takes precedence if it is inconsistent with kty:</span>
+<span class="c1"># a ValueError is raised if kty and alg are inconsistent:</span>
 <span class="n">rsa_jwk</span> <span class="o">=</span> <span class="n">Jwk</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">kty</span><span class="o">=</span><span class="s2">&quot;EC&quot;</span><span class="p">,</span> <span class="n">alg</span><span class="o">=</span><span class="s2">&quot;RS256&quot;</span><span class="p">)</span>
+<span class="c1"># ValueError: Incompatible `alg=&#39;RS256&#39;` and `kty=&#39;EC&#39;` parameters. `alg=&#39;RS256&#39;` points to `kty=&#39;RSA&#39;`.</span>
 </code></pre></div></td></tr></table></div>
 <p>You can include additional parameters such as "use" or "key_ops", or custom parameters which will be included in the
 generated key:</p>
@@ -2347,10 +2357,10 @@ one in the used JWK. You can add additional headers by using the <code>extra_hea
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.indexes", "navigation.tabs", "navigation.instant", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.indexes", "navigation.tabs", "navigation.instant", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.a51614de.min.js"></script>
+      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
       
     
   </body>

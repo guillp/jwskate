@@ -1,6 +1,7 @@
 """This module implements password-based Key Management Algorithms relying on PBES2."""
+from __future__ import annotations
 
-from typing import SupportsBytes, Type, Union
+from typing import SupportsBytes
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes
@@ -20,10 +21,10 @@ class BasePbes2(BaseKeyManagementAlg):
 
     """
 
-    kwalg: Type[BaseAesKeyWrap]
+    kwalg: type[BaseAesKeyWrap]
     hash_alg: hashes.HashAlgorithm
 
-    def __init__(self, password: Union[SupportsBytes, bytes, str]):
+    def __init__(self, password: SupportsBytes | bytes | str):
         if isinstance(password, str):
             password = password.encode("utf-8")
         if not isinstance(password, bytes):

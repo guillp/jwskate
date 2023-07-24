@@ -1,6 +1,5 @@
 """This module implements direct use of a shared symmetric key as Key Management algorithm."""
-
-from typing import Type
+from __future__ import annotations
 
 from binapy import BinaPy
 
@@ -13,7 +12,7 @@ class DirectKeyUse(BaseKeyManagementAlg, BaseSymmetricAlg):
     name = "dir"
     description = __doc__
 
-    def direct_key(self, aesalg: Type[BaseSymmetricAlg]) -> BinaPy:
+    def direct_key(self, aesalg: type[BaseSymmetricAlg]) -> BinaPy:
         """Check that the current key is appropriate for a given alg and return that same key.
 
         Args:

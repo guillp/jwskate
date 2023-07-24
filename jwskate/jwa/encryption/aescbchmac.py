@@ -1,6 +1,7 @@
 """This module implements AES-CBC with HMAC-SHA based Encryption algorithms."""
+from __future__ import annotations
 
-from typing import SupportsBytes, Tuple, Union
+from typing import SupportsBytes
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import ciphers, constant_time, hashes, hmac, padding
@@ -38,10 +39,10 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
     def mac(
         self,
-        ciphertext: Union[bytes, SupportsBytes],
+        ciphertext: bytes | SupportsBytes,
         *,
-        iv: Union[bytes, SupportsBytes],
-        aad: Union[bytes, SupportsBytes, None] = None,
+        iv: bytes | SupportsBytes,
+        aad: bytes | SupportsBytes | None = None,
     ) -> BinaPy:
         """Produce a Message Authentication Code for the given `ciphertext`, `iv` and `aad`.
 
@@ -52,6 +53,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         Returns:
           the resulting MAC.
+
         """
         if not isinstance(ciphertext, bytes):
             ciphertext = bytes(ciphertext)
@@ -73,11 +75,11 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
     def encrypt(
         self,
-        plaintext: Union[bytes, SupportsBytes],
+        plaintext: bytes | SupportsBytes,
         *,
-        iv: Union[bytes, SupportsBytes],
-        aad: Union[bytes, SupportsBytes, None] = None,
-    ) -> Tuple[BinaPy, BinaPy]:
+        iv: bytes | SupportsBytes,
+        aad: bytes | SupportsBytes | None = None,
+    ) -> tuple[BinaPy, BinaPy]:
         """Encrypt and MAC the given `plaintext`.
 
         This requires a given Initialization Vector (`iv`).
@@ -90,6 +92,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         Returns:
           a tuple (encrypted_data, authentication_tag)
+
         """
         if not isinstance(plaintext, bytes):
             plaintext = bytes(plaintext)
@@ -112,11 +115,11 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
     def decrypt(
         self,
-        ciphertext: Union[bytes, SupportsBytes],
+        ciphertext: bytes | SupportsBytes,
         *,
-        iv: Union[bytes, SupportsBytes],
-        auth_tag: Union[bytes, SupportsBytes],
-        aad: Union[bytes, SupportsBytes, None] = None,
+        iv: bytes | SupportsBytes,
+        auth_tag: bytes | SupportsBytes,
+        aad: bytes | SupportsBytes | None = None,
     ) -> BinaPy:
         """Decrypt and authenticate a given ciphertext.
 

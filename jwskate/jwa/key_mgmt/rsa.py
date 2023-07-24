@@ -1,6 +1,7 @@
 """This module implements RSA based Key Management algorithms."""
+from __future__ import annotations
 
-from typing import Any, SupportsBytes, Union
+from typing import Any, SupportsBytes
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes
@@ -53,7 +54,7 @@ class BaseRsaKeyWrap(
         with self.public_key_required() as key:
             return BinaPy(key.encrypt(plainkey, self.padding))
 
-    def unwrap_key(self, cipherkey: Union[bytes, SupportsBytes]) -> BinaPy:
+    def unwrap_key(self, cipherkey: bytes | SupportsBytes) -> BinaPy:
         """Unwrap a symmetric key with this alg.
 
         Args:

@@ -1,5 +1,7 @@
 """High-Level facility to verify JWT tokens signature, validity dates, issuer, audiences, etc."""
-from typing import Any, Callable, Dict, Iterable, Optional, Union
+from __future__ import annotations
+
+from typing import Any, Callable, Iterable
 
 from jwskate import Jwk, JwkSet
 
@@ -42,14 +44,14 @@ class JwtVerifier:
 
     def __init__(
         self,
-        jwkset: Union[JwkSet, Jwk, Dict[str, Any]],
+        jwkset: JwkSet | Jwk | dict[str, Any],
         *,
-        issuer: Optional[str],
-        audience: Optional[str] = None,
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
+        issuer: str | None,
+        audience: str | None = None,
+        alg: str | None = None,
+        algs: Iterable[str] | None = None,
         leeway: int = 10,
-        verifiers: Optional[Iterable[Callable[[SignedJwt], None]]] = None,
+        verifiers: Iterable[Callable[[SignedJwt], None]] | None = None,
     ) -> None:
         if isinstance(jwkset, Jwk):
             jwkset = jwkset.as_jwks()
@@ -73,7 +75,7 @@ class JwtVerifier:
         self.leeway = leeway
         self.verifiers = list(verifiers) if verifiers else []
 
-    def verify(self, jwt: Union[SignedJwt, str]) -> None:
+    def verify(self, jwt: SignedJwt | str) -> None:
         """Verify a given JWT token.
 
         This checks the token signature, issuer, audience and expiration date, plus any custom verification,

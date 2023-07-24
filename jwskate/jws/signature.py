@@ -1,9 +1,8 @@
 """This module implement JWS signatures."""
-
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Any, Dict, Iterable, Mapping, Optional, Type, TypeVar, Union
+from typing import Any, Iterable, Mapping, TypeVar
 
 from binapy import BinaPy
 
@@ -27,10 +26,10 @@ class JwsSignature(BaseJsonDict):
 
     @classmethod
     def from_parts(
-        cls: Type[S],
+        cls: type[S],
         protected: Mapping[str, Any],
         signature: bytes,
-        header: Optional[Any],
+        header: Any | None,
         **kwargs: Any,
     ) -> S:
         """Initialize a JwsSignature based on the provided parts.
@@ -55,7 +54,7 @@ class JwsSignature(BaseJsonDict):
         return cls(content)
 
     @cached_property
-    def protected(self) -> Dict[str, Any]:
+    def protected(self) -> dict[str, Any]:
         """The protected header.
 
         Returns:
@@ -98,12 +97,12 @@ class JwsSignature(BaseJsonDict):
 
     @classmethod
     def sign(
-        cls: Type[S],
+        cls: type[S],
         payload: bytes,
-        key: Union[Jwk, Dict[str, Any], Any],
-        alg: Optional[str] = None,
-        extra_protected_headers: Optional[Mapping[str, Any]] = None,
-        header: Optional[Any] = None,
+        key: Jwk | dict[str, Any] | Any,
+        alg: str | None = None,
+        extra_protected_headers: Mapping[str, Any] | None = None,
+        header: Any | None = None,
         **kwargs: Any,
     ) -> S:
         """Sign a payload and return the generated JWS signature.
@@ -135,7 +134,7 @@ class JwsSignature(BaseJsonDict):
 
     @classmethod
     def assemble_signed_part(
-        cls, headers: Dict[str, Any], payload: Union[bytes, str]
+        cls, headers: dict[str, Any], payload: bytes | str
     ) -> bytes:
         """Assemble the protected header and payload to sign, as specified in.
 
@@ -160,10 +159,10 @@ class JwsSignature(BaseJsonDict):
     def verify(
         self,
         payload: bytes,
-        key: Union[Jwk, Dict[str, Any], Any],
+        key: Jwk | dict[str, Any] | Any,
         *,
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
+        alg: str | None = None,
+        algs: Iterable[str] | None = None,
     ) -> bool:
         """Verify this signature against the given payload using the provided key.
 

@@ -1,4 +1,6 @@
-from typing import SupportsBytes, Union
+from __future__ import annotations
+
+from typing import SupportsBytes
 
 import pytest
 
@@ -426,7 +428,7 @@ def encryption_alg(request: pytest.FixtureRequest) -> str:
 @pytest.fixture(
     scope="module",
     params=[
-        'pAvkcJv!$N8HtIuf3W@KaF&2Gv"EAD/BK[_FEoLIuvMS*aG0tm4,.?'.encode(),
+        b'pAvkcJv!$N8HtIuf3W@KaF&2Gv"EAD/BK[_FEoLIuvMS*aG0tm4,.?',
     ],
 )
 def password(request: pytest.FixtureRequest) -> bytes:
@@ -449,7 +451,7 @@ def decryption_jwk(
     symmetric_384_encryption_jwk: Jwk,
     symmetric_512_encryption_jwk: Jwk,
     password: bytes,
-) -> Union[Jwk, bytes]:
+) -> Jwk | bytes:
     if key_management_alg == "dir":
         for key in (
             symmetric_128_encryption_jwk,
@@ -485,7 +487,7 @@ def decryption_jwk(
 
 
 @pytest.fixture(scope="module")
-def encryption_jwk(decryption_jwk: Union[Jwk, bytes]) -> Union[Jwk, bytes]:
+def encryption_jwk(decryption_jwk: Jwk | bytes) -> Jwk | bytes:
     if isinstance(decryption_jwk, SymmetricJwk):
         return decryption_jwk
     elif isinstance(decryption_jwk, bytes):
@@ -497,7 +499,7 @@ def encryption_jwk(decryption_jwk: Union[Jwk, bytes]) -> Union[Jwk, bytes]:
 @pytest.fixture(scope="module")
 def encrypted_jwe(
     encryption_plaintext: SupportsBytes,
-    encryption_jwk: Union[Jwk, SupportsBytes],
+    encryption_jwk: Jwk | SupportsBytes,
     key_management_alg: str,
     encryption_alg: str,
 ) -> JweCompact:
@@ -533,7 +535,7 @@ class SupportsBytesTester:
 
 def test_supportsbytes(
     encryption_plaintext: bytes,
-    encryption_jwk: Union[Jwk, SupportsBytes],
+    encryption_jwk: Jwk | SupportsBytes,
     key_management_alg: str,
     encryption_alg: str,
     encrypted_jwe: JweCompact,
@@ -575,7 +577,7 @@ def test_supportsbytes(
 def test_decrypt(
     encryption_plaintext: bytes,
     encrypted_jwe: JweCompact,
-    decryption_jwk: Union[Jwk, bytes],
+    decryption_jwk: Jwk | bytes,
     key_management_alg: str,
     encryption_alg: str,
 ) -> None:
@@ -604,6 +606,7 @@ def test_decrypt_by_jwcrypto(
         decryption_jwk: the Jwk containing the decryption key
         key_management_alg: the key management alg
         encryption_alg: the encryption alg
+
     """
     import jwcrypto.jwe  # type: ignore[import]
     import jwcrypto.jwk  # type: ignore[import]
@@ -643,6 +646,7 @@ def jwcrypto_encrypted_jwe(
 
     Returns:
         a JWE token
+
     """
     import jwcrypto.jwe
     import jwcrypto.jwk
@@ -683,6 +687,7 @@ def test_decrypt_from_jwcrypto(
         decryption_jwk: the decryption key
         key_management_alg: the key management alg
         encryption_alg: the encryption alg
+
     """
     jwe = JweCompact(jwcrypto_encrypted_jwe)
     assert jwe.alg == key_management_alg

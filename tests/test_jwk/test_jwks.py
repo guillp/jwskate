@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from jwskate import Jwk, JwkSet
@@ -135,14 +137,14 @@ def test_public_jwkset() -> None:
     sig_keys = jwks.verification_keys()
     enc_keys = jwks.encryption_keys()
 
-    sig_kids = set(jwk.kid for jwk in sig_keys)
+    sig_kids = {jwk.kid for jwk in sig_keys}
     assert sig_kids == {
         "7KJgpwNvHJp_zb6SybahlC7506kvAm2cvMG_EY6jmx8",
         "ojHE_6b7DXtOwLKYTmeao38CV_7P9F9rYTLGm8BuJnk",
         "m7XoZRBgXXjEFxGhWvb_urskl4rCLmOhhPRdC6278-E",
     }
 
-    enc_kids = set(jwk.kid for jwk in enc_keys)
+    enc_kids = {jwk.kid for jwk in enc_keys}
     assert enc_kids == {
         "xAgzqjWdBD8cRifXbpmcv-9vIgjKHTdjelI-Vvu0K9Q",
         "zjY2pjFnBc4rOHWEwfS5Cjyxsjo2aprsctM-4oS1r8I",

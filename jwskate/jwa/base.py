@@ -1,9 +1,8 @@
 """This module implement base classes for the algorithms defined in JWA."""
-
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Generic, Iterator, SupportsBytes, Tuple, Type, TypeVar, Union
+from typing import Generic, Iterator, SupportsBytes, TypeVar
 
 import cryptography.exceptions
 from binapy import BinaPy
@@ -88,6 +87,7 @@ class BaseSymmetricAlg(BaseAlg):
 
         Returns:
           `True` if the key is suitable for this alg class, `False` otherwise
+
         """
         try:
             cls.check_key(key)
@@ -111,15 +111,15 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
     """
 
-    private_key_class: Union[Type[Kpriv], Tuple[Type[Kpriv], ...]]
-    public_key_class: Union[Type[Kpub], Tuple[Type[Kpub], ...]]
+    private_key_class: type[Kpriv] | tuple[type[Kpriv], ...]
+    public_key_class: type[Kpub] | tuple[type[Kpub], ...]
 
-    def __init__(self, key: Union[Kpriv, Kpub]):
+    def __init__(self, key: Kpriv | Kpub):
         self.check_key(key)
         self.key = key
 
     @classmethod
-    def check_key(cls, key: Union[Kpriv, Kpub]) -> None:
+    def check_key(cls, key: Kpriv | Kpub) -> None:
         """Check that a given key is suitable for this alg class.
 
         This must be implemented by subclasses as required.
@@ -183,7 +183,7 @@ class BaseSignatureAlg(BaseAlg):
     use = "sig"
     hashing_alg: hashes.HashAlgorithm
 
-    def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:
+    def sign(self, data: bytes | SupportsBytes) -> BinaPy:
         """Sign arbitrary data, return the signature.
 
         Args:
@@ -196,7 +196,7 @@ class BaseSignatureAlg(BaseAlg):
         raise NotImplementedError
 
     def verify(
-        self, data: Union[bytes, SupportsBytes], signature: Union[bytes, SupportsBytes]
+        self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes
     ) -> bool:
         """Verify a signature against some data.
 
@@ -258,11 +258,11 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
     def encrypt(
         self,
-        plaintext: Union[bytes, SupportsBytes],
+        plaintext: bytes | SupportsBytes,
         *,
-        iv: Union[bytes, SupportsBytes],
-        aad: Union[bytes, SupportsBytes, None] = None,
-    ) -> Tuple[BinaPy, BinaPy]:
+        iv: bytes | SupportsBytes,
+        aad: bytes | SupportsBytes | None = None,
+    ) -> tuple[BinaPy, BinaPy]:
         """Encrypt arbitrary data, with optional Authenticated Encryption.
 
         This needs as parameters:
@@ -286,11 +286,11 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
 
     def decrypt(
         self,
-        ciphertext: Union[bytes, SupportsBytes],
+        ciphertext: bytes | SupportsBytes,
         *,
-        iv: Union[bytes, SupportsBytes],
-        auth_tag: Union[bytes, SupportsBytes],
-        aad: Union[bytes, SupportsBytes, None] = None,
+        iv: bytes | SupportsBytes,
+        auth_tag: bytes | SupportsBytes,
+        aad: bytes | SupportsBytes | None = None,
     ) -> BinaPy:
         """Decrypt and verify a ciphertext with Authenticated Encryption.
 

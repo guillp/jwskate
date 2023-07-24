@@ -1,4 +1,4 @@
-from typing import Type
+from __future__ import annotations
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -106,7 +106,7 @@ def test_private_public_key_required() -> None:
         RsaEsPcks1v1_5,
     ),
 )
-def test_init_with_random_key(alg_class: Type[BaseAlg]) -> None:
+def test_init_with_random_key(alg_class: type[BaseAlg]) -> None:
     alg = alg_class.with_random_key()
     assert isinstance(alg, alg_class)
     if issubclass(alg_class, BaseAsymmetricAlg):

@@ -1,6 +1,7 @@
 """This module implements HMAC based signature algorithms."""
+from __future__ import annotations
 
-from typing import SupportsBytes, Type, Union
+from typing import SupportsBytes
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes, hmac
@@ -12,7 +13,7 @@ from ..base import BaseSignatureAlg, BaseSymmetricAlg
 class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
     """Base class for HMAC signature algorithms."""
 
-    mac: Type[hmac.HMAC] = hmac.HMAC
+    mac: type[hmac.HMAC] = hmac.HMAC
     min_key_size: int
 
     @classmethod
@@ -20,7 +21,7 @@ class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
     def with_random_key(cls) -> Self:
         return cls(BinaPy.random_bits(cls.min_key_size))
 
-    def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:  # noqa: D102
+    def sign(self, data: bytes | SupportsBytes) -> BinaPy:  # noqa: D102
         if not isinstance(data, bytes):
             data = bytes(data)
 
@@ -32,7 +33,7 @@ class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
         return BinaPy(signature)
 
     def verify(
-        self, data: Union[bytes, SupportsBytes], signature: Union[bytes, SupportsBytes]
+        self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes
     ) -> bool:  # noqa: D102
         if not isinstance(data, bytes):
             data = bytes(data)

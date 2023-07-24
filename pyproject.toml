@@ -1,17 +1,17 @@
 [tool]
 [tool.poetry]
 name = "jwskate"
-version = "0.8.0"
+version = "0.9.0"
 homepage = "https://github.com/guillp/jwskate"
 description = "A Pythonic implementation of Json Web Signature, Keys, Algorithms, Tokens and Encryption (RFC7514 to 7519), on top of the `cryptography` module."
 authors = ["Guillaume Pujol <guill.p.linux@gmail.com>"]
 readme = "README.md"
 license =  "MIT"
 classifiers=[
-    'Development Status :: 3 - Alpha',
+    'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',
+    'Topic :: Security',
     'License :: OSI Approved :: MIT License',
-    'Natural Language :: English',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
@@ -24,35 +24,34 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.12"
+python = ">=3.8"
 cryptography = ">=3.4"
 typing-extensions = ">=4.3.0"
-binapy = ">=0.6.1"
+binapy = ">=0.7.0"
 
 [tool.poetry.dev-dependencies]
-black  = ">=23.3"
+black  = ">=23.7"
 coverage = ">=7.2.3"
 freezegun = ">=1.2.2"
 isort  = ">=5.12"
 jwcrypto = ">=1.0"
 livereload = ">=2.6"
-mypy = ">=1.2"
+mypy = ">=1.4.1"
 mkdocs  = ">=1.4.2"
 mkdocstrings = { version = ">=0.21.2", extras = ["python"] }
 mkdocs-autorefs = ">=0.4"
-mkdocs-include-markdown-plugin  = ">=4.0.4"
-mkdocs-material  = ">=9.1.6"
+mkdocs-material  = ">=9.1.19"
 mkdocs-material-extensions  = ">=1.1"
-pip  = ">=22.0"
+pip  = ">=23.2.1"
 pre-commit = ">=3.2.2"
-pytest  = ">=7.3"
+pytest  = ">=7.4.0"
 pytest-cov  = ">=4.0"
 pytest-mypy = ">=0.10"
 toml = ">=0.10"
 tomli = ">=2.0.1"
-tox  = ">=4.5.1"
+tox  = ">=4.6.4"
 types-cryptography = ">=3.3"
-virtualenv  = ">=20.14.1"
+virtualenv  = ">=20.24.1"
 
 [tool.poetry.extras]
 test = ["pytest", "pytest-cov", "jwcrypto", "freezegun"]

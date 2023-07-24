@@ -1,6 +1,7 @@
 """This module implements AES-GCM based encryption algorithms."""
+from __future__ import annotations
 
-from typing import SupportsBytes, Tuple, Union
+from typing import SupportsBytes
 
 import cryptography.exceptions
 from binapy import BinaPy
@@ -17,11 +18,11 @@ class BaseAESGCM(BaseAESEncryptionAlg):
 
     def encrypt(
         self,
-        plaintext: Union[bytes, SupportsBytes],
+        plaintext: bytes | SupportsBytes,
         *,
-        iv: Union[bytes, SupportsBytes],
-        aad: Union[bytes, SupportsBytes, None] = None,
-    ) -> Tuple[BinaPy, BinaPy]:
+        iv: bytes | SupportsBytes,
+        aad: bytes | SupportsBytes | None = None,
+    ) -> tuple[BinaPy, BinaPy]:
         """Encrypt a plaintext, with the given IV and Additional Authenticated Data.".
 
         Args:
@@ -52,11 +53,11 @@ class BaseAESGCM(BaseAESEncryptionAlg):
 
     def decrypt(
         self,
-        ciphertext: Union[bytes, SupportsBytes],
+        ciphertext: bytes | SupportsBytes,
         *,
-        iv: Union[bytes, SupportsBytes],
-        auth_tag: Union[bytes, SupportsBytes],
-        aad: Union[bytes, SupportsBytes, None] = None,
+        iv: bytes | SupportsBytes,
+        auth_tag: bytes | SupportsBytes,
+        aad: bytes | SupportsBytes | None = None,
     ) -> BinaPy:
         """Decrypt a ciphertext.
 

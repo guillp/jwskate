@@ -1,9 +1,8 @@
 """This module implements JWK representing RSA keys."""
-
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Any, Optional, Tuple, Union
+from typing import Any
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -113,7 +112,7 @@ class RSAJwk(Jwk):
             raise TypeError("A RSAPrivateKey or a RSAPublicKey is required.")
 
     @override
-    def _to_cryptography_key(self) -> Union[rsa.RSAPrivateKey, rsa.RSAPublicKey]:
+    def _to_cryptography_key(self) -> rsa.RSAPrivateKey | rsa.RSAPublicKey:
         if self.is_private:
             return rsa.RSAPrivateNumbers(
                 self.first_prime_factor,
@@ -137,7 +136,8 @@ class RSAJwk(Jwk):
           **params: additional parameters to include in the `Jwk`
 
         Returns:
-          a `RsaJwk` initialized from the provided parameters
+          a `RSAJwk` initialized from the provided parameters
+
         """
         return cls(
             dict(
@@ -155,14 +155,14 @@ class RSAJwk(Jwk):
         n: int,
         e: int = 65537,
         d: int,
-        p: Optional[int] = None,
-        q: Optional[int] = None,
-        dp: Optional[int] = None,
-        dq: Optional[int] = None,
-        qi: Optional[int] = None,
+        p: int | None = None,
+        q: int | None = None,
+        dp: int | None = None,
+        dq: int | None = None,
+        qi: int | None = None,
         **params: Any,
     ) -> RSAJwk:
-        """Initialize a private `RsaJwk` from its required parameters.
+        """Initialize a private `RSAJwk` from its required parameters.
 
         Args:
           n: the modulus
@@ -177,6 +177,7 @@ class RSAJwk(Jwk):
 
         Returns:
             a `RSAJwk` initialized from the given parameters
+
         """
         return cls(
             dict(
@@ -230,6 +231,7 @@ class RSAJwk(Jwk):
 
         Returns:
           a generated `RSAJwk`
+
         """
         private_key = rsa.generate_private_key(65537, key_size=key_size)
         pn = private_key.private_numbers()
@@ -261,7 +263,7 @@ class RSAJwk(Jwk):
         return BinaPy(self.d).decode_from("b64u").to_int()
 
     @cached_property
-    def prime_factors(self) -> Tuple[int, int]:
+    def prime_factors(self) -> tuple[int, int]:
         """Return the 2 prime factors `p` and `q` from this `Jwk`."""
         if "p" not in self or "q" not in self:
             p, q = rsa.rsa_recover_prime_factors(

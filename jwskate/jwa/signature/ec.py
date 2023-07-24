@@ -1,5 +1,7 @@
 """This module implement Elliptic Curve signature algorithms."""
-from typing import SupportsBytes, Union
+from __future__ import annotations
+
+from typing import SupportsBytes
 
 from binapy import BinaPy
 from cryptography import exceptions
@@ -23,7 +25,7 @@ class BaseECSignatureAlg(
 
     @classmethod
     def check_key(
-        cls, key: Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey]
+        cls, key: ec.EllipticCurvePrivateKey | ec.EllipticCurvePublicKey
     ) -> None:  # noqa: D102
         if key.curve.name != cls.curve.cryptography_curve.name:
             raise ValueError(
@@ -35,7 +37,7 @@ class BaseECSignatureAlg(
     def with_random_key(cls) -> Self:
         return cls(ec.generate_private_key(cls.curve.cryptography_curve))
 
-    def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:  # noqa: D102
+    def sign(self, data: bytes | SupportsBytes) -> BinaPy:  # noqa: D102
         if not isinstance(data, bytes):
             data = bytes(data)
 
@@ -47,7 +49,7 @@ class BaseECSignatureAlg(
             )
 
     def verify(
-        self, data: Union[bytes, SupportsBytes], signature: Union[bytes, SupportsBytes]
+        self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes
     ) -> bool:  # noqa: D102
         if not isinstance(data, bytes):
             data = bytes(data)

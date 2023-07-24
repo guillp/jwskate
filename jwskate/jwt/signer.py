@@ -24,7 +24,7 @@ assert isinstance(signer.jwk, ECJwk) and signer.jwk.is_private
 from __future__ import annotations
 
 import uuid
-from typing import Any, Callable, Dict, Iterable, Optional, Union
+from typing import Any, Callable, Iterable
 
 from jwskate.jwk import Jwk
 
@@ -67,9 +67,9 @@ class JwtSigner:
         self,
         issuer: str,
         jwk: Jwk,
-        alg: Optional[str] = None,
+        alg: str | None = None,
         default_lifetime: int = 60,
-        default_leeway: Optional[int] = None,
+        default_leeway: int | None = None,
     ):
         self.issuer = issuer
         self.jwk = jwk
@@ -79,12 +79,12 @@ class JwtSigner:
 
     def sign(
         self,
-        subject: Optional[str] = None,
-        audience: Union[str, Iterable[str], None] = None,
-        extra_claims: Optional[Dict[str, Any]] = None,
-        extra_headers: Optional[Dict[str, Any]] = None,
-        lifetime: Optional[int] = None,
-        leeway: Optional[int] = None,
+        subject: str | None = None,
+        audience: str | Iterable[str] | None = None,
+        extra_claims: dict[str, Any] | None = None,
+        extra_headers: dict[str, Any] | None = None,
+        lifetime: int | None = None,
+        leeway: int | None = None,
     ) -> SignedJwt:
         """Sign a Jwt.
 
@@ -144,8 +144,8 @@ class JwtSigner:
         issuer: str,
         alg: str,
         default_lifetime: int = 60,
-        default_leeway: Optional[int] = None,
-        kid: Optional[str] = None,
+        default_leeway: int | None = None,
+        kid: str | None = None,
     ) -> JwtSigner:
         """Initialize a JwtSigner with a randomly generated key.
 
@@ -166,7 +166,7 @@ class JwtSigner:
     def verifier(
         self,
         audience: str,
-        verifiers: Optional[Iterable[Callable[[SignedJwt], None]]] = None,
+        verifiers: Iterable[Callable[[SignedJwt], None]] | None = None,
         **kwargs: Any,
     ) -> JwtVerifier:
         """Return the matching JwtVerifier, initialized with the public key."""

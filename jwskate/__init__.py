@@ -7,7 +7,9 @@ for convenience, you can import any class or component directly from the root
 
 `jwskate` doesn't implement any actual cryptographic operation, it just
 provides a set of convenient wrappers around the `cryptography` module.
+
 """
+from __future__ import annotations
 
 __author__ = """Guillaume Pujol"""
 __email__ = "guill.p.linux@gmail.com"

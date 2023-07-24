@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import secrets
-from typing import Tuple
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -180,7 +181,7 @@ def test_invalid_class_for_kty() -> None:
     ],
 )
 def test_key_ops_without_alg(
-    kty: str, private_key_ops: Tuple[str], public_key_ops: Tuple[str]
+    kty: str, private_key_ops: tuple[str], public_key_ops: tuple[str]
 ) -> None:
     # with a key with no alg or use, we can only trust the key_ops from the key
     private_jwk = Jwk.generate_for_kty("RSA", key_ops=private_key_ops)
@@ -200,7 +201,7 @@ def test_key_ops_without_alg(
     ],
 )
 def test_use_key_ops_with_alg(
-    alg: str, use: str, private_key_ops: Tuple[str], public_key_ops: Tuple[str]
+    alg: str, use: str, private_key_ops: tuple[str], public_key_ops: tuple[str]
 ) -> None:
     # if key has an 'alg' parameter, we can deduce the use and key ops
     private_jwk = Jwk.generate(alg=alg)

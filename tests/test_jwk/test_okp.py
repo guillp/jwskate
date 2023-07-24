@@ -1,4 +1,6 @@
-from typing import Any, Type
+from __future__ import annotations
+
+from typing import Any
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
@@ -77,7 +79,7 @@ def test_rfc8037_ed25519() -> None:
 
     assert jwk.thumbprint() == "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k"
 
-    payload = "Example of Ed25519 signing".encode()
+    payload = b"Example of Ed25519 signing"
 
     jws = JwsCompact.sign(payload, key=jwk, alg="EdDSA")
     assert jws.alg == "EdDSA"
@@ -201,7 +203,7 @@ def test_unknown_curve() -> None:
     ],
 )
 def test_from_to_cryptography(
-    crv: str, private_key_class: Type[Any], public_key_class: Type[Any]
+    crv: str, private_key_class: type[Any], public_key_class: type[Any]
 ) -> None:
     private_key = private_key_class.generate()
     private_jwk = Jwk(private_key)

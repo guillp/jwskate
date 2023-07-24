@@ -1,5 +1,7 @@
 """This module implements RSA signature algorithms."""
-from typing import SupportsBytes, Union
+from __future__ import annotations
+
+from typing import SupportsBytes
 
 from binapy import BinaPy
 from cryptography import exceptions
@@ -29,7 +31,7 @@ class BaseRSASigAlg(
             rsa.generate_private_key(public_exponent=65537, key_size=cls.min_key_size)
         )
 
-    def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:
+    def sign(self, data: bytes | SupportsBytes) -> BinaPy:
         """Sign arbitrary data.
 
         Args:
@@ -53,7 +55,7 @@ class BaseRSASigAlg(
             return BinaPy(key.sign(data, self.padding_alg, self.hashing_alg))
 
     def verify(
-        self, data: Union[bytes, SupportsBytes], signature: Union[bytes, SupportsBytes]
+        self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes
     ) -> bool:
         """Verify a signature against some data.
 

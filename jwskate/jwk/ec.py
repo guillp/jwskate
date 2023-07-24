@@ -1,10 +1,9 @@
 """This module implements JWK representing Elliptic Curve keys."""
-
 from __future__ import annotations
 
 import warnings
 from functools import cached_property
-from typing import Any, List, Mapping, Optional, Type, Union
+from typing import Any, Mapping
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -66,11 +65,11 @@ class ECJwk(Jwk):
         curve.name: curve for curve in [P_256, P_384, P_521, secp256k1]
     }
 
-    SIGNATURE_ALGORITHMS: Mapping[str, Type[BaseECSignatureAlg]] = {
+    SIGNATURE_ALGORITHMS: Mapping[str, type[BaseECSignatureAlg]] = {
         sigalg.name: sigalg for sigalg in [ES256, ES384, ES512, ES256K]
     }
 
-    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, Type[EcdhEs]] = {
+    KEY_MANAGEMENT_ALGORITHMS: Mapping[str, type[EcdhEs]] = {
         keyalg.name: keyalg
         for keyalg in [EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW]
     }
@@ -110,6 +109,7 @@ class ECJwk(Jwk):
 
         Returns:
             the `EllipticCurve` instance
+
         """
         return self.get_curve(self.crv)
 
@@ -125,6 +125,7 @@ class ECJwk(Jwk):
 
         Returns:
           an ECJwk initialized with the supplied parameters
+
         """
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(
@@ -167,7 +168,7 @@ class ECJwk(Jwk):
     @classmethod
     @override
     def generate(
-        cls, *, crv: Optional[str] = None, alg: Optional[str] = None, **kwargs: Any
+        cls, *, crv: str | None = None, alg: str | None = None, **kwargs: Any
     ) -> ECJwk:
         curve: EllipticCurve = P_256
 
@@ -210,7 +211,7 @@ class ECJwk(Jwk):
     @override
     def _to_cryptography_key(
         self,
-    ) -> Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey,]:
+    ) -> ec.EllipticCurvePrivateKey | ec.EllipticCurvePublicKey:
         if self.is_private:
             return ec.EllipticCurvePrivateNumbers(
                 private_value=self.ecc_private_key,
@@ -252,7 +253,7 @@ class ECJwk(Jwk):
         return BinaPy(self.d).decode_from("b64u").to_int()
 
     @override
-    def supported_signing_algorithms(self) -> List[str]:
+    def supported_signing_algorithms(self) -> list[str]:
         return [
             name
             for name, alg in self.SIGNATURE_ALGORITHMS.items()
@@ -260,9 +261,9 @@ class ECJwk(Jwk):
         ]
 
     @override
-    def supported_key_management_algorithms(self) -> List[str]:
+    def supported_key_management_algorithms(self) -> list[str]:
         return list(self.KEY_MANAGEMENT_ALGORITHMS)
 
     @override
-    def supported_encryption_algorithms(self) -> List[str]:
+    def supported_encryption_algorithms(self) -> list[str]:
         return list(self.ENCRYPTION_ALGORITHMS)

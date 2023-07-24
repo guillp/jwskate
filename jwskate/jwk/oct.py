@@ -1,9 +1,8 @@
 """This module implements JWK representing Symmetric keys."""
-
 from __future__ import annotations
 
 import warnings
-from typing import Any, List, Optional, SupportsBytes, Tuple, Union
+from typing import Any, SupportsBytes
 
 from binapy import BinaPy
 from typing_extensions import override
@@ -92,7 +91,7 @@ class SymmetricJwk(Jwk):
         raise ValueError("Symmetric keys don't have a public key")
 
     @classmethod
-    def from_bytes(cls, k: Union[bytes, str], **params: Any) -> SymmetricJwk:
+    def from_bytes(cls, k: bytes | str, **params: Any) -> SymmetricJwk:
         """Initialize a `SymmetricJwk` from a raw secret key.
 
         The provided secret key is encoded and used as the `k` parameter for the returned `SymmetricKey`.
@@ -103,13 +102,14 @@ class SymmetricJwk(Jwk):
 
         Returns:
           the resulting `SymmetricJwk`
+
         """
         return cls(dict(kty=cls.KTY, k=BinaPy(k).to("b64u").ascii(), **params))
 
     @classmethod
     @override
     def generate(
-        cls, *, alg: Optional[str] = None, key_size: Optional[int] = None, **params: Any
+        cls, *, alg: str | None = None, key_size: int | None = None, **params: Any
     ) -> SymmetricJwk:
         if alg:
             alg_class = cls._get_alg_class(alg)
@@ -162,7 +162,7 @@ class SymmetricJwk(Jwk):
         )
 
     @override
-    def to_pem(self, password: Union[bytes, str, None] = None) -> str:
+    def to_pem(self, password: bytes | str | None = None) -> str:
         raise TypeError("Symmetric keys are not serializable to PEM.")
 
     @property
@@ -178,12 +178,12 @@ class SymmetricJwk(Jwk):
     @override
     def encrypt(
         self,
-        plaintext: Union[bytes, SupportsBytes],
+        plaintext: bytes | SupportsBytes,
         *,
-        aad: Optional[bytes] = None,
-        alg: Optional[str] = None,
-        iv: Optional[bytes] = None,
-    ) -> Tuple[BinaPy, BinaPy, BinaPy]:
+        aad: bytes | None = None,
+        alg: str | None = None,
+        iv: bytes | None = None,
+    ) -> tuple[BinaPy, BinaPy, BinaPy]:
         """Encrypt arbitrary data using this key.
 
         Supports Authenticated Encryption with Additional Authenticated Data (use parameter `aad` for Additional
@@ -215,12 +215,12 @@ class SymmetricJwk(Jwk):
     @override
     def decrypt(
         self,
-        ciphertext: Union[bytes, SupportsBytes],
+        ciphertext: bytes | SupportsBytes,
         *,
-        iv: Union[bytes, SupportsBytes],
-        tag: Union[bytes, SupportsBytes],
-        aad: Union[bytes, SupportsBytes, None] = None,
-        alg: Optional[str] = None,
+        iv: bytes | SupportsBytes,
+        tag: bytes | SupportsBytes,
+        aad: bytes | SupportsBytes | None = None,
+        alg: str | None = None,
     ) -> BinaPy:
         """Decrypt arbitrary data, and verify Additional Authenticated Data.
 
@@ -249,7 +249,7 @@ class SymmetricJwk(Jwk):
         return BinaPy(plaintext)
 
     @override
-    def supported_key_management_algorithms(self) -> List[str]:
+    def supported_key_management_algorithms(self) -> list[str]:
         return [
             name
             for name, alg in self.KEY_MANAGEMENT_ALGORITHMS.items()
@@ -258,7 +258,7 @@ class SymmetricJwk(Jwk):
         ]
 
     @override
-    def supported_encryption_algorithms(self) -> List[str]:
+    def supported_encryption_algorithms(self) -> list[str]:
         return [
             name
             for name, alg in self.ENCRYPTION_ALGORITHMS.items()

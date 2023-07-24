@@ -1,5 +1,7 @@
 """This module implements AES based Key Management algorithms."""
-from typing import SupportsBytes, Union
+from __future__ import annotations
+
+from typing import SupportsBytes
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import keywrap
@@ -48,7 +50,7 @@ class BaseAesKeyWrap(BaseKeyManagementAlg, BaseSymmetricAlg):
         """
         return BinaPy(keywrap.aes_key_wrap(self.key, plainkey))
 
-    def unwrap_key(self, cipherkey: Union[bytes, SupportsBytes]) -> BinaPy:
+    def unwrap_key(self, cipherkey: bytes | SupportsBytes) -> BinaPy:
         """Unwrap a key.
 
         Args:

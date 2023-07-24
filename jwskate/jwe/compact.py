@@ -1,10 +1,9 @@
 """This module implements the JWE Compact format."""
-
 from __future__ import annotations
 
 import warnings
 from functools import cached_property
-from typing import Any, Dict, Iterable, Mapping, Optional, SupportsBytes, Type, Union
+from typing import Any, Iterable, Mapping, SupportsBytes
 
 from binapy import BinaPy
 
@@ -31,7 +30,7 @@ class JweCompact(BaseCompactToken):
 
     """
 
-    def __init__(self, value: Union[bytes, str], max_size: int = 16 * 1024):
+    def __init__(self, value: bytes | str, max_size: int = 16 * 1024):
         super().__init__(value, max_size)
 
         if self.value.count(b".") != 4:
@@ -103,6 +102,7 @@ class JweCompact(BaseCompactToken):
 
         Returns:
             the initialized `JweCompact` instance
+
         """
         return cls(
             b".".join(
@@ -127,6 +127,7 @@ class JweCompact(BaseCompactToken):
 
         Raises:
             AttributeError: if there is no enc header or it is not a string
+
         """
         return self.get_header("enc")  # type: ignore[no-any-return]
         # header has been checked at init time
@@ -134,15 +135,15 @@ class JweCompact(BaseCompactToken):
     @classmethod
     def encrypt(
         cls,
-        plaintext: Union[bytes, SupportsBytes],
-        key: Union[Jwk, Dict[str, Any], Any],
+        plaintext: bytes | SupportsBytes,
+        key: Jwk | dict[str, Any] | Any,
         *,
         enc: str,
-        alg: Optional[str] = None,
-        extra_headers: Optional[Dict[str, Any]] = None,
-        cek: Optional[bytes] = None,
-        iv: Optional[bytes] = None,
-        epk: Optional[Jwk] = None,
+        alg: str | None = None,
+        extra_headers: dict[str, Any] | None = None,
+        cek: bytes | None = None,
+        iv: bytes | None = None,
+        epk: Jwk | None = None,
     ) -> JweCompact:
         """Encrypt an arbitrary plaintext into a `JweCompact`.
 
@@ -158,6 +159,7 @@ class JweCompact(BaseCompactToken):
 
         Returns:
             the generated JweCompact instance
+
         """
         extra_headers = extra_headers or {}
         key = to_jwk(key)
@@ -181,16 +183,16 @@ class JweCompact(BaseCompactToken):
             headers=headers, cek=wrapped_cek, iv=iv, ciphertext=ciphertext, tag=tag
         )
 
-    PBES2_ALGORITHMS: Mapping[str, Type[BasePbes2]] = {
+    PBES2_ALGORITHMS: Mapping[str, type[BasePbes2]] = {
         alg.name: alg
         for alg in [Pbes2_HS256_A128KW, Pbes2_HS384_A192KW, Pbes2_HS512_A256KW]
     }
 
     def unwrap_cek(
         self,
-        key_or_password: Union[Jwk, Dict[str, Any], bytes, str],
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
+        key_or_password: Jwk | dict[str, Any] | bytes | str,
+        alg: str | None = None,
+        algs: Iterable[str] | None = None,
     ) -> Jwk:
         """Unwrap the CEK from this `Jwe` using the provided key or password.
 
@@ -201,6 +203,7 @@ class JweCompact(BaseCompactToken):
 
         Returns:
             the unwrapped CEK, as a SymmetricJwk
+
         """
         if isinstance(key_or_password, (bytes, str)):
             password = key_or_password
@@ -219,9 +222,9 @@ class JweCompact(BaseCompactToken):
 
     def decrypt(
         self,
-        key: Union[Jwk, Dict[str, Any], Any],
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
+        key: Jwk | dict[str, Any] | Any,
+        alg: str | None = None,
+        algs: Iterable[str] | None = None,
     ) -> BinaPy:
         """Decrypts this `Jwe` payload using a `Jwk`.
 
@@ -232,6 +235,7 @@ class JweCompact(BaseCompactToken):
 
         Returns:
           the decrypted payload
+
         """
         cek_jwk = self.unwrap_cek(key, alg=alg, algs=algs)
 
@@ -247,16 +251,16 @@ class JweCompact(BaseCompactToken):
     @classmethod
     def encrypt_with_password(
         cls,
-        plaintext: Union[SupportsBytes, bytes],
-        password: Union[SupportsBytes, bytes, str],
+        plaintext: SupportsBytes | bytes,
+        password: SupportsBytes | bytes | str,
         *,
         alg: str,
         enc: str,
-        salt: Optional[bytes] = None,
+        salt: bytes | None = None,
         count: int = 2000,
-        cek: Optional[bytes] = None,
-        iv: Optional[bytes] = None,
-    ) -> "JweCompact":
+        cek: bytes | None = None,
+        iv: bytes | None = None,
+    ) -> JweCompact:
         """Encrypt a payload with a password and return the resulting JweCompact.
 
         This performs symmetric encryption using PBES2.
@@ -315,7 +319,7 @@ class JweCompact(BaseCompactToken):
             headers=headers, cek=wrapped_cek, iv=iv, ciphertext=ciphertext, tag=tag
         )
 
-    def unwrap_cek_with_password(self, password: Union[bytes, str]) -> Jwk:
+    def unwrap_cek_with_password(self, password: bytes | str) -> Jwk:
         """Unwrap a CEK using a password. Works only for password-encrypted JWE Tokens.
 
         Args:
@@ -350,7 +354,7 @@ class JweCompact(BaseCompactToken):
         cek = wrapper.unwrap_key(self.wrapped_cek, salt=salt, count=p2c)
         return SymmetricJwk.from_bytes(cek)
 
-    def decrypt_with_password(self, password: Union[bytes, str]) -> bytes:
+    def decrypt_with_password(self, password: bytes | str) -> bytes:
         """Decrypt this JWE with a password.
 
         This only works for tokens encrypted with a password.

@@ -193,6 +193,28 @@ class RSAJwk(Jwk):
             )
         )
 
+    @classmethod
+    def from_prime_factors(cls, p: int, q: int, e: int = 65537) -> RSAJwk:
+        """Initialise a `RSAJwk` from its prime factors and exponent.
+
+        Modulus and Private Exponent are mathematically calculated based on those factors.
+
+        Exponent is usually 65537 (default).
+
+        Args:
+            p: first prime factor
+            q: second prime factor
+            e: exponent
+
+        Returns:
+            a `RSAJwk`
+
+        """
+        n = p * q
+        phi = (p - 1) * (q - 1)
+        d = pow(e, -1, phi)
+        return cls.private(n=n, e=e, d=d)
+
     @cached_property
     def key_size(self) -> int:
         """Key size, in bits."""

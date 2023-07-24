@@ -1,5 +1,4 @@
 """This module implements JWK representing RSA keys."""
-
 from __future__ import annotations
 
 from functools import cached_property

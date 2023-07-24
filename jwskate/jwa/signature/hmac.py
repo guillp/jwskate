@@ -1,4 +1,5 @@
 """This module implements HMAC based signature algorithms."""
+from __future__ import annotations
 
 from typing import SupportsBytes, Type, Union
 

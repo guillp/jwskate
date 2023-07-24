@@ -4,7 +4,6 @@
 : https: //www.rfc-editor.org/rfc/rfc8037.html
 
 """
-
 from __future__ import annotations
 
 from functools import cached_property

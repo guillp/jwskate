@@ -1,4 +1,5 @@
 """This module exposes all the Signature algorithms available from `jwskate`."""
+from __future__ import annotations
 
 from .ec import ES256, ES256K, ES384, ES512, BaseECSignatureAlg
 from .eddsa import Ed448Dsa, Ed25519Dsa, EdDsa

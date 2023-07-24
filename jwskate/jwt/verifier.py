@@ -1,4 +1,6 @@
 """High-Level facility to verify JWT tokens signature, validity dates, issuer, audiences, etc."""
+from __future__ import annotations
+
 from typing import Any, Callable, Dict, Iterable, Optional, Union
 
 from jwskate import Jwk, JwkSet

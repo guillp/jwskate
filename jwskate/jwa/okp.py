@@ -4,15 +4,14 @@
 : https: //www.rfc-editor.org/rfc/rfc8037.html
 
 """
-
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, ClassVar, Dict, Tuple, Type, Union
+from typing import Any, ClassVar, Dict, Tuple, Type, Union, runtime_checkable
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
-from typing_extensions import Protocol, runtime_checkable
+from typing_extensions import Protocol
 
 
 @runtime_checkable

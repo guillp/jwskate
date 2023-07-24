@@ -1,4 +1,5 @@
 """This module implements password-based Key Management Algorithms relying on PBES2."""
+from __future__ import annotations
 
 from typing import SupportsBytes, Type, Union
 

@@ -1,5 +1,4 @@
 """This module implement JWS signatures."""
-
 from __future__ import annotations
 
 from functools import cached_property

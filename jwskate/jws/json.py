@@ -1,5 +1,4 @@
 """This module implement the JWS JSON flat and general formats."""
-
 from __future__ import annotations
 
 from functools import cached_property

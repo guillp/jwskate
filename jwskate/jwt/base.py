@@ -1,5 +1,4 @@
 """This modules contains the `Jwt` base class."""
-
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -53,7 +52,7 @@ class Jwt(BaseCompactToken):
         claims: Dict[str, Any],
         key: Union[Jwk, Dict[str, Any], Any],
         alg: Optional[str] = None,
-        typ: Optional[str] = 'JWT',
+        typ: Optional[str] = "JWT",
         extra_headers: Optional[Dict[str, Any]] = None,
     ) -> SignedJwt:
         """Sign a JSON payload with a private key and return the resulting `SignedJwt`.
@@ -82,7 +81,7 @@ class Jwt(BaseCompactToken):
         extra_headers = extra_headers or {}
         headers = dict(alg=alg, **extra_headers)
         if typ:
-            headers['typ'] = typ
+            headers["typ"] = typ
         if key.kid:
             headers["kid"] = key.kid
 
@@ -128,7 +127,7 @@ class Jwt(BaseCompactToken):
     def unprotected(
         cls,
         claims: Dict[str, Any],
-        typ: Optional[str] = 'JWT',
+        typ: Optional[str] = "JWT",
         extra_headers: Optional[Dict[str, Any]] = None,
     ) -> SignedJwt:
         """Generate a JWT that is not signed and not encrypted (with alg=none).
@@ -146,7 +145,7 @@ class Jwt(BaseCompactToken):
 
         headers = dict(extra_headers or {}, alg="none")
         if typ:
-            headers['typ'] = typ
+            headers["typ"] = typ
 
         headers_part = BinaPy.serialize_to("json", headers).to("b64u")
         claims_part = BinaPy.serialize_to("json", claims).to("b64u")

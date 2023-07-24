@@ -1,4 +1,5 @@
 """This module implements AES-GCM based Key Management algorithms."""
+from __future__ import annotations
 
 from typing import SupportsBytes, Tuple, Union
 
@@ -45,7 +46,7 @@ class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
         cipherkey: Union[bytes, SupportsBytes],
         *,
         tag: Union[bytes, SupportsBytes],
-        iv: Union[bytes, SupportsBytes]
+        iv: Union[bytes, SupportsBytes],
     ) -> BinaPy:
         """Unwrap a symmetric key.
 

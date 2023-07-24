@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization

@@ -1,5 +1,4 @@
 """This module implements JWK representing Symmetric keys."""
-
 from __future__ import annotations
 
 import warnings

@@ -1,4 +1,5 @@
 """This module implements Json Web Key Sets (JWKS)."""
+from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Optional, Union
 

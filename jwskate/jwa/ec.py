@@ -1,5 +1,4 @@
 """This module contains classes that describe Elliptic Curves as described in RFC7518."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from builtins import ValueError
 from datetime import datetime, timezone
 
@@ -90,8 +92,8 @@ def test_signed_jwt() -> None:
 def test_unprotected() -> None:
     jwt = Jwt.unprotected({"foo": "bar"})
     assert jwt == "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJmb28iOiJiYXIifQ."
-    assert jwt.alg == 'none'
-    assert jwt.signature == b''
+    assert jwt.alg == "none"
+    assert jwt.signature == b""
 
 
 def test_jwt_signer_and_verifier(issuer: str) -> None:
@@ -160,7 +162,10 @@ def test_empty_jwt(private_jwk: Jwk) -> None:
         == "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkpXSy1BQkNEIn0.e30.c_3ppMzgxnhn4CkLBCNNJ5_zdoS6S9P79cruukiuixMHoHIPF0_nzaj5LBRUXt3O47JiJyUzroi1MXNe_Kod9dqLRM8RJ9t3dbWJRNbPrgnCkqpUhNZ6frrc8jVs9Qu9xmXLDYEa4aSwPSkQTufWN1fC04Vzm8JUMVXM0AFeKjyEyUijEuqeBBFztDbIc2apyXWc5bZW7HEkhDNgKK0pWAVnXLwt4OwGQjd6ZOC5Hgx1wDbiam_abNWaDvR53JSCLM0wMpkYrONY_RPjWRycyeb9K5tHOcGbfRvQqpZGsRG-slf-bqwSOt-8G6Phc_YDv9Lw4NN-vqOxbo2lw-3Crw"
     )
     assert bytes(jwt) == str(jwt).encode()
-    assert jwt.signed_part == b"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkpXSy1BQkNEIn0.e30"
+    assert (
+        jwt.signed_part
+        == b"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkpXSy1BQkNEIn0.e30"
+    )
 
     jwt.validate(key=private_jwk.public_jwk(), check_exp=False)
 

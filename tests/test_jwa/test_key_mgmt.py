@@ -1,4 +1,6 @@
 """Tests for jwskate.jwa.key_mgmt submodule."""
+from __future__ import annotations
+
 from typing import Type, Union
 
 import pytest

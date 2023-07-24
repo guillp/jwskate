@@ -10,10 +10,15 @@ repos:
     rev: v4.4.0
     hooks:
     - id: trailing-whitespace
+      args: [--markdown-linebreak-ext=md]
     - id: end-of-file-fixer
     - id: check-merge-conflict
     - id: check-yaml
-      args: [--unsafe]
+    - id: debug-statements
+    - id: name-tests-test
+    - id: mixed-line-ending
+      args: [--fix=lf]
+    - id: no-commit-to-branch
 -   repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0
     hooks:
@@ -22,6 +27,11 @@ repos:
     - id: python-no-eval
     - id: python-use-type-annotations
     - id: text-unicode-replacement-char
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v3.9.0
+    hooks:
+    -   id: pyupgrade
+        args: [--py38-plus]
 - repo: https://github.com/myint/docformatter
   rev: v1.7.5
   hooks:

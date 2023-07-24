@@ -1,4 +1,6 @@
 """Tests for the jwkskate.jwa submodule."""
+from __future__ import annotations
+
 from binapy import BinaPy
 
 from jwskate import A128CBC_HS256, A192CBC_HS384, EcdhEs, Jwk

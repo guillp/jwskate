@@ -1,4 +1,5 @@
 """This module implements the Edwards-curve Digital Signature Algorithm (EdDSA)."""
+from __future__ import annotations
 
 from typing import SupportsBytes, Union
 

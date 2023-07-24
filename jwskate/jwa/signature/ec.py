@@ -1,4 +1,6 @@
 """This module implement Elliptic Curve signature algorithms."""
+from __future__ import annotations
+
 from typing import SupportsBytes, Union
 
 from binapy import BinaPy

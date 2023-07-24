@@ -1,4 +1,5 @@
 """This modules contains classes and utilities to generate and validate signed JWT."""
+from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from functools import cached_property

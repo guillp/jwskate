@@ -1,4 +1,5 @@
 """This module implements Elliptic Curve Diffie-Hellman based Key Management algorithms."""
+from __future__ import annotations
 
 from typing import Any, SupportsBytes, Type, Union
 

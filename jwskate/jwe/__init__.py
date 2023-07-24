@@ -4,6 +4,7 @@
 : https: //www.rfc-editor.org/rfc/rfc7516
 
 """
+from __future__ import annotations
 
 from .compact import InvalidJwe, JweCompact
 

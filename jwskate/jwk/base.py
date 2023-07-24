@@ -8,7 +8,6 @@ specific key type and want to access the internal attributes, you should only ev
 interface from `Jwk`.
 
 """
-
 from __future__ import annotations
 
 import warnings

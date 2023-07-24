@@ -1,5 +1,4 @@
 """This module implements JWK representing Elliptic Curve keys."""
-
 from __future__ import annotations
 
 import warnings

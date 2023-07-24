@@ -1,4 +1,6 @@
 """This module contains base classes for all tokens types handled by `jwskate`."""
+from __future__ import annotations
+
 import json
 from functools import cached_property
 from typing import Any, Dict, Type, TypeVar, Union

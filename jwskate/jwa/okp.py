@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, ClassVar, Dict, Tuple, Type, Union, runtime_checkable
+from typing import Any, ClassVar, runtime_checkable
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
@@ -60,23 +60,23 @@ class OKPCurve:
     description: str
     """Curve description (human readable)."""
 
-    cryptography_private_key_class: Type[Any]
+    cryptography_private_key_class: type[Any]
     """`cryptography` private key class."""
 
-    cryptography_public_key_class: Type[Any]
+    cryptography_public_key_class: type[Any]
     """`cryptography` public key class."""
 
     use: str
     """Curve usage (`'sig'` or '`enc'`)."""
 
-    instances: ClassVar[Dict[str, OKPCurve]] = {}
+    instances: ClassVar[dict[str, OKPCurve]] = {}
     """Registry of subclasses, in a {name: instance} mapping."""
 
     def __post_init__(self) -> None:
         """Automatically registers subclasses in the instance registry."""
         self.instances[self.name] = self
 
-    def generate(self) -> Tuple[bytes, bytes]:
+    def generate(self) -> tuple[bytes, bytes]:
         """Generate a new private key on this curve.
 
         Returns:
@@ -95,7 +95,7 @@ class OKPCurve:
         return x, d
 
     @classmethod
-    def get_curve(cls, key: Union[PublicKeyProtocol, PrivateKeyProtocol]) -> OKPCurve:
+    def get_curve(cls, key: PublicKeyProtocol | PrivateKeyProtocol) -> OKPCurve:
         """Return the appropriate `OKPCurve` instance for a given key.
 
         This takes a `cryptography` private or public key as parameter. If the key type matches an OKP curve

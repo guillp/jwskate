@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 from functools import cached_property
-from typing import Any, Dict, Type, TypeVar, Union
+from typing import Any, Dict, TypeVar
 
 
 class BaseCompactToken:
@@ -18,7 +18,7 @@ class BaseCompactToken:
 
     """
 
-    def __init__(self, value: Union[bytes, str], max_size: int = 16 * 1024):
+    def __init__(self, value: bytes | str, max_size: int = 16 * 1024):
         if len(value) > max_size:
             raise ValueError(
                 f"This JWT size exceeds {max_size} bytes, which is abnormally big. "
@@ -32,7 +32,7 @@ class BaseCompactToken:
         value = b"".join(value.split())
 
         self.value = value
-        self.headers: Dict[str, Any]
+        self.headers: dict[str, Any]
 
     def __eq__(self, other: Any) -> bool:
         """Check that a Jwt is equal to another.
@@ -142,7 +142,7 @@ class BaseJsonDict(Dict[str, Any]):
     """Base class Jwk and tokens in JSON representation."""
 
     @classmethod
-    def from_json(cls: Type[D], j: str) -> D:
+    def from_json(cls: type[D], j: str) -> D:
         """Initialize an object based on a string containing a JSON representation.
 
         Args:

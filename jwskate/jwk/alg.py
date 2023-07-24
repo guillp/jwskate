@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Iterable, List, Mapping, Optional, Type, TypeVar, Union
+from typing import Iterable, Mapping, Type, TypeVar
 
 from jwskate.jwa import BaseAlg
 
@@ -26,8 +26,8 @@ class MismatchingAlg(ValueError):
     def __init__(
         self,
         target_alg: str,
-        alg: Optional[str] = None,
-        algs: Union[Iterable[str], None] = None,
+        alg: str | None = None,
+        algs: Iterable[str] | None = None,
     ) -> None:
         self.target_alg = target_alg
         self.alg = alg
@@ -40,8 +40,8 @@ T = TypeVar("T", bound=Type[BaseAlg])
 def select_alg_class(
     supported_algs: Mapping[str, T],
     *,
-    jwk_alg: Optional[str] = None,
-    alg: Optional[str] = None,
+    jwk_alg: str | None = None,
+    alg: str | None = None,
     strict: bool = False,
 ) -> T:
     """Choose the appropriate alg class to use for cryptographic operations.
@@ -105,11 +105,11 @@ def select_alg_class(
 def select_alg_classes(
     supported_algs: Mapping[str, T],
     *,
-    jwk_alg: Optional[str] = None,
-    alg: Optional[str] = None,
-    algs: Optional[Iterable[str]] = None,
+    jwk_alg: str | None = None,
+    alg: str | None = None,
+    algs: Iterable[str] | None = None,
     strict: bool = False,
-) -> List[T]:
+) -> list[T]:
     """Select several appropriate algs classes to use on cryptographic operations.
 
     This method is typically used to get the list of valid algorithms when checking a signature, when several algorithms are allowed.
@@ -156,7 +156,7 @@ def select_alg_classes(
                     f"You requested {requested_alg}."
                 )
 
-    possible_algs: List[str] = []
+    possible_algs: list[str] = []
     if alg:
         possible_algs = [alg]
     elif algs:

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from functools import cached_property
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Iterable
 
 from binapy import BinaPy
 
@@ -36,7 +36,7 @@ class SignedJwt(Jwt):
 
     """
 
-    def __init__(self, value: Union[bytes, str]) -> None:
+    def __init__(self, value: bytes | str) -> None:
         super().__init__(value)
 
         if self.value.count(b".") != 2:
@@ -81,9 +81,9 @@ class SignedJwt(Jwt):
 
     def verify_signature(
         self,
-        key: Union[Jwk, Dict[str, Any], Any],
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
+        key: Jwk | dict[str, Any] | Any,
+        alg: str | None = None,
+        algs: Iterable[str] | None = None,
     ) -> bool:
         """Verify this JWT signature using a given key and algorithm(s).
 
@@ -102,7 +102,7 @@ class SignedJwt(Jwt):
             data=self.signed_part, signature=self.signature, alg=alg, algs=algs
         )
 
-    def is_expired(self, leeway: int = 0) -> Optional[bool]:
+    def is_expired(self, leeway: int = 0) -> bool | None:
         """Check if this token is expired, based on its `exp` claim.
 
         Args:
@@ -118,7 +118,7 @@ class SignedJwt(Jwt):
         return exp < (datetime.now(timezone.utc) + timedelta(seconds=leeway))
 
     @cached_property
-    def expires_at(self) -> Optional[datetime]:
+    def expires_at(self) -> datetime | None:
         """Get the *Expires At* (`exp`) date from this token.
 
         Returns:
@@ -138,7 +138,7 @@ class SignedJwt(Jwt):
             raise AttributeError("invalid `exp `claim", exp)
 
     @cached_property
-    def issued_at(self) -> Optional[datetime]:
+    def issued_at(self) -> datetime | None:
         """Get the *Issued At* (`iat`) date from this token.
 
         Returns:
@@ -158,7 +158,7 @@ class SignedJwt(Jwt):
             raise AttributeError("invalid `iat `claim", iat)
 
     @cached_property
-    def not_before(self) -> Optional[datetime]:
+    def not_before(self) -> datetime | None:
         """Get the *Not Before* (nbf) date from this token.
 
         Returns:
@@ -178,7 +178,7 @@ class SignedJwt(Jwt):
             raise AttributeError("invalid `nbf `claim", nbf)
 
     @cached_property
-    def issuer(self) -> Optional[str]:
+    def issuer(self) -> str | None:
         """Get the *Issuer* (`iss`) claim from this token.
 
         Returns:
@@ -194,7 +194,7 @@ class SignedJwt(Jwt):
         raise AttributeError("iss has an unexpected type", type(iss))
 
     @cached_property
-    def audiences(self) -> List[str]:
+    def audiences(self) -> list[str]:
         """Get the *Audience(s)* (`aud`) claim from this token.
 
         If this token has a single audience, this will return a `list` anyway.
@@ -216,7 +216,7 @@ class SignedJwt(Jwt):
         raise AttributeError("aud has an unexpected type", type(aud))
 
     @cached_property
-    def subject(self) -> Optional[str]:
+    def subject(self) -> str | None:
         """Get the *Subject* (`sub`) from this token.
 
         Returns:
@@ -232,7 +232,7 @@ class SignedJwt(Jwt):
         raise AttributeError("sub has an unexpected type", type(sub))
 
     @cached_property
-    def jwt_token_id(self) -> Optional[str]:
+    def jwt_token_id(self) -> str | None:
         """Get the *JWT Token ID* (`jti`) from this token.
 
         Returns:
@@ -310,12 +310,12 @@ class SignedJwt(Jwt):
 
     def validate(
         self,
-        key: Union[Jwk, Dict[str, Any], Any],
+        key: Jwk | dict[str, Any] | Any,
         *,
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
-        issuer: Optional[str] = None,
-        audience: Union[None, str] = None,
+        alg: str | None = None,
+        algs: Iterable[str] | None = None,
+        issuer: str | None = None,
+        audience: None | str = None,
         check_exp: bool = True,
         **kwargs: Any,
     ) -> None:

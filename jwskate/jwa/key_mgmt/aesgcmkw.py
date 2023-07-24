@@ -1,7 +1,7 @@
 """This module implements AES-GCM based Key Management algorithms."""
 from __future__ import annotations
 
-from typing import SupportsBytes, Tuple, Union
+from typing import SupportsBytes
 
 from binapy import BinaPy
 
@@ -22,8 +22,8 @@ class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
     """Initialisation Vector size, in bits."""
 
     def wrap_key(
-        self, plainkey: Union[bytes, SupportsBytes], *, iv: Union[bytes, SupportsBytes]
-    ) -> Tuple[BinaPy, BinaPy]:
+        self, plainkey: bytes | SupportsBytes, *, iv: bytes | SupportsBytes
+    ) -> tuple[BinaPy, BinaPy]:
         """Wrap a symmetric key, which is typically used as Content Encryption Key (CEK).
 
         This method is used by the sender of the encrypted message.
@@ -43,10 +43,10 @@ class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
 
     def unwrap_key(
         self,
-        cipherkey: Union[bytes, SupportsBytes],
+        cipherkey: bytes | SupportsBytes,
         *,
-        tag: Union[bytes, SupportsBytes],
-        iv: Union[bytes, SupportsBytes],
+        tag: bytes | SupportsBytes,
+        iv: bytes | SupportsBytes,
     ) -> BinaPy:
         """Unwrap a symmetric key.
 

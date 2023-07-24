@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
@@ -129,8 +129,8 @@ class OKPJwk(Jwk):
     def from_bytes(
         cls,
         private_key: bytes,
-        crv: Optional[str] = None,
-        use: Optional[str] = None,
+        crv: str | None = None,
+        use: str | None = None,
         **kwargs: Any,
     ) -> OKPJwk:
         """Initialize an `OKPJwk` from its private key, as `bytes`.
@@ -313,7 +313,7 @@ class OKPJwk(Jwk):
     @classmethod
     @override
     def generate(
-        cls, *, crv: Optional[str] = None, alg: Optional[str] = None, **params: Any
+        cls, *, crv: str | None = None, alg: str | None = None, **params: Any
     ) -> OKPJwk:
         if crv:
             curve = cls.get_curve(crv)
@@ -335,7 +335,7 @@ class OKPJwk(Jwk):
 
     @cached_property
     @override
-    def use(self) -> Optional[str]:
+    def use(self) -> str | None:
         if self.curve in (Ed25519, Ed448):
             return "sig"
         elif self.curve in (X25519, X448):

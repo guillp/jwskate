@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Any, Callable, Iterable, Mapping
 
 from binapy import BinaPy
 
@@ -50,10 +50,10 @@ class JwsJsonFlat(JwsSignature):
     def sign(
         cls,
         payload: bytes,
-        key: Union[Jwk, Dict[str, Any], Any],
-        alg: Optional[str] = None,
-        extra_protected_headers: Optional[Mapping[str, Any]] = None,
-        header: Optional[Any] = None,
+        key: Jwk | dict[str, Any] | Any,
+        alg: str | None = None,
+        extra_protected_headers: Mapping[str, Any] | None = None,
+        header: Any | None = None,
         **kwargs: Any,
     ) -> JwsJsonFlat:
         """Signs a payload into a JWS in JSON flat format.
@@ -115,10 +115,10 @@ class JwsJsonFlat(JwsSignature):
 
     def verify_signature(
         self,
-        key: Union[Jwk, Dict[str, Any], Any],
+        key: Jwk | dict[str, Any] | Any,
         *,
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
+        alg: str | None = None,
+        algs: Iterable[str] | None = None,
     ) -> bool:
         """Verify this JWS signature with a given key.
 
@@ -154,24 +154,25 @@ class JwsJsonGeneral(BaseJsonDict):
     def sign(
         cls,
         payload: bytes,
-        *signature_parameters: Union[
-            Tuple[
-                Union[Jwk, Mapping[str, Any]],
+        *signature_parameters: (
+            tuple[
+                Jwk | Mapping[str, Any],
                 str,
-                Optional[Mapping[str, Any]],
-                Optional[Mapping[str, Any]],
-            ],
-            Tuple[
-                Union[Jwk, Mapping[str, Any]],
+                Mapping[str, Any] | None,
+                Mapping[str, Any] | None,
+            ]
+            | tuple[
+                Jwk | Mapping[str, Any],
                 str,
-                Optional[Mapping[str, Any]],
-            ],
-            Tuple[
-                Union[Jwk, Mapping[str, Any]],
+                Mapping[str, Any] | None,
+            ]
+            | tuple[
+                Jwk | Mapping[str, Any],
                 str,
-            ],
-            Union[Jwk, Mapping[str, Any]],
-        ],
+            ]
+            | Jwk
+            | Mapping[str, Any]
+        ),
     ) -> JwsJsonGeneral:
         """Sign a payload with several keys and return the resulting JWS in JSON general format.
 
@@ -194,7 +195,7 @@ class JwsJsonGeneral(BaseJsonDict):
         return jws
 
     @cached_property
-    def signatures(self) -> List[JwsSignature]:
+    def signatures(self) -> list[JwsSignature]:
         """The list of `JwsSignature` from this JWS.
 
         Returns:
@@ -208,10 +209,10 @@ class JwsJsonGeneral(BaseJsonDict):
 
     def add_signature(
         self,
-        key: Union[Jwk, Dict[str, Any], Any],
-        alg: Optional[str] = None,
-        extra_protected_headers: Optional[Mapping[str, Any]] = None,
-        header: Optional[Mapping[str, Any]] = None,
+        key: Jwk | dict[str, Any] | Any,
+        alg: str | None = None,
+        extra_protected_headers: Mapping[str, Any] | None = None,
+        header: Mapping[str, Any] | None = None,
     ) -> JwsJsonGeneral:
         """Add a new signature in this JWS.
 
@@ -234,7 +235,7 @@ class JwsJsonGeneral(BaseJsonDict):
     def signed_part(
         self,
         signature_chooser: Callable[
-            [List[JwsSignature]], JwsSignature
+            [list[JwsSignature]], JwsSignature
         ] = lambda sigs: sigs[0],
     ) -> bytes:
         """Return the signed part from a given signature.
@@ -257,7 +258,7 @@ class JwsJsonGeneral(BaseJsonDict):
     def compact(
         self,
         signature_chooser: Callable[
-            [List[JwsSignature]], JwsSignature
+            [list[JwsSignature]], JwsSignature
         ] = lambda sigs: sigs[0],
     ) -> JwsCompact:
         """Create a compact JWS from a specific signature from this JWS.
@@ -278,7 +279,7 @@ class JwsJsonGeneral(BaseJsonDict):
     def flatten(
         self,
         signature_chooser: Callable[
-            [List[JwsSignature]], JwsSignature
+            [list[JwsSignature]], JwsSignature
         ] = lambda sigs: sigs[0],
     ) -> JwsJsonFlat:
         """Create a JWS in JSON flat format from a specific signature from this JWS.
@@ -300,10 +301,10 @@ class JwsJsonGeneral(BaseJsonDict):
 
     def verify_signature(
         self,
-        key: Union[Jwk, Dict[str, Any], Any],
+        key: Jwk | dict[str, Any] | Any,
         *,
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
+        alg: str | None = None,
+        algs: Iterable[str] | None = None,
     ) -> bool:
         """Verify the signatures from this JWS.
 

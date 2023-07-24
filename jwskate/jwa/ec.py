@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, ClassVar, Dict, Tuple, Union
+from typing import Any, ClassVar
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -31,14 +31,14 @@ class EllipticCurve:
     coordinate_size: int
     """Coordinate size, in bytes."""
 
-    instances: ClassVar[Dict[str, EllipticCurve]] = {}
+    instances: ClassVar[dict[str, EllipticCurve]] = {}
     """Registry of subclasses, in a {name: instance} mapping."""
 
     def __post_init__(self) -> None:
         """Automatically register subclasses in the instance registry."""
         self.instances[self.name] = self
 
-    def generate(self) -> Tuple[int, int, int]:
+    def generate(self) -> tuple[int, int, int]:
         """Generate a new EC key on this curve.
 
         Returns:
@@ -54,8 +54,8 @@ class EllipticCurve:
 
     @classmethod
     def get_curve(
-        cls, key: Union[ec.EllipticCurvePublicKey, ec.EllipticCurvePrivateKey]
-    ) -> "EllipticCurve":
+        cls, key: ec.EllipticCurvePublicKey | ec.EllipticCurvePrivateKey
+    ) -> EllipticCurve:
         """Get the appropriate `EllipticCurve` instance for a given key.
 
         The provided key must be an `EllipticCurvePublicKey` or `EllipticCurvePrivateKey`
@@ -78,8 +78,8 @@ class EllipticCurve:
 
     @classmethod
     def get_jwk_parameters(
-        cls, key: Union[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey]
-    ) -> Dict[str, Any]:
+        cls, key: ec.EllipticCurvePrivateKey | ec.EllipticCurvePublicKey
+    ) -> dict[str, Any]:
         """Extract all private and public parameters from the given `cryptography` key.
 
         Key must be an instance of `EllipticCurvePrivateKey` or `EllipticCurvePublicKey`.

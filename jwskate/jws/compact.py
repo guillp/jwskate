@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, SupportsBytes, Union
+from typing import TYPE_CHECKING, Any, Iterable, SupportsBytes
 
 from binapy import BinaPy
 
@@ -27,7 +27,7 @@ class JwsCompact(BaseCompactToken):
 
     """
 
-    def __init__(self, value: Union[bytes, str], max_size: int = 16 * 1024):
+    def __init__(self, value: bytes | str, max_size: int = 16 * 1024):
         super().__init__(value, max_size)
 
         if self.value.count(b".") != 2:
@@ -61,10 +61,10 @@ class JwsCompact(BaseCompactToken):
     @classmethod
     def sign(
         cls,
-        payload: Union[bytes, SupportsBytes],
-        key: Union[Jwk, Dict[str, Any], Any],
-        alg: Optional[str] = None,
-        extra_headers: Optional[Dict[str, Any]] = None,
+        payload: bytes | SupportsBytes,
+        key: Jwk | dict[str, Any] | Any,
+        alg: str | None = None,
+        extra_headers: dict[str, Any] | None = None,
     ) -> JwsCompact:
         """Sign a payload and returns the resulting JwsCompact.
 
@@ -95,8 +95,8 @@ class JwsCompact(BaseCompactToken):
     @classmethod
     def from_parts(
         cls,
-        signed_part: Union[bytes, SupportsBytes, str],
-        signature: Union[bytes, SupportsBytes],
+        signed_part: bytes | SupportsBytes | str,
+        signature: bytes | SupportsBytes,
     ) -> JwsCompact:
         """Construct a JWS token based on its signed part and signature values.
 
@@ -132,10 +132,10 @@ class JwsCompact(BaseCompactToken):
 
     def verify_signature(
         self,
-        key: Union[Jwk, Dict[str, Any], Any],
+        key: Jwk | dict[str, Any] | Any,
         *,
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
+        alg: str | None = None,
+        algs: Iterable[str] | None = None,
     ) -> bool:
         """Verify the signature from this JwsCompact using a Jwk.
 

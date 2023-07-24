@@ -32,7 +32,7 @@ class EdDsa(
     def with_random_key(cls) -> Self:
         return cls(ed25519.Ed25519PrivateKey.generate())
 
-    def sign(self, data: Union[bytes, SupportsBytes]) -> BinaPy:  # noqa: D102
+    def sign(self, data: bytes | SupportsBytes) -> BinaPy:  # noqa: D102
         if not isinstance(data, bytes):
             data = bytes(data)
 
@@ -40,7 +40,7 @@ class EdDsa(
             return BinaPy(key.sign(data))
 
     def verify(
-        self, data: Union[bytes, SupportsBytes], signature: Union[bytes, SupportsBytes]
+        self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes
     ) -> bool:  # noqa: D102
         if not isinstance(data, bytes):
             data = bytes(data)

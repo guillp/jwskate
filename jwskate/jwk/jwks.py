@@ -1,7 +1,7 @@
 """This module implements Json Web Key Sets (JWKS)."""
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Iterable
 
 from ..token import BaseJsonDict
 from .base import Jwk, to_jwk
@@ -27,8 +27,8 @@ class JwkSet(BaseJsonDict):
 
     def __init__(
         self,
-        jwks: Optional[Dict[str, Any]] = None,
-        keys: Optional[Iterable[Union[Jwk, Dict[str, Any]]]] = None,
+        jwks: dict[str, Any] | None = None,
+        keys: Iterable[Jwk | dict[str, Any]] | None = None,
     ):
         if jwks is None and keys is None:
             keys = []
@@ -46,7 +46,7 @@ class JwkSet(BaseJsonDict):
                 self.add_jwk(jwk)
 
     @property
-    def jwks(self) -> List[Jwk]:
+    def jwks(self) -> list[Jwk]:
         """Return the list of keys from this JwkSet, as `Jwk` instances.
 
         Returns:
@@ -84,9 +84,9 @@ class JwkSet(BaseJsonDict):
 
     def add_jwk(
         self,
-        key: Union[Jwk, Dict[str, Any], Any],
-        kid: Optional[str] = None,
-        use: Optional[str] = None,
+        key: Jwk | dict[str, Any] | Any,
+        kid: str | None = None,
+        use: str | None = None,
     ) -> str:
         """Add a Jwk in this JwkSet.
 
@@ -140,7 +140,7 @@ class JwkSet(BaseJsonDict):
         """
         return any(key.is_private for key in self.jwks)
 
-    def public_jwks(self) -> "JwkSet":
+    def public_jwks(self) -> JwkSet:
         """Return another JwkSet with the public keys associated with the current keys.
 
         Returns:
@@ -149,7 +149,7 @@ class JwkSet(BaseJsonDict):
         """
         return JwkSet(keys=(key.public_jwk() for key in self.jwks))
 
-    def verification_keys(self) -> List[Jwk]:
+    def verification_keys(self) -> list[Jwk]:
         """Return the list of keys from this JWKS that are usable for signature verification.
 
         To be usable for signature verification, a key must:
@@ -172,9 +172,9 @@ class JwkSet(BaseJsonDict):
         self,
         data: bytes,
         signature: bytes,
-        alg: Optional[str] = None,
-        algs: Optional[Iterable[str]] = None,
-        kid: Optional[str] = None,
+        alg: str | None = None,
+        algs: Iterable[str] | None = None,
+        kid: str | None = None,
     ) -> bool:
         """Verify a signature with the keys from this key set.
 
@@ -217,7 +217,7 @@ class JwkSet(BaseJsonDict):
         # no key matches, so consider the signature invalid
         return False
 
-    def encryption_keys(self) -> List[Jwk]:
+    def encryption_keys(self) -> list[Jwk]:
         """Return the list of keys from this JWKS that are usable for encryption.
 
         To be usable for encryption, a key must:

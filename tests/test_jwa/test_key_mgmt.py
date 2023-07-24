@@ -1,8 +1,6 @@
 """Tests for jwskate.jwa.key_mgmt submodule."""
 from __future__ import annotations
 
-from typing import Type, Union
-
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec, x448, x25519
 
@@ -20,11 +18,11 @@ from jwskate import BasePbes2, EcdhEs
     ],
 )
 def test_ecdhes(
-    key_gen: Union[
-        Type[ec.EllipticCurvePrivateKey],
-        Type[x25519.X25519PrivateKey],
-        Type[x448.X448PrivateKey],
-    ]
+    key_gen: (
+        type[ec.EllipticCurvePrivateKey]
+        | type[x25519.X25519PrivateKey]
+        | type[x448.X448PrivateKey]
+    ),
 ) -> None:
     private_key = key_gen()
     sender_ecdhes = EcdhEs(private_key.public_key())

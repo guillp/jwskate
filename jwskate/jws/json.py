@@ -200,6 +200,7 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Returns:
             The list of signatures from this JWS.
+
         """
         signatures = self.get("signatures")
         if signatures is None:

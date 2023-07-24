@@ -52,6 +52,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         Returns:
           the resulting MAC.
+
         """
         if not isinstance(ciphertext, bytes):
             ciphertext = bytes(ciphertext)
@@ -90,6 +91,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         Returns:
           a tuple (encrypted_data, authentication_tag)
+
         """
         if not isinstance(plaintext, bytes):
             plaintext = bytes(plaintext)

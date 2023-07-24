@@ -50,6 +50,7 @@ class JwkSet(BaseJsonDict):
 
         Returns:
             a list of `Jwk`
+
         """
         return self.get("keys", [])
 
@@ -120,6 +121,7 @@ class JwkSet(BaseJsonDict):
 
         Raises:
             KeyError: if no key matches
+
         """
         try:
             jwk = self.get_jwk_by_kid(kid)

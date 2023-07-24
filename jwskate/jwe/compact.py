@@ -103,6 +103,7 @@ class JweCompact(BaseCompactToken):
 
         Returns:
             the initialized `JweCompact` instance
+
         """
         return cls(
             b".".join(
@@ -127,6 +128,7 @@ class JweCompact(BaseCompactToken):
 
         Raises:
             AttributeError: if there is no enc header or it is not a string
+
         """
         return self.get_header("enc")  # type: ignore[no-any-return]
         # header has been checked at init time
@@ -158,6 +160,7 @@ class JweCompact(BaseCompactToken):
 
         Returns:
             the generated JweCompact instance
+
         """
         extra_headers = extra_headers or {}
         key = to_jwk(key)
@@ -201,6 +204,7 @@ class JweCompact(BaseCompactToken):
 
         Returns:
             the unwrapped CEK, as a SymmetricJwk
+
         """
         if isinstance(key_or_password, (bytes, str)):
             password = key_or_password
@@ -232,6 +236,7 @@ class JweCompact(BaseCompactToken):
 
         Returns:
           the decrypted payload
+
         """
         cek_jwk = self.unwrap_cek(key, alg=alg, algs=algs)
 

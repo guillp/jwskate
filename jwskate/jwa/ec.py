@@ -70,6 +70,7 @@ class EllipticCurve:
 
         Raises:
             NotImplementedError: if the curve is not supported
+
         """
         for c in cls.instances.values():
             if c.cryptography_curve.name == key.curve.name:
@@ -92,6 +93,7 @@ class EllipticCurve:
 
         Raises:
             TypeError: if the provided key is not an EllipticCurvePrivateKey or EllipticCurvePublicKey
+
         """
         public_numbers: ec.EllipticCurvePublicNumbers
         if isinstance(key, ec.EllipticCurvePrivateKey):

@@ -482,6 +482,7 @@ def test_verify_signature_by_jwcrypto(
         signed_jws_compact: the Jws signed by jwskate to verify
         verification_jwk: the Jwk containing the verification key
         signature_alg: the signature alg
+
     """
     import jwcrypto.jwk  # type: ignore[import]
     import jwcrypto.jws  # type: ignore[import]
@@ -505,6 +506,7 @@ def jwcrypto_signed_jws(
 
     Returns:
         a JWS token
+
     """
     import jwcrypto.jwk
     import jwcrypto.jws
@@ -530,6 +532,7 @@ def test_verify_signature_from_jwcrypto(
         jwcrypto_signed_jws: the JWS to verify
         verification_jwk: the public key to verify the signature
         signature_alg: the alg to use
+
     """
     assert JwsCompact(jwcrypto_signed_jws).verify_signature(
         verification_jwk, alg=signature_alg

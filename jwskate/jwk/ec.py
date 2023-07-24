@@ -110,6 +110,7 @@ class ECJwk(Jwk):
 
         Returns:
             the `EllipticCurve` instance
+
         """
         return self.get_curve(self.crv)
 
@@ -125,6 +126,7 @@ class ECJwk(Jwk):
 
         Returns:
           an ECJwk initialized with the supplied parameters
+
         """
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(

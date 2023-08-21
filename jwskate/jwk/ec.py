@@ -192,7 +192,12 @@ class ECJwk(Jwk):
             else:
                 raise UnsupportedAlg(alg)
 
-        x, y, d = curve.generate()
+        key = ec.generate_private_key(curve.cryptography_curve)
+        pn = key.private_numbers()  # type: ignore[attr-defined]
+        x = pn.public_numbers.x
+        y = pn.public_numbers.y
+        d = pn.private_value
+
         return cls.private(
             crv=curve.name,
             alg=alg,
@@ -205,7 +210,36 @@ class ECJwk(Jwk):
     @classmethod
     @override
     def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> ECJwk:
-        parameters = EllipticCurve.get_jwk_parameters(cryptography_key)
+        public_numbers: ec.EllipticCurvePublicNumbers
+        if isinstance(cryptography_key, ec.EllipticCurvePrivateKey):
+            public_numbers = cryptography_key.public_key().public_numbers()
+        elif isinstance(cryptography_key, ec.EllipticCurvePublicKey):
+            public_numbers = cryptography_key.public_numbers()
+        else:
+            raise TypeError(
+                "A EllipticCurvePrivateKey or a EllipticCurvePublicKey is required."
+            )
+
+        for crv in EllipticCurve.instances.values():
+            if crv.cryptography_curve.name == cryptography_key.curve.name:
+                break
+        else:
+            raise NotImplementedError(
+                f"Unsupported Curve {cryptography_key.curve.name}"
+            )
+
+        x = BinaPy.from_int(public_numbers.x, crv.coordinate_size).to("b64u").ascii()
+        y = BinaPy.from_int(public_numbers.y, crv.coordinate_size).to("b64u").ascii()
+        parameters = {"kty": KeyTypes.EC, "crv": crv.name, "x": x, "y": y}
+        if isinstance(cryptography_key, ec.EllipticCurvePrivateKey):
+            pn = cryptography_key.private_numbers()  # type: ignore[attr-defined]
+            d = (
+                BinaPy.from_int(pn.private_value, crv.coordinate_size)
+                .to("b64u")
+                .ascii()
+            )
+            parameters["d"] = d
+
         return cls(parameters)
 
     @override

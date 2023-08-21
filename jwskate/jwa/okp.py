@@ -76,55 +76,6 @@ class OKPCurve:
         """Automatically registers subclasses in the instance registry."""
         self.instances[self.name] = self
 
-    def generate(self) -> tuple[bytes, bytes]:
-        """Generate a new private key on this curve.
-
-        Returns:
-            a tuple of `x` (public  part), and `d` (private part), as bytes
-
-        """
-        key = self.cryptography_private_key_class.generate()
-        x = key.public_key().public_bytes(
-            serialization.Encoding.Raw, serialization.PublicFormat.Raw
-        )
-        d = key.private_bytes(
-            serialization.Encoding.Raw,
-            serialization.PrivateFormat.Raw,
-            serialization.NoEncryption(),
-        )
-        return x, d
-
-    @classmethod
-    def get_curve(cls, key: PublicKeyProtocol | PrivateKeyProtocol) -> OKPCurve:
-        """Return the appropriate `OKPCurve` instance for a given key.
-
-        This takes a `cryptography` private or public key as parameter. If the key type matches an OKP curve
-
-        Args:
-          key: `cryptography` private or public OKP key.
-
-        Returns:
-          OKPCurve: the appropriate `OKPCurve` for the given key
-
-        Raises:
-            NotImplementedError: if the required OKP curve is not supported
-
-        """
-        for c in cls.instances.values():
-            if isinstance(
-                key, (c.cryptography_private_key_class, c.cryptography_public_key_class)
-            ):
-                return c
-        raise TypeError(
-            f"""\
-Unsupported key type for OKP: {type(key)}. Supported key types are: "
-{', '.join(
-    name
-    for curve in cls.instances.values()
-    for name in (curve.cryptography_private_key_class.__name__, curve.cryptography_public_key_class.__name__)
-)}"""
-        )
-
 
 Ed25519 = OKPCurve(
     name="Ed25519",

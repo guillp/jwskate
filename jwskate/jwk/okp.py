@@ -217,7 +217,23 @@ class OKPJwk(Jwk):
     @classmethod
     @override
     def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> OKPJwk:
-        crv = OKPCurve.get_curve(cryptography_key)
+        for crv in OKPCurve.instances.values():
+            if isinstance(
+                cryptography_key,
+                (crv.cryptography_private_key_class, crv.cryptography_public_key_class),
+            ):
+                break
+        else:
+            raise TypeError(
+                f"""\
+                    Unsupported key type for OKP: {type(cryptography_key)}. Supported key types are: "
+                    {', '.join(
+                            name
+                            for curve in OKPCurve.instances.values()
+                            for name in (curve.cryptography_private_key_class.__name__, curve.cryptography_public_key_class.__name__)
+                        )}"""
+            )
+
         if isinstance(cryptography_key, cls.CRYPTOGRAPHY_PRIVATE_KEY_CLASSES):
             priv = cryptography_key.private_bytes(
                 encoding=serialization.Encoding.Raw,
@@ -248,28 +264,14 @@ class OKPJwk(Jwk):
 
     @override
     def _to_cryptography_key(self) -> Any:
-        if self.curve.name == "Ed25519":
-            if self.is_private:
-                return ed25519.Ed25519PrivateKey.from_private_bytes(self.private_key)
-            else:
-                return ed25519.Ed25519PublicKey.from_public_bytes(self.public_key)
-        elif self.curve.name == "Ed448":
-            if self.is_private:
-                return ed448.Ed448PrivateKey.from_private_bytes(self.private_key)
-            else:
-                return ed448.Ed448PublicKey.from_public_bytes(self.public_key)
-        elif self.curve.name == "X25519":
-            if self.is_private:
-                return x25519.X25519PrivateKey.from_private_bytes(self.private_key)
-            else:
-                return x25519.X25519PublicKey.from_public_bytes(self.public_key)
-        elif self.curve.name == "X448":
-            if self.is_private:
-                return x448.X448PrivateKey.from_private_bytes(self.private_key)
-            else:
-                return x448.X448PublicKey.from_public_bytes(self.public_key)
+        if self.is_private:
+            return self.curve.cryptography_private_key_class.from_private_bytes(
+                self.private_key
+            )
         else:
-            raise UnsupportedOKPCurve(self.curve)  # pragma: no cover
+            return self.curve.cryptography_public_key_class.from_public_bytes(
+                self.public_key
+            )
 
     @classmethod
     def public(cls, *, crv: str, x: bytes, **params: Any) -> OKPJwk:
@@ -330,14 +332,19 @@ class OKPJwk(Jwk):
                 "in order to generate an OKPJwk."
             )
 
-        x, d = curve.generate()
+        key = curve.cryptography_private_key_class.generate()
+        x = key.public_key().public_bytes(
+            serialization.Encoding.Raw, serialization.PublicFormat.Raw
+        )
+        d = key.private_bytes(
+            serialization.Encoding.Raw,
+            serialization.PrivateFormat.Raw,
+            serialization.NoEncryption(),
+        )
+
         return cls.private(crv=curve.name, x=x, d=d, alg=alg, **params)
 
     @cached_property
     @override
     def use(self) -> str | None:
-        if self.curve in (Ed25519, Ed448):
-            return "sig"
-        elif self.curve in (X25519, X448):
-            return "enc"
-        raise UnsupportedOKPCurve(self.curse)  # pragma: no-cover
+        return self.curve.use

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -37,86 +37,6 @@ class EllipticCurve:
     def __post_init__(self) -> None:
         """Automatically register subclasses in the instance registry."""
         self.instances[self.name] = self
-
-    def generate(self) -> tuple[int, int, int]:
-        """Generate a new EC key on this curve.
-
-        Returns:
-             a tuple of 4 `int`s: `x` and `y` coordinates (public key) and `d` (private key)
-
-        """
-        key = ec.generate_private_key(self.cryptography_curve)
-        pn = key.private_numbers()  # type: ignore[attr-defined]
-        x = pn.public_numbers.x
-        y = pn.public_numbers.y
-        d = pn.private_value
-        return x, y, d
-
-    @classmethod
-    def get_curve(
-        cls, key: ec.EllipticCurvePublicKey | ec.EllipticCurvePrivateKey
-    ) -> EllipticCurve:
-        """Get the appropriate `EllipticCurve` instance for a given key.
-
-        The provided key must be an `EllipticCurvePublicKey` or `EllipticCurvePrivateKey`
-        from the `cryptography` module.
-
-        Args:
-          key: an Elliptic Curve private or public key from `cryptography`.
-
-        Returns:
-          the appropriate instance of EllipticCurve for the given key.
-
-        Raises:
-            NotImplementedError: if the curve is not supported
-
-        """
-        for c in cls.instances.values():
-            if c.cryptography_curve.name == key.curve.name:
-                return c
-        raise NotImplementedError(f"Unsupported Curve {key.curve.name}")
-
-    @classmethod
-    def get_jwk_parameters(
-        cls, key: ec.EllipticCurvePrivateKey | ec.EllipticCurvePublicKey
-    ) -> dict[str, Any]:
-        """Extract all private and public parameters from the given `cryptography` key.
-
-        Key must be an instance of `EllipticCurvePrivateKey` or `EllipticCurvePublicKey`.
-
-        Args:
-          key: an Elliptic Curve public or private key from `cryptography`.
-
-        Returns:
-          a dict of JWK parameters matching that key
-
-        Raises:
-            TypeError: if the provided key is not an EllipticCurvePrivateKey or EllipticCurvePublicKey
-
-        """
-        public_numbers: ec.EllipticCurvePublicNumbers
-        if isinstance(key, ec.EllipticCurvePrivateKey):
-            public_numbers = key.public_key().public_numbers()
-        elif isinstance(key, ec.EllipticCurvePublicKey):
-            public_numbers = key.public_numbers()
-        else:
-            raise TypeError(
-                "A EllipticCurvePrivateKey or a EllipticCurvePublicKey is required."
-            )
-
-        crv = cls.get_curve(key)
-        x = BinaPy.from_int(public_numbers.x, crv.coordinate_size).to("b64u").ascii()
-        y = BinaPy.from_int(public_numbers.y, crv.coordinate_size).to("b64u").ascii()
-        parameters = {"kty": KeyTypes.EC, "crv": crv.name, "x": x, "y": y}
-        if isinstance(key, ec.EllipticCurvePrivateKey):
-            pn = key.private_numbers()  # type: ignore[attr-defined]
-            d = (
-                BinaPy.from_int(pn.private_value, crv.coordinate_size)
-                .to("b64u")
-                .ascii()
-            )
-            parameters["d"] = d
-        return parameters
 
 
 P_256: EllipticCurve = EllipticCurve(

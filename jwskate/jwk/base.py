@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Mapping, SupportsBytes, Type
+from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Mapping, SupportsBytes
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
@@ -121,8 +121,8 @@ class Jwk(BaseJsonDict):
 
     KTY: ClassVar[str]
 
-    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES: ClassVar[tuple[Type[Any], ...]]
-    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES: ClassVar[tuple[Type[Any], ...]]
+    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES: ClassVar[tuple[type[Any], ...]]
+    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES: ClassVar[tuple[type[Any], ...]]
 
     SIGNATURE_ALGORITHMS: Mapping[str, type[BaseSignatureAlg]] = {}
     KEY_MANAGEMENT_ALGORITHMS: Mapping[str, type[BaseKeyManagementAlg]] = {}
@@ -382,12 +382,11 @@ class Jwk(BaseJsonDict):
             hashalg: the IANA registered name for the hash alg to use
 
         Returns:
-             the JWK thumbprint uri for this Jwk
+             the JWK thumbprint URI for this `Jwk`
 
         """
-        return (
-            f"urn:ietf:params:oauth:jwk-thumbprint:{hashalg}:{self.thumbprint(hashalg)}"
-        )
+        thumbprint = self.thumbprint(hashalg)
+        return f"urn:ietf:params:oauth:jwk-thumbprint:{hashalg}:{thumbprint}"
 
     def check(
         self,
@@ -413,17 +412,17 @@ class Jwk(BaseJsonDict):
 
         """
         if is_private is not None:
-            if is_private is True and self.is_private is False:
+            if is_private and not self.is_private:
                 raise ValueError("This key is public while a private key is expected.")
-            elif is_private is False and self.is_private is True:
+            elif not is_private and self.is_private:
                 raise ValueError("This key is private while a public key is expected.")
 
         if is_symmetric is not None:
-            if is_symmetric is True and self.is_symmetric is False:
+            if is_symmetric and not self.is_symmetric:
                 raise ValueError(
                     "This key is asymmetric while a symmetric key is expected."
                 )
-            if is_symmetric is False and self.is_symmetric is True:
+            if not is_symmetric and self.is_symmetric:
                 raise ValueError(
                     "This key is symmetric while an asymmetric key is expected."
                 )
@@ -437,7 +436,7 @@ class Jwk(BaseJsonDict):
         return self
 
     def _validate(self) -> None:
-        """Validate the content of this JWK.
+        """Validate the content of this `Jwk`.
 
         It checks that all required parameters are present and well-formed. If the key is private, it sets the `is_private` flag to `True`.
 

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 import pytest
 from binapy import BinaPy
-from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 
 from jwskate import (
     ExpectedAlgRequired,
@@ -96,7 +96,7 @@ def test_unprotected() -> None:
     assert jwt.signature == b""
 
 
-def test_jwt_signer_and_verifier(issuer: str) -> None:
+def test_jwt_signer_and_verifier(issuer: str, freezer: FrozenDateTimeFactory) -> None:
     audience = "some_audience"
     signer = JwtSigner.with_random_key(issuer, alg="ES256")
     now = datetime.now(timezone.utc)
@@ -104,7 +104,7 @@ def test_jwt_signer_and_verifier(issuer: str) -> None:
     assert isinstance(jwt, SignedJwt)
     assert jwt.subject == "some_id"
     assert jwt.audiences == [audience]
-    assert jwt.iat == pytest.approx(now.timestamp())
+    assert jwt.iat == int(now.timestamp())
     assert jwt.expires_at is not None
     assert jwt.expires_at > now
 
@@ -489,8 +489,8 @@ def test_invalid_claims() -> None:
         jwt.jwt_token_id
 
 
-@freeze_time("2022-10-07 10:40:15 UTC")
-def test_timestamp() -> None:
+def test_timestamp(freezer: FrozenDateTimeFactory) -> None:
+    freezer.move_to("2022-10-07 10:40:15 UTC")
     now_ts = Jwt.timestamp()
     assert isinstance(now_ts, int)
     assert now_ts == 1665139215
@@ -502,8 +502,8 @@ def test_timestamp() -> None:
     assert Jwt.timestamp(-60) == 1665139155
 
 
-@freeze_time("2023-04-03 11:56:20 UTC")
-def test_verifier() -> None:
+def test_verifier(freezer: FrozenDateTimeFactory) -> None:
+    freezer.move_to("2023-04-03 11:56:20 UTC")
     issuer = "https://my.issuer.local"
     audience = "myaudience"
     subject = "mysubject"

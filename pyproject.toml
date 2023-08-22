@@ -17,6 +17,7 @@ classifiers=[
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
 ]
 packages = [
     { include = "jwskate" },
@@ -32,7 +33,6 @@ binapy = ">=0.7.0"
 [tool.poetry.dev-dependencies]
 black  = ">=23.7"
 coverage = ">=7.2.3"
-freezegun = ">=1.2.2"
 isort  = ">=5.12"
 jwcrypto = ">=1.0"
 livereload = ">=2.6"
@@ -40,13 +40,16 @@ mypy = ">=1.4.1"
 mkdocs  = ">=1.4.2"
 mkdocstrings = { version = ">=0.21.2", extras = ["python"] }
 mkdocs-autorefs = ">=0.4"
+mkdocs-include-markdown-plugin = { version = ">=4.0", python = ">=3.8,<3.12" }
 mkdocs-material  = ">=9.1.19"
 mkdocs-material-extensions  = ">=1.1"
 pip  = ">=23.2.1"
 pre-commit = ">=3.2.2"
 pytest  = ">=7.4.0"
 pytest-cov  = ">=4.0"
+pytest-freezer = ">=0.4.8"
 pytest-mypy = ">=0.10"
+pytest-profiling = ">=1.7.0"
 toml = ">=0.10"
 tomli = ">=2.0.1"
 tox  = ">=4.6.4"

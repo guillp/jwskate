@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.5.1
+    rev: v1.5.4
     hooks:
     -   id: forbid-crlf
     -   id: remove-crlf
@@ -28,7 +28,7 @@ repos:
     - id: python-use-type-annotations
     - id: text-unicode-replacement-char
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.9.0
+    rev: v3.10.1
     hooks:
     -   id: pyupgrade
         args: [--py38-plus]
@@ -41,7 +41,7 @@ repos:
       - --wrap-summaries=100
       - --wrap-descriptions=100
 -   repo: https://github.com/hadialqattan/pycln
-    rev: v2.1.6
+    rev: v2.2.2
     hooks:
     -   id: pycln
         args: [--config=pyproject.toml]
@@ -54,13 +54,13 @@ repos:
     hooks:
     - id: black
 -   repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
+    rev: 6.1.0
     hooks:
     -   id: flake8
         additional_dependencies:
             - flake8-typing-imports==1.14.0
 -   repo: https://github.com/asottile/blacken-docs
-    rev: 1.15.0
+    rev: 1.16.0
     hooks:
         - id: blacken-docs
 -   repo: https://github.com/pycqa/pydocstyle
@@ -72,7 +72,7 @@ repos:
         args:
             - --add-ignore=D107
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.4.1
+    rev: v1.5.1
     hooks:
     -   id: mypy
         args:

@@ -24,7 +24,7 @@ def rsa_private_jwk() -> Jwk:
     jwk = Jwk(d)
     assert jwk.is_private
     assert jwk.kty == "RSA"
-    assert type(jwk) == RSAJwk
+    assert type(jwk) is RSAJwk
     assert jwk.n == d["n"]
     assert jwk.e == d["e"]
     assert jwk.d == d["d"]
@@ -86,7 +86,7 @@ def test_public_jwk(rsa_private_jwk: Jwk) -> None:
     jwk = Jwk(public_jwk)
     assert jwk.is_private is False
     assert jwk.kty == "RSA"
-    assert type(jwk) == RSAJwk
+    assert type(jwk) is RSAJwk
     assert jwk.n == rsa_private_jwk["n"]
     assert jwk.e == rsa_private_jwk["e"]
 

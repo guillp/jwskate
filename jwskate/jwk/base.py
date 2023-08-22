@@ -24,7 +24,6 @@ from jwskate.jwa import (
     BaseAlg,
     BaseAsymmetricAlg,
     BaseEcdhEs_AesKw,
-    BaseHMACSigAlg,
     BaseKeyManagementAlg,
     BaseRsaKeyWrap,
     BaseSignatureAlg,
@@ -89,7 +88,7 @@ class Jwk(BaseJsonDict):
             the generated `Jwk`
 
         """
-        for kty, jwk_class in cls.subclasses.items():
+        for jwk_class in Jwk.__subclasses__():
             try:
                 jwk_class._get_alg_class(alg)
                 return jwk_class.generate(alg=alg, **kwargs)
@@ -113,22 +112,17 @@ class Jwk(BaseJsonDict):
             UnsupportedKeyType: if the specified key type (`kty`) is not supported
 
         """
-        jwk_class = cls.subclasses.get(kty)
-        if jwk_class is None:
-            raise UnsupportedKeyType("Unsupported Key Type:", kty)
-        return jwk_class.generate(**kwargs)
-
-    subclasses: dict[str, type[Jwk]] = {}
-    """A dict of 'kty' values to `Jwk` subclasses implementing each specific Key Type."""
-    cryptography_key_types: dict[Any, type[Jwk]] = {}
-    """A dict of cryptography classes to equivalent `Jwk` subclasses."""
+        for jwk_class in Jwk.__subclasses__():
+            if jwk_class.KTY == kty:
+                return jwk_class.generate(**kwargs)
+        raise UnsupportedKeyType("Unsupported Key Type:", kty)
 
     PARAMS: Mapping[str, JwkParameter]
 
     KTY: ClassVar[str]
 
-    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES: ClassVar[Iterable[Any]]
-    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES: ClassVar[Iterable[Any]]
+    CRYPTOGRAPHY_PRIVATE_KEY_CLASSES: ClassVar[tuple[type[Any], ...]]
+    CRYPTOGRAPHY_PUBLIC_KEY_CLASSES: ClassVar[tuple[type[Any], ...]]
 
     SIGNATURE_ALGORITHMS: Mapping[str, type[BaseSignatureAlg]] = {}
     KEY_MANAGEMENT_ALGORITHMS: Mapping[str, type[BaseKeyManagementAlg]] = {}
@@ -145,29 +139,17 @@ class Jwk(BaseJsonDict):
         "shake256": "shake256",
     }
 
-    def __init_subclass__(cls) -> None:
-        """Automatically add subclasses to the registry.
-
-        This allows `__new__` to pick the appropriate subclass when creating a Jwk.
-
-        """
-        Jwk.subclasses[cls.KTY] = cls
-        for klass in cls.CRYPTOGRAPHY_PRIVATE_KEY_CLASSES:
-            Jwk.cryptography_key_types[klass] = cls
-        for klass in cls.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES:
-            Jwk.cryptography_key_types[klass] = cls
-
     def __new__(cls, key: Jwk | dict[str, Any] | Any, **kwargs: Any) -> Jwk:
         """Overridden `__new__` to make the Jwk constructor smarter.
 
-        The Jwk constructor will accept:
+        The `Jwk` constructor will accept:
 
             - a `dict` with the parsed Jwk content
-            - another Jwk, which will be used as-is instead of creating a copy
+            - another `Jwk`, which will be used as-is instead of creating a copy
             - an instance from a `cryptography` public or private key class
 
         Args:
-            key: a dict containing JWK parameters, or another Jwk instance, or a `cryptography` key
+            key: the source for key materials
             **kwargs: additional members to include in the Jwk
 
         """
@@ -179,10 +161,12 @@ class Jwk(BaseJsonDict):
                 if kty is None:
                     raise InvalidJwk("A Json Web Key must have a Key Type (kty)")
 
-                subclass = Jwk.subclasses.get(kty)
-                if subclass is None:
-                    raise InvalidJwk("Unsupported Key Type", kty)
-                return super().__new__(subclass)  # type: ignore[type-var]
+                for jwk_class in Jwk.__subclasses__():
+                    if jwk_class.KTY == kty:
+                        return super().__new__(jwk_class)  # type: ignore[type-var]
+
+                raise InvalidJwk("Unsupported Key Type", kty)
+
             elif isinstance(key, str):
                 return cls.from_json(key)
             else:
@@ -398,12 +382,11 @@ class Jwk(BaseJsonDict):
             hashalg: the IANA registered name for the hash alg to use
 
         Returns:
-             the JWK thumbprint uri for this Jwk
+             the JWK thumbprint URI for this `Jwk`
 
         """
-        return (
-            f"urn:ietf:params:oauth:jwk-thumbprint:{hashalg}:{self.thumbprint(hashalg)}"
-        )
+        thumbprint = self.thumbprint(hashalg)
+        return f"urn:ietf:params:oauth:jwk-thumbprint:{hashalg}:{thumbprint}"
 
     def check(
         self,
@@ -429,17 +412,17 @@ class Jwk(BaseJsonDict):
 
         """
         if is_private is not None:
-            if is_private is True and self.is_private is False:
+            if is_private and not self.is_private:
                 raise ValueError("This key is public while a private key is expected.")
-            elif is_private is False and self.is_private is True:
+            elif not is_private and self.is_private:
                 raise ValueError("This key is private while a public key is expected.")
 
         if is_symmetric is not None:
-            if is_symmetric is True and self.is_symmetric is False:
+            if is_symmetric and not self.is_symmetric:
                 raise ValueError(
                     "This key is asymmetric while a symmetric key is expected."
                 )
-            if is_symmetric is False and self.is_symmetric is True:
+            if not is_symmetric and self.is_symmetric:
                 raise ValueError(
                     "This key is symmetric while an asymmetric key is expected."
                 )
@@ -453,7 +436,7 @@ class Jwk(BaseJsonDict):
         return self
 
     def _validate(self) -> None:
-        """Validate the content of this JWK.
+        """Validate the content of this `Jwk`.
 
         It checks that all required parameters are present and well-formed. If the key is private, it sets the `is_private` flag to `True`.
 
@@ -1023,9 +1006,13 @@ class Jwk(BaseJsonDict):
             TypeError: if the key type is not supported
 
         """
-        for cryptography_class, jwk_class in cls.cryptography_key_types.items():
-            if isinstance(cryptography_key, cryptography_class):
-                return jwk_class.from_cryptography_key(cryptography_key, **kwargs)
+        for jwk_class in Jwk.__subclasses__():
+            for cryptography_class in (
+                jwk_class.CRYPTOGRAPHY_PRIVATE_KEY_CLASSES
+                + jwk_class.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES
+            ):
+                if isinstance(cryptography_key, cryptography_class):
+                    return jwk_class.from_cryptography_key(cryptography_key, **kwargs)
 
         raise TypeError(
             f"Unsupported Jwk class for this Key Type: {type(cryptography_key).__name__}"

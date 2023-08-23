@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from typing_extensions import Self, override
 
-from ..base import BaseAsymmetricAlg, BaseSignatureAlg
+from jwskate.jwa.base import BaseAsymmetricAlg, BaseSignatureAlg
 
 
 class BaseRSASigAlg(
@@ -27,9 +27,7 @@ class BaseRSASigAlg(
     @classmethod
     @override
     def with_random_key(cls) -> Self:
-        return cls(
-            rsa.generate_private_key(public_exponent=65537, key_size=cls.min_key_size)
-        )
+        return cls(rsa.generate_private_key(public_exponent=65537, key_size=cls.min_key_size))
 
     def sign(self, data: bytes | SupportsBytes) -> BinaPy:
         """Sign arbitrary data.
@@ -54,9 +52,7 @@ class BaseRSASigAlg(
         with self.private_key_required() as key:
             return BinaPy(key.sign(data, self.padding_alg, self.hashing_alg))
 
-    def verify(
-        self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes
-    ) -> bool:
+    def verify(self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes) -> bool:
         """Verify a signature against some data.
 
         Args:
@@ -81,12 +77,13 @@ class BaseRSASigAlg(
                     self.padding_alg,
                     self.hashing_alg,
                 )
-                return True
             except exceptions.InvalidSignature:
                 return False
+            else:
+                return True
 
 
-class RS256(BaseRSASigAlg):  # noqa: D415
+class RS256(BaseRSASigAlg):
     """RSASSA-PKCS1-v1_5 using SHA-256."""
 
     name = "RS256"
@@ -94,7 +91,7 @@ class RS256(BaseRSASigAlg):  # noqa: D415
     hashing_alg = hashes.SHA256()
 
 
-class RS384(BaseRSASigAlg):  # noqa: D415
+class RS384(BaseRSASigAlg):
     """RSASSA-PKCS1-v1_5 using SHA-384."""
 
     name = "RS384"
@@ -102,7 +99,7 @@ class RS384(BaseRSASigAlg):  # noqa: D415
     hashing_alg = hashes.SHA384()
 
 
-class RS512(BaseRSASigAlg):  # noqa: D415
+class RS512(BaseRSASigAlg):
     """RSASSA-PKCS1-v1_5 using SHA-256."""
 
     name = "RS512"
@@ -110,7 +107,7 @@ class RS512(BaseRSASigAlg):  # noqa: D415
     hashing_alg = hashes.SHA512()
 
 
-class PS256(BaseRSASigAlg):  # noqa: D415
+class PS256(BaseRSASigAlg):
     """RSASSA-PSS using SHA-256 and MGF1 with SHA-256."""
 
     name = "PS256"
@@ -119,7 +116,7 @@ class PS256(BaseRSASigAlg):  # noqa: D415
     padding_alg = padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=256 // 8)
 
 
-class PS384(BaseRSASigAlg):  # noqa: D415
+class PS384(BaseRSASigAlg):
     """RSASSA-PSS using SHA-384 and MGF1 with SHA-384."""
 
     name = "PS384"
@@ -128,7 +125,7 @@ class PS384(BaseRSASigAlg):  # noqa: D415
     padding_alg = padding.PSS(mgf=padding.MGF1(hashes.SHA384()), salt_length=384 // 8)
 
 
-class PS512(BaseRSASigAlg):  # noqa: D415
+class PS512(BaseRSASigAlg):
     """RSASSA-PSS using SHA-512 and MGF1 with SHA-512."""
 
     name = "PS512"
@@ -137,10 +134,10 @@ class PS512(BaseRSASigAlg):  # noqa: D415
     padding_alg = padding.PSS(mgf=padding.MGF1(hashes.SHA512()), salt_length=512 // 8)
 
 
-class RS1(BaseRSASigAlg):  # noqa: D415
+class RS1(BaseRSASigAlg):
     """RSASSA-PKCS1-v1_5 with SHA-1."""
 
     name = "RS1"
     description = __doc__
-    hashing_alg = hashes.SHA1()
+    hashing_alg = hashes.SHA1()  # noqa: S303
     read_only = True

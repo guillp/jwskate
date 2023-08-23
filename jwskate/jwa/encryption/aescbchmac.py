@@ -7,7 +7,7 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import ciphers, constant_time, hashes, hmac, padding
 from cryptography.hazmat.primitives.ciphers import algorithms, modes
 
-from ..base import BaseAESEncryptionAlg, MismatchingAuthTag
+from jwskate.jwa.base import BaseAESEncryptionAlg, MismatchingAuthTag
 
 
 class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
@@ -104,7 +104,8 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
             aad = bytes(aad)
 
         if len(iv) * 8 != self.iv_size:
-            raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
+            msg = f"Invalid IV size, must be {self.iv_size} bits"
+            raise ValueError(msg)
 
         cipher = ciphers.Cipher(algorithms.AES(self.aes_key), modes.CBC(iv)).encryptor()
         padder = self.padding.padder()
@@ -123,7 +124,8 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
     ) -> BinaPy:
         """Decrypt and authenticate a given ciphertext.
 
-         An optional Additional Authenticated Data must be authentication tag must be supplied, if the text was encryptwith authentication tag, as produced by `encrypt()`.
+        If the text was encrypted with an authentication tag, an Additional Authenticated Data must be supplied
+        (as produced by `encrypt()`).
 
         Args:
           ciphertext: the ciphertext
@@ -147,7 +149,8 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
             aad = bytes(aad)
 
         if len(iv) * 8 != self.iv_size:
-            raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
+            msg = f"Invalid IV size, must be {self.iv_size} bits"
+            raise ValueError(msg)
 
         mac = self.mac(ciphertext, iv=iv, aad=aad)
         if not constant_time.bytes_eq(mac, auth_tag):
@@ -159,7 +162,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
         return BinaPy(unpadder.update(padded_text) + unpadder.finalize())
 
 
-class A128CBC_HS256(BaseAesCbcHmacSha2):
+class A128CBC_HS256(BaseAesCbcHmacSha2):  # noqa: N801
     """AES_128_CBC_HMAC_SHA_256."""
 
     name = "A128CBC-HS256"
@@ -171,7 +174,7 @@ class A128CBC_HS256(BaseAesCbcHmacSha2):
     hash_alg = hashes.SHA256()
 
 
-class A192CBC_HS384(BaseAesCbcHmacSha2):
+class A192CBC_HS384(BaseAesCbcHmacSha2):  # noqa: N801
     """AES_192_CBC_HMAC_SHA_384."""
 
     name = "A192CBC-HS384"
@@ -183,7 +186,7 @@ class A192CBC_HS384(BaseAesCbcHmacSha2):
     hash_alg = hashes.SHA384()
 
 
-class A256CBC_HS512(BaseAesCbcHmacSha2):
+class A256CBC_HS512(BaseAesCbcHmacSha2):  # noqa: N801
     """AES_256_CBC_HMAC_SHA_512."""
 
     name = "A256CBC-HS512"

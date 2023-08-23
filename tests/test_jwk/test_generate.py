@@ -18,9 +18,7 @@ from jwskate import (
 )
 
 
-@pytest.mark.parametrize(
-    "alg", SignatureAlgs.ALL | EncryptionAlgs.ALL | KeyManagementAlgs.ALL_KEY_BASED
-)
+@pytest.mark.parametrize("alg", SignatureAlgs.ALL | EncryptionAlgs.ALL | KeyManagementAlgs.ALL_KEY_BASED)
 def test_generate_for_alg(alg: str) -> None:
     with warnings.catch_warnings():
         jwk = Jwk.generate(alg=alg).with_usage_parameters()

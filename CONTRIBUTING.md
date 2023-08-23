@@ -52,11 +52,11 @@ Ready to contribute? Here's how to set up `jwskate` for local development.
     $ git clone git@github.com:your_name_here/jwskate.git
 ```
 
-3. Ensure [poetry](https://python-poetry.org/docs/) is installed.
+3. Ensure [hatch](https://hatch.pypa.io/) is installed.
 4. Install dependencies and start your virtualenv:
 
 ```
-    $ poetry install -E test -E doc -E dev
+    $ hatch env create
 ```
 
 5. Create a branch for local development:
@@ -71,7 +71,7 @@ Now you can make your changes locally.
    with tox:
 
 ```
-    $ tox
+    $ hatch run test:test
 ```
 
 7. Commit your changes and push your branch to GitHub:
@@ -91,29 +91,5 @@ Before you submit a pull request, check that it meets these guidelines:
 1. The pull request should include tests.
 2. If the pull request adds functionality, the docs should be updated. Put your new functionality into a function with a
    docstring, and add the feature to the list in README.md.
-3. The pull request should work for Python 3.6, 3.7, 3.8, 3.9 and for PyPy. Check
+3. The pull request should work for Python 3.8+ and for PyPy. Check
    https://github.com/guillp/jwskate/actions and make sure that the tests pass for all supported Python versions.
-
-## Tips\`\`\`
-
-```
-$ pytest tests.test_jwskate
-```
-
-```To run a subset of tests.
-
-
-## Deploying
-
-A reminder for the maintainers on how to deploy.
-Make sure all your changes are committed (including an entry in HISTORY.md).
-Then run:
-
-```
-
-$ poetry patch # possible: major / minor / patch $ git push $ git push --tags
-
-```
-
-Travis will then deploy to PyPI if tests pass.
-```

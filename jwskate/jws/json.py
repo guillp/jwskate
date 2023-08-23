@@ -26,7 +26,8 @@ class JwsJsonFlat(JwsSignature):
         """
         payload = self.get("payload")
         if payload is None:
-            raise AttributeError("This Jws JSON does not contain a 'payload' member")
+            msg = "This Jws JSON does not contain a 'payload' member"
+            raise AttributeError(msg)
         return BinaPy(payload).decode_from("b64u")
 
     @cached_property
@@ -70,9 +71,7 @@ class JwsJsonFlat(JwsSignature):
             The JWS with the payload, signature, header and extra claims.
 
         """
-        signature = super().sign(
-            payload, key, alg, extra_protected_headers, header, **kwargs
-        )
+        signature = super().sign(payload, key, alg, extra_protected_headers, header, **kwargs)
         signature["payload"] = BinaPy(payload).to("b64u").ascii()
         return cls(signature)
 
@@ -147,7 +146,8 @@ class JwsJsonGeneral(BaseJsonDict):
         """
         payload = self.get("payload")
         if payload is None:
-            raise AttributeError("This Jws JSON does not contain a 'payload' member")
+            msg = "This Jws JSON does not contain a 'payload' member"
+            raise AttributeError(msg)
         return BinaPy(payload).decode_from("b64u")
 
     @classmethod
@@ -179,14 +179,21 @@ class JwsJsonGeneral(BaseJsonDict):
         Args:
             payload: the data to sign
             *signature_parameters: each of those parameter can be:
+
                 - a `(jwk, alg, extra_protected_headers, header)` tuple
                 - a `(jwk, alg, extra_protected_headers)` tuple,
                 - a `(jwk, alg)` tuple,
                 - a `jwk`
-                with `jwk` being a Jwk key, alg being the signature algorithm to use, extra_protected_headers a mapping of extra protected headers and values to include, and header the raw unprotected header to include in the signature.
+
+                with:
+
+                - `jwk` being a `Jwk` key,
+                - `alg` being the signature algorithm to use,
+                - `extra_protected_headers` a mapping of extra protected headers and values to include,
+                - `header` the raw unprotected header to include in the signature.
 
         Returns:
-            A JwsJsonGeneral with the generated signatures.
+            the generated signatures in JSON General format.
 
         """
         jws = cls({"payload": BinaPy(payload).to("b64u").ascii()})
@@ -204,7 +211,8 @@ class JwsJsonGeneral(BaseJsonDict):
         """
         signatures = self.get("signatures")
         if signatures is None:
-            raise AttributeError("This Jws JSON does not contain a 'signatures' member")
+            msg = "This Jws JSON does not contain a 'signatures' member"
+            raise AttributeError(msg)
         return [JwsSignature(sig) for sig in signatures]
 
     def add_signature(
@@ -227,26 +235,24 @@ class JwsJsonGeneral(BaseJsonDict):
 
         """
         self.setdefault("signatures", [])
-        self["signatures"].append(
-            JwsSignature.sign(self.payload, key, alg, extra_protected_headers, header)
-        )
+        self["signatures"].append(JwsSignature.sign(self.payload, key, alg, extra_protected_headers, header))
         return self
 
     def signed_part(
         self,
-        signature_chooser: Callable[
-            [list[JwsSignature]], JwsSignature
-        ] = lambda sigs: sigs[0],
+        signature_chooser: Callable[[list[JwsSignature]], JwsSignature] = lambda sigs: sigs[0],
     ) -> bytes:
         """Return the signed part from a given signature.
 
         The signed part is a concatenation of the protected header from a specific signature, then the payload,
         separated by a dot (`.`).
+
         You can select the specific signature with the `signature_chooser` parameter.
         By default, the first signature is selected.
 
         Args:
-            signature_chooser: a callable that takes the list of signatures from this JWS as parameter and returns the choosen signature.
+            signature_chooser: a callable that takes the list of signatures from this JWS as parameter,
+                and returns the chosen signature.
 
         Returns:
             The raw signed part from the chosen signature.
@@ -257,14 +263,13 @@ class JwsJsonGeneral(BaseJsonDict):
 
     def compact(
         self,
-        signature_chooser: Callable[
-            [list[JwsSignature]], JwsSignature
-        ] = lambda sigs: sigs[0],
+        signature_chooser: Callable[[list[JwsSignature]], JwsSignature] = lambda sigs: sigs[0],
     ) -> JwsCompact:
         """Create a compact JWS from a specific signature from this JWS.
 
         Args:
-            signature_chooser: a callable that takes the list of signatures from this JWS as parameter and returns the choosen signature.
+            signature_chooser: a callable that takes the list of signatures from this JWS as parameter
+                and returns the choosen signature.
 
         Returns:
             A JwsCompact with the payload and the chosen signature from this JWS.
@@ -278,14 +283,13 @@ class JwsJsonGeneral(BaseJsonDict):
 
     def flatten(
         self,
-        signature_chooser: Callable[
-            [list[JwsSignature]], JwsSignature
-        ] = lambda sigs: sigs[0],
+        signature_chooser: Callable[[list[JwsSignature]], JwsSignature] = lambda sigs: sigs[0],
     ) -> JwsJsonFlat:
         """Create a JWS in JSON flat format from a specific signature from this JWS.
 
         Args:
-            signature_chooser:  a callable that takes the list of signatures from this JWS as parameter and returns the choosen signature.
+            signature_chooser:  a callable that takes the list of signatures from this JWS as parameter
+                and returns the choosen signature.
 
         Returns:
             A JwsJsonFlat with the payload and the chosen signature from this JWS.
@@ -308,7 +312,8 @@ class JwsJsonGeneral(BaseJsonDict):
     ) -> bool:
         """Verify the signatures from this JWS.
 
-        It will try to validate each signature with the given key, and returns `True` if at least one signature verifies.
+        It tries to validate each signature with the given key, and returns `True` if at least one signature verifies.
+
         Args:
             key: the public key to use
             alg: the signature algorithm to use, if only 1 is allowed.
@@ -318,7 +323,4 @@ class JwsJsonGeneral(BaseJsonDict):
             `True` if any of the signature verifies with the given key, `False` otherwise.
 
         """
-        for signature in self.signatures:
-            if signature.verify(self.payload, key, alg=alg, algs=algs):
-                return True
-        return False
+        return any(signature.verify(self.payload, key, alg=alg, algs=algs) for signature in self.signatures)

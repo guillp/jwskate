@@ -18,11 +18,11 @@ from typing_extensions import Protocol
 class PublicKeyProtocol(Protocol):
     """A protocol that each `cryptography` ECDH public key class implements."""
 
-    def public_bytes(
+    def public_bytes(  # noqa: D102
         self,
         encoding: serialization.Encoding,
-        format: serialization.PublicFormat,
-    ) -> bytes:  # noqa: D102
+        format: serialization.PublicFormat,  # noqa: A002
+    ) -> bytes:
         ...
 
 
@@ -30,12 +30,12 @@ class PublicKeyProtocol(Protocol):
 class PrivateKeyProtocol(Protocol):
     """A protocol that each `cryptography` ECDH private key class implements."""
 
-    def private_bytes(
+    def private_bytes(  # noqa: D102
         self,
         encoding: serialization.Encoding,
-        format: serialization.PrivateFormat,
+        format: serialization.PrivateFormat,  # noqa: A002
         encryption_algorithm: serialization.KeySerializationEncryption,
-    ) -> bytes:  # noqa: D102
+    ) -> bytes:
         ...
 
     def public_key(self) -> PublicKeyProtocol:  # noqa: D102
@@ -69,6 +69,9 @@ class OKPCurve:
     use: str
     """Curve usage (`'sig'` or '`enc'`)."""
 
+    key_size: int
+    """Size of keys, in bytes."""
+
     instances: ClassVar[dict[str, OKPCurve]] = {}
     """Registry of subclasses, in a {name: instance} mapping."""
 
@@ -83,6 +86,7 @@ Ed25519 = OKPCurve(
     cryptography_private_key_class=ed25519.Ed25519PrivateKey,
     cryptography_public_key_class=ed25519.Ed25519PublicKey,
     use="sig",
+    key_size=32,
 )
 """Ed25519 curve."""
 
@@ -92,6 +96,7 @@ Ed448 = OKPCurve(
     cryptography_private_key_class=ed448.Ed448PrivateKey,
     cryptography_public_key_class=ed448.Ed448PublicKey,
     use="sig",
+    key_size=57,
 )
 """Ed448 curve."""
 
@@ -101,6 +106,7 @@ X25519 = OKPCurve(
     cryptography_private_key_class=x25519.X25519PrivateKey,
     cryptography_public_key_class=x25519.X25519PublicKey,
     use="enc",
+    key_size=32,
 )
 """X25519 curve."""
 
@@ -110,5 +116,6 @@ X448 = OKPCurve(
     cryptography_private_key_class=x448.X448PrivateKey,
     cryptography_public_key_class=x448.X448PublicKey,
     use="enc",
+    key_size=56,
 )
 """X448 curve."""

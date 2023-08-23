@@ -7,7 +7,8 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf import pbkdf2
 
-from ..base import BaseKeyManagementAlg
+from jwskate.jwa.base import BaseKeyManagementAlg
+
 from .aeskw import A128KW, A192KW, A256KW, BaseAesKeyWrap
 
 
@@ -23,6 +24,8 @@ class BasePbes2(BaseKeyManagementAlg):
 
     kwalg: type[BaseAesKeyWrap]
     hash_alg: hashes.HashAlgorithm
+
+    MIN_SALT_SIZE = 8
 
     def __init__(self, password: SupportsBytes | bytes | str):
         if isinstance(password, str):
@@ -45,8 +48,9 @@ class BasePbes2(BaseKeyManagementAlg):
             ValueError: if the salt is less than 8 bytes long
 
         """
-        if size < 8:
-            raise ValueError("salts used for PBES2 must be at least 8 bytes long")
+        if size < cls.MIN_SALT_SIZE:
+            msg = f"salts used for PBES2 must be at least {cls.MIN_SALT_SIZE} bytes long"
+            raise ValueError(msg)
         return BinaPy.random(size)
 
     def derive(self, *, salt: bytes, count: int) -> BinaPy:
@@ -103,7 +107,7 @@ class BasePbes2(BaseKeyManagementAlg):
         return BinaPy(self.kwalg(aes_key).unwrap_key(cipherkey))
 
 
-class Pbes2_HS256_A128KW(BasePbes2):
+class Pbes2_HS256_A128KW(BasePbes2):  # noqa: N801
     """PBES2 with HMAC SHA-256 and "A128KW" wrapping."""
 
     name = "PBES2-HS256+A128KW"
@@ -112,7 +116,7 @@ class Pbes2_HS256_A128KW(BasePbes2):
     hash_alg = hashes.SHA256()
 
 
-class Pbes2_HS384_A192KW(BasePbes2):
+class Pbes2_HS384_A192KW(BasePbes2):  # noqa: N801
     """PBES2 with HMAC SHA-384 and "A192KW" wrapping."""
 
     name = "PBES2-HS384+A192KW"
@@ -121,7 +125,7 @@ class Pbes2_HS384_A192KW(BasePbes2):
     hash_alg = hashes.SHA384()
 
 
-class Pbes2_HS512_A256KW(BasePbes2):
+class Pbes2_HS512_A256KW(BasePbes2):  # noqa: N801
     """PBES2 with HMAC SHA-512 and "A256KW" wrapping."""
 
     name = "PBES2-HS512+A256KW"

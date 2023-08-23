@@ -7,6 +7,7 @@ from typing import Any, SupportsBytes
 from binapy import BinaPy
 from typing_extensions import override
 
+from jwskate import BaseAESEncryptionAlg, KeyTypes
 from jwskate.jwa import (
     A128CBC_HS256,
     A128GCM,
@@ -29,7 +30,6 @@ from jwskate.jwa import (
     DirectKeyUse,
 )
 
-from .. import BaseAESEncryptionAlg, KeyTypes
 from .base import Jwk, JwkParameter
 
 
@@ -88,7 +88,8 @@ class SymmetricJwk(Jwk):
             ValueError: symmetric keys are always private, it makes no sense to use them as public keys
 
         """
-        raise ValueError("Symmetric keys don't have a public key")
+        msg = "Symmetric keys don't have a public key"
+        raise ValueError(msg)
 
     @classmethod
     def from_bytes(cls, k: bytes | str, **params: Any) -> SymmetricJwk:
@@ -108,25 +109,25 @@ class SymmetricJwk(Jwk):
 
     @classmethod
     @override
-    def generate(
-        cls, *, alg: str | None = None, key_size: int | None = None, **params: Any
-    ) -> SymmetricJwk:
+    def generate(cls, *, alg: str | None = None, key_size: int | None = None, **params: Any) -> SymmetricJwk:
         if alg:
             alg_class = cls._get_alg_class(alg)
             # special cases for AES or HMAC based algs which require a specific key size
             if issubclass(alg_class, (BaseAESEncryptionAlg, BaseAesKeyWrap)):
                 if key_size is not None and key_size != alg_class.key_size:
-                    raise ValueError(
+                    msg = (
                         f"Key for {alg} must be exactly {alg_class.key_size} bits. "
                         "You should remove the `key_size` parameter to generate a key of the appropriate length."
                     )
+                    raise ValueError(msg)
                 key_size = alg_class.key_size
             elif issubclass(alg_class, BaseHMACSigAlg):
                 if key_size is not None and key_size < alg_class.min_key_size:
                     warnings.warn(
                         f"Symmetric keys to use with {alg} should be at least {alg_class.min_key_size} bits "
                         "in order to make the key at least as hard to brute-force as the signature. "
-                        f"You requested a key size of {key_size} bits."
+                        f"You requested a key size of {key_size} bits.",
+                        stacklevel=2,
                     )
                 else:
                     key_size = alg_class.min_key_size
@@ -134,7 +135,8 @@ class SymmetricJwk(Jwk):
         if key_size is None:
             warnings.warn(
                 "Please provide a key_size or an alg parameter for jwskate to know the number of bits to generate. "
-                "Defaulting to 128 bits."
+                "Defaulting to 128 bits.",
+                stacklevel=2,
             )
             key_size = 128
 
@@ -143,9 +145,7 @@ class SymmetricJwk(Jwk):
 
     @classmethod
     @override
-    def from_cryptography_key(
-        cls, cryptography_key: Any, **params: Any
-    ) -> SymmetricJwk:
+    def from_cryptography_key(cls, cryptography_key: Any, **params: Any) -> SymmetricJwk:
         return cls.from_bytes(cryptography_key, **params)
 
     @override
@@ -154,16 +154,12 @@ class SymmetricJwk(Jwk):
 
     @override
     def thumbprint(self, hashalg: str = "SHA256") -> str:
-        return (
-            BinaPy.serialize_to("json", {"k": self.k, "kty": self.kty})
-            .to("sha256")
-            .to("b64u")
-            .ascii()
-        )
+        return BinaPy.serialize_to("json", {"k": self.k, "kty": self.kty}).to("sha256").to("b64u").ascii()
 
     @override
     def to_pem(self, password: bytes | str | None = None) -> str:
-        raise TypeError("Symmetric keys are not serializable to PEM.")
+        msg = "Symmetric keys are not serializable to PEM."
+        raise TypeError(msg)
 
     @property
     def key(self) -> BinaPy:
@@ -253,14 +249,9 @@ class SymmetricJwk(Jwk):
         return [
             name
             for name, alg in self.KEY_MANAGEMENT_ALGORITHMS.items()
-            if issubclass(alg, BaseSymmetricAlg)
-            and alg.supports_key(self.cryptography_key)
+            if issubclass(alg, BaseSymmetricAlg) and alg.supports_key(self.cryptography_key)
         ]
 
     @override
     def supported_encryption_algorithms(self) -> list[str]:
-        return [
-            name
-            for name, alg in self.ENCRYPTION_ALGORITHMS.items()
-            if alg.supports_key(self.cryptography_key)
-        ]
+        return [name for name, alg in self.ENCRYPTION_ALGORITHMS.items() if alg.supports_key(self.cryptography_key)]

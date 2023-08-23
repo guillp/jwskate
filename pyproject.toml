@@ -1,13 +1,15 @@
-[tool]
-[tool.poetry]
+[project]
 name = "jwskate"
-version = "0.9.0"
-homepage = "https://github.com/guillp/jwskate"
-description = "A Pythonic implementation of Json Web Signature, Keys, Algorithms, Tokens and Encryption (RFC7514 to 7519), on top of the `cryptography` module."
-authors = ["Guillaume Pujol <guill.p.linux@gmail.com>"]
+version = "0.10.0"
+description = "A Pythonic implementation of the JOSE / JSON Web Crypto related RFCs (JWS, JWK, JWA, JWT, JWE)"
 readme = "README.md"
-license =  "MIT"
-classifiers=[
+license = "MIT"
+requires-python = ">=3.8"
+authors = [
+    { name = "Guillaume Pujol", email = "guill.p.linux@gmail.com" }
+]
+
+classifiers = [
     'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',
     'Topic :: Security',
@@ -19,54 +21,110 @@ classifiers=[
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
 ]
-packages = [
-    { include = "jwskate" },
-    { include = "tests", format = "sdist" },
+dependencies = [
+    "cryptography>=3.4",
+    "typing-extensions>=4.3",
+    "binapy>=0.7",
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.8"
-cryptography = ">=3.4"
-typing-extensions = ">=4.3.0"
-binapy = ">=0.7.0"
+[project.urls]
+homepage = "https://github.com/guillp/jwskate"
+documentation = "https://guillp.github.io/jwskate/"
+pypi = "https://pypi.org/project/jwskate/"
 
-[tool.poetry.dev-dependencies]
-black  = ">=23.7"
-coverage = ">=7.2.3"
-isort  = ">=5.12"
-jwcrypto = ">=1.0"
-livereload = ">=2.6"
-mypy = ">=1.4.1"
-mkdocs  = ">=1.4.2"
-mkdocstrings = { version = ">=0.21.2", extras = ["python"] }
-mkdocs-autorefs = ">=0.4"
-mkdocs-include-markdown-plugin = { version = ">=4.0", python = ">=3.8,<3.12" }
-mkdocs-material  = ">=9.1.19"
-mkdocs-material-extensions  = ">=1.1"
-pip  = ">=23.2.1"
-pre-commit = ">=3.2.2"
-pytest  = ">=7.4.0"
-pytest-cov  = ">=4.0"
-pytest-freezer = ">=0.4.8"
-pytest-mypy = ">=0.10"
-pytest-profiling = ">=1.7.0"
-toml = ">=0.10"
-tomli = ">=2.0.1"
-tox  = ">=4.6.4"
-types-cryptography = ">=3.3"
-virtualenv  = ">=20.24.1"
+[tool]
+[tool.hatch.build.targets.wheel]
+packages = ["jwskate"]
 
-[tool.poetry.extras]
-test = ["pytest", "pytest-cov", "jwcrypto", "freezegun"]
-doc = ["mkdocs"]
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.github",
+    "/docs",
+]
 
+[tool.hatch.envs.default]
+dependencies = [
+    "jwcrypto",
+    "pre-commit",
+]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.envs.test]
+dependencies = [
+    "coverage[toml]",
+    "jwcrypto",
+    "pytest",
+    "pytest-cov",
+    "pytest-freezer",
+    "pytest-mypy",
+    "pytest-profiling",
+]
+[tool.hatch.envs.test.scripts]
+test = "pytest {args:tests}"
+test-cov = "pytest --cov {args:tests}"
+cov-report = [
+    "- coverage combine",
+    "coverage report --show-missing",
+]
+cov = [
+    "test-cov",
+    "cov-report",
+]
+
+[tools.hatch.envs.all]
+type = "container"
+
+[[envs.all.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+[tool.hatch.envs.docs]
+dependencies = [
+    "mkdocs",
+    "mkdocstrings[python]",
+    "mkdocs-autorefs",
+    "mkdocs-include-markdown-plugin",
+    "mkdocs-material",
+    "mkdocs-material-extensions",
+    "black",
+]
+[tool.hatch.envs.docs.scripts]
+build = "mkdocs build --clean --strict"
+serve = "mkdocs serve --dev-addr localhost:8000"
+
+
+[tool.hatch.envs.lint]
+detached = true
+dependencies = [
+    "black",
+    "mypy",
+    "ruff",
+    "pytest",
+    "freezegun",
+    "types-cryptography",
+    "binapy",
+]
+
+[tool.hatch.envs.lint.scripts]
+typing = "mypy --install-types --non-interactive {args:jwskate tests}"
+style = [
+    "ruff {args:.}",
+    "black --check --diff {args:.}",
+]
+fmt = [
+    "black {args:.}",
+    "ruff --fix {args:.}",
+    "style",
+]
+all = [
+    "style",
+    "typing",
+]
 
 [tool.black]
-line-length = 88
+line-length = 120
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -93,17 +151,84 @@ warn_unused_configs = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 
-
-[tool.pydocstyle]
-convention = "google"
-match_dir = 'jwskate'
-ignore_decorators = 'override'
-
 [tool.docformatter]
 recursive = true
 wrap-summaries = 120
 wrap-descriptions = 120
 blank = true
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+target-version = "py38"
+line-length = 120
+select = [
+    "A",
+    "B",
+    "C",
+    "C4",
+    "D",
+    "DTZ",
+    "E",
+    "EM",
+    "ERA",
+    "F",
+    "FA",
+    "FBT",
+    "I",
+    "ICN",
+    "ISC",
+    "N",
+    "PGH",
+    "PLC",
+    "PLE",
+    "PLR",
+    "PLW",
+    "PTH",
+    "Q",
+    "RUF",
+    "S",
+    "SIM",
+    "T",
+    "TID",
+    "TRY",
+    "UP",
+    "W",
+    "YTT",
+]
+ignore = [
+    "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
+    "N818", # Exception names should be named with an Error suffix
+    "PLR0912", # Too many branches
+    "D107", # Missing docstring in `__init__`
+]
+exclude = [
+    "tests"
+]
+
+
+[tool.ruff.pydocstyle]
+convention = "google"
+ignore-decorators = ['override']
+
+[tool.ruff.pylint]
+max-args = 10
+
+
+[tool.coverage.run]
+omit = "tests/"
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "def main",
+    "...",
+    "assert False",
+    "pytest.skip",
+    "pass",
+]

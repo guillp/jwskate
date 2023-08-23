@@ -20,9 +20,7 @@ def test_jwk_okp_generate_with_crv(crv: str) -> None:
     assert jwk.supported_encryption_algorithms() == []
 
 
-@pytest.mark.parametrize(
-    "alg", ["ECDH-ES", "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW"]
-)
+@pytest.mark.parametrize("alg", ["ECDH-ES", "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW"])
 def test_jwk_okp_generate_with_alg(alg: str) -> None:
     jwk = OKPJwk.generate(alg=alg, kid="myokpkey")
     assert jwk.kty == "OKP"
@@ -202,9 +200,7 @@ def test_unknown_curve() -> None:
         ("X25519", x25519.X25519PrivateKey, x25519.X25519PublicKey),
     ],
 )
-def test_from_to_cryptography(
-    crv: str, private_key_class: type[Any], public_key_class: type[Any]
-) -> None:
+def test_from_to_cryptography(crv: str, private_key_class: type[Any], public_key_class: type[Any]) -> None:
     private_key = private_key_class.generate()
     private_jwk = Jwk(private_key)
     assert private_jwk.kty == "OKP"

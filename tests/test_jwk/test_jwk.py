@@ -180,9 +180,7 @@ def test_invalid_class_for_kty() -> None:
         ("oct", ("unwrapKey",), ("wrapKey",)),
     ],
 )
-def test_key_ops_without_alg(
-    kty: str, private_key_ops: tuple[str], public_key_ops: tuple[str]
-) -> None:
+def test_key_ops_without_alg(kty: str, private_key_ops: tuple[str], public_key_ops: tuple[str]) -> None:
     # with a key with no alg or use, we can only trust the key_ops from the key
     private_jwk = Jwk.generate_for_kty("RSA", key_ops=private_key_ops)
     assert private_jwk.key_ops == private_key_ops
@@ -200,9 +198,7 @@ def test_key_ops_without_alg(
         ("A128GCM", "enc", ("encrypt", "decrypt"), ("encrypt", "decrypt")),
     ],
 )
-def test_use_key_ops_with_alg(
-    alg: str, use: str, private_key_ops: tuple[str], public_key_ops: tuple[str]
-) -> None:
+def test_use_key_ops_with_alg(alg: str, use: str, private_key_ops: tuple[str], public_key_ops: tuple[str]) -> None:
     # if key has an 'alg' parameter, we can deduce the use and key ops
     private_jwk = Jwk.generate(alg=alg)
     assert "use" not in private_jwk
@@ -210,9 +206,7 @@ def test_use_key_ops_with_alg(
     assert private_jwk.use == use
     assert private_jwk.key_ops == private_key_ops
 
-    public_jwk = (
-        private_jwk.public_jwk() if not private_jwk.is_symmetric else private_jwk
-    )
+    public_jwk = private_jwk.public_jwk() if not private_jwk.is_symmetric else private_jwk
     assert "use" not in public_jwk
     assert "key_ops" not in public_jwk
     assert public_jwk.use == use
@@ -251,7 +245,7 @@ def test_thumbprint() -> None:
     jwk_with_initial_kid = jwk.with_kid_thumbprint(force=False)
     assert jwk_with_initial_kid.kid == "2011-04-29"
     assert isinstance(jwk_with_initial_kid, Jwk)
-    assert jwk_with_initial_kid is jwk
+    assert jwk_with_initial_kid == jwk
     assert jwk_with_initial_kid.n == jwk.n
 
 
@@ -352,37 +346,25 @@ def test_sender_receiver_key(alg: str, enc: str) -> None:
     if recipient_jwk.is_symmetric:
         sender_cek, wrapped_cek, extra_headers = recipient_jwk.sender_key(enc=enc)
     else:
-        sender_cek, wrapped_cek, extra_headers = recipient_jwk.public_jwk().sender_key(
-            enc=enc
-        )
+        sender_cek, wrapped_cek, extra_headers = recipient_jwk.public_jwk().sender_key(enc=enc)
         with pytest.warns(match="private key"):
             recipient_jwk.sender_key(enc=enc)
 
     if recipient_jwk.is_symmetric:
-        recipient_cek = recipient_jwk.recipient_key(
-            wrapped_cek, enc=enc, **extra_headers
-        )
+        recipient_cek = recipient_jwk.recipient_key(wrapped_cek, enc=enc, **extra_headers)
         assert sender_cek == recipient_cek
     else:
         with pytest.raises(ValueError):
-            recipient_jwk.public_jwk().recipient_key(
-                wrapped_cek, enc=enc, **extra_headers
-            )
+            recipient_jwk.public_jwk().recipient_key(wrapped_cek, enc=enc, **extra_headers)
 
 
-@pytest.mark.parametrize(
-    "alg", KeyManagementAlgs.ALL_AES | KeyManagementAlgs.ALL_AESGCM
-)
+@pytest.mark.parametrize("alg", KeyManagementAlgs.ALL_AES | KeyManagementAlgs.ALL_AESGCM)
 @pytest.mark.parametrize("enc", EncryptionAlgs.ALL)
 def test_aeskw_with_choosen_cek(alg: str, enc: str) -> None:
     recipient_jwk = Jwk.generate(alg=alg)
-    choosen_cek = select_alg_class(
-        SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc
-    ).generate_key()
+    choosen_cek = select_alg_class(SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc).generate_key()
 
-    sender_cek, wrapped_cek, extra_headers = recipient_jwk.sender_key(
-        enc=enc, cek=choosen_cek
-    )
+    sender_cek, wrapped_cek, extra_headers = recipient_jwk.sender_key(enc=enc, cek=choosen_cek)
     assert sender_cek.key == choosen_cek
 
 

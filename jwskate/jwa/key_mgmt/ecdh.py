@@ -9,7 +9,8 @@ from cryptography.hazmat.primitives.asymmetric import ec, x448, x25519
 from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 from typing_extensions import Self, override
 
-from ..base import BaseAsymmetricAlg, BaseKeyManagementAlg
+from jwskate.jwa.base import BaseAsymmetricAlg, BaseKeyManagementAlg
+
 from .aeskw import A128KW, A192KW, A256KW, BaseAesKeyWrap
 
 
@@ -64,12 +65,8 @@ class EcdhEs(
     @classmethod
     def ecdh(
         cls,
-        private_key: (
-            ec.EllipticCurvePrivateKey | x25519.X25519PrivateKey | x448.X448PrivateKey
-        ),
-        public_key: (
-            ec.EllipticCurvePublicKey | x25519.X25519PublicKey | x448.X448PublicKey
-        ),
+        private_key: (ec.EllipticCurvePrivateKey | x25519.X25519PrivateKey | x448.X448PrivateKey),
+        public_key: (ec.EllipticCurvePublicKey | x25519.X25519PublicKey | x448.X448PublicKey),
     ) -> BinaPy:
         """Perform an Elliptic Curve Diffie-Hellman key exchange.
 
@@ -85,21 +82,19 @@ class EcdhEs(
           a shared key
 
         """
-        if isinstance(private_key, ec.EllipticCurvePrivateKey) and isinstance(
-            public_key, ec.EllipticCurvePublicKey
-        ):
+        if isinstance(private_key, ec.EllipticCurvePrivateKey) and isinstance(public_key, ec.EllipticCurvePublicKey):
             shared_key = private_key.exchange(ec.ECDH(), public_key)
-        elif isinstance(private_key, x25519.X25519PrivateKey) and isinstance(
-            public_key, x25519.X25519PublicKey
+        elif isinstance(private_key, x25519.X25519PrivateKey) and isinstance(  # noqa: SIM114
+            public_key,
+            x25519.X25519PublicKey,
         ):
             shared_key = private_key.exchange(public_key)
-        elif isinstance(private_key, x448.X448PrivateKey) and isinstance(
-            public_key, x448.X448PublicKey
-        ):
+        elif isinstance(private_key, x448.X448PrivateKey) and isinstance(public_key, x448.X448PublicKey):
             shared_key = private_key.exchange(public_key)
         else:
-            raise ValueError(
-                "Invalid or unsupported private/public key combination for ECDH",
+            msg = "Invalid or unsupported private/public key combination for ECDH"
+            raise TypeError(
+                msg,
                 type(private_key),
                 type(public_key),
             )
@@ -109,12 +104,8 @@ class EcdhEs(
     def derive(
         cls,
         *,
-        private_key: (
-            ec.EllipticCurvePrivateKey | x25519.X25519PrivateKey | x448.X448PrivateKey
-        ),
-        public_key: (
-            ec.EllipticCurvePublicKey | x25519.X25519PublicKey | x448.X448PublicKey
-        ),
+        private_key: (ec.EllipticCurvePrivateKey | x25519.X25519PrivateKey | x448.X448PrivateKey),
+        public_key: (ec.EllipticCurvePublicKey | x25519.X25519PublicKey | x448.X448PublicKey),
         otherinfo: bytes,
         key_size: int,
     ) -> BinaPy:
@@ -131,9 +122,7 @@ class EcdhEs(
 
         """
         shared_key = cls.ecdh(private_key, public_key)
-        ckdf = ConcatKDFHash(
-            algorithm=hashes.SHA256(), length=key_size // 8, otherinfo=otherinfo
-        )
+        ckdf = ConcatKDFHash(algorithm=hashes.SHA256(), length=key_size // 8, otherinfo=otherinfo)
         return BinaPy(ckdf.derive(shared_key))
 
     def generate_ephemeral_key(
@@ -145,9 +134,7 @@ class EcdhEs(
             a generated EllipticCurvePrivateKey, on the same curve as this algorithm key
 
         """
-        if isinstance(
-            self.key, (ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey)
-        ):
+        if isinstance(self.key, (ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey)):
             return ec.generate_private_key(self.key.curve)
         elif isinstance(self.key, (x25519.X25519PrivateKey, x25519.X25519PublicKey)):
             return x25519.X25519PrivateKey.generate()
@@ -156,9 +143,7 @@ class EcdhEs(
 
     def sender_key(
         self,
-        ephemeral_private_key: (
-            ec.EllipticCurvePrivateKey | x25519.X25519PrivateKey | x448.X448PrivateKey
-        ),
+        ephemeral_private_key: (ec.EllipticCurvePrivateKey | x25519.X25519PrivateKey | x448.X448PrivateKey),
         *,
         alg: str,
         key_size: int,
@@ -190,9 +175,7 @@ class EcdhEs(
 
     def recipient_key(
         self,
-        ephemeral_public_key: (
-            ec.EllipticCurvePublicKey | x25519.X25519PublicKey | x448.X448PublicKey
-        ),
+        ephemeral_public_key: (ec.EllipticCurvePublicKey | x25519.X25519PublicKey | x448.X448PublicKey),
         *,
         alg: str,
         key_size: int,
@@ -223,7 +206,7 @@ class EcdhEs(
             return cek
 
 
-class BaseEcdhEs_AesKw(EcdhEs):
+class BaseEcdhEs_AesKw(EcdhEs):  # noqa: N801
     """Base class for ECDH-ES+AESKW algorithms."""
 
     kwalg: type[BaseAesKeyWrap]
@@ -231,9 +214,7 @@ class BaseEcdhEs_AesKw(EcdhEs):
     def wrap_key_with_epk(
         self,
         plainkey: bytes,
-        ephemeral_private_key: (
-            ec.EllipticCurvePrivateKey | x25519.X25519PrivateKey | x448.X448PrivateKey
-        ),
+        ephemeral_private_key: (ec.EllipticCurvePrivateKey | x25519.X25519PrivateKey | x448.X448PrivateKey),
         **headers: Any,
     ) -> BinaPy:
         """Wrap a key for content encryption.
@@ -247,17 +228,13 @@ class BaseEcdhEs_AesKw(EcdhEs):
             the wrapped CEK
 
         """
-        aes_key = self.sender_key(
-            ephemeral_private_key, key_size=self.kwalg.key_size, **headers
-        )
+        aes_key = self.sender_key(ephemeral_private_key, key_size=self.kwalg.key_size, **headers)
         return self.kwalg(aes_key).wrap_key(plainkey)
 
     def unwrap_key_with_epk(
         self,
         cipherkey: bytes | SupportsBytes,
-        ephemeral_public_key: (
-            ec.EllipticCurvePublicKey | x25519.X25519PublicKey | x448.X448PublicKey
-        ),
+        ephemeral_public_key: (ec.EllipticCurvePublicKey | x25519.X25519PublicKey | x448.X448PublicKey),
         **headers: Any,
     ) -> BinaPy:
         """Unwrap a key for content decryption.
@@ -271,13 +248,11 @@ class BaseEcdhEs_AesKw(EcdhEs):
             the unwrapped key
 
         """
-        aes_key = self.recipient_key(
-            ephemeral_public_key, key_size=self.kwalg.key_size, **headers
-        )
+        aes_key = self.recipient_key(ephemeral_public_key, key_size=self.kwalg.key_size, **headers)
         return self.kwalg(aes_key).unwrap_key(cipherkey)
 
 
-class EcdhEs_A128KW(BaseEcdhEs_AesKw):
+class EcdhEs_A128KW(BaseEcdhEs_AesKw):  # noqa: N801
     """ECDH-ES using Concat KDF and "A128KW" wrapping."""
 
     name = "ECDH-ES+A128KW"
@@ -285,7 +260,7 @@ class EcdhEs_A128KW(BaseEcdhEs_AesKw):
     kwalg = A128KW
 
 
-class EcdhEs_A192KW(BaseEcdhEs_AesKw):
+class EcdhEs_A192KW(BaseEcdhEs_AesKw):  # noqa: N801
     """ECDH-ES using Concat KDF and "A192KW" wrapping."""
 
     name = "ECDH-ES+A192KW"
@@ -293,7 +268,7 @@ class EcdhEs_A192KW(BaseEcdhEs_AesKw):
     kwalg = A192KW
 
 
-class EcdhEs_A256KW(BaseEcdhEs_AesKw):
+class EcdhEs_A256KW(BaseEcdhEs_AesKw):  # noqa: N801
     """ECDH-ES using Concat KDF and "A256KW" wrapping."""
 
     name = "ECDH-ES+A256KW"

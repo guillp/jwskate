@@ -7,7 +7,7 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes, hmac
 from typing_extensions import Self, override
 
-from ..base import BaseSignatureAlg, BaseSymmetricAlg
+from jwskate.jwa.base import BaseSignatureAlg, BaseSymmetricAlg
 
 
 class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
@@ -21,7 +21,8 @@ class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
     def with_random_key(cls) -> Self:
         return cls(BinaPy.random_bits(cls.min_key_size))
 
-    def sign(self, data: bytes | SupportsBytes) -> BinaPy:  # noqa: D102
+    @override
+    def sign(self, data: bytes | SupportsBytes) -> BinaPy:
         if not isinstance(data, bytes):
             data = bytes(data)
 
@@ -32,9 +33,8 @@ class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
         signature = m.finalize()
         return BinaPy(signature)
 
-    def verify(
-        self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes
-    ) -> bool:  # noqa: D102
+    @override
+    def verify(self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes) -> bool:
         if not isinstance(data, bytes):
             data = bytes(data)
 
@@ -45,7 +45,7 @@ class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
         return candidate_signature == signature
 
 
-class HS256(BaseHMACSigAlg):  # noqa: D415
+class HS256(BaseHMACSigAlg):
     """HMAC using SHA-256."""
 
     name = "HS256"
@@ -54,7 +54,7 @@ class HS256(BaseHMACSigAlg):  # noqa: D415
     min_key_size = 256
 
 
-class HS384(BaseHMACSigAlg):  # noqa: D415
+class HS384(BaseHMACSigAlg):
     """HMAC using SHA-384."""
 
     name = "HS384"
@@ -63,7 +63,7 @@ class HS384(BaseHMACSigAlg):  # noqa: D415
     min_key_size = 384
 
 
-class HS512(BaseHMACSigAlg):  # noqa: D415
+class HS512(BaseHMACSigAlg):
     """HMAC using SHA-512."""
 
     name = "HS512"
@@ -72,11 +72,11 @@ class HS512(BaseHMACSigAlg):  # noqa: D415
     min_key_size = 512
 
 
-class HS1(BaseHMACSigAlg):  # noqa: D415
+class HS1(BaseHMACSigAlg):
     """HMAC using SHA-1."""
 
     name = "HS1"
     description = __doc__
     read_only = True
     min_key_size = 160
-    hashing_alg = hashes.SHA1()
+    hashing_alg = hashes.SHA1()  # noqa: S303

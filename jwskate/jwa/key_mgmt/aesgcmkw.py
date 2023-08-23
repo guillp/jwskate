@@ -5,8 +5,8 @@ from typing import SupportsBytes
 
 from binapy import BinaPy
 
-from ..base import BaseKeyManagementAlg
-from ..encryption.aesgcm import BaseAESGCM
+from jwskate.jwa.base import BaseKeyManagementAlg
+from jwskate.jwa.encryption.aesgcm import BaseAESGCM
 
 
 class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
@@ -21,9 +21,7 @@ class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):
     iv_size: int = 96
     """Initialisation Vector size, in bits."""
 
-    def wrap_key(
-        self, plainkey: bytes | SupportsBytes, *, iv: bytes | SupportsBytes
-    ) -> tuple[BinaPy, BinaPy]:
+    def wrap_key(self, plainkey: bytes | SupportsBytes, *, iv: bytes | SupportsBytes) -> tuple[BinaPy, BinaPy]:
         """Wrap a symmetric key, which is typically used as Content Encryption Key (CEK).
 
         This method is used by the sender of the encrypted message.

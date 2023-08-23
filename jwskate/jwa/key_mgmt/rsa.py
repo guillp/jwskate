@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from typing_extensions import Self, override
 
-from ..base import BaseAsymmetricAlg, BaseKeyManagementAlg
+from jwskate.jwa.base import BaseAsymmetricAlg, BaseKeyManagementAlg
 
 
 class BaseRsaKeyWrap(
@@ -30,9 +30,7 @@ class BaseRsaKeyWrap(
     @classmethod
     @override
     def with_random_key(cls) -> Self:
-        return cls(
-            rsa.generate_private_key(public_exponent=65537, key_size=cls.min_key_size)
-        )
+        return cls(rsa.generate_private_key(public_exponent=65537, key_size=cls.min_key_size))
 
     def wrap_key(self, plainkey: bytes) -> BinaPy:
         """Wrap a symmetric key using this algorithm.
@@ -48,9 +46,8 @@ class BaseRsaKeyWrap(
 
         """
         if self.read_only:
-            raise NotImplementedError(
-                "Due to security reasons, this algorithm is only usable for decryption."
-            )
+            msg = "Due to security reasons, this algorithm is only usable for decryption."
+            raise NotImplementedError(msg)
         with self.public_key_required() as key:
             return BinaPy(key.encrypt(plainkey, self.padding))
 
@@ -73,7 +70,7 @@ class BaseRsaKeyWrap(
             return BinaPy(key.decrypt(cipherkey, self.padding))
 
 
-class RsaEsPcks1v1_5(BaseRsaKeyWrap):  # noqa: D415
+class RsaEsPcks1v1_5(BaseRsaKeyWrap):  # noqa: N801
     """RSAES-PKCS1-v1_5."""
 
     name = "RSA1_5"
@@ -83,20 +80,20 @@ class RsaEsPcks1v1_5(BaseRsaKeyWrap):  # noqa: D415
     padding = padding.PKCS1v15()
 
 
-class RsaEsOaep(BaseRsaKeyWrap):  # noqa: D415
+class RsaEsOaep(BaseRsaKeyWrap):
     """RSAES OAEP using default parameters."""
 
     name = "RSA-OAEP"
     description = __doc__
 
     padding = padding.OAEP(
-        mgf=padding.MGF1(algorithm=hashes.SHA1()),
-        algorithm=hashes.SHA1(),
+        mgf=padding.MGF1(algorithm=hashes.SHA1()),  # noqa: S303
+        algorithm=hashes.SHA1(),  # noqa: S303
         label=None,
     )
 
 
-class RsaEsOaepSha256(BaseRsaKeyWrap):  # noqa: D415
+class RsaEsOaepSha256(BaseRsaKeyWrap):
     """RSAES OAEP using SHA-256 and MGF1 with SHA-256."""
 
     name = "RSA-OAEP-256"
@@ -109,7 +106,7 @@ class RsaEsOaepSha256(BaseRsaKeyWrap):  # noqa: D415
     )
 
 
-class RsaEsOaepSha384(BaseRsaKeyWrap):  # noqa: D415
+class RsaEsOaepSha384(BaseRsaKeyWrap):
     """RSA-OAEP using SHA-384 and MGF1 with SHA-384."""
 
     name = "RSA-OAEP-384"
@@ -122,7 +119,7 @@ class RsaEsOaepSha384(BaseRsaKeyWrap):  # noqa: D415
     )
 
 
-class RsaEsOaepSha512(BaseRsaKeyWrap):  # noqa: D415
+class RsaEsOaepSha512(BaseRsaKeyWrap):
     """RSA-OAEP using SHA-512 and MGF1 with SHA-512."""
 
     name = "RSA-OAEP-512"

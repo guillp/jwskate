@@ -162,10 +162,7 @@ def test_empty_jwt(private_jwk: Jwk) -> None:
         == "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkpXSy1BQkNEIn0.e30.c_3ppMzgxnhn4CkLBCNNJ5_zdoS6S9P79cruukiuixMHoHIPF0_nzaj5LBRUXt3O47JiJyUzroi1MXNe_Kod9dqLRM8RJ9t3dbWJRNbPrgnCkqpUhNZ6frrc8jVs9Qu9xmXLDYEa4aSwPSkQTufWN1fC04Vzm8JUMVXM0AFeKjyEyUijEuqeBBFztDbIc2apyXWc5bZW7HEkhDNgKK0pWAVnXLwt4OwGQjd6ZOC5Hgx1wDbiam_abNWaDvR53JSCLM0wMpkYrONY_RPjWRycyeb9K5tHOcGbfRvQqpZGsRG-slf-bqwSOt-8G6Phc_YDv9Lw4NN-vqOxbo2lw-3Crw"
     )
     assert bytes(jwt) == str(jwt).encode()
-    assert (
-        jwt.signed_part
-        == b"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkpXSy1BQkNEIn0.e30"
-    )
+    assert jwt.signed_part == b"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkpXSy1BQkNEIn0.e30"
 
     jwt.validate(key=private_jwk.public_jwk(), check_exp=False)
 
@@ -208,9 +205,7 @@ def test_validate() -> None:
         jwt.validate(jwk, issuer="invalid_iss", algs=SignatureAlgs.ALL_SYMMETRIC)
 
     with pytest.raises(InvalidClaim):
-        jwt.validate(
-            jwk, algs=SignatureAlgs.ALL_SYMMETRIC, claim1=lambda value: "2" in value
-        )
+        jwt.validate(jwk, algs=SignatureAlgs.ALL_SYMMETRIC, claim1=lambda value: "2" in value)
 
     with pytest.raises(ExpiredJwt):
         SignedJwt(
@@ -388,22 +383,16 @@ def test_sign_and_encrypt() -> None:
     assert inner_jwt.verify_signature(sign_jwk.public_jwk())
     assert inner_jwt.kid == sign_jwk.kid
 
-    verified_inner_jwt = Jwt.decrypt_and_verify(
-        enc_jwt, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk()
-    )
+    verified_inner_jwt = Jwt.decrypt_and_verify(enc_jwt, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk())
     assert isinstance(verified_inner_jwt, SignedJwt)
 
     # try to encrypt a JWT with an altered signature
     altered_inner_jwt = bytes(verified_inner_jwt)[:-4] + (
         b"aaaa" if not verified_inner_jwt.value.endswith(b"aaaa") else b"bbbb"
     )
-    enc_altered_jwe = JweCompact.encrypt(
-        altered_inner_jwt, key=enc_jwk.public_jwk(), enc=enc
-    )
+    enc_altered_jwe = JweCompact.encrypt(altered_inner_jwt, key=enc_jwk.public_jwk(), enc=enc)
     with pytest.raises(InvalidSignature):
-        Jwt.decrypt_and_verify(
-            enc_altered_jwe, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk()
-        )
+        Jwt.decrypt_and_verify(enc_altered_jwe, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk())
 
     # trying to decrypt and verify a JWE nested in a JWE will raise a ValueError
     inner_jwe = JweCompact.encrypt(
@@ -412,10 +401,8 @@ def test_sign_and_encrypt() -> None:
         enc="A128GCM",
     )
     nested_inner_jwe = JweCompact.encrypt(inner_jwe, key=enc_jwk.public_jwk(), enc=enc)
-    with pytest.raises(ValueError):
-        Jwt.decrypt_and_verify(
-            nested_inner_jwe, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk()
-        )
+    with pytest.raises(TypeError):
+        Jwt.decrypt_and_verify(nested_inner_jwe, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk())
 
 
 def test_sign_without_alg() -> None:

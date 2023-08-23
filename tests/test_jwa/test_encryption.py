@@ -25,18 +25,14 @@ class SupportsBytesTester:
         return self.payload
 
 
-@pytest.mark.parametrize(
-    "alg", [A128GCM, A192GCM, A256GCM, A128CBC_HS256, A192CBC_HS384, A256CBC_HS512]
-)
+@pytest.mark.parametrize("alg", [A128GCM, A192GCM, A256GCM, A128CBC_HS256, A192CBC_HS384, A256CBC_HS512])
 def test_encryption(alg: BaseAESEncryptionAlg) -> None:
     jwa = alg.with_random_key()
     plaintext = b"this is a test"
     iv = alg.generate_iv()
     assert len(iv) * 8 == alg.iv_size
     ciphertext, tag = jwa.encrypt(plaintext, iv=iv)
-    assert (ciphertext, tag) == jwa.encrypt(
-        SupportsBytesTester(plaintext), iv=SupportsBytesTester(iv)
-    )
+    assert (ciphertext, tag) == jwa.encrypt(SupportsBytesTester(plaintext), iv=SupportsBytesTester(iv))
     assert (
         jwa.decrypt(ciphertext, iv=iv, auth_tag=tag)
         == jwa.decrypt(
@@ -85,8 +81,6 @@ def test_aescbchmac() -> None:
             iv=bytearray(b"this_is_a_test_iv"),
             aad=bytearray(b"this_is_a_test_aad"),
         )
-        == aescbchmac.mac(
-            b"this_is_a_test", iv=b"this_is_a_test_iv", aad=b"this_is_a_test_aad"
-        )
+        == aescbchmac.mac(b"this_is_a_test", iv=b"this_is_a_test_iv", aad=b"this_is_a_test_aad")
         == b"\xc5\xcb\xa0\xa1\xf0t\x8c\x80-\x1a\xd2Ti \x85F"
     )

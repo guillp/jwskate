@@ -61,9 +61,7 @@ def test_select_alg_class() -> None:
 
     # strict mode
     with pytest.raises(MismatchingAlg):
-        select_alg_class(
-            RSAJwk.SIGNATURE_ALGORITHMS, jwk_alg="RS512", alg="RS256", strict=True
-        )
+        select_alg_class(RSAJwk.SIGNATURE_ALGORITHMS, jwk_alg="RS512", alg="RS256", strict=True)
 
 
 def test_select_alg_classes() -> None:

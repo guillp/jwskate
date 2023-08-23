@@ -18,13 +18,14 @@ class BaseCompactToken:
 
     """
 
-    def __init__(self, value: bytes | str, max_size: int = 16 * 1024):
+    def __init__(self, value: bytes | str, max_size: int = 16 * 1024) -> None:
         if len(value) > max_size:
-            raise ValueError(
+            msg = (
                 f"This JWT size exceeds {max_size} bytes, which is abnormally big. "
                 "This size limit is made to avoid potential JSON deserialization vulnerabilities or issues. "
                 "You can increase this limit by passing a different `max_size` value as parameter."
             )
+            raise ValueError(msg)
 
         if isinstance(value, str):
             value = value.encode("ascii")
@@ -78,7 +79,8 @@ class BaseCompactToken:
         """
         alg = self.get_header("alg")
         if alg is None or not isinstance(alg, str):  # pragma: no branch
-            raise AttributeError("This token doesn't have a valid 'alg' header")
+            msg = "This token doesn't have a valid 'alg' header"
+            raise AttributeError(msg)
         return alg
 
     @cached_property
@@ -93,7 +95,8 @@ class BaseCompactToken:
         """
         kid = self.get_header("kid")
         if kid is None or not isinstance(kid, str):
-            raise AttributeError("This token doesn't have a valid 'kid' header")
+            msg = "This token doesn't have a valid 'kid' header"
+            raise AttributeError(msg)
         return kid
 
     @cached_property
@@ -108,7 +111,8 @@ class BaseCompactToken:
         """
         typ = self.get_header("typ")
         if typ is None or not isinstance(typ, str):  # pragma: no branch
-            raise AttributeError("This token doesn't have a valid 'typ' header")
+            msg = "This token doesn't have a valid 'typ' header"
+            raise AttributeError(msg)
         return typ
 
     @cached_property
@@ -123,7 +127,8 @@ class BaseCompactToken:
         """
         cty = self.get_header("cty")
         if cty is None or not isinstance(cty, str):  # pragma: no branch
-            raise AttributeError("This token doesn't have a valid 'cty' header")
+            msg = "This token doesn't have a valid 'cty' header"
+            raise AttributeError(msg)
         return cty
 
     def __repr__(self) -> str:

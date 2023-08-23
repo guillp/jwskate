@@ -4,10 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar
 
-from binapy import BinaPy
 from cryptography.hazmat.primitives.asymmetric import ec
-
-from jwskate import KeyTypes
 
 
 @dataclass

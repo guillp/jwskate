@@ -7,7 +7,7 @@ import cryptography.exceptions
 from binapy import BinaPy
 from cryptography.hazmat.primitives.ciphers import aead
 
-from ..base import BaseAESEncryptionAlg, MismatchingAuthTag
+from jwskate.jwa.base import BaseAESEncryptionAlg, MismatchingAuthTag
 
 
 class BaseAESGCM(BaseAESEncryptionAlg):
@@ -40,7 +40,8 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         if not isinstance(iv, bytes):
             iv = bytes(iv)
         if len(iv) * 8 != self.iv_size:
-            raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
+            msg = f"Invalid IV size, must be {self.iv_size} bits"
+            raise ValueError(msg)
         if aad is None:
             aad = b""
         elif not isinstance(aad, bytes):
@@ -86,12 +87,13 @@ class BaseAESGCM(BaseAESEncryptionAlg):
             aad = bytes(aad)
 
         if len(iv) * 8 != self.iv_size:
-            raise ValueError(f"Invalid IV size, must be {self.iv_size} bits")
+            msg = f"Invalid IV size, must be {self.iv_size} bits"
+            raise ValueError(msg)
         ciphertext_with_tag = ciphertext + auth_tag
         try:
             return BinaPy(aead.AESGCM(self.key).decrypt(iv, ciphertext_with_tag, aad))
-        except cryptography.exceptions.InvalidTag:
-            raise MismatchingAuthTag()
+        except cryptography.exceptions.InvalidTag as exc:
+            raise MismatchingAuthTag() from exc
 
 
 class A128GCM(BaseAESGCM):

@@ -7,7 +7,7 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives import keywrap
 from typing_extensions import Self, override
 
-from ..base import BaseKeyManagementAlg, BaseSymmetricAlg
+from jwskate.jwa.base import BaseKeyManagementAlg, BaseSymmetricAlg, InvalidKey
 
 
 class BaseAesKeyWrap(BaseKeyManagementAlg, BaseSymmetricAlg):
@@ -31,7 +31,8 @@ class BaseAesKeyWrap(BaseKeyManagementAlg, BaseSymmetricAlg):
 
         """
         if not isinstance(key, bytes) or len(key) * 8 != cls.key_size:
-            raise ValueError(f"Key must be {cls.key_size} bits.")
+            msg = f"Key must be {cls.key_size} bits."
+            raise InvalidKey(msg)
 
     @classmethod
     @override

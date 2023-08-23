@@ -65,8 +65,7 @@ def rsa_public_jwk(rsa_private_jwk: Jwk) -> Jwk:
 def test_sign(rsa_private_jwk: Jwk, rsa_public_jwk: Jwk) -> None:
     signature = rsa_private_jwk.sign(b"Hello World!", alg="RS256")
     assert (
-        signature.hex()
-        == "2eb2d1f5ef9a55403b7d09cca52955feea3ced6b948d311819ec976e4f40cb3cdf9718de38ecc53f"
+        signature.hex() == "2eb2d1f5ef9a55403b7d09cca52955feea3ced6b948d311819ec976e4f40cb3cdf9718de38ecc53f"
         "d060e2994fab378cb64ebcecf1a6da1d5983af8b6d53c2830e0a4815863345ac72f9a6e7b6328f56"
         "78c1a3ed89074fa1e0526f261c5d969c0d059db94fedd51a705ae1870ef4c00cf89b5702c62f20fd"
         "1c3f13b94b15e529a9f6d86810788cf7d6d9e1e296d094af934931d6b845d2c93239943ca678b715"
@@ -80,9 +79,7 @@ def test_sign(rsa_private_jwk: Jwk, rsa_public_jwk: Jwk) -> None:
 
 
 def test_public_jwk(rsa_private_jwk: Jwk) -> None:
-    public_jwk = {
-        key: val for key, val in rsa_private_jwk.items() if key in ("kty", "n", "e")
-    }
+    public_jwk = {key: val for key, val in rsa_private_jwk.items() if key in ("kty", "n", "e")}
     jwk = Jwk(public_jwk)
     assert jwk.is_private is False
     assert jwk.kty == "RSA"
@@ -248,9 +245,7 @@ def test_from_cryptography_key() -> None:
     assert not public_jwk.is_private
     assert public_jwk.cryptography_key.public_bytes(
         serialization.Encoding.PEM, serialization.PublicFormat.PKCS1
-    ) == public_key.public_bytes(
-        serialization.Encoding.PEM, serialization.PublicFormat.PKCS1
-    )
+    ) == public_key.public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.PKCS1)
 
     with pytest.raises(TypeError):
         RSAJwk.from_cryptography_key(b"foo")

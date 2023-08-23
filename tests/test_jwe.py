@@ -24,9 +24,7 @@ def test_jwe() -> None:
     plaintext = b"The true sign of intelligence is not knowledge but imagination."
     alg = "RSA-OAEP"
     enc = "A256GCM"
-    cek = bytes.fromhex(
-        "b1a1f480548fe1733fb403ff6b9ad4f68a076e5b702e22692f82cb2e7aea40fc"
-    )
+    cek = bytes.fromhex("b1a1f480548fe1733fb403ff6b9ad4f68a076e5b702e22692f82cb2e7aea40fc")
     jwk = Jwk(
         {
             "kty": "RSA",
@@ -62,9 +60,7 @@ def test_jwe() -> None:
     )
     iv = bytes.fromhex("e3c575fc02dbe944b4e14ddb")
 
-    jwe = JweCompact.encrypt(
-        plaintext, jwk.public_jwk(), alg=alg, enc=enc, cek=cek, iv=iv
-    )
+    jwe = JweCompact.encrypt(plaintext, jwk.public_jwk(), alg=alg, enc=enc, cek=cek, iv=iv)
 
     assert jwe.initialization_vector == bytes.fromhex("e3c575fc02dbe944b4e14ddb")
 
@@ -138,7 +134,7 @@ def test_jwe_decrypt() -> None:
 
 
 def test_invalid_jwe() -> None:
-    with pytest.raises(InvalidJwe, match="Invalid JWE: .*$"):
+    with pytest.raises(InvalidJwe, match="Invalid JWE"):
         JweCompact("foo")
     with pytest.raises(InvalidJwe, match="Invalid JWE header: .*$"):
         JweCompact("foo!.foo!.foo!.foo!.foo!")
@@ -189,12 +185,9 @@ EC_P521_PRIVATE_KEY = {
     "kid": "bilbo.baggins@hobbiton.example",
     "use": "enc",
     "crv": "P-521",
-    "x": "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9"
-    "A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt",
-    "y": "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVy"
-    "SsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1",
-    "d": "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zb"
-    "KipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt",
+    "x": "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9" "A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt",
+    "y": "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVy" "SsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1",
+    "d": "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zb" "KipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt",
 }
 
 RSA_PRIVATE_KEY = {
@@ -351,10 +344,7 @@ def symmetric_256_encryption_jwk() -> Jwk:
     assert jwk.kty == "oct"
     assert jwk.kid == "018c0ae5-4d9b-471b-bfd6-eef314bc7037"
     assert jwk.use == "enc"
-    assert (
-        jwk.key.hex()
-        == "849b57219dae48de646d07dbb533566e976686457c1491be3a76dcea6c427188"
-    )
+    assert jwk.key.hex() == "849b57219dae48de646d07dbb533566e976686457c1491be3a76dcea6c427188"
     assert jwk.key_size == 32 * 8
     return jwk
 
@@ -559,9 +549,7 @@ def test_supportsbytes(
 
     assert jwe.decrypt(decryption_jwk) == encrypted_jwe.decrypt(decryption_jwk)
     if not isinstance(decryption_jwk, bytes):
-        cek = decryption_jwk.recipient_key(
-            SupportsBytesTester(jwe.wrapped_cek), **jwe.headers
-        )
+        cek = decryption_jwk.recipient_key(SupportsBytesTester(jwe.wrapped_cek), **jwe.headers)
         assert (
             cek.decrypt(
                 SupportsBytesTester(jwe.ciphertext),
@@ -586,9 +574,7 @@ def test_decrypt(
     if isinstance(decryption_jwk, Jwk):
         assert encrypted_jwe.decrypt(decryption_jwk) == encryption_plaintext
     else:
-        assert (
-            encrypted_jwe.decrypt_with_password(decryption_jwk) == encryption_plaintext
-        )
+        assert encrypted_jwe.decrypt_with_password(decryption_jwk) == encryption_plaintext
 
 
 def test_decrypt_by_jwcrypto(
@@ -696,9 +682,7 @@ def test_decrypt_from_jwcrypto(
         assert jwe.decrypt(decryption_jwk) == encryption_plaintext
     except Exception:
         cek = jwe.unwrap_cek(decryption_jwk)
-        assert (
-            False
-        ), f"Decryption by JWSkate failed for {jwcrypto_encrypted_jwe}, CEK={cek}"
+        assert False, f"Decryption by JWSkate failed for {jwcrypto_encrypted_jwe}, CEK={cek}"
 
 
 def test_invalid_enc_header() -> None:
@@ -711,16 +695,12 @@ def test_invalid_enc_header() -> None:
 def test_invalid_password_encryption() -> None:
     with pytest.raises(
         UnsupportedAlg,
-        match=r"^Unsupported password-based encryption algorithm 'foo'\. Value must be one of \[.*\]\.$",
+        match="Unsupported password-based encryption algorithm 'foo'",
     ):
-        JweCompact.encrypt_with_password(
-            b"payload", "password", alg="foo", enc="A128GCM"
-        )
+        JweCompact.encrypt_with_password(b"payload", "password", alg="foo", enc="A128GCM")
 
     with pytest.raises(ValueError, match="must be a positive integer"):
-        JweCompact.encrypt_with_password(
-            b"payload", "password", alg="PBES2-HS256+A128KW", enc="A128GCM", count=-1
-        )
+        JweCompact.encrypt_with_password(b"payload", "password", alg="PBES2-HS256+A128KW", enc="A128GCM", count=-1)
 
     with pytest.warns(match="PBES2 iteration count should be > 1000"):
         assert isinstance(
@@ -750,7 +730,7 @@ def test_invalid_password_encryption() -> None:
     assert jwe_invalid_alg.alg == "foo"
     with pytest.raises(
         UnsupportedAlg,
-        match=r"^Unsupported password-based encryption algorithm 'foo'\. Value must be one of \[.*\]\.$",
+        match="Unsupported password-based encryption algorithm 'foo'",
     ):
         jwe_invalid_alg.decrypt_with_password("password")
 
@@ -758,18 +738,14 @@ def test_invalid_password_encryption() -> None:
         "eyJhbGciOiJQQkVTMi1IUzI1NitBMTI4S1ciLCJlbmMiOiJBMTI4R0NNIiwicDJjIjo1MH0.KB5nuVzZJ_DAw5VhvDjuvXMYe-tVDZC_.fQbPcHuNP68owByZ.ca5JnpoJVg.G1atlPo0sDP7E4VOR3dD5w"
     )
     assert jwe_missing_p2s.headers.get("p2s") is None
-    with pytest.raises(
-        InvalidJwe, match=r"Invalid JWE: a required 'p2s' header is missing."
-    ):
+    with pytest.raises(InvalidJwe, match=r"Invalid JWE: a required 'p2s' header is missing."):
         jwe_missing_p2s.decrypt_with_password("password")
 
     jwe_missing_p2c = JweCompact(
         "eyJhbGciOiJQQkVTMi1IUzI1NitBMTI4S1ciLCJlbmMiOiJBMTI4R0NNIiwicDJzIjoiZHR0Nlk0SE1DeC1DYWlFMyJ9.KB5nuVzZJ_DAw5VhvDjuvXMYe-tVDZC_.fQbPcHuNP68owByZ.ca5JnpoJVg.G1atlPo0sDP7E4VOR3dD5w"
     )
     assert jwe_missing_p2c.headers.get("p2c") is None
-    with pytest.raises(
-        InvalidJwe, match=r"Invalid JWE: a required 'p2c' header is missing."
-    ):
+    with pytest.raises(InvalidJwe, match=r"Invalid JWE: a required 'p2c' header is missing."):
         jwe_missing_p2c.decrypt_with_password("password")
 
     jwe_invalid_p2c = JweCompact(

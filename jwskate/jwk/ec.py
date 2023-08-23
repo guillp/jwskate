@@ -9,6 +9,7 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives.asymmetric import ec
 from typing_extensions import override
 
+from jwskate import KeyTypes
 from jwskate.jwa import (
     ES256,
     ES256K,
@@ -26,7 +27,6 @@ from jwskate.jwa import (
     secp256k1,
 )
 
-from .. import KeyTypes
 from .alg import UnsupportedAlg
 from .base import Jwk, JwkParameter
 
@@ -50,28 +50,19 @@ class ECJwk(Jwk):
 
     PARAMS: Mapping[str, JwkParameter] = {
         "crv": JwkParameter("Curve", is_private=False, is_required=True, kind="name"),
-        "x": JwkParameter(
-            "X Coordinate", is_private=False, is_required=True, kind="b64u"
-        ),
-        "y": JwkParameter(
-            "Y Coordinate", is_private=False, is_required=True, kind="b64u"
-        ),
-        "d": JwkParameter(
-            "ECC Private Key", is_private=True, is_required=True, kind="b64u"
-        ),
+        "x": JwkParameter("X Coordinate", is_private=False, is_required=True, kind="b64u"),
+        "y": JwkParameter("Y Coordinate", is_private=False, is_required=True, kind="b64u"),
+        "d": JwkParameter("ECC Private Key", is_private=True, is_required=True, kind="b64u"),
     }
 
-    CURVES: Mapping[str, EllipticCurve] = {
-        curve.name: curve for curve in [P_256, P_384, P_521, secp256k1]
-    }
+    CURVES: Mapping[str, EllipticCurve] = {curve.name: curve for curve in [P_256, P_384, P_521, secp256k1]}
 
     SIGNATURE_ALGORITHMS: Mapping[str, type[BaseECSignatureAlg]] = {
         sigalg.name: sigalg for sigalg in [ES256, ES384, ES512, ES256K]
     }
 
     KEY_MANAGEMENT_ALGORITHMS: Mapping[str, type[EcdhEs]] = {
-        keyalg.name: keyalg
-        for keyalg in [EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW]
+        keyalg.name: keyalg for keyalg in [EcdhEs, EcdhEs_A128KW, EcdhEs_A192KW, EcdhEs_A256KW]
     }
 
     @property
@@ -167,17 +158,16 @@ class ECJwk(Jwk):
 
     @classmethod
     @override
-    def generate(
-        cls, *, crv: str | None = None, alg: str | None = None, **kwargs: Any
-    ) -> ECJwk:
+    def generate(cls, *, crv: str | None = None, alg: str | None = None, **kwargs: Any) -> ECJwk:
         curve: EllipticCurve = P_256
 
         if crv is None and alg is None:
-            raise ValueError(
+            msg = (
                 "No Curve identifier (crv) or Algorithm identifier (alg) have been provided "
                 "when generating an Elliptic Curve JWK. So there is no hint to determine which curve to use. "
                 "You must explicitly pass an 'alg' or 'crv' parameter to select the appropriate Curve."
             )
+            raise ValueError(msg)
         elif crv:
             curve = cls.get_curve(crv)
         elif alg:
@@ -187,7 +177,8 @@ class ECJwk(Jwk):
                 warnings.warn(
                     "No Curve identifier (crv) specified when generating an Elliptic Curve Jwk for Key Management. "
                     "Curve 'P-256' is used by default. You should explicitly pass a 'crv' parameter "
-                    "to select the appropriate Curve and avoid this warning."
+                    "to select the appropriate Curve and avoid this warning.",
+                    stacklevel=2,
                 )
             else:
                 raise UnsupportedAlg(alg)
@@ -216,28 +207,22 @@ class ECJwk(Jwk):
         elif isinstance(cryptography_key, ec.EllipticCurvePublicKey):
             public_numbers = cryptography_key.public_numbers()
         else:
-            raise TypeError(
-                "A EllipticCurvePrivateKey or a EllipticCurvePublicKey is required."
-            )
+            msg = "A EllipticCurvePrivateKey or a EllipticCurvePublicKey is required."
+            raise TypeError(msg)
 
         for crv in EllipticCurve.instances.values():
             if crv.cryptography_curve.name == cryptography_key.curve.name:
                 break
         else:
-            raise NotImplementedError(
-                f"Unsupported Curve {cryptography_key.curve.name}"
-            )
+            msg = f"Unsupported Curve {cryptography_key.curve.name}"
+            raise NotImplementedError(msg)
 
         x = BinaPy.from_int(public_numbers.x, crv.coordinate_size).to("b64u").ascii()
         y = BinaPy.from_int(public_numbers.y, crv.coordinate_size).to("b64u").ascii()
         parameters = {"kty": KeyTypes.EC, "crv": crv.name, "x": x, "y": y}
         if isinstance(cryptography_key, ec.EllipticCurvePrivateKey):
             pn = cryptography_key.private_numbers()  # type: ignore[attr-defined]
-            d = (
-                BinaPy.from_int(pn.private_value, crv.coordinate_size)
-                .to("b64u")
-                .ascii()
-            )
+            d = BinaPy.from_int(pn.private_value, crv.coordinate_size).to("b64u").ascii()
             parameters["d"] = d
 
         return cls(parameters)
@@ -288,11 +273,7 @@ class ECJwk(Jwk):
 
     @override
     def supported_signing_algorithms(self) -> list[str]:
-        return [
-            name
-            for name, alg in self.SIGNATURE_ALGORITHMS.items()
-            if alg.curve == self.curve
-        ]
+        return [name for name, alg in self.SIGNATURE_ALGORITHMS.items() if alg.curve == self.curve]
 
     @override
     def supported_key_management_algorithms(self) -> list[str]:

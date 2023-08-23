@@ -21,8 +21,7 @@ from jwskate import (
 def test_jws_compact(private_jwk: Jwk) -> None:
     jws = JwsCompact.sign(payload=b"Hello World!", key=private_jwk, alg="RS256")
     assert (
-        str(jws)
-        == "eyJhbGciOiJSUzI1NiIsImtpZCI6IkpXSy1BQkNEIn0.SGVsbG8gV29ybGQh.1eucS9ZaTnAJyfVNhxLJ_phFN1rexm0l"
+        str(jws) == "eyJhbGciOiJSUzI1NiIsImtpZCI6IkpXSy1BQkNEIn0.SGVsbG8gV29ybGQh.1eucS9ZaTnAJyfVNhxLJ_phFN1rexm0l"
         "-nIXWBjUImdS29z55BuxH6NjGpltSXKrgYxYQxqGCsGIxlSVoIEhKVdhE1Vd9NPJRyw7I4zBRdwVvcqMRODMqDxCiqbDQ"
         "_5bI5jAqFEJAFCXZo2T4ixlxs-2eXtmSEp6vX51Tg1pvicM5_YrKfS8Jn3lt9xW5RaNKUJ94KVLlov_IncFsh2bg5jdo1"
         "SEoUxlB2II0JdlfCsgHohJd58eWjFToeNtH1eiXGeZOHblMLz5a5AhY8jY3C424-tggj6BK6fwpedddFD3mtFFTNw6KT-"
@@ -37,12 +36,9 @@ EC_P521_PRIVATE_KEY = {
     "kid": "bilbo.baggins@hobbiton.example",
     "use": "sig",
     "crv": "P-521",
-    "x": "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9"
-    "A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt",
-    "y": "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVy"
-    "SsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1",
-    "d": "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zb"
-    "KipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt",
+    "x": "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9" "A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt",
+    "y": "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVy" "SsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1",
+    "d": "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zb" "KipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt",
 }
 
 RSA_PRIVATE_KEY = {
@@ -190,14 +186,8 @@ def okp_ed25519_signature_jwk() -> Jwk:
     assert isinstance(jwk, OKPJwk)
     assert jwk.is_private
     assert jwk.kty == "OKP"
-    assert (
-        jwk.private_key.hex()
-        == "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60"
-    )
-    assert (
-        jwk.public_key.hex()
-        == "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
-    )
+    assert jwk.private_key.hex() == "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60"
+    assert jwk.public_key.hex() == "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
     assert jwk.thumbprint() == "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k"
     return jwk
 
@@ -229,10 +219,7 @@ def symmetric_signature_jwk() -> Jwk:
     assert jwk.kty == "oct"
     assert jwk.kid == "018c0ae5-4d9b-471b-bfd6-eef314bc7037"
     assert jwk.use == "sig"
-    assert (
-        jwk.key.hex()
-        == "849b57219dae48de646d07dbb533566e976686457c1491be3a76dcea6c427188"
-    )
+    assert jwk.key.hex() == "849b57219dae48de646d07dbb533566e976686457c1491be3a76dcea6c427188"
     assert jwk.key_size == 32 * 8
     return jwk
 
@@ -291,9 +278,7 @@ def signature_jwk(
         if signature_alg in key.supported_signing_algorithms():
             return key
 
-    pytest.skip(
-        f"No key supports this signature alg: {signature_alg}"
-    )  # pragma: no cover
+    pytest.skip(f"No key supports this signature alg: {signature_alg}")  # pragma: no cover
 
 
 @pytest.fixture()
@@ -307,12 +292,8 @@ def verification_jwk(signature_jwk: Jwk) -> Jwk:
 
 
 @pytest.fixture()
-def signed_jws_compact(
-    signature_payload: bytes, signature_jwk: Jwk, signature_alg: str
-) -> JwsCompact:
-    jws = JwsCompact.sign(
-        payload=signature_payload, key=signature_jwk, alg=signature_alg
-    )
+def signed_jws_compact(signature_payload: bytes, signature_jwk: Jwk, signature_alg: str) -> JwsCompact:
+    jws = JwsCompact.sign(payload=signature_payload, key=signature_jwk, alg=signature_alg)
     assert isinstance(jws, JwsCompact)
     return jws
 
@@ -352,35 +333,25 @@ def test_supportsbytes(
 
 
 @pytest.fixture()
-def signed_jws_json_flat(
-    signature_payload: bytes, signature_jwk: Jwk, signature_alg: str
-) -> JwsJsonFlat:
-    jws = JwsJsonFlat.sign(
-        payload=signature_payload, key=signature_jwk, alg=signature_alg
-    )
+def signed_jws_json_flat(signature_payload: bytes, signature_jwk: Jwk, signature_alg: str) -> JwsJsonFlat:
+    jws = JwsJsonFlat.sign(payload=signature_payload, key=signature_jwk, alg=signature_alg)
     assert isinstance(jws, JwsJsonFlat)
     return jws
 
 
 @pytest.fixture()
-def signed_jws_json_general(
-    signature_payload: bytes, signature_jwk: Jwk, signature_alg: str
-) -> JwsJsonGeneral:
+def signed_jws_json_general(signature_payload: bytes, signature_jwk: Jwk, signature_alg: str) -> JwsJsonGeneral:
     jws = JwsJsonGeneral.sign(signature_payload, (signature_jwk, signature_alg))
     assert isinstance(jws, JwsJsonGeneral)
     return jws
 
 
-def test_verify_signature(
-    signed_jws_compact: JwsCompact, verification_jwk: Jwk, signature_alg: str
-) -> None:
+def test_verify_signature(signed_jws_compact: JwsCompact, verification_jwk: Jwk, signature_alg: str) -> None:
     assert signed_jws_compact.verify_signature(verification_jwk, alg=signature_alg)
     altered_jws = bytes(signed_jws_compact)[:-4] + (
         b"aaaa" if not signed_jws_compact.value.endswith(b"aaaa") else b"bbbb"
     )
-    assert not JwsCompact(altered_jws).verify_signature(
-        verification_jwk, alg=signature_alg
-    )
+    assert not JwsCompact(altered_jws).verify_signature(verification_jwk, alg=signature_alg)
 
 
 def test_verify_signature_json_flat(
@@ -391,9 +362,7 @@ def test_verify_signature_json_flat(
     altered_jws["signature"] = signed_jws_json_flat["signature"][:-4] + (
         "aaaa" if not signed_jws_json_flat["signature"].endswith("aaaa") else "bbbb"
     )
-    assert not JwsJsonFlat(altered_jws).verify_signature(
-        verification_jwk, alg=signature_alg
-    )
+    assert not JwsJsonFlat(altered_jws).verify_signature(verification_jwk, alg=signature_alg)
 
 
 def test_verify_signature_json_general(
@@ -401,16 +370,10 @@ def test_verify_signature_json_general(
 ) -> None:
     assert signed_jws_json_general.verify_signature(verification_jwk, alg=signature_alg)
     altered_jws = dict(signed_jws_json_general)
-    altered_jws["signatures"][0]["signature"] = signed_jws_json_general["signatures"][
-        0
-    ]["signature"][:-4] + (
-        "aaaa"
-        if not signed_jws_json_general["signatures"][0]["signature"].endswith("aaaa")
-        else "bbbb"
+    altered_jws["signatures"][0]["signature"] = signed_jws_json_general["signatures"][0]["signature"][:-4] + (
+        "aaaa" if not signed_jws_json_general["signatures"][0]["signature"].endswith("aaaa") else "bbbb"
     )
-    assert not JwsJsonGeneral(altered_jws).verify_signature(
-        verification_jwk, alg=signature_alg
-    )
+    assert not JwsJsonGeneral(altered_jws).verify_signature(verification_jwk, alg=signature_alg)
 
 
 def test_jws_format_transformation(
@@ -441,38 +404,17 @@ def test_jws_format_transformation(
     assert flat_json_with_unprotected_header.header == unprotected_header
     assert flat_json_with_unprotected_header.protected == signed_jws_compact.headers
     assert flat_json_with_unprotected_header.signature == signed_jws_compact.signature
-    assert (
-        flat_json_with_unprotected_header.jws_signature
-        == signed_jws_compact.jws_signature(unprotected_header)
-    )
+    assert flat_json_with_unprotected_header.jws_signature == signed_jws_compact.jws_signature(unprotected_header)
     assert flat_json_with_unprotected_header.compact() == signed_jws_compact
 
-    general_json_with_unprotected_header = signed_jws_compact.general_json(
-        unprotected_header
-    )
+    general_json_with_unprotected_header = signed_jws_compact.general_json(unprotected_header)
     assert general_json_with_unprotected_header.payload == signed_jws_compact.payload
-    assert (
-        general_json_with_unprotected_header.signatures[0].header == unprotected_header
-    )
-    assert (
-        general_json_with_unprotected_header.signatures[0].protected
-        == signed_jws_compact.headers
-    )
-    assert (
-        general_json_with_unprotected_header.signatures[0].signature
-        == signed_jws_compact.signature
-    )
-    assert general_json_with_unprotected_header.signatures[
-        0
-    ] == signed_jws_compact.jws_signature(unprotected_header)
-    assert (
-        general_json_with_unprotected_header.signed_part(lambda sigs: sigs[0])
-        == signed_jws_compact.signed_part
-    )
-    assert (
-        general_json_with_unprotected_header.compact(lambda sigs: sigs[0])
-        == signed_jws_compact
-    )
+    assert general_json_with_unprotected_header.signatures[0].header == unprotected_header
+    assert general_json_with_unprotected_header.signatures[0].protected == signed_jws_compact.headers
+    assert general_json_with_unprotected_header.signatures[0].signature == signed_jws_compact.signature
+    assert general_json_with_unprotected_header.signatures[0] == signed_jws_compact.jws_signature(unprotected_header)
+    assert general_json_with_unprotected_header.signed_part(lambda sigs: sigs[0]) == signed_jws_compact.signed_part
+    assert general_json_with_unprotected_header.compact(lambda sigs: sigs[0]) == signed_jws_compact
 
 
 def test_verify_signature_by_jwcrypto(
@@ -496,9 +438,7 @@ def test_verify_signature_by_jwcrypto(
 
 
 @pytest.fixture()
-def jwcrypto_signed_jws(
-    signature_payload: bytes, signature_jwk: Jwk, signature_alg: str
-) -> str:
+def jwcrypto_signed_jws(signature_payload: bytes, signature_jwk: Jwk, signature_alg: str) -> str:
     """Sign a JWS using `jwcrypto`, to make sure it verifies with `jwskate`.
 
     Args:
@@ -525,9 +465,7 @@ def jwcrypto_signed_jws(
     return token
 
 
-def test_verify_signature_from_jwcrypto(
-    jwcrypto_signed_jws: str, verification_jwk: Jwk, signature_alg: str
-) -> None:
+def test_verify_signature_from_jwcrypto(jwcrypto_signed_jws: str, verification_jwk: Jwk, signature_alg: str) -> None:
     """Check that `jwskate` verifies tokens signed by `jwcrypto`.
 
     Args:
@@ -536,9 +474,7 @@ def test_verify_signature_from_jwcrypto(
         signature_alg: the alg to use
 
     """
-    assert JwsCompact(jwcrypto_signed_jws).verify_signature(
-        verification_jwk, alg=signature_alg
-    )
+    assert JwsCompact(jwcrypto_signed_jws).verify_signature(verification_jwk, alg=signature_alg)
 
 
 def test_invalid_jws_compact() -> None:
@@ -549,9 +485,7 @@ def test_invalid_jws_compact() -> None:
             "ey.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.cOUKU1ijv3KiN2KK_o50RU978I9MzQ4lNw2y7nOGAdM"
         )
     with pytest.raises(ValueError):
-        JwsCompact(
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.!!.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-        )
+        JwsCompact("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.!!.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
     with pytest.raises(ValueError):
         JwsCompact(
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.!!"
@@ -574,9 +508,9 @@ def test_invalid_jws_json() -> None:
 def test_jws_from_parts() -> None:
     assert JwsCompact.from_parts(
         "eyJhbGciOm51bGx9.dGhpc19pc19hX3Rlc3Q",
-        BinaPy(
-            "xZdQ-v6xqUpJGeuRIGVTs9gv56eQ_T_q-4OQdFS3IkkC3o-QM6vP39wHf5iNoHrZww9SrXHXb0oaF4RQZyKRGg"
-        ).decode_from("b64u"),
+        BinaPy("xZdQ-v6xqUpJGeuRIGVTs9gv56eQ_T_q-4OQdFS3IkkC3o-QM6vP39wHf5iNoHrZww9SrXHXb0oaF4RQZyKRGg").decode_from(
+            "b64u"
+        ),
     ) == JwsCompact(
         "eyJhbGciOm51bGx9.dGhpc19pc19hX3Rlc3Q.xZdQ-v6xqUpJGeuRIGVTs9gv56eQ_T_q-4OQdFS3IkkC3o-QM6vP39wHf5iNoHrZww9SrXHXb0oaF4RQZyKRGg"
     )

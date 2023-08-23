@@ -67,8 +67,7 @@ Ready to contribute? Here's how to set up `jwskate` for local development.
 
 Now you can make your changes locally.
 
-6. When you're done making changes, check that your changes pass the tests, including testing other Python versions,
-   with tox:
+6. When you're done making changes, check that your changes pass the tests:
 
 ```
     $ hatch run test:test

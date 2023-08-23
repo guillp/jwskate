@@ -110,3 +110,6 @@ site/
 
 # profiling data
 prof/
+
+# hatch-vcs
+_version.py

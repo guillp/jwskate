@@ -1,6 +1,5 @@
 [project]
 name = "jwskate"
-version = "0.10.0"
 description = "A Pythonic implementation of the JOSE / JSON Web Crypto related RFCs (JWS, JWK, JWA, JWT, JWE)"
 readme = "README.md"
 license = "MIT"
@@ -8,6 +7,7 @@ requires-python = ">=3.8"
 authors = [
     { name = "Guillaume Pujol", email = "guill.p.linux@gmail.com" }
 ]
+dynamic = ["version"]
 
 classifiers = [
     'Development Status :: 4 - Beta',
@@ -32,7 +32,11 @@ homepage = "https://github.com/guillp/jwskate"
 documentation = "https://guillp.github.io/jwskate/"
 pypi = "https://pypi.org/project/jwskate/"
 
+
 [tool]
+[tool.hatch.version]
+source = "vcs"
+
 [tool.hatch.build.targets.wheel]
 packages = ["jwskate"]
 
@@ -49,7 +53,7 @@ dependencies = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [tool.hatch.envs.test]

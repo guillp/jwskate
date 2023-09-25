@@ -21,7 +21,7 @@ class InvalidJwt(ValueError):
 class Jwt(BaseCompactToken):
     """Represents a Json Web Token."""
 
-    def __new__(cls, value: bytes | str, max_size: int = 16 * 1024) -> SignedJwt | JweCompact | Jwt:  # type: ignore[misc]
+    def __new__(cls, value: bytes | str, max_size: int = 16 * 1024) -> SignedJwt | JweCompact | Jwt:  # type: ignore[misc] # noqa: E501
         """Allow parsing both Signed and Encrypted JWTs.
 
         This returns the appropriate subclass or instance depending on the number of dots (.) in the serialized JWT.
@@ -35,12 +35,12 @@ class Jwt(BaseCompactToken):
             value = value.encode("ascii")
 
         if cls == Jwt:
-            if value.count(b".") == 2:
+            if value.count(b".") == 2:  # noqa: PLR2004
                 from .signed import SignedJwt
 
                 return super().__new__(SignedJwt)
-            elif value.count(b".") == 4:
-                from ..jwe import JweCompact
+            elif value.count(b".") == 4:  # noqa: PLR2004
+                from jwskate.jwe import JweCompact
 
                 return JweCompact(value, max_size)
 
@@ -76,7 +76,8 @@ class Jwt(BaseCompactToken):
         alg = alg or key.get("alg")
 
         if alg is None:
-            raise ValueError("a signing alg is required")
+            msg = "a signing alg is required"
+            raise ValueError(msg)
 
         extra_headers = extra_headers or {}
         headers = dict(alg=alg, **extra_headers)
@@ -89,7 +90,7 @@ class Jwt(BaseCompactToken):
 
     @classmethod
     def sign_arbitrary(
-        self,
+        cls,
         claims: dict[str, Any],
         headers: dict[str, Any],
         key: Jwk | dict[str, Any] | Any,
@@ -115,7 +116,8 @@ class Jwt(BaseCompactToken):
         alg = alg or key.get("alg")
 
         if alg is None:
-            raise ValueError("a signing alg is required")
+            msg = "a signing alg is required"
+            raise ValueError(msg)
 
         headers_part = BinaPy.serialize_to("json", headers).to("b64u")
         claims_part = BinaPy.serialize_to("json", claims).to("b64u")
@@ -187,18 +189,12 @@ class Jwt(BaseCompactToken):
         enc_extra_headers = enc_extra_headers or {}
         enc_extra_headers.setdefault("cty", "JWT")
 
-        inner_jwt = cls.sign(
-            claims, key=sign_key, alg=sign_alg, extra_headers=sign_extra_headers
-        )
-        jwe = JweCompact.encrypt(
-            inner_jwt, enc_key, enc=enc, alg=enc_alg, extra_headers=enc_extra_headers
-        )
+        inner_jwt = cls.sign(claims, key=sign_key, alg=sign_alg, extra_headers=sign_extra_headers)
+        jwe = JweCompact.encrypt(inner_jwt, enc_key, enc=enc, alg=enc_alg, extra_headers=enc_extra_headers)
         return jwe
 
     @classmethod
-    def decrypt_nested_jwt(
-        cls, jwe: str | JweCompact, key: Jwk | dict[str, Any] | Any
-    ) -> Jwt:
+    def decrypt_nested_jwt(cls, jwe: str | JweCompact, key: Jwk | dict[str, Any] | Any) -> Jwt:
         """Decrypt a JWE that contains a nested JWT.
 
         It will return a [Jwt] instance for the inner JWT.
@@ -251,11 +247,11 @@ class Jwt(BaseCompactToken):
 
         nested_jwt = cls.decrypt_nested_jwt(jwt, enc_key)
         if not isinstance(nested_jwt, SignedJwt):
-            raise ValueError("Nested JWT is not signed", nested_jwt)
+            msg = "Nested JWT is not signed"
+            raise TypeError(msg, nested_jwt)
 
-        if sig_key:
-            if nested_jwt.verify_signature(sig_key, sig_alg, sig_algs):
-                return nested_jwt
+        if sig_key and nested_jwt.verify_signature(sig_key, sig_alg, sig_algs):
+            return nested_jwt
 
         raise InvalidSignature()
 

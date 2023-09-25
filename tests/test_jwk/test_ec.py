@@ -44,9 +44,7 @@ def test_jwk_ec_generate() -> None:
     with pytest.raises(UnsupportedAlg):
         ECJwk.generate(alg="foo")
 
-    with pytest.raises(
-        ValueError, match=r"No Curve identifier \(crv\) or Algorithm identifier \(alg\)"
-    ):
+    with pytest.raises(ValueError, match=r"No Curve identifier \(crv\) or Algorithm identifier \(alg\)"):
         ECJwk.generate()
 
 

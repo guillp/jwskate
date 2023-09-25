@@ -66,7 +66,8 @@ class JwsSignature(BaseJsonDict):
         """
         protected = self.get("protected")
         if protected is None:
-            raise AttributeError("This Jws JSON does not contain a 'protected' member")
+            msg = "This Jws JSON does not contain a 'protected' member"
+            raise AttributeError(msg)
         return BinaPy(protected).decode_from("b64u").parse_from("json")  # type: ignore[no-any-return]
 
     @property
@@ -92,7 +93,8 @@ class JwsSignature(BaseJsonDict):
         """
         signature = self.get("signature")
         if signature is None:
-            raise AttributeError("This Jws JSON does not contain a 'signature' member")
+            msg = "This Jws JSON does not contain a 'signature' member"
+            raise AttributeError(msg)
         return BinaPy(signature).decode_from("b64u")
 
     @classmethod
@@ -128,14 +130,10 @@ class JwsSignature(BaseJsonDict):
 
         signed_part = JwsSignature.assemble_signed_part(headers, payload)
         signature = key.sign(signed_part, alg=alg)
-        return cls.from_parts(
-            protected=headers, signature=signature, header=header, **kwargs
-        )
+        return cls.from_parts(protected=headers, signature=signature, header=header, **kwargs)
 
     @classmethod
-    def assemble_signed_part(
-        cls, headers: dict[str, Any], payload: bytes | str
-    ) -> bytes:
+    def assemble_signed_part(cls, headers: dict[str, Any], payload: bytes | str) -> bytes:
         """Assemble the protected header and payload to sign, as specified in.
 
         [RFC7515

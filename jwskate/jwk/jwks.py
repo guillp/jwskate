@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-from ..token import BaseJsonDict
+from jwskate.token import BaseJsonDict
+
 from .base import Jwk, to_jwk
 
 
@@ -35,9 +36,7 @@ class JwkSet(BaseJsonDict):
 
         if jwks is not None:
             keys = jwks.pop("keys", [])
-            super().__init__(
-                jwks
-            )  # init the dict with all the dict content that is not keys
+            super().__init__(jwks)  # init the dict with all the dict content that is not keys
         else:
             super().__init__()
 
@@ -162,11 +161,7 @@ class JwkSet(BaseJsonDict):
             a list of `Jwk` that are usable for signature verification
 
         """
-        return [
-            jwk
-            for jwk in self.jwks
-            if not jwk.is_symmetric and not jwk.is_private and jwk.use == "sig"
-        ]
+        return [jwk for jwk in self.jwks if not jwk.is_symmetric and not jwk.is_private and jwk.use == "sig"]
 
     def verify(
         self,
@@ -194,7 +189,8 @@ class JwkSet(BaseJsonDict):
 
         """
         if not alg and not algs:
-            raise ValueError("Please provide either 'alg' or 'algs' parameter")
+            msg = "Please provide either 'alg' or 'algs' parameter"
+            raise ValueError(msg)
 
         # if a kid is provided, try only the key matching `kid`
         if kid is not None:
@@ -210,9 +206,8 @@ class JwkSet(BaseJsonDict):
 
         for jwk in self.verification_keys():
             for alg in algs or (None,):
-                if alg in jwk.supported_signing_algorithms():
-                    if jwk.verify(data, signature, alg=alg):
-                        return True
+                if alg in jwk.supported_signing_algorithms() and jwk.verify(data, signature, alg=alg):
+                    return True
 
         # no key matches, so consider the signature invalid
         return False
@@ -230,8 +225,4 @@ class JwkSet(BaseJsonDict):
             a list of `Jwk` that are suitable for encryption
 
         """
-        return [
-            jwk
-            for jwk in self.jwks
-            if not jwk.is_symmetric and not jwk.is_private and jwk.use == "enc"
-        ]
+        return [jwk for jwk in self.jwks if not jwk.is_symmetric and not jwk.is_private and jwk.use == "enc"]

@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519
 from typing_extensions import Self, override
 
-from ..base import BaseAsymmetricAlg, BaseSignatureAlg
+from jwskate.jwa.base import BaseAsymmetricAlg, BaseSignatureAlg
 
 
 class EdDsa(
@@ -32,16 +32,16 @@ class EdDsa(
     def with_random_key(cls) -> Self:
         return cls(ed25519.Ed25519PrivateKey.generate())
 
-    def sign(self, data: bytes | SupportsBytes) -> BinaPy:  # noqa: D102
+    @override
+    def sign(self, data: bytes | SupportsBytes) -> BinaPy:
         if not isinstance(data, bytes):
             data = bytes(data)
 
         with self.private_key_required() as key:
             return BinaPy(key.sign(data))
 
-    def verify(
-        self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes
-    ) -> bool:  # noqa: D102
+    @override
+    def verify(self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes) -> bool:
         if not isinstance(data, bytes):
             data = bytes(data)
         if not isinstance(signature, bytes):
@@ -50,9 +50,10 @@ class EdDsa(
         with self.public_key_required() as key:
             try:
                 key.verify(signature, data)
-                return True
             except exceptions.InvalidSignature:
                 return False
+            else:
+                return True
 
 
 class Ed25519Dsa(

@@ -56,16 +56,14 @@ class JwtVerifier:
         if isinstance(jwkset, Jwk):
             jwkset = jwkset.as_jwks()
         elif isinstance(jwkset, dict):
-            if "keys" in jwkset:
-                jwkset = JwkSet(jwkset)
-            else:
-                jwkset = Jwk(jwkset).as_jwks()
+            jwkset = JwkSet(jwkset) if "keys" in jwkset else Jwk(jwkset).as_jwks()
 
         if not isinstance(jwkset, JwkSet) or jwkset.is_private:
-            raise ValueError(
+            msg = (
                 "Please provide either a `JwkSet` or a single `Jwk` for signature verification. "
                 "Signature verification keys must be public."
             )
+            raise ValueError(msg)
 
         self.issuer = issuer
         self.jwkset = jwkset
@@ -89,10 +87,12 @@ class JwtVerifier:
             jwt = SignedJwt(jwt)
 
         if self.issuer and jwt.issuer != self.issuer:
-            raise InvalidClaim("Mismatching issuer", self.issuer, jwt.issuer)
+            msg = "Mismatching issuer"
+            raise InvalidClaim(msg, self.issuer, jwt.issuer)
 
         if self.audience and self.audience not in jwt.audiences:
-            raise InvalidClaim("Mismatching audience", self.audience, jwt.audiences)
+            msg = "Mismatching audience"
+            raise InvalidClaim(msg, self.audience, jwt.audiences)
 
         if "kid" in jwt.headers:
             jwk = self.jwkset.get_jwk_by_kid(jwt.kid)
@@ -106,7 +106,8 @@ class JwtVerifier:
                 raise InvalidSignature()
 
         if jwt.is_expired(self.leeway):
-            raise ExpiredJwt(f"Jwt token expired at {jwt.expires_at}")
+            msg = f"Jwt token expired at {jwt.expires_at}"
+            raise ExpiredJwt(msg)
 
         for verifier in self.verifiers:
             verifier(jwt)

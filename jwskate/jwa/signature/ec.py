@@ -9,8 +9,8 @@ from cryptography.hazmat.primitives import asymmetric, hashes
 from cryptography.hazmat.primitives.asymmetric import ec
 from typing_extensions import Self, override
 
-from ..base import BaseAsymmetricAlg, BaseSignatureAlg
-from ..ec import P_256, P_384, P_521, EllipticCurve, secp256k1
+from jwskate.jwa.base import BaseAsymmetricAlg, BaseSignatureAlg
+from jwskate.jwa.ec import P_256, P_384, P_521, EllipticCurve, secp256k1
 
 
 class BaseECSignatureAlg(
@@ -23,34 +23,30 @@ class BaseECSignatureAlg(
     public_key_class = ec.EllipticCurvePublicKey
     private_key_class = ec.EllipticCurvePrivateKey
 
+    @override
     @classmethod
-    def check_key(
-        cls, key: ec.EllipticCurvePrivateKey | ec.EllipticCurvePublicKey
-    ) -> None:  # noqa: D102
+    def check_key(cls, key: ec.EllipticCurvePrivateKey | ec.EllipticCurvePublicKey) -> None:
         if key.curve.name != cls.curve.cryptography_curve.name:
-            raise ValueError(
-                f"This key is on curve {key.curve.name}. An EC key on curve {cls.curve.name} is expected."
-            )
+            msg = f"This key is on curve {key.curve.name}. An EC key on curve {cls.curve.name} is expected."
+            raise ValueError(msg)
 
     @classmethod
     @override
     def with_random_key(cls) -> Self:
         return cls(ec.generate_private_key(cls.curve.cryptography_curve))
 
-    def sign(self, data: bytes | SupportsBytes) -> BinaPy:  # noqa: D102
+    @override
+    def sign(self, data: bytes | SupportsBytes) -> BinaPy:
         if not isinstance(data, bytes):
             data = bytes(data)
 
         with self.private_key_required() as key:
             dss_sig = key.sign(data, ec.ECDSA(self.hashing_alg))
             r, s = asymmetric.utils.decode_dss_signature(dss_sig)
-            return BinaPy.from_int(r, self.curve.coordinate_size) + BinaPy.from_int(
-                s, self.curve.coordinate_size
-            )
+            return BinaPy.from_int(r, self.curve.coordinate_size) + BinaPy.from_int(s, self.curve.coordinate_size)
 
-    def verify(
-        self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes
-    ) -> bool:  # noqa: D102
+    @override
+    def verify(self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes) -> bool:
         if not isinstance(data, bytes):
             data = bytes(data)
 
@@ -59,9 +55,10 @@ class BaseECSignatureAlg(
 
         with self.public_key_required() as key:
             if len(signature) != self.curve.coordinate_size * 2:
-                raise ValueError(
+                msg = (
                     f"Invalid signature length {len(signature)} bytes, expected {self.curve.coordinate_size * 2} bytes"
                 )
+                raise ValueError(msg)
 
             r_bytes, s_bytes = (
                 signature[: self.curve.coordinate_size],
@@ -77,9 +74,10 @@ class BaseECSignatureAlg(
                     data,
                     ec.ECDSA(self.hashing_alg),
                 )
-                return True
             except exceptions.InvalidSignature:
                 return False
+            else:
+                return True
 
 
 class ES256(BaseECSignatureAlg):

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from binapy import BinaPy
 
-from ..base import BaseKeyManagementAlg, BaseSymmetricAlg
+from jwskate.jwa.base import BaseKeyManagementAlg, BaseSymmetricAlg
 
 
 class DirectKeyUse(BaseKeyManagementAlg, BaseSymmetricAlg):

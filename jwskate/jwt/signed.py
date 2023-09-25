@@ -39,33 +39,32 @@ class SignedJwt(Jwt):
     def __init__(self, value: bytes | str) -> None:
         super().__init__(value)
 
-        if self.value.count(b".") != 2:
+        parts = BinaPy(self.value).split(b".")
+        if len(parts) != 3:  # noqa: PLR2004
+            msg = "A JWT must contain a header, a payload and a signature, separated by dots"
             raise InvalidJwt(
-                "A JWT must contain a header, a payload and a signature, separated by dots",
+                msg,
                 value,
             )
 
-        header, payload, signature = self.value.split(b".")
+        header, payload, signature = parts
         try:
-            self.headers = BinaPy(header).decode_from("b64u").parse_from("json")
-        except ValueError:
-            raise InvalidJwt(
-                "Invalid JWT header: it must be a Base64URL-encoded JSON object"
-            )
+            self.headers = header.decode_from("b64u").parse_from("json")
+        except ValueError as exc:
+            msg = "Invalid JWT header: it must be a Base64URL-encoded JSON object"
+            raise InvalidJwt(msg) from exc
 
         try:
-            self.claims = BinaPy(payload).decode_from("b64u").parse_from("json")
-        except ValueError:
-            raise InvalidJwt(
-                "Invalid JWT payload: it must be a Base64URL-encoded JSON object"
-            )
+            self.claims = payload.decode_from("b64u").parse_from("json")
+        except ValueError as exc:
+            msg = "Invalid JWT payload: it must be a Base64URL-encoded JSON object"
+            raise InvalidJwt(msg) from exc
 
         try:
-            self.signature = BinaPy(signature).decode_from("b64u")
-        except ValueError:
-            raise InvalidJwt(
-                "Invalid JWT signature: it must be a Base64URL-encoded binary data (bytes)"
-            )
+            self.signature = signature.decode_from("b64u")
+        except ValueError as exc:
+            msg = "Invalid JWT signature: it must be a Base64URL-encoded binary data (bytes)"
+            raise InvalidJwt(msg) from exc
 
     @cached_property
     def signed_part(self) -> bytes:
@@ -98,9 +97,7 @@ class SignedJwt(Jwt):
         """
         key = to_jwk(key)
 
-        return key.verify(
-            data=self.signed_part, signature=self.signature, alg=alg, algs=algs
-        )
+        return key.verify(data=self.signed_part, signature=self.signature, alg=alg, algs=algs)
 
     def is_expired(self, leeway: int = 0) -> bool | None:
         """Check if this token is expired, based on its `exp` claim.
@@ -133,9 +130,11 @@ class SignedJwt(Jwt):
             return None
         try:
             exp_dt = Jwt.timestamp_to_datetime(exp)
-            return exp_dt
         except (TypeError, OSError):
-            raise AttributeError("invalid `exp `claim", exp)
+            msg = "invalid `exp `claim"
+            raise AttributeError(msg, exp) from None
+        else:
+            return exp_dt
 
     @cached_property
     def issued_at(self) -> datetime | None:
@@ -153,9 +152,11 @@ class SignedJwt(Jwt):
             return None
         try:
             iat_dt = Jwt.timestamp_to_datetime(iat)
-            return iat_dt
         except (TypeError, OSError):
-            raise AttributeError("invalid `iat `claim", iat)
+            msg = "invalid `iat `claim"
+            raise AttributeError(msg, iat) from None
+        else:
+            return iat_dt
 
     @cached_property
     def not_before(self) -> datetime | None:
@@ -173,9 +174,11 @@ class SignedJwt(Jwt):
             return None
         try:
             nbf_dt = Jwt.timestamp_to_datetime(nbf)
-            return nbf_dt
         except (TypeError, OSError):
-            raise AttributeError("invalid `nbf `claim", nbf)
+            msg = "invalid `nbf `claim"
+            raise AttributeError(msg, nbf) from None
+        else:
+            return nbf_dt
 
     @cached_property
     def issuer(self) -> str | None:
@@ -191,7 +194,8 @@ class SignedJwt(Jwt):
         iss = self.get_claim("iss")
         if iss is None or isinstance(iss, str):
             return iss
-        raise AttributeError("iss has an unexpected type", type(iss))
+        msg = "iss has an unexpected type"
+        raise AttributeError(msg, type(iss))
 
     @cached_property
     def audiences(self) -> list[str]:
@@ -213,7 +217,8 @@ class SignedJwt(Jwt):
             return [aud]
         if isinstance(aud, list):
             return aud
-        raise AttributeError("aud has an unexpected type", type(aud))
+        msg = "aud has an unexpected type"
+        raise AttributeError(msg, type(aud))
 
     @cached_property
     def subject(self) -> str | None:
@@ -229,7 +234,8 @@ class SignedJwt(Jwt):
         sub = self.get_claim("sub")
         if sub is None or isinstance(sub, str):
             return sub
-        raise AttributeError("sub has an unexpected type", type(sub))
+        msg = "sub has an unexpected type"
+        raise AttributeError(msg, type(sub))
 
     @cached_property
     def jwt_token_id(self) -> str | None:
@@ -245,7 +251,8 @@ class SignedJwt(Jwt):
         jti = self.get_claim("jti")
         if jti is None or isinstance(jti, str):
             return jti
-        raise AttributeError("jti has an unexpected type", type(jti))
+        msg = "jti has an unexpected type"
+        raise AttributeError(msg, type(jti))
 
     def get_claim(self, key: str, default: Any = None) -> Any:
         """Get a claim by name from this Jwt.
@@ -308,7 +315,7 @@ class SignedJwt(Jwt):
         """
         return self.value
 
-    def validate(
+    def validate(  # noqa: C901
         self,
         key: Jwk | dict[str, Any] | Any,
         *,
@@ -321,11 +328,13 @@ class SignedJwt(Jwt):
     ) -> None:
         """Validate a `SignedJwt` signature and expected claims.
 
-        This verifies the signature using the provided `jwk` and `alg`, then checks the token issuer, audience and expiration date.
+        This verifies the signature using the provided `jwk` and `alg`, then checks the token issuer, audience and
+        expiration date.
         This can also check custom claims using extra `kwargs`, whose values can be:
 
-        - a static value (`str`, `int`, etc.): the value from the token will be compared "as-is"
-        - a callable, taking the claim value as parameter: if that callable returns `True`, the claim is considered as valid
+        - a static value (`str`, `int`, etc.): the value from the token will be compared "as-is".
+        - a callable, taking the claim value as parameter: if that callable returns `True`, the claim is considered
+        as valid.
 
         Args:
           key: the signing key to use to verify the signature.
@@ -346,22 +355,25 @@ class SignedJwt(Jwt):
 
         """
         if not self.verify_signature(key, alg, algs):
-            raise InvalidSignature("Signature is not valid.")
+            msg = "Signature is not valid."
+            raise InvalidSignature(msg)
 
-        if issuer is not None:
-            if self.issuer != issuer:
-                raise InvalidClaim("iss", "Unexpected issuer", self.issuer)
+        if issuer is not None and self.issuer != issuer:
+            msg = "Unexpected issuer"
+            raise InvalidClaim(msg, "iss", self.issuer)
 
-        if audience is not None:
-            if self.audiences is None or audience not in self.audiences:
-                raise InvalidClaim("aud", "Unexpected audience", self.audiences)
+        if audience is not None and (self.audiences is None or audience not in self.audiences):
+            msg = "Unexpected audience"
+            raise InvalidClaim(msg, "aud", self.audiences)
 
         if check_exp:
             expired = self.is_expired()
             if expired is True:
-                raise ExpiredJwt(f"This token expired at {self.expires_at}")
+                msg = f"This token expired at {self.expires_at}"
+                raise ExpiredJwt(msg)
             elif expired is None:
-                raise InvalidClaim("exp", "This token misses a 'exp' claim.")
+                msg = "This token does not contain an 'exp' claim."
+                raise InvalidClaim(msg, "exp")
 
         for key, value in kwargs.items():
             claim = self.get_claim(key)

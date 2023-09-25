@@ -18,6 +18,10 @@ class PublicKeyRequired(AttributeError):
     """Raised when a private key is provided for an operation that requires a public key."""
 
 
+class InvalidKey(ValueError):
+    """Raised when an unsuitable key is provided to an algorithm."""
+
+
 class BaseAlg:
     """Base class for all algorithms.
 
@@ -73,6 +77,9 @@ class BaseSymmetricAlg(BaseAlg):
         Returns:
           Returns `None`. Raises an exception if the key is not suitable
 
+        Raises:
+            InvalidKey: if the key is not suitable for this algorithm
+
         """
         pass
 
@@ -91,9 +98,10 @@ class BaseSymmetricAlg(BaseAlg):
         """
         try:
             cls.check_key(key)
-            return True
-        except Exception:
+        except InvalidKey:
             return False
+        else:
+            return True
 
 
 Kpriv = TypeVar("Kpriv")
@@ -195,9 +203,7 @@ class BaseSignatureAlg(BaseAlg):
         """
         raise NotImplementedError
 
-    def verify(
-        self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes
-    ) -> bool:
+    def verify(self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes) -> bool:
         """Verify a signature against some data.
 
         Args:
@@ -228,13 +234,12 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
           key: the key to check
 
         Raises:
-            ValueError: if the key is not suitable
+            InvalidKey: if the key is not suitable
 
         """
         if len(key) * 8 != cls.key_size:
-            raise ValueError(
-                f"This key size of {len(key) * 8} bits doesn't match the expected key size of {cls.key_size} bits"
-            )
+            msg = f"This key size of {len(key) * 8} bits doesn't match the expected key size of {cls.key_size} bits"
+            raise InvalidKey(msg)
 
     @classmethod
     def generate_key(cls) -> BinaPy:
@@ -295,9 +300,12 @@ class BaseAESEncryptionAlg(BaseSymmetricAlg):
         """Decrypt and verify a ciphertext with Authenticated Encryption.
 
         This needs:
+
         - the raw encrypted Data (`ciphertext`) and Authentication Tag (`auth_tag`) that were produced by encryption,
-        - the same Initialisation Vector (`iv`) and optional Additional Authentication Data that were provided for encryption.
-        and returns the resulting clear text data.
+        - the same Initialisation Vector (`iv`) and optional Additional Authentication Data that were provided for
+        encryption.
+
+        Returns the resulting clear text data.
 
         Args:
           ciphertext: the data to decrypt

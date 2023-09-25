@@ -160,9 +160,7 @@ def test_contains() -> None:
     assert key2.public_jwk() in jwkset.jwks
 
     assert key1.with_kid_thumbprint().with_usage_parameters() in jwkset.jwks
-    assert (
-        key2.public_jwk().with_kid_thumbprint().with_usage_parameters() in jwkset.jwks
-    )
+    assert key2.public_jwk().with_kid_thumbprint().with_usage_parameters() in jwkset.jwks
 
     key3 = Jwk.generate(alg="HS256")
     assert key3 not in jwkset.jwks

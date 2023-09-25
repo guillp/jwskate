@@ -80,9 +80,7 @@ def test_sign(rsa_private_jwk: Jwk, rsa_public_jwk: Jwk) -> None:
 
 
 def test_public_jwk(rsa_private_jwk: Jwk) -> None:
-    public_jwk = {
-        key: val for key, val in rsa_private_jwk.items() if key in ("kty", "n", "e")
-    }
+    public_jwk = {key: val for key, val in rsa_private_jwk.items() if key in ("kty", "n", "e")}
     jwk = Jwk(public_jwk)
     assert jwk.is_private is False
     assert jwk.kty == "RSA"
@@ -248,9 +246,7 @@ def test_from_cryptography_key() -> None:
     assert not public_jwk.is_private
     assert public_jwk.cryptography_key.public_bytes(
         serialization.Encoding.PEM, serialization.PublicFormat.PKCS1
-    ) == public_key.public_bytes(
-        serialization.Encoding.PEM, serialization.PublicFormat.PKCS1
-    )
+    ) == public_key.public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.PKCS1)
 
     with pytest.raises(TypeError):
         RSAJwk.from_cryptography_key(b"foo")

@@ -18,11 +18,7 @@ from jwskate import BasePbes2, EcdhEs
     ],
 )
 def test_ecdhes(
-    key_gen: (
-        type[ec.EllipticCurvePrivateKey]
-        | type[x25519.X25519PrivateKey]
-        | type[x448.X448PrivateKey]
-    ),
+    key_gen: (type[ec.EllipticCurvePrivateKey] | type[x25519.X25519PrivateKey] | type[x448.X448PrivateKey]),
 ) -> None:
     private_key = key_gen()
     sender_ecdhes = EcdhEs(private_key.public_key())
@@ -31,13 +27,11 @@ def test_ecdhes(
     sender_key = sender_ecdhes.sender_key(epk, alg="A128GCM", key_size=128)
 
     recipient_ecdhes = EcdhEs(private_key)
-    recipient_key = recipient_ecdhes.recipient_key(
-        epk.public_key(), alg="A128GCM", key_size=128
-    )
+    recipient_key = recipient_ecdhes.recipient_key(epk.public_key(), alg="A128GCM", key_size=128)
 
     assert sender_key == recipient_key
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         sender_ecdhes.ecdh(private_key, b"foo")  # type: ignore[arg-type]
 
 

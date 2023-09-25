@@ -31,8 +31,8 @@ from jwskate.jwa import (
     DirectKeyUse,
     EcdhEs,
 )
+from jwskate.token import BaseJsonDict
 
-from ..token import BaseJsonDict
 from .alg import ExpectedAlgRequired, UnsupportedAlg, select_alg_class
 
 if TYPE_CHECKING:
@@ -48,7 +48,9 @@ class InvalidJwk(ValueError):
 
 
 @dataclass
-class JwkParameter:  # noqa: D101
+class JwkParameter:
+    """Describe known JWK parameters."""
+
     description: str
     is_private: bool
     is_required: bool
@@ -71,8 +73,17 @@ class Jwk(BaseJsonDict):
     interface for cryptographic operations.
 
     Args:
-        params: a `dict` parsed from a JSON JWK, or a `cryptography key`, or another `Jwk`, or a `str` containing the JSON representation of a JWK, or raw `bytes`
-        include_kid_thumbprint: if `True` (default), and there is no kid in the provided params, generate a kid based on the key thumbprint
+        params: one of
+
+            - a `dict` parsed from a JWK
+            - a JSON JWK
+            - a `cryptography key`
+            - another `Jwk`
+            - a `str` containing the JSON representation of a JWK
+            - a raw `bytes`
+        include_kid_thumbprint: if `True`, and there is no `kid` in the provided params,
+            generate a kid based on the key thumbprint. Default to `False`.
+            *DEPRECATED: Use `with_kid_thumbprint()`.*
 
     """
 
@@ -113,9 +124,10 @@ class Jwk(BaseJsonDict):
 
         """
         for jwk_class in Jwk.__subclasses__():
-            if jwk_class.KTY == kty:
+            if kty == jwk_class.KTY:
                 return jwk_class.generate(**kwargs)
-        raise UnsupportedKeyType("Unsupported Key Type:", kty)
+        msg = "Unsupported Key Type:"
+        raise UnsupportedKeyType(msg, kty)
 
     PARAMS: Mapping[str, JwkParameter]
 
@@ -159,13 +171,15 @@ class Jwk(BaseJsonDict):
             if isinstance(key, dict):
                 kty: str | None = key.get("kty")
                 if kty is None:
-                    raise InvalidJwk("A Json Web Key must have a Key Type (kty)")
+                    msg = "A Json Web Key must have a Key Type (kty)"
+                    raise InvalidJwk(msg)
 
                 for jwk_class in Jwk.__subclasses__():
-                    if jwk_class.KTY == kty:
+                    if kty == jwk_class.KTY:
                         return super().__new__(jwk_class)  # type: ignore[type-var]
 
-                raise InvalidJwk("Unsupported Key Type", kty)
+                msg = "Unsupported Key Type"
+                raise InvalidJwk(msg, kty)
 
             elif isinstance(key, str):
                 return cls.from_json(key)
@@ -173,15 +187,9 @@ class Jwk(BaseJsonDict):
                 return cls.from_cryptography_key(key, **kwargs)
         return super().__new__(cls, key, **kwargs)  # type: ignore[type-var]
 
-    def __init__(
-        self, params: dict[str, Any] | Any, include_kid_thumbprint: bool = False
-    ):
-        if isinstance(
-            params, dict
-        ):  # this is to avoid double init due to the __new__ above
-            super().__init__(
-                {key: val for key, val in params.items() if val is not None}
-            )
+    def __init__(self, params: dict[str, Any] | Any, *, include_kid_thumbprint: bool = False):
+        if isinstance(params, dict):  # this is to avoid double init due to the __new__ above
+            super().__init__({key: val for key, val in params.items() if val is not None})
             self._validate()
             if self.get("kid") is None and include_kid_thumbprint:
                 self["kid"] = self.thumbprint()
@@ -265,7 +273,8 @@ class Jwk(BaseJsonDict):
 
         """
         if key in self.PARAMS:
-            raise RuntimeError("JWK key attributes cannot be modified.")
+            msg = "JWK key attributes cannot be modified."
+            raise RuntimeError(msg)
         super().__setitem__(key, value)
 
     @property
@@ -288,7 +297,8 @@ class Jwk(BaseJsonDict):
         """
         alg = self.get("alg")
         if alg is not None and not isinstance(alg, str):  # pragma: no branch
-            raise TypeError(f"Invalid alg type {type(alg)}", alg)
+            msg = f"Invalid alg type {type(alg)}"
+            raise TypeError(msg, alg)
         return alg
 
     @property
@@ -296,7 +306,8 @@ class Jwk(BaseJsonDict):
         """Return the JWK key ID (kid), if present."""
         kid = self.get("kid")
         if kid is not None and not isinstance(kid, str):  # pragma: no branch
-            raise TypeError(f"invalid kid type {type(kid)}", kid)
+            msg = f"invalid kid type {type(kid)}"
+            raise TypeError(msg, kid)
         return kid
 
     @property
@@ -361,19 +372,15 @@ class Jwk(BaseJsonDict):
         """
         alg = self.IANA_HASH_FUNCTION_NAMES.get(hashalg)
         if not alg:
-            raise ValueError(f"Unsupported hash alg {hashalg}")
+            msg = f"Unsupported hash alg {hashalg}"
+            raise ValueError(msg)
 
         t = {"kty": self.get("kty")}
         for name, param in self.PARAMS.items():
             if param.is_required and not param.is_private:
                 t[name] = self.get(name)
 
-        return (
-            BinaPy.serialize_to("json", t, separators=(",", ":"), sort_keys=True)
-            .to(alg)
-            .to("b64u")
-            .ascii()
-        )
+        return BinaPy.serialize_to("json", t, separators=(",", ":"), sort_keys=True).to(alg).to("b64u").ascii()
 
     def thumbprint_uri(self, hashalg: str = "sha-256") -> str:
         """Return the JWK thumbprint URI for this key.
@@ -400,8 +407,16 @@ class Jwk(BaseJsonDict):
         This raises a `ValueError` if the key is not as expected.
 
         Args:
-            is_private: if `True`, check if the key is private, if `False`, check if it is public, if `None`, do nothing
-            is_symmetric: if `True`, check if the key is symmetric, if `False`, check if it is asymmetric, if `None`, do nothing
+            is_private:
+
+                - if `True`, check if the key is private,
+                - if `False`, check if it is public,
+                - if `None`, do nothing
+            is_symmetric:
+
+                - if `True`, check if the key is symmetric,
+                - if `False`, check if it is asymmetric,
+                - if `None`, do nothing
             kty: the expected key type, if any
 
         Returns:
@@ -413,32 +428,31 @@ class Jwk(BaseJsonDict):
         """
         if is_private is not None:
             if is_private and not self.is_private:
-                raise ValueError("This key is public while a private key is expected.")
+                msg = "This key is public while a private key is expected."
+                raise ValueError(msg)
             elif not is_private and self.is_private:
-                raise ValueError("This key is private while a public key is expected.")
+                msg = "This key is private while a public key is expected."
+                raise ValueError(msg)
 
         if is_symmetric is not None:
             if is_symmetric and not self.is_symmetric:
-                raise ValueError(
-                    "This key is asymmetric while a symmetric key is expected."
-                )
+                msg = "This key is asymmetric while a symmetric key is expected."
+                raise ValueError(msg)
             if not is_symmetric and self.is_symmetric:
-                raise ValueError(
-                    "This key is symmetric while an asymmetric key is expected."
-                )
+                msg = "This key is symmetric while an asymmetric key is expected."
+                raise ValueError(msg)
 
-        if kty is not None:
-            if self.kty != kty:
-                raise ValueError(
-                    f"This key has kty={self.kty} while a kty={kty} is expected."
-                )
+        if kty is not None and self.kty != kty:
+            msg = f"This key has kty={self.kty} while a kty={kty} is expected."
+            raise ValueError(msg)
 
         return self
 
-    def _validate(self) -> None:
+    def _validate(self) -> None:  # noqa: C901
         """Validate the content of this `Jwk`.
 
-        It checks that all required parameters are present and well-formed. If the key is private, it sets the `is_private` flag to `True`.
+        It checks that all required parameters are present and well-formed.
+        If the key is private, it sets the `is_private` flag to `True`.
 
         Raises:
             TypeError: if the key type doesn't match the subclass
@@ -446,9 +460,8 @@ class Jwk(BaseJsonDict):
 
         """
         if self.get("kty") != self.KTY:
-            raise TypeError(
-                f"This key 'kty' {self.get('kty')} doesn't match this Jwk subclass intended 'kty' {self.KTY}!"
-            )
+            msg = f"This key 'kty' {self.get('kty')} doesn't match this Jwk subclass intended 'kty' {self.KTY}!"
+            raise TypeError(msg)
 
         jwk_is_private = False
         for name, param in self.PARAMS.items():
@@ -458,44 +471,41 @@ class Jwk(BaseJsonDict):
                 jwk_is_private = True
 
             if not param.is_private and param.is_required and value is None:
-                raise InvalidJwk(
-                    f"Missing required public param {param.description} ({name})"
-                )
+                msg = f"Missing required public param {param.description} ({name})"
+                raise InvalidJwk(msg)
 
             if value is None:
                 pass
             elif param.kind == "b64u":
                 if not isinstance(value, str):
-                    raise InvalidJwk(
-                        f"Parameter {param.description} ({name}) must be a string with a Base64URL-encoded value"
-                    )
+                    msg = f"Parameter {param.description} ({name}) must be a string with a Base64URL-encoded value"
+                    raise InvalidJwk(msg)
                 if not BinaPy(value).check("b64u"):
-                    raise InvalidJwk(
-                        f"Parameter {param.description} ({name}) must be a Base64URL-encoded value"
-                    )
+                    msg = f"Parameter {param.description} ({name}) must be a Base64URL-encoded value"
+                    raise InvalidJwk(msg)
             elif param.kind == "unsupported":
                 if value is not None:  # pragma: no cover
-                    raise InvalidJwk(f"Unsupported JWK param '{name}'")
+                    msg = f"Unsupported JWK param '{name}'"
+                    raise InvalidJwk(msg)
             elif param.kind == "name":
                 pass
             else:
-                assert (
-                    False
-                ), f"Unsupported param '{name}' type '{param.kind}'"  # pragma: no cover
+                msg = f"Unsupported param '{name}' type '{param.kind}'"
+                raise AssertionError(msg)  # pragma: no cover
 
         # if at least one of the supplied parameter was private, then all required private parameters must be provided
         if jwk_is_private:
             for name, param in self.PARAMS.items():
                 value = self.get(name)
                 if param.is_private and param.is_required and value is None:
-                    raise InvalidJwk(
-                        f"Missing required private param {param.description} ({name})"
-                    )
+                    msg = f"Missing required private param {param.description} ({name})"
+                    raise InvalidJwk(msg)
 
         # if key is used for signing, it must be private
         for op in self.get("key_ops", []):
             if op in ("sign", "unwrapKey") and not self.is_private:
-                raise InvalidJwk(f"Key Operation is '{op}' but the key is public")
+                msg = f"Key Operation is '{op}' but the key is public"
+                raise InvalidJwk(msg)
 
     def signature_class(self, alg: str | None = None) -> type[BaseSignatureAlg]:
         """Return the appropriate signature algorithm class to use with this key.
@@ -529,9 +539,7 @@ class Jwk(BaseJsonDict):
         """
         return select_alg_class(self.ENCRYPTION_ALGORITHMS, jwk_alg=self.alg, alg=alg)
 
-    def key_management_class(
-        self, alg: str | None = None
-    ) -> type[BaseKeyManagementAlg]:
+    def key_management_class(self, alg: str | None = None) -> type[BaseKeyManagementAlg]:
         """Return the appropriate key management algorithm class to use with this key.
 
         If this key doesn't have an `alg` parameter, you must supply one as parameter to this method.
@@ -543,9 +551,7 @@ class Jwk(BaseJsonDict):
             the appropriate `BaseKeyManagementAlg` subclass
 
         """
-        return select_alg_class(
-            self.KEY_MANAGEMENT_ALGORITHMS, jwk_alg=self.alg, alg=alg
-        )
+        return select_alg_class(self.KEY_MANAGEMENT_ALGORITHMS, jwk_alg=self.alg, alg=alg)
 
     def signature_wrapper(self, alg: str | None = None) -> BaseSignatureAlg:
         """Initialize a  key management wrapper with this key.
@@ -675,7 +681,8 @@ class Jwk(BaseJsonDict):
         if not self.is_symmetric and self.is_private:
             warnings.warn(
                 "You are trying to validate a signature with a private key. "
-                "Signatures should always be verified with a public key."
+                "Signatures should always be verified with a public key.",
+                stacklevel=2,
             )
             public_jwk = self.public_jwk()
         else:
@@ -699,7 +706,9 @@ class Jwk(BaseJsonDict):
     ) -> tuple[BinaPy, BinaPy, BinaPy]:
         """Encrypt a plaintext with Authenticated Encryption using this key.
 
-        Authenticated Encryption with Associated Data (AEAD) is supported, by passing Additional Authenticated Data (`aad`).
+        Authenticated Encryption with Associated Data (AEAD) is supported,
+        by passing Additional Authenticated Data (`aad`).
+
         This returns a tuple with 3 raw data, in order:
         - the encrypted Data
         - the Initialization Vector that was used to encrypt data
@@ -709,7 +718,8 @@ class Jwk(BaseJsonDict):
           plaintext: the data to encrypt.
           aad: the Additional Authenticated Data (AAD) to include in the authentication tag
           alg: the alg to use to encrypt the data
-          iv: the Initialization Vector to use. If not provided, an IV is generated. If provided, the returned IV will be the same.
+          iv: the Initialization Vector to use. If `None`, an IV is randomly generated.
+              If a value is provided, the returned IV will be that same value. You should never reuse the same IV!
 
         Returns:
           a tuple (ciphertext, iv, authentication_tag), as raw data
@@ -743,7 +753,7 @@ class Jwk(BaseJsonDict):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def sender_key(
+    def sender_key(  # noqa: C901
         self,
         enc: str,
         *,
@@ -754,13 +764,17 @@ class Jwk(BaseJsonDict):
     ) -> tuple[Jwk, BinaPy, Mapping[str, Any]]:
         """Produce a Content Encryption Key, to use for encryption.
 
-        This method is meant to be used by encrypted token senders. Recipients should use the matching method `Jwk.recipient_key()`.
+        This method is meant to be used by encrypted token senders.
+        Recipients should use the matching method `Jwk.recipient_key()`.
 
         Returns a tuple with 3 items:
 
-        - the clear text CEK, as a SymmetricJwk instance. Use this key to encrypt your message, but do not communicate this key to anyone!
-        - the encrypted CEK, as bytes. You must send this to your recipient. This may be `None` for Key Management algs which derive a CEK instead of generating one.
-        - extra headers depending on the Key Management algorithm, as a dict of name to values: you must send those to your recipient as well.
+        - the clear text CEK, as a SymmetricJwk instance.
+        Use this key to encrypt your message, but do not communicate this key to anyone!
+        - the encrypted CEK, as bytes. You must send this to your recipient.
+        This may be `None` for Key Management algs which derive a CEK instead of generating one.
+        - extra headers depending on the Key Management algorithm, as a dict of name to values.
+        You must send those to your recipient as well.
 
         For algorithms that rely on a randomly generated CEK, such as RSAES or AES, you can provide that CEK instead
         of letting `jwskate` generate a safe, unique random value for you.
@@ -786,7 +800,9 @@ class Jwk(BaseJsonDict):
 
         if not self.is_symmetric and self.is_private:
             warnings.warn(
-                "You are using a private key for sender key wrapping. Key wrapping should always be done using the recipient public key."
+                "You are using a private key for sender key wrapping. "
+                "Key wrapping should always be done using the recipient public key.",
+                stacklevel=2,
             )
             key_alg_wrapper = self.public_jwk().key_management_wrapper(alg)
         else:
@@ -801,20 +817,16 @@ class Jwk(BaseJsonDict):
                 enc_alg_class.check_key(cek)
             else:
                 cek = enc_alg_class.generate_key()
-            assert cek
             wrapped_cek = key_alg_wrapper.wrap_key(cek)
 
         elif isinstance(key_alg_wrapper, EcdhEs):
-            epk = epk or Jwk.from_cryptography_key(
-                key_alg_wrapper.generate_ephemeral_key()
-            )
+            epk = epk or Jwk.from_cryptography_key(key_alg_wrapper.generate_ephemeral_key())
             cek_headers = {"epk": epk.public_jwk()}
             if isinstance(key_alg_wrapper, BaseEcdhEs_AesKw):
                 if cek:
                     enc_alg_class.check_key(cek)
                 else:
                     cek = enc_alg_class.generate_key()
-                assert cek
                 wrapped_cek = key_alg_wrapper.wrap_key_with_epk(
                     cek, epk.cryptography_key, alg=key_alg_wrapper.name, **headers
                 )
@@ -832,7 +844,6 @@ class Jwk(BaseJsonDict):
                 enc_alg_class.check_key(cek)
             else:
                 cek = enc_alg_class.generate_key()
-            assert cek
             wrapped_cek = key_alg_wrapper.wrap_key(cek)
 
         elif isinstance(key_alg_wrapper, BaseAesGcmKeyWrap):
@@ -840,7 +851,6 @@ class Jwk(BaseJsonDict):
                 enc_alg_class.check_key(cek)
             else:
                 cek = enc_alg_class.generate_key()
-            assert cek
             iv = key_alg_wrapper.generate_iv()
             wrapped_cek, tag = key_alg_wrapper.wrap_key(cek, iv=iv)
             cek_headers = {
@@ -852,13 +862,12 @@ class Jwk(BaseJsonDict):
             cek = key_alg_wrapper.direct_key(enc_alg_class)
             wrapped_cek = BinaPy(b"")
         else:
-            raise UnsupportedAlg(
-                f"Unsupported Key Management Alg {key_alg_wrapper}"
-            )  # pragma: no cover
+            msg = f"Unsupported Key Management Alg {key_alg_wrapper}"
+            raise UnsupportedAlg(msg)  # pragma: no cover
 
         return SymmetricJwk.from_bytes(cek), wrapped_cek, cek_headers
 
-    def recipient_key(
+    def recipient_key(  # noqa: C901
         self,
         wrapped_cek: bytes | SupportsBytes,
         enc: str,
@@ -868,7 +877,8 @@ class Jwk(BaseJsonDict):
     ) -> Jwk:
         """Produce a Content Encryption Key, to use for decryption.
 
-        This method is meant to be used by encrypted token recipient. Senders should use the matching method `Jwk.sender_key()`.
+        This method is meant to be used by encrypted token recipient.
+        Senders should use the matching method `Jwk.sender_key()`.
 
         Args:
           wrapped_cek: the wrapped CEK
@@ -886,9 +896,11 @@ class Jwk(BaseJsonDict):
         from jwskate import SymmetricJwk
 
         if not self.is_symmetric and not self.is_private:
-            raise ValueError(
-                "You are using a public key for recipient key unwrapping. Key unwrapping must always be done using the recipient private key."
+            msg = (
+                "You are using a public key for recipient key unwrapping. "
+                "Key unwrapping must always be done using the recipient private key."
             )
+            raise ValueError(msg)
 
         key_alg_wrapper = self.key_management_wrapper(alg)
         enc_alg_class = select_alg_class(SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc)
@@ -899,15 +911,15 @@ class Jwk(BaseJsonDict):
         elif isinstance(key_alg_wrapper, EcdhEs):
             epk = headers.get("epk")
             if epk is None:
-                raise ValueError("No EPK in the headers!")
+                msg = "No EPK in the headers!"
+                raise ValueError(msg)
             epk_jwk = Jwk(epk)
             if epk_jwk.is_private:
-                raise ValueError("The EPK present in the header is private.")
+                msg = "The EPK present in the header is private."
+                raise ValueError(msg)
             epk = epk_jwk.cryptography_key
             if isinstance(key_alg_wrapper, BaseEcdhEs_AesKw):
-                cek = key_alg_wrapper.unwrap_key_with_epk(
-                    wrapped_cek, epk, alg=key_alg_wrapper.name
-                )
+                cek = key_alg_wrapper.unwrap_key_with_epk(wrapped_cek, epk, alg=key_alg_wrapper.name)
             else:
                 cek = key_alg_wrapper.recipient_key(
                     epk,
@@ -922,11 +934,13 @@ class Jwk(BaseJsonDict):
         elif isinstance(key_alg_wrapper, BaseAesGcmKeyWrap):
             iv = headers.get("iv")
             if iv is None:
-                raise ValueError("No 'iv' in headers!")
+                msg = "No 'iv' in headers!"
+                raise ValueError(msg)
             iv = BinaPy(iv).decode_from("b64u")
             tag = headers.get("tag")
             if tag is None:
-                raise ValueError("No 'tag' in headers!")
+                msg = "No 'tag' in headers!"
+                raise ValueError(msg)
             tag = BinaPy(tag).decode_from("b64u")
             cek = key_alg_wrapper.unwrap_key(wrapped_cek, tag=tag, iv=iv)
 
@@ -934,9 +948,8 @@ class Jwk(BaseJsonDict):
             cek = key_alg_wrapper.direct_key(enc_alg_class)
 
         else:
-            raise UnsupportedAlg(
-                f"Unsupported Key Management Alg {key_alg_wrapper}"
-            )  # pragma: no cover
+            msg = f"Unsupported Key Management Alg {key_alg_wrapper}"
+            raise UnsupportedAlg(msg)  # pragma: no cover
 
         return SymmetricJwk.from_bytes(cek)
 
@@ -950,11 +963,7 @@ class Jwk(BaseJsonDict):
         if not self.is_private:
             return self
 
-        params = {
-            name: self.get(name)
-            for name, param in self.PARAMS.items()
-            if not param.is_private
-        }
+        params = {name: self.get(name) for name, param in self.PARAMS.items() if not param.is_private}
 
         if "key_ops" in self:
             key_ops = list(self.key_ops)
@@ -1008,15 +1017,13 @@ class Jwk(BaseJsonDict):
         """
         for jwk_class in Jwk.__subclasses__():
             for cryptography_class in (
-                jwk_class.CRYPTOGRAPHY_PRIVATE_KEY_CLASSES
-                + jwk_class.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES
+                jwk_class.CRYPTOGRAPHY_PRIVATE_KEY_CLASSES + jwk_class.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES
             ):
                 if isinstance(cryptography_key, cryptography_class):
                     return jwk_class.from_cryptography_key(cryptography_key, **kwargs)
 
-        raise TypeError(
-            f"Unsupported Jwk class for this Key Type: {type(cryptography_key).__name__}"
-        )
+        msg = f"Unsupported Jwk class for this Key Type: {type(cryptography_key).__name__}"
+        raise TypeError(msg)
 
     def _to_cryptography_key(self) -> Any:
         """Return a key from the `cryptography` library that matches this Jwk.
@@ -1040,7 +1047,8 @@ class Jwk(BaseJsonDict):
 
         Args:
           der: the PEM encoded data to load
-          password: the password to decrypt the PEM, if required. Should be bytes. If it is a string, it will be encoded with UTF-8.
+          password: the password to decrypt the PEM, if required. Should be bytes.
+              If it is a string, it will be encoded with UTF-8.
           **kwargs: additional members to include in the `Jwk` (e.g. `kid`, `use`)
 
         Returns:
@@ -1057,14 +1065,14 @@ class Jwk(BaseJsonDict):
                 cryptography_key = serialization.load_pem_public_key(der)
 
             except Exception:
-                raise ValueError(
-                    "The provided data is not a private or a public PEM encoded key."
-                ) from private_exc
+                msg = "The provided data is not a private or a public PEM encoded key."
+                raise ValueError(msg) from private_exc
             if password is not None:
-                raise ValueError(
-                    "A public key was loaded from PEM, while a password was provided for decryption."
+                msg = (
+                    "A public key was loaded from PEM, while a password was provided for decryption. "
                     "Only private keys are encrypted using a password."
                 )
+                raise ValueError(msg) from None
 
         return cls.from_cryptography_key(cryptography_key, **kwargs)
 
@@ -1085,10 +1093,7 @@ class Jwk(BaseJsonDict):
 
         if self.is_private:
             encryption: serialization.KeySerializationEncryption
-            if password:
-                encryption = serialization.BestAvailableEncryption(password)
-            else:
-                encryption = serialization.NoEncryption()
+            encryption = serialization.BestAvailableEncryption(password) if password else serialization.NoEncryption()
             return self.cryptography_key.private_bytes(  # type: ignore[no-any-return]
                 serialization.Encoding.PEM,
                 serialization.PrivateFormat.PKCS8,
@@ -1096,7 +1101,8 @@ class Jwk(BaseJsonDict):
             ).decode()
         else:
             if password:
-                raise ValueError("Public keys cannot be encrypted when serialized.")
+                msg = "Public keys cannot be encrypted when serialized."
+                raise ValueError(msg)
             return self.cryptography_key.public_bytes(  # type: ignore[no-any-return]
                 serialization.Encoding.PEM,
                 serialization.PublicFormat.SubjectPublicKeyInfo,
@@ -1118,14 +1124,14 @@ class Jwk(BaseJsonDict):
             try:
                 cryptography_key = serialization.load_der_public_key(der)
             except Exception:
-                raise ValueError(
-                    "The provided data is not a private or a public DER encoded key."
-                ) from private_exc
+                msg = "The provided data is not a private or a public DER encoded key."
+                raise ValueError(msg) from private_exc
             if password is not None:
-                raise ValueError(
-                    "A public key was loaded from DER, while a password was provided for decryption."
+                msg = (
+                    "A public key was loaded from DER, while a password was provided for decryption. "
                     "Only private keys are encrypted using a password."
                 )
+                raise ValueError(msg) from None
 
         return cls.from_cryptography_key(cryptography_key, **kwargs)
 
@@ -1136,7 +1142,8 @@ class Jwk(BaseJsonDict):
         accepted, and will be encoded to `bytes` using UTF-8 before it is used as encryption key.
 
         Args:
-          password: password to use to encrypt the PEM. Should be bytes. If it is a string, it will be encoded to bytes with UTF-8.
+          password: password to use to encrypt the PEM. Should be bytes.
+            If it is a string, it will be encoded to bytes with UTF-8.
 
         Returns:
             the DER serialized key
@@ -1146,10 +1153,7 @@ class Jwk(BaseJsonDict):
 
         if self.is_private:
             encryption: serialization.KeySerializationEncryption
-            if password:
-                encryption = serialization.BestAvailableEncryption(password)
-            else:
-                encryption = serialization.NoEncryption()
+            encryption = serialization.BestAvailableEncryption(password) if password else serialization.NoEncryption()
             return BinaPy(
                 self.cryptography_key.private_bytes(
                     serialization.Encoding.DER,
@@ -1159,7 +1163,8 @@ class Jwk(BaseJsonDict):
             )
         else:
             if password:
-                raise ValueError("Public keys cannot be encrypted when serialized.")
+                msg = "Public keys cannot be encrypted when serialized."
+                raise ValueError(msg)
             return BinaPy(
                 self.cryptography_key.public_bytes(
                     serialization.Encoding.DER,
@@ -1168,9 +1173,7 @@ class Jwk(BaseJsonDict):
             )
 
     @classmethod
-    def generate(
-        cls, *, alg: str | None = None, kty: str | None = None, **kwargs: Any
-    ) -> Jwk:
+    def generate(cls, *, alg: str | None = None, kty: str | None = None, **kwargs: Any) -> Jwk:
         """Generate a Private Key and return it as a `Jwk` instance.
 
         This method is implemented by subclasses for specific Key Types and returns an instance of that subclass.
@@ -1187,17 +1190,16 @@ class Jwk(BaseJsonDict):
         if alg:
             key = cls.generate_for_alg(alg=alg, **kwargs)
             if kty is not None and key.kty != kty:
-                raise ValueError(
-                    f"Incompatible `{alg=}` and `{kty=}` parameters. "
-                    f"`{alg=}` points to `kty='{key.kty}'`."
-                )
+                msg = f"Incompatible `{alg=}` and `{kty=}` parameters. `{alg=}` points to `kty='{key.kty}'`."
+                raise ValueError(msg)
             return key
         if kty:
             return cls.generate_for_kty(kty=kty, **kwargs)
-        raise ValueError(
+        msg = (
             "You must provide a hint for jwskate to know what kind of key it must generate. "
             "You can either provide an 'alg' identifier as keyword parameter, and/or a 'kty'."
         )
+        raise ValueError(msg)
 
     def copy(self) -> Jwk:
         """Create a copy of this key.
@@ -1208,10 +1210,11 @@ class Jwk(BaseJsonDict):
         """
         return Jwk(super().copy())
 
-    def with_kid_thumbprint(self, force: bool = False) -> Jwk:
-        """Includes the JWK thumbprint as "kid".
+    def with_kid_thumbprint(self, *, force: bool = False) -> Jwk:
+        """Include the JWK thumbprint as `kid`.
 
-        If key already has a "kid":
+        If key already has a `kid` (Key ID):
+
         - if `force` is `True`, this erases the previous "kid".
         - if `force` is `False` (default), do nothing.
 
@@ -1219,26 +1222,30 @@ class Jwk(BaseJsonDict):
             force: whether to overwrite a previously existing kid
 
         Returns:
-            a copy of this key with a "kid" (either the previous one or the existing one, depending on `force`).
+            a copy of this Jwk, with a `kid` attribute.
 
         """
-        if self.get("kid") is not None and not force:
-            return self
         jwk = self.copy()
+        if self.get("kid") is not None and not force:
+            return jwk
         jwk["kid"] = self.thumbprint()
         return jwk
 
     def with_usage_parameters(
         self,
         alg: str | None = None,
+        *,
         with_alg: bool = True,
         with_use: bool = True,
         with_key_ops: bool = True,
     ) -> Jwk:
         """Copy this Jwk and add the `use` and `key_ops` parameters.
 
-        The returned jwk `alg` parameter will be the one passed as parameter to this method, or as dfault the one declared as `alg` parameter in this Jwk.
+        The returned jwk `alg` parameter will be the one passed as parameter to this method,
+        or as default the one declared as `alg` parameter in this Jwk.
+
         The `use` (Public Key Use) param is deduced based on this `alg` value.
+
         The `key_ops` (Key Operations) param is deduced based on the key `use` and if the key is public, private,
         or symmetric.
 
@@ -1255,9 +1262,8 @@ class Jwk(BaseJsonDict):
         alg = alg or self.alg
 
         if not alg:
-            raise ExpectedAlgRequired(
-                "An algorithm is required to set the usage parameters"
-            )
+            msg = "An algorithm is required to set the usage parameters"
+            raise ExpectedAlgRequired(msg)
 
         self._get_alg_class(alg)  # raises an exception if alg is not supported
 
@@ -1314,7 +1320,8 @@ def to_jwk(
         key: the key material
         kty: the expected key type
         is_private: if `True`, check if the key is private, if `False`, check if it is public, if `None`, do nothing
-        is_symmetric: if `True`, check if the key is symmetric, if `False`, check if it is asymmetric, if `None`, do nothing
+        is_symmetric: if `True`, check if the key is symmetric, if `False`, check if it is asymmetric,
+            if `None`, do nothing
 
     Returns:
         a Jwk key

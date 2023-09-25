@@ -71,7 +71,8 @@ def select_alg_class(
 
     """
     if not supported_algs:
-        raise ValueError("No possible algorithms to choose from!")
+        msg = "No possible algorithms to choose from!"
+        raise ValueError(msg)
 
     choosen_alg: str
     if jwk_alg is not None:
@@ -81,7 +82,8 @@ def select_alg_class(
                     raise MismatchingAlg(jwk_alg, alg)
                 else:
                     warnings.warn(
-                        "This key has an 'alg' parameter, you should use that alg for each operation."
+                        "This key has an 'alg' parameter, you should use that alg for each operation.",
+                        stacklevel=2,
                     )
             choosen_alg = alg
         else:
@@ -89,17 +91,17 @@ def select_alg_class(
     elif alg is not None:
         choosen_alg = alg
     else:
-        raise ExpectedAlgRequired(
+        msg = (
             "This key doesn't have an 'alg' parameter specifying which algorithm to use with that key, "
             "so you need to provide the expected signing alg(s) for each operation."
         )
+        raise ExpectedAlgRequired(msg)
 
     try:
         return supported_algs[choosen_alg]
     except KeyError:
-        raise UnsupportedAlg(
-            f"Alg {choosen_alg} is not supported. Supported algs: {list(supported_algs)}."
-        )
+        msg = f"Alg {choosen_alg} is not supported. Supported algs: {list(supported_algs)}."
+        raise UnsupportedAlg(msg) from None
 
 
 def select_alg_classes(
@@ -112,14 +114,18 @@ def select_alg_classes(
 ) -> list[T]:
     """Select several appropriate algs classes to use on cryptographic operations.
 
-    This method is typically used to get the list of valid algorithms when checking a signature, when several algorithms are allowed.
+    This method is typically used to get the list of valid algorithms when checking a signature,
+    when several algorithms are allowed.
 
     Given:
+
     - a mapping of supported algorithms name to wrapper classes
     - an alg parameter from a JWK
     - and/or a user-specified alg
     - and/or a user specified list of usable algs
-    this returns a list of supported alg wrapper classes that matches what the user specified, or, as default, the alg parameter from the JWK.
+
+    this returns a list of supported alg wrapper classes that matches what the user specified, or, as default,
+    the alg parameter from the JWK.
 
     This checks the coherency between the user specified `alg` and the `jwk_alg`, and will emit a warning
     if the user specified alg is different from the `jwk_alg`.
@@ -140,21 +146,23 @@ def select_alg_classes(
 
     """
     if alg and algs:
-        raise ValueError("Please use either parameter 'alg' or 'algs', not both.")
+        msg = "Please use either parameter 'alg' or 'algs', not both."
+        raise ValueError(msg)
 
     if not supported_algs:
-        raise ValueError("No possible algorithms to choose from!")
+        msg = "No possible algorithms to choose from!"
+        raise ValueError(msg)
 
-    if jwk_alg is not None:
-        if (alg and alg != jwk_alg) or (algs and jwk_alg not in algs):
-            if strict:
-                raise MismatchingAlg(jwk_alg, alg, algs)
-            else:
-                requested_alg = f"{alg=}" if alg else f"{algs=}"
-                warnings.warn(
-                    f"This key has an 'alg' parameter with value {jwk_alg}, so you should use it with that alg only."
-                    f"You requested {requested_alg}."
-                )
+    if jwk_alg is not None and ((alg and alg != jwk_alg) or (algs and jwk_alg not in algs)):
+        if strict:
+            raise MismatchingAlg(jwk_alg, alg, algs)
+        else:
+            requested_alg = f"{alg=}" if alg else f"{algs=}"
+            warnings.warn(
+                f"This key has an 'alg' parameter with value {jwk_alg}, so you should use it with that alg only."
+                f"You requested {requested_alg}.",
+                stacklevel=2,
+            )
 
     possible_algs: list[str] = []
     if alg:
@@ -165,17 +173,15 @@ def select_alg_classes(
         possible_algs = [jwk_alg]
 
     if possible_algs:
-        possible_supported_algs = [
-            supported_algs[alg] for alg in possible_algs if alg in supported_algs
-        ]
+        possible_supported_algs = [supported_algs[alg] for alg in possible_algs if alg in supported_algs]
         if possible_supported_algs:
             return possible_supported_algs
         else:
-            raise UnsupportedAlg(
-                f"None of the user-specified alg(s) are supported. {possible_algs}"
-            )
+            msg = f"None of the user-specified alg(s) are supported. {possible_algs}"
+            raise UnsupportedAlg(msg)
 
-    raise ExpectedAlgRequired(
+    msg = (
         "This key doesn't have an 'alg' parameter specifying which algorithm to use with that key, "
         "so you need to provide the expected signing alg(s) for each operation."
     )
+    raise ExpectedAlgRequired(msg)

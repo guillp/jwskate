@@ -37,53 +37,64 @@ EC_P521_PRIVATE_KEY = {
     "kid": "bilbo.baggins@hobbiton.example",
     "use": "sig",
     "crv": "P-521",
-    "x": "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9"
-    "A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt",
-    "y": "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVy"
-    "SsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1",
-    "d": "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zb"
-    "KipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt",
+    "x": "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt",
+    "y": "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVySsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1",
+    "d": "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zbKipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt",
 }
 
 RSA_PRIVATE_KEY = {
     "kty": "RSA",
     "kid": "bilbo.baggins@hobbiton.example",
     "use": "sig",
-    "n": "n4EPtAOCc9AlkeQHPzHStgAbgs7bTZLwUBZdR8_KuKPEHLd4rHVTeT"
-    "-O-XV2jRojdNhxJWTDvNd7nqQ0VEiZQHz_AJmSCpMaJMRBSFKrKb2wqV"
-    "wGU_NsYOYL-QtiWN2lbzcEe6XC0dApr5ydQLrHqkHHig3RBordaZ6Aj-"
-    "oBHqFEHYpPe7Tpe-OfVfHd1E6cS6M1FZcD1NNLYD5lFHpPI9bTwJlsde"
-    "3uhGqC0ZCuEHg8lhzwOHrtIQbS0FVbb9k3-tVTU4fg_3L_vniUFAKwuC"
-    "LqKnS2BYwdq_mzSnbLY7h_qixoR7jig3__kRhuaxwUkRz5iaiQkqgc5g"
-    "HdrNP5zw",
+    "n": (
+        "n4EPtAOCc9AlkeQHPzHStgAbgs7bTZLwUBZdR8_KuKPEHLd4rHVTeT"
+        "-O-XV2jRojdNhxJWTDvNd7nqQ0VEiZQHz_AJmSCpMaJMRBSFKrKb2wqV"
+        "wGU_NsYOYL-QtiWN2lbzcEe6XC0dApr5ydQLrHqkHHig3RBordaZ6Aj-"
+        "oBHqFEHYpPe7Tpe-OfVfHd1E6cS6M1FZcD1NNLYD5lFHpPI9bTwJlsde"
+        "3uhGqC0ZCuEHg8lhzwOHrtIQbS0FVbb9k3-tVTU4fg_3L_vniUFAKwuC"
+        "LqKnS2BYwdq_mzSnbLY7h_qixoR7jig3__kRhuaxwUkRz5iaiQkqgc5g"
+        "HdrNP5zw"
+    ),
     "e": "AQAB",
-    "d": "bWUC9B-EFRIo8kpGfh0ZuyGPvMNKvYWNtB_ikiH9k20eT-O1q_I78e"
-    "iZkpXxXQ0UTEs2LsNRS-8uJbvQ-A1irkwMSMkK1J3XTGgdrhCku9gRld"
-    "Y7sNA_AKZGh-Q661_42rINLRCe8W-nZ34ui_qOfkLnK9QWDDqpaIsA-b"
-    "MwWWSDFu2MUBYwkHTMEzLYGqOe04noqeq1hExBTHBOBdkMXiuFhUq1BU"
-    "6l-DqEiWxqg82sXt2h-LMnT3046AOYJoRioz75tSUQfGCshWTBnP5uDj"
-    "d18kKhyv07lhfSJdrPdM5Plyl21hsFf4L_mHCuoFau7gdsPfHPxxjVOc"
-    "OpBrQzwQ",
-    "p": "3Slxg_DwTXJcb6095RoXygQCAZ5RnAvZlno1yhHtnUex_fp7AZ_9nR"
-    "aO7HX_-SFfGQeutao2TDjDAWU4Vupk8rw9JR0AzZ0N2fvuIAmr_WCsmG"
-    "peNqQnev1T7IyEsnh8UMt-n5CafhkikzhEsrmndH6LxOrvRJlsPp6Zv8"
-    "bUq0k",
-    "q": "uKE2dh-cTf6ERF4k4e_jy78GfPYUIaUyoSSJuBzp3Cubk3OCqs6grT"
-    "8bR_cu0Dm1MZwWmtdqDyI95HrUeq3MP15vMMON8lHTeZu2lmKvwqW7an"
-    "V5UzhM1iZ7z4yMkuUwFWoBvyY898EXvRD-hdqRxHlSqAZ192zB3pVFJ0"
-    "s7pFc",
-    "dp": "B8PVvXkvJrj2L-GYQ7v3y9r6Kw5g9SahXBwsWUzp19TVlgI-YV85q"
-    "1NIb1rxQtD-IsXXR3-TanevuRPRt5OBOdiMGQp8pbt26gljYfKU_E9xn"
-    "-RULHz0-ed9E9gXLKD4VGngpz-PfQ_q29pk5xWHoJp009Qf1HvChixRX"
-    "59ehik",
-    "dq": "CLDmDGduhylc9o7r84rEUVn7pzQ6PF83Y-iBZx5NT-TpnOZKF1pEr"
-    "AMVeKzFEl41DlHHqqBLSM0W1sOFbwTxYWZDm6sI6og5iTbwQGIC3gnJK"
-    "bi_7k_vJgGHwHxgPaX2PnvP-zyEkDERuf-ry4c_Z11Cq9AqC2yeL6kdK"
-    "T1cYF8",
-    "qi": "3PiqvXQN0zwMeE-sBvZgi289XP9XCQF3VWqPzMKnIgQp7_Tugo6-N"
-    "ZBKCQsMf3HaEGBjTVJs_jcK8-TRXvaKe-7ZMaQj8VfBdYkssbu0NKDDh"
-    "jJ-GtiseaDVWt7dcH0cfwxgFUHpQh7FoCrjFJ6h6ZEpMF6xmujs4qMpP"
-    "z8aaI4",
+    "d": (
+        "bWUC9B-EFRIo8kpGfh0ZuyGPvMNKvYWNtB_ikiH9k20eT-O1q_I78e"
+        "iZkpXxXQ0UTEs2LsNRS-8uJbvQ-A1irkwMSMkK1J3XTGgdrhCku9gRld"
+        "Y7sNA_AKZGh-Q661_42rINLRCe8W-nZ34ui_qOfkLnK9QWDDqpaIsA-b"
+        "MwWWSDFu2MUBYwkHTMEzLYGqOe04noqeq1hExBTHBOBdkMXiuFhUq1BU"
+        "6l-DqEiWxqg82sXt2h-LMnT3046AOYJoRioz75tSUQfGCshWTBnP5uDj"
+        "d18kKhyv07lhfSJdrPdM5Plyl21hsFf4L_mHCuoFau7gdsPfHPxxjVOc"
+        "OpBrQzwQ"
+    ),
+    "p": (
+        "3Slxg_DwTXJcb6095RoXygQCAZ5RnAvZlno1yhHtnUex_fp7AZ_9nR"
+        "aO7HX_-SFfGQeutao2TDjDAWU4Vupk8rw9JR0AzZ0N2fvuIAmr_WCsmG"
+        "peNqQnev1T7IyEsnh8UMt-n5CafhkikzhEsrmndH6LxOrvRJlsPp6Zv8"
+        "bUq0k"
+    ),
+    "q": (
+        "uKE2dh-cTf6ERF4k4e_jy78GfPYUIaUyoSSJuBzp3Cubk3OCqs6grT"
+        "8bR_cu0Dm1MZwWmtdqDyI95HrUeq3MP15vMMON8lHTeZu2lmKvwqW7an"
+        "V5UzhM1iZ7z4yMkuUwFWoBvyY898EXvRD-hdqRxHlSqAZ192zB3pVFJ0"
+        "s7pFc"
+    ),
+    "dp": (
+        "B8PVvXkvJrj2L-GYQ7v3y9r6Kw5g9SahXBwsWUzp19TVlgI-YV85q"
+        "1NIb1rxQtD-IsXXR3-TanevuRPRt5OBOdiMGQp8pbt26gljYfKU_E9xn"
+        "-RULHz0-ed9E9gXLKD4VGngpz-PfQ_q29pk5xWHoJp009Qf1HvChixRX"
+        "59ehik"
+    ),
+    "dq": (
+        "CLDmDGduhylc9o7r84rEUVn7pzQ6PF83Y-iBZx5NT-TpnOZKF1pEr"
+        "AMVeKzFEl41DlHHqqBLSM0W1sOFbwTxYWZDm6sI6og5iTbwQGIC3gnJK"
+        "bi_7k_vJgGHwHxgPaX2PnvP-zyEkDERuf-ry4c_Z11Cq9AqC2yeL6kdK"
+        "T1cYF8"
+    ),
+    "qi": (
+        "3PiqvXQN0zwMeE-sBvZgi289XP9XCQF3VWqPzMKnIgQp7_Tugo6-N"
+        "ZBKCQsMf3HaEGBjTVJs_jcK8-TRXvaKe-7ZMaQj8VfBdYkssbu0NKDDh"
+        "jJ-GtiseaDVWt7dcH0cfwxgFUHpQh7FoCrjFJ6h6ZEpMF6xmujs4qMpP"
+        "z8aaI4"
+    ),
 }
 
 OKP_ED25519_PRIVATE_KEY = {
@@ -190,14 +201,8 @@ def okp_ed25519_signature_jwk() -> Jwk:
     assert isinstance(jwk, OKPJwk)
     assert jwk.is_private
     assert jwk.kty == "OKP"
-    assert (
-        jwk.private_key.hex()
-        == "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60"
-    )
-    assert (
-        jwk.public_key.hex()
-        == "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
-    )
+    assert jwk.private_key.hex() == "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60"
+    assert jwk.public_key.hex() == "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
     assert jwk.thumbprint() == "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k"
     return jwk
 
@@ -229,10 +234,7 @@ def symmetric_signature_jwk() -> Jwk:
     assert jwk.kty == "oct"
     assert jwk.kid == "018c0ae5-4d9b-471b-bfd6-eef314bc7037"
     assert jwk.use == "sig"
-    assert (
-        jwk.key.hex()
-        == "849b57219dae48de646d07dbb533566e976686457c1491be3a76dcea6c427188"
-    )
+    assert jwk.key.hex() == "849b57219dae48de646d07dbb533566e976686457c1491be3a76dcea6c427188"
     assert jwk.key_size == 32 * 8
     return jwk
 
@@ -291,9 +293,7 @@ def signature_jwk(
         if signature_alg in key.supported_signing_algorithms():
             return key
 
-    pytest.skip(
-        f"No key supports this signature alg: {signature_alg}"
-    )  # pragma: no cover
+    pytest.skip(f"No key supports this signature alg: {signature_alg}")  # pragma: no cover
 
 
 @pytest.fixture()
@@ -307,12 +307,8 @@ def verification_jwk(signature_jwk: Jwk) -> Jwk:
 
 
 @pytest.fixture()
-def signed_jws_compact(
-    signature_payload: bytes, signature_jwk: Jwk, signature_alg: str
-) -> JwsCompact:
-    jws = JwsCompact.sign(
-        payload=signature_payload, key=signature_jwk, alg=signature_alg
-    )
+def signed_jws_compact(signature_payload: bytes, signature_jwk: Jwk, signature_alg: str) -> JwsCompact:
+    jws = JwsCompact.sign(payload=signature_payload, key=signature_jwk, alg=signature_alg)
     assert isinstance(jws, JwsCompact)
     return jws
 
@@ -352,35 +348,25 @@ def test_supportsbytes(
 
 
 @pytest.fixture()
-def signed_jws_json_flat(
-    signature_payload: bytes, signature_jwk: Jwk, signature_alg: str
-) -> JwsJsonFlat:
-    jws = JwsJsonFlat.sign(
-        payload=signature_payload, key=signature_jwk, alg=signature_alg
-    )
+def signed_jws_json_flat(signature_payload: bytes, signature_jwk: Jwk, signature_alg: str) -> JwsJsonFlat:
+    jws = JwsJsonFlat.sign(payload=signature_payload, key=signature_jwk, alg=signature_alg)
     assert isinstance(jws, JwsJsonFlat)
     return jws
 
 
 @pytest.fixture()
-def signed_jws_json_general(
-    signature_payload: bytes, signature_jwk: Jwk, signature_alg: str
-) -> JwsJsonGeneral:
+def signed_jws_json_general(signature_payload: bytes, signature_jwk: Jwk, signature_alg: str) -> JwsJsonGeneral:
     jws = JwsJsonGeneral.sign(signature_payload, (signature_jwk, signature_alg))
     assert isinstance(jws, JwsJsonGeneral)
     return jws
 
 
-def test_verify_signature(
-    signed_jws_compact: JwsCompact, verification_jwk: Jwk, signature_alg: str
-) -> None:
+def test_verify_signature(signed_jws_compact: JwsCompact, verification_jwk: Jwk, signature_alg: str) -> None:
     assert signed_jws_compact.verify_signature(verification_jwk, alg=signature_alg)
     altered_jws = bytes(signed_jws_compact)[:-4] + (
         b"aaaa" if not signed_jws_compact.value.endswith(b"aaaa") else b"bbbb"
     )
-    assert not JwsCompact(altered_jws).verify_signature(
-        verification_jwk, alg=signature_alg
-    )
+    assert not JwsCompact(altered_jws).verify_signature(verification_jwk, alg=signature_alg)
 
 
 def test_verify_signature_json_flat(
@@ -391,9 +377,7 @@ def test_verify_signature_json_flat(
     altered_jws["signature"] = signed_jws_json_flat["signature"][:-4] + (
         "aaaa" if not signed_jws_json_flat["signature"].endswith("aaaa") else "bbbb"
     )
-    assert not JwsJsonFlat(altered_jws).verify_signature(
-        verification_jwk, alg=signature_alg
-    )
+    assert not JwsJsonFlat(altered_jws).verify_signature(verification_jwk, alg=signature_alg)
 
 
 def test_verify_signature_json_general(
@@ -401,16 +385,10 @@ def test_verify_signature_json_general(
 ) -> None:
     assert signed_jws_json_general.verify_signature(verification_jwk, alg=signature_alg)
     altered_jws = dict(signed_jws_json_general)
-    altered_jws["signatures"][0]["signature"] = signed_jws_json_general["signatures"][
-        0
-    ]["signature"][:-4] + (
-        "aaaa"
-        if not signed_jws_json_general["signatures"][0]["signature"].endswith("aaaa")
-        else "bbbb"
+    altered_jws["signatures"][0]["signature"] = signed_jws_json_general["signatures"][0]["signature"][:-4] + (
+        "aaaa" if not signed_jws_json_general["signatures"][0]["signature"].endswith("aaaa") else "bbbb"
     )
-    assert not JwsJsonGeneral(altered_jws).verify_signature(
-        verification_jwk, alg=signature_alg
-    )
+    assert not JwsJsonGeneral(altered_jws).verify_signature(verification_jwk, alg=signature_alg)
 
 
 def test_jws_format_transformation(
@@ -441,38 +419,17 @@ def test_jws_format_transformation(
     assert flat_json_with_unprotected_header.header == unprotected_header
     assert flat_json_with_unprotected_header.protected == signed_jws_compact.headers
     assert flat_json_with_unprotected_header.signature == signed_jws_compact.signature
-    assert (
-        flat_json_with_unprotected_header.jws_signature
-        == signed_jws_compact.jws_signature(unprotected_header)
-    )
+    assert flat_json_with_unprotected_header.jws_signature == signed_jws_compact.jws_signature(unprotected_header)
     assert flat_json_with_unprotected_header.compact() == signed_jws_compact
 
-    general_json_with_unprotected_header = signed_jws_compact.general_json(
-        unprotected_header
-    )
+    general_json_with_unprotected_header = signed_jws_compact.general_json(unprotected_header)
     assert general_json_with_unprotected_header.payload == signed_jws_compact.payload
-    assert (
-        general_json_with_unprotected_header.signatures[0].header == unprotected_header
-    )
-    assert (
-        general_json_with_unprotected_header.signatures[0].protected
-        == signed_jws_compact.headers
-    )
-    assert (
-        general_json_with_unprotected_header.signatures[0].signature
-        == signed_jws_compact.signature
-    )
-    assert general_json_with_unprotected_header.signatures[
-        0
-    ] == signed_jws_compact.jws_signature(unprotected_header)
-    assert (
-        general_json_with_unprotected_header.signed_part(lambda sigs: sigs[0])
-        == signed_jws_compact.signed_part
-    )
-    assert (
-        general_json_with_unprotected_header.compact(lambda sigs: sigs[0])
-        == signed_jws_compact
-    )
+    assert general_json_with_unprotected_header.signatures[0].header == unprotected_header
+    assert general_json_with_unprotected_header.signatures[0].protected == signed_jws_compact.headers
+    assert general_json_with_unprotected_header.signatures[0].signature == signed_jws_compact.signature
+    assert general_json_with_unprotected_header.signatures[0] == signed_jws_compact.jws_signature(unprotected_header)
+    assert general_json_with_unprotected_header.signed_part(lambda sigs: sigs[0]) == signed_jws_compact.signed_part
+    assert general_json_with_unprotected_header.compact(lambda sigs: sigs[0]) == signed_jws_compact
 
 
 def test_verify_signature_by_jwcrypto(
@@ -496,9 +453,7 @@ def test_verify_signature_by_jwcrypto(
 
 
 @pytest.fixture()
-def jwcrypto_signed_jws(
-    signature_payload: bytes, signature_jwk: Jwk, signature_alg: str
-) -> str:
+def jwcrypto_signed_jws(signature_payload: bytes, signature_jwk: Jwk, signature_alg: str) -> str:
     """Sign a JWS using `jwcrypto`, to make sure it verifies with `jwskate`.
 
     Args:
@@ -525,9 +480,7 @@ def jwcrypto_signed_jws(
     return token
 
 
-def test_verify_signature_from_jwcrypto(
-    jwcrypto_signed_jws: str, verification_jwk: Jwk, signature_alg: str
-) -> None:
+def test_verify_signature_from_jwcrypto(jwcrypto_signed_jws: str, verification_jwk: Jwk, signature_alg: str) -> None:
     """Check that `jwskate` verifies tokens signed by `jwcrypto`.
 
     Args:
@@ -536,9 +489,7 @@ def test_verify_signature_from_jwcrypto(
         signature_alg: the alg to use
 
     """
-    assert JwsCompact(jwcrypto_signed_jws).verify_signature(
-        verification_jwk, alg=signature_alg
-    )
+    assert JwsCompact(jwcrypto_signed_jws).verify_signature(verification_jwk, alg=signature_alg)
 
 
 def test_invalid_jws_compact() -> None:
@@ -549,9 +500,7 @@ def test_invalid_jws_compact() -> None:
             "ey.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.cOUKU1ijv3KiN2KK_o50RU978I9MzQ4lNw2y7nOGAdM"
         )
     with pytest.raises(ValueError):
-        JwsCompact(
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.!!.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-        )
+        JwsCompact("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.!!.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
     with pytest.raises(ValueError):
         JwsCompact(
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.!!"
@@ -574,9 +523,9 @@ def test_invalid_jws_json() -> None:
 def test_jws_from_parts() -> None:
     assert JwsCompact.from_parts(
         "eyJhbGciOm51bGx9.dGhpc19pc19hX3Rlc3Q",
-        BinaPy(
-            "xZdQ-v6xqUpJGeuRIGVTs9gv56eQ_T_q-4OQdFS3IkkC3o-QM6vP39wHf5iNoHrZww9SrXHXb0oaF4RQZyKRGg"
-        ).decode_from("b64u"),
+        BinaPy("xZdQ-v6xqUpJGeuRIGVTs9gv56eQ_T_q-4OQdFS3IkkC3o-QM6vP39wHf5iNoHrZww9SrXHXb0oaF4RQZyKRGg").decode_from(
+            "b64u"
+        ),
     ) == JwsCompact(
         "eyJhbGciOm51bGx9.dGhpc19pc19hX3Rlc3Q.xZdQ-v6xqUpJGeuRIGVTs9gv56eQ_T_q-4OQdFS3IkkC3o-QM6vP39wHf5iNoHrZww9SrXHXb0oaF4RQZyKRGg"
     )

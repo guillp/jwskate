@@ -8,6 +8,7 @@ from binapy import BinaPy
 from cryptography.hazmat.primitives.asymmetric import rsa
 from typing_extensions import override
 
+from jwskate import KeyTypes
 from jwskate.jwa import (
     PS256,
     PS384,
@@ -22,7 +23,6 @@ from jwskate.jwa import (
     RsaEsPcks1v1_5,
 )
 
-from .. import KeyTypes
 from .base import Jwk, JwkParameter
 
 
@@ -40,35 +40,21 @@ class RSAJwk(Jwk):
     PARAMS = {
         "n": JwkParameter("Modulus", is_private=False, is_required=True, kind="b64u"),
         "e": JwkParameter("Exponent", is_private=False, is_required=True, kind="b64u"),
-        "d": JwkParameter(
-            "Private Exponent", is_private=True, is_required=True, kind="b64u"
-        ),
-        "p": JwkParameter(
-            "First Prime Factor", is_private=True, is_required=False, kind="b64u"
-        ),
-        "q": JwkParameter(
-            "Second Prime Factor", is_private=True, is_required=False, kind="b64u"
-        ),
-        "dp": JwkParameter(
-            "First Factor CRT Exponent", is_private=True, is_required=False, kind="b64u"
-        ),
+        "d": JwkParameter("Private Exponent", is_private=True, is_required=True, kind="b64u"),
+        "p": JwkParameter("First Prime Factor", is_private=True, is_required=False, kind="b64u"),
+        "q": JwkParameter("Second Prime Factor", is_private=True, is_required=False, kind="b64u"),
+        "dp": JwkParameter("First Factor CRT Exponent", is_private=True, is_required=False, kind="b64u"),
         "dq": JwkParameter(
             "Second Factor CRT Exponent",
             is_private=True,
             is_required=False,
             kind="b64u",
         ),
-        "qi": JwkParameter(
-            "First CRT Coefficient", is_private=True, is_required=False, kind="b64u"
-        ),
-        "oth": JwkParameter(
-            "Other Primes Info", is_private=True, is_required=False, kind="unsupported"
-        ),
+        "qi": JwkParameter("First CRT Coefficient", is_private=True, is_required=False, kind="b64u"),
+        "oth": JwkParameter("Other Primes Info", is_private=True, is_required=False, kind="unsupported"),
     }
 
-    SIGNATURE_ALGORITHMS = {
-        sigalg.name: sigalg for sigalg in [RS256, RS384, RS512, PS256, PS384, PS512]
-    }
+    SIGNATURE_ALGORITHMS = {sigalg.name: sigalg for sigalg in [RS256, RS384, RS512, PS256, PS384, PS512]}
 
     KEY_MANAGEMENT_ALGORITHMS = {
         keyalg.name: keyalg
@@ -109,7 +95,8 @@ class RSAJwk(Jwk):
                 e=pub.e,
             )
         else:
-            raise TypeError("A RSAPrivateKey or a RSAPublicKey is required.")
+            msg = "A RSAPrivateKey or a RSAPublicKey is required."
+            raise TypeError(msg)
 
     @override
     def _to_cryptography_key(self) -> rsa.RSAPrivateKey | rsa.RSAPublicKey:
@@ -266,9 +253,7 @@ class RSAJwk(Jwk):
     def prime_factors(self) -> tuple[int, int]:
         """Return the 2 prime factors `p` and `q` from this `Jwk`."""
         if "p" not in self or "q" not in self:
-            p, q = rsa.rsa_recover_prime_factors(
-                self.modulus, self.exponent, self.private_exponent
-            )
+            p, q = rsa.rsa_recover_prime_factors(self.modulus, self.exponent, self.private_exponent)
             return (p, q) if p < q else (q, p)
         return (
             BinaPy(self.p).decode_from("b64u").to_int(),
@@ -321,9 +306,8 @@ class RSAJwk(Jwk):
 
         """
         if not self.is_private:
-            raise ValueError(
-                "Optional private parameters can only be computed for private RSA keys."
-            )
+            msg = "Optional private parameters can only be computed for private RSA keys."
+            raise ValueError(msg)
 
         jwk = dict(self)
 
@@ -331,12 +315,8 @@ class RSAJwk(Jwk):
             {
                 "p": BinaPy.from_int(self.first_prime_factor).to("b64u").ascii(),
                 "q": BinaPy.from_int(self.second_prime_factor).to("b64u").ascii(),
-                "dp": BinaPy.from_int(self.first_factor_crt_exponent)
-                .to("b64u")
-                .ascii(),
-                "dq": BinaPy.from_int(self.second_factor_crt_exponent)
-                .to("b64u")
-                .ascii(),
+                "dp": BinaPy.from_int(self.first_factor_crt_exponent).to("b64u").ascii(),
+                "dq": BinaPy.from_int(self.second_factor_crt_exponent).to("b64u").ascii(),
                 "qi": BinaPy.from_int(self.first_crt_coefficient).to("b64u").ascii(),
             }
         )

@@ -1,14 +1,16 @@
 """High level JWT signing helpers.
 
-While you can use the method `Jwt.sign()` with all parameters to generate JWT tokens, this will soon prove to be impractical
-for real application usage where the issuer is static, expiration time must be a configured number of seconds in the future,
-tokens must include a uniquely generated Jwt Oken ID, and signing key is mostly static (but might be renewed once in a while).
+While you can use the method `Jwt.sign()` with all parameters to generate JWT tokens, this will soon prove to be
+impractical for real application usage where the issuer is static, expiration time must be a configured number of
+seconds in the future, tokens must include a uniquely generated Jwt Token ID, and signing key is mostly static (but
+might be renewed once in a while).
 
-To make things easier, you should use the `JwtSigner` class, which you can pre-configure with a static issuer, private key, and signing alg.
-Once initialized, you can simply pass the token specific subject, audience and additional claims to `JwtSigner.sign()`, and
-a signed Jwt will be prepared accordingly.
+To make things easier, you should use the `JwtSigner` class, which you can pre-configure with a static issuer, private
+key, and signing alg.
+Once initialized, you can simply pass the token specific subject, audience and additional claims to `JwtSigner.sign()`,
+and a signed Jwt will be prepared accordingly.
 
-If you do not care about using a specific private key, you can even initialize a `JwtSigner` with a randomly generated key:
+If you do not care about using a specific private key, you can initialize a `JwtSigner` with a randomly generated key:
 
 ```python
 from jwskate import JwtSigner, ECJwk
@@ -16,7 +18,7 @@ from jwskate import JwtSigner, ECJwk
 signer = JwtSigner.with_random_key(issuer="https://myissuer.local", alg="ES256")
 jwt = signer.sign(subject="myuser", audience="myapp")
 
-# you can access the generated private key key, for example if you need to persist it:
+# you can access the generated private key, for example if you need to persist it:
 assert isinstance(signer.jwk, ECJwk) and signer.jwk.is_private
 ```
 
@@ -97,8 +99,10 @@ class JwtSigner:
           audience: the audience identifier(s) to include in claim `aud`.
           extra_claims: additional claims to include in the signed token. (Default value = None)
           extra_headers: additional headers to include in the header part. (Default value = None)
-          lifetime: lifetime, in seconds, to use for the `exp` claim. If None, use the default_lifetime defined at initialization time.
-          leeway: leeway, in seconds, to use for the `nbf` claim. If None, use the default_leeway defined at initialization time.
+          lifetime: lifetime, in seconds, to use for the `exp` claim. If None, use the default_lifetime defined at
+            initialization time.
+          leeway: leeway, in seconds, to use for the `nbf` claim. If None, use the default_leeway defined at
+            initialization time.
 
         Returns:
           the resulting signed token.

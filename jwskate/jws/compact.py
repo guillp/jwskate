@@ -30,33 +30,31 @@ class JwsCompact(BaseCompactToken):
     def __init__(self, value: bytes | str, max_size: int = 16 * 1024):
         super().__init__(value, max_size)
 
-        if self.value.count(b".") != 2:
-            raise InvalidJws(
-                "A JWS must contain a header, a payload and a signature, separated by dots"
-            )
+        parts = BinaPy(self.value).split(b".")
 
-        header, payload, signature = BinaPy(self.value).split(b".")
+        if len(parts) != 3:  # noqa: PLR2004
+            msg = "A JWS must contain a header, a payload and a signature, separated by dots"
+            raise InvalidJws(msg)
 
-        try:
-            self.headers = BinaPy(header).decode_from("b64u").parse_from("json")
-        except ValueError:
-            raise InvalidJws(
-                "Invalid JWS header: it must be a Base64URL-encoded JSON object"
-            )
+        header, payload, signature = parts
 
         try:
-            self.payload = BinaPy(payload).decode_from("b64u")
-        except ValueError:
-            raise InvalidJws(
-                "Invalid JWS payload: it must be a Base64URL-encoded binary data (bytes)"
-            )
+            self.headers = header.decode_from("b64u").parse_from("json")
+        except ValueError as exc:
+            msg = "Invalid JWS header: it must be a Base64URL-encoded JSON object"
+            raise InvalidJws(msg) from exc
 
         try:
-            self.signature = BinaPy(signature).decode_from("b64u")
-        except ValueError:
-            raise InvalidJws(
-                "Invalid JWS signature: it must be a Base64URL-encoded binary data (bytes)"
-            )
+            self.payload = payload.decode_from("b64u")
+        except ValueError as exc:
+            msg = "Invalid JWS payload: it must be a Base64URL-encoded binary data (bytes)"
+            raise InvalidJws(msg) from exc
+
+        try:
+            self.signature = signature.decode_from("b64u")
+        except ValueError as exc:
+            msg = "Invalid JWS signature: it must be a Base64URL-encoded binary data (bytes)"
+            raise InvalidJws(msg) from exc
 
     @classmethod
     def sign(
@@ -191,6 +189,4 @@ class JwsCompact(BaseCompactToken):
 
     def jws_signature(self, unprotected_header: Any = None) -> JwsSignature:
         """Return a JwsSignature based on this JWS Compact token."""
-        return JwsSignature.from_parts(
-            protected=self.headers, signature=self.signature, header=unprotected_header
-        )
+        return JwsSignature.from_parts(protected=self.headers, signature=self.signature, header=unprotected_header)

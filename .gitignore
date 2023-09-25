@@ -107,3 +107,9 @@ ENV/
 
 # mkdocs build dir
 site/
+
+# profiling data
+prof/
+
+# hatch-vcs
+_version.py

@@ -133,6 +133,7 @@ all = [
 
 [tool.black]
 line-length = 120
+preview = true
 include = '\.pyi?$'
 exclude = '''
 /(

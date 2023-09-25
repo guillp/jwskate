@@ -22,8 +22,7 @@ class PublicKeyProtocol(Protocol):
         self,
         encoding: serialization.Encoding,
         format: serialization.PublicFormat,  # noqa: A002
-    ) -> bytes:
-        ...
+    ) -> bytes: ...
 
 
 @runtime_checkable
@@ -35,8 +34,7 @@ class PrivateKeyProtocol(Protocol):
         encoding: serialization.Encoding,
         format: serialization.PrivateFormat,  # noqa: A002
         encryption_algorithm: serialization.KeySerializationEncryption,
-    ) -> bytes:
-        ...
+    ) -> bytes: ...
 
     def public_key(self) -> PublicKeyProtocol:  # noqa: D102
         ...

@@ -57,18 +57,12 @@ def test_rfc8037_ed25519() -> None:
     )
     assert isinstance(jwk, OKPJwk)
     assert jwk.is_private
-    assert jwk.private_key == bytes.fromhex(
-        """9d 61 b1 9d ef fd 5a 60 ba 84 4a f4 92 ec 2c c4
-   44 49 c5 69 7b 32 69 19 70 3b ac 03 1c ae 7f 60""".replace(
-            " ", ""
-        )
-    )
-    assert jwk.public_key == bytes.fromhex(
-        """d7 5a 98 01 82 b1 0a b7 d5 4b fe d3 c9 64 07 3a
-   0e e1 72 f3 da a6 23 25 af 02 1a 68 f7 07 51 1a""".replace(
-            " ", ""
-        )
-    )
+    assert jwk.private_key == bytes.fromhex("""
+    9d 61 b1 9d ef fd 5a 60 ba 84 4a f4 92 ec 2c c4
+    44 49 c5 69 7b 32 69 19 70 3b ac 03 1c ae 7f 60""")
+    assert jwk.public_key == bytes.fromhex("""
+    d7 5a 98 01 82 b1 0a b7 d5 4b fe d3 c9 64 07 3a
+    0e e1 72 f3 da a6 23 25 af 02 1a 68 f7 07 51 1a""")
     assert jwk.public_jwk() == {
         "kty": "OKP",
         "crv": "Ed25519",
@@ -102,15 +96,11 @@ def test_rfc8037_x25519() -> None:
         }
     )
     assert isinstance(public_jwk, OKPJwk)
-    assert public_jwk.public_key == bytes.fromhex(
-        """de 9e db 7d 7b 7d c1 b4 d3 5b 61 c2 ec e4 35 37
-   3f 83 43 c8 5b 78 67 4d ad fc 7e 14 6f 88 2b 4f"""
-    )
+    assert public_jwk.public_key == bytes.fromhex("""de 9e db 7d 7b 7d c1 b4 d3 5b 61 c2 ec e4 35 37
+   3f 83 43 c8 5b 78 67 4d ad fc 7e 14 6f 88 2b 4f""")
 
-    ephemeral_secret = bytes.fromhex(
-        """77 07 6d 0a 73 18 a5 7d 3c 16 c1 72 51 b2 66 45
-   df 4c 2f 87 eb c0 99 2a b1 77 fb a5 1d b9 2c 2a"""
-    )
+    ephemeral_secret = bytes.fromhex("""77 07 6d 0a 73 18 a5 7d 3c 16 c1 72 51 b2 66 45
+   df 4c 2f 87 eb c0 99 2a b1 77 fb a5 1d b9 2c 2a""")
 
     ephemeral_private_key = OKPJwk.from_bytes(ephemeral_secret, use="enc")
 
@@ -128,10 +118,8 @@ def test_rfc8037_x25519() -> None:
         private_key=ephemeral_private_key.cryptography_key,
         public_key=public_jwk.cryptography_key,
     )
-    assert sender_shared_key == bytes.fromhex(
-        """4a 5d 9d 5b a4 ce 2d e1 72 8e 3b f4 80 35 0f 25
-   e0 7e 21 c9 47 d1 9e 33 76 f0 9b 3c 1e 16 17 42"""
-    )
+    assert sender_shared_key == bytes.fromhex("""4a 5d 9d 5b a4 ce 2d e1 72 8e 3b f4 80 35 0f 25
+   e0 7e 21 c9 47 d1 9e 33 76 f0 9b 3c 1e 16 17 42""")
 
 
 def test_rfc8037_x448() -> None:
@@ -145,19 +133,17 @@ def test_rfc8037_x448() -> None:
         }
     )
     assert isinstance(public_jwk, OKPJwk)
-    assert public_jwk.public_key == bytes.fromhex(
-        """3e b7 a8 29 b0 cd 20 f5 bc fc 0b 59 9b 6f ec cf
+    assert public_jwk.public_key == bytes.fromhex("""
+   3e b7 a8 29 b0 cd 20 f5 bc fc 0b 59 9b 6f ec cf
    6d a4 62 71 07 bd b0 d4 f3 45 b4 30 27 d8 b9 72
    fc 3e 34 fb 42 32 a1 3c a7 06 dc b5 7a ec 3d ae
-   07 bd c1 c6 7b f3 36 09"""
-    )
+   07 bd c1 c6 7b f3 36 09""")
 
-    ephemeral_secret = bytes.fromhex(
-        """9a 8f 49 25 d1 51 9f 57 75 cf 46 b0 4b 58 00 d4
-   ee 9e e8 ba e8 bc 55 65 d4 98 c2 8d d9 c9 ba f5
-   74 a9 41 97 44 89 73 91 00 63 82 a6 f1 27 ab 1d
-   9a c2 d8 c0 a5 98 72 6b"""
-    )
+    ephemeral_secret = bytes.fromhex("""
+    9a 8f 49 25 d1 51 9f 57 75 cf 46 b0 4b 58 00 d4
+    ee 9e e8 ba e8 bc 55 65 d4 98 c2 8d d9 c9 ba f5
+    74 a9 41 97 44 89 73 91 00 63 82 a6 f1 27 ab 1d
+    9a c2 d8 c0 a5 98 72 6b""")
 
     ephemeral_private_key = OKPJwk.from_bytes(ephemeral_secret, use="enc")
 
@@ -175,12 +161,11 @@ def test_rfc8037_x448() -> None:
         private_key=ephemeral_private_key.cryptography_key,
         public_key=public_jwk.cryptography_key,
     )
-    assert sender_shared_key == bytes.fromhex(
-        """07 ff f4 18 1a c6 cc 95 ec 1c 16 a9 4a 0f 74 d1
-   2d a2 32 ce 40 a7 75 52 28 1d 28 2b b6 0c 0b 56
-   fd 24 64 c3 35 54 39 36 52 1c 24 40 30 85 d5 9a
-   44 9a 50 37 51 4a 87 9d"""
-    )
+    assert sender_shared_key == bytes.fromhex("""
+    07 ff f4 18 1a c6 cc 95 ec 1c 16 a9 4a 0f 74 d1
+    2d a2 32 ce 40 a7 75 52 28 1d 28 2b b6 0c 0b 56
+    fd 24 64 c3 35 54 39 36 52 1c 24 40 30 85 d5 9a
+    44 9a 50 37 51 4a 87 9d""")
 
 
 def test_unknown_curve() -> None:

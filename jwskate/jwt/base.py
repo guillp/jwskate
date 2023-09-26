@@ -191,8 +191,8 @@ class Jwt(BaseCompactToken):
         return cls.sign(claims, key=sign_key, alg=sign_alg, extra_headers=sign_extra_headers).encrypt(enc_key, enc=enc, alg=enc_alg, extra_headers=enc_extra_headers)
 
     @classmethod
-    def decrypt_nested_jwt(cls, jwe: str | JweCompact, key: Jwk | dict[str, Any] | Any) -> Jwt:
-        """Decrypt a JWE that contains a nested JWT.
+    def decrypt_nested_jwt(cls, jwe: str | JweCompact, key: Jwk | dict[str, Any] | Any) -> SignedJwt:
+        """Decrypt a JWE that contains a nested signed JWT.
 
         It will return a [Jwt] instance for the inner JWT.
 
@@ -209,21 +209,20 @@ class Jwt(BaseCompactToken):
         """
         if not isinstance(jwe, JweCompact):
             jwe = JweCompact(jwe)
-        cleartext = jwe.decrypt(key)
-        return Jwt(cleartext)
+        return jwe.decrypt_jwt(key)
 
     @classmethod
     def decrypt_and_verify(
         cls,
         jwt: str | JweCompact,
         enc_key: Jwk | dict[str, Any] | Any,
-        sig_key: Jwk | dict[str, Any] | None | Any,
+        sig_key: Jwk | dict[str, Any] | Any,
         sig_alg: str | None = None,
         sig_algs: Iterable[str] | None = None,
     ) -> SignedJwt:
         """Decrypt then verify the signature of a JWT nested in a JWE.
 
-        This can only be used with signed then encrypted Jwt, such as those produce by `Jwt.sign_and_encrypt()`.
+        This can only be used with signed then encrypted Jwt, such as those produced by `SignedJwt.encrypt()`.
 
         Args:
             jwt: the JWE containing a nested signed JWT
@@ -240,17 +239,7 @@ class Jwt(BaseCompactToken):
             InvalidSignature: if the nested JWT signature is not valid
 
         """
-        from .signed import InvalidSignature, SignedJwt
-
-        nested_jwt = cls.decrypt_nested_jwt(jwt, enc_key)
-        if not isinstance(nested_jwt, SignedJwt):
-            msg = "Nested JWT is not signed"
-            raise TypeError(msg, nested_jwt)
-
-        if sig_key and nested_jwt.verify_signature(sig_key, sig_alg, sig_algs):
-            return nested_jwt
-
-        raise InvalidSignature()
+        return cls.decrypt_nested_jwt(jwt, enc_key).verify(sig_key, alg=sig_alg, algs=sig_algs)
 
     @classmethod
     def timestamp(cls, delta_seconds: int = 0) -> int:

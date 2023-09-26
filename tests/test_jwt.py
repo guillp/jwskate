@@ -427,7 +427,7 @@ def test_sign_and_encrypt() -> None:
         enc="A128GCM",
     )
     nested_inner_jwe = JweCompact.encrypt(inner_jwe, key=enc_jwk.public_jwk(), enc=enc)
-    with pytest.raises(TypeError):
+    with pytest.raises(InvalidJwt):
         Jwt.decrypt_and_verify(nested_inner_jwe, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk())
 
 
@@ -456,7 +456,7 @@ def test_sign_then_encrypt() -> None:
     assert inner_jwt.verify_signature(sign_jwk.public_jwk())
     assert inner_jwt.kid == sign_jwk.kid
 
-    verified_inner_jwt = enc_jwt.decrypt_jwt(enc_jwk).verify_signature(sign_jwk.public_jwk())
+    verified_inner_jwt = enc_jwt.decrypt_jwt(enc_jwk).verify(sign_jwk.public_jwk())
     assert isinstance(verified_inner_jwt, SignedJwt)
 
     # try to encrypt a JWT with an altered signature
@@ -474,7 +474,7 @@ def test_sign_then_encrypt() -> None:
         enc="A128GCM",
     )
     nested_inner_jwe = JweCompact.encrypt(inner_jwe, key=enc_jwk.public_jwk(), enc=enc)
-    with pytest.raises(TypeError):
+    with pytest.raises(InvalidJwt):
         Jwt.decrypt_and_verify(nested_inner_jwe, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk())
 
 

@@ -102,7 +102,7 @@ class JwtVerifier:
                 if jwt.verify_signature(jwk, alg=self.alg, algs=self.algs):
                     break
             else:
-                raise InvalidSignature()
+                raise InvalidSignature(jwt=jwt, key=self.jwkset, alg=self.alg, algs=self.algs)
 
         if jwt.is_expired(self.leeway):
             msg = f"Jwt token expired at {jwt.expires_at}"

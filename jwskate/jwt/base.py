@@ -172,6 +172,8 @@ class Jwt(BaseCompactToken):
 
         This is a convenience method to do both the signing and encryption, in appropriate order.
 
+        This is deprecated, use `Jwt.sign().encrypt()` instead.
+
         Args:
           claims: the payload to encrypt
           sign_key: the Jwk to use for signature
@@ -186,12 +188,7 @@ class Jwt(BaseCompactToken):
           the resulting JWE token, with the signed JWT as payload
 
         """
-        enc_extra_headers = enc_extra_headers or {}
-        enc_extra_headers.setdefault("cty", "JWT")
-
-        inner_jwt = cls.sign(claims, key=sign_key, alg=sign_alg, extra_headers=sign_extra_headers)
-        jwe = JweCompact.encrypt(inner_jwt, enc_key, enc=enc, alg=enc_alg, extra_headers=enc_extra_headers)
-        return jwe
+        return cls.sign(claims, key=sign_key, alg=sign_alg, extra_headers=sign_extra_headers).encrypt(enc_key, enc=enc, alg=enc_alg, extra_headers=enc_extra_headers)
 
     @classmethod
     def decrypt_nested_jwt(cls, jwe: str | JweCompact, key: Jwk | dict[str, Any] | Any) -> Jwt:

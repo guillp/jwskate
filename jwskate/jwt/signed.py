@@ -7,6 +7,7 @@ from typing import Any, Iterable
 
 from binapy import BinaPy
 
+from jwskate.jwe import JweCompact
 from jwskate.jwk import Jwk, to_jwk
 
 from .base import InvalidJwt, Jwt
@@ -386,3 +387,23 @@ class SignedJwt(Jwt):
                     )
             elif claim != value:
                 raise InvalidClaim(key, f"unexpected value for claim {key}", claim)
+
+    def encrypt(
+        self, key: Any, enc: str, alg: str | None = None, extra_headers: dict[str, Any] | None = None
+    ) -> JweCompact:
+        """Encrypt this JWT into a JWE.
+
+        The result is an encrypted (outer) JWT containing a signed (inner) JWT.
+
+        Arguments:
+            key: the encryption key to use
+            enc: the encryption alg to use
+            alg: the key management alg to use
+            extra_headers: additional headers to include in the outer JWE.
+
+        """
+        extra_headers = extra_headers or {}
+        extra_headers.setdefault("cty", "JWT")
+
+        jwe = JweCompact.encrypt(self, key, enc=enc, alg=alg, extra_headers=extra_headers)
+        return jwe

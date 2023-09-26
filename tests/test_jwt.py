@@ -431,6 +431,53 @@ def test_sign_and_encrypt() -> None:
         Jwt.decrypt_and_verify(nested_inner_jwe, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk())
 
 
+def test_sign_then_encrypt() -> None:
+    sign_alg = "ES256"
+    sign_jwk = Jwk.generate(alg=sign_alg).with_kid_thumbprint().with_usage_parameters()
+
+    enc_alg = "RSA-OAEP-256"
+    enc = "A128GCM"
+    enc_jwk = Jwk.generate(alg=enc_alg).with_kid_thumbprint().with_usage_parameters()
+
+    claims = {"iat": 1661759343, "exp": 1661759403, "nbf": 1661759323, "sub": "mysub"}
+
+    enc_jwt = Jwt.sign(claims, sign_jwk).encrypt(enc_jwk.public_jwk(), enc)
+
+    assert isinstance(enc_jwt, JweCompact)
+    assert enc_jwt.cty == "JWT"
+    assert enc_jwt.alg == enc_alg
+    assert enc_jwt.enc == enc
+    assert enc_jwt.kid == enc_jwk.kid
+
+    inner_jwt = enc_jwt.decrypt_jwt(enc_jwk)
+    assert isinstance(inner_jwt, SignedJwt)
+    assert inner_jwt.alg == sign_alg
+    assert inner_jwt.claims == claims
+    assert inner_jwt.verify_signature(sign_jwk.public_jwk())
+    assert inner_jwt.kid == sign_jwk.kid
+
+    verified_inner_jwt = enc_jwt.decrypt_jwt(enc_jwk).verify_signature(sign_jwk.public_jwk())
+    assert isinstance(verified_inner_jwt, SignedJwt)
+
+    # try to encrypt a JWT with an altered signature
+    altered_inner_jwt = bytes(verified_inner_jwt)[:-4] + (
+        b"aaaa" if not verified_inner_jwt.value.endswith(b"aaaa") else b"bbbb"
+    )
+    enc_altered_jwe = JweCompact.encrypt(altered_inner_jwt, key=enc_jwk.public_jwk(), enc=enc)
+    with pytest.raises(InvalidSignature):
+        Jwt.decrypt_and_verify(enc_altered_jwe, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk())
+
+    # trying to decrypt and verify a JWE nested in a JWE will raise a ValueError
+    inner_jwe = JweCompact.encrypt(
+        b"this_is_a_test",
+        key=Jwk.generate(alg="ECDH-ES+A128KW", crv="P-256").public_jwk(),
+        enc="A128GCM",
+    )
+    nested_inner_jwe = JweCompact.encrypt(inner_jwe, key=enc_jwk.public_jwk(), enc=enc)
+    with pytest.raises(TypeError):
+        Jwt.decrypt_and_verify(nested_inner_jwe, enc_key=enc_jwk, sig_key=sign_jwk.public_jwk())
+
+
 def test_sign_without_alg() -> None:
     jwk = Jwk.generate_for_kty("EC", crv="P-256")
     with pytest.raises(ValueError, match="signing alg is required"):

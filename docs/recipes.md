@@ -1,4 +1,4 @@
-from jwcrypto.jwa import JWAThis is a collection of recipes related to `jwskate` usage.
+This is a collection of recipes related to `jwskate` usage.
 
 # JWK
 

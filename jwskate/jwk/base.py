@@ -1039,14 +1039,14 @@ class Jwk(BaseJsonDict):
     @classmethod
     def from_pem(
         cls,
-        der: bytes | str,
+        pem: bytes | str,
         password: bytes | str | None = None,
         **kwargs: Any,
     ) -> Jwk:
         """Load a `Jwk` from a PEM encoded private or public key.
 
         Args:
-          der: the PEM encoded data to load
+          pem: the PEM encoded data to load
           password: the password to decrypt the PEM, if required. Should be bytes.
               If it is a string, it will be encoded with UTF-8.
           **kwargs: additional members to include in the `Jwk` (e.g. `kid`, `use`)
@@ -1055,14 +1055,14 @@ class Jwk(BaseJsonDict):
             a `Jwk` instance from the loaded key
 
         """
-        der = der.encode() if isinstance(der, str) else der
+        pem = pem.encode() if isinstance(pem, str) else pem
         password = password.encode("UTF-8") if isinstance(password, str) else password
 
         try:
-            cryptography_key = serialization.load_pem_private_key(der, password)
+            cryptography_key = serialization.load_pem_private_key(pem, password)
         except Exception as private_exc:
             try:
-                cryptography_key = serialization.load_pem_public_key(der)
+                cryptography_key = serialization.load_pem_public_key(pem)
 
             except Exception:
                 msg = "The provided data is not a private or a public PEM encoded key."

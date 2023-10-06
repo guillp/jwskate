@@ -4,8 +4,8 @@
 
 Subclasses of `Jwk` will implement the specific key types, like RSA, EC, OKP, and will provide an
 interface to access the specific attributes for each key type. Unless you are dealing with a
-specific key type and want to access the internal attributes, you should only ever need to use the
-interface from `Jwk`.
+specific key type and want to access its internal, type-dependent attributes, you should only
+need to use the interface from `Jwk`.
 
 """
 from __future__ import annotations
@@ -15,7 +15,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Mapping, SupportsBytes
 
 from binapy import BinaPy
+from cryptography import x509
 from cryptography.hazmat.primitives import serialization
+from typing_extensions import Self
 
 from jwskate.jwa import (
     BaseAESEncryptionAlg,
@@ -1173,6 +1175,15 @@ class Jwk(BaseJsonDict):
             )
 
     @classmethod
+    def from_x509(cls, x509_pem: str | bytes) -> Self:
+        """Read the public key from a X509 certificate, PEM formatted."""
+        if isinstance(x509_pem, str):
+            x509_pem = x509_pem.encode()
+
+        cert = x509.load_pem_x509_certificate(x509_pem)
+        return cls(cert.public_key())
+
+    @classmethod
     def generate(cls, *, alg: str | None = None, kty: str | None = None, **kwargs: Any) -> Jwk:
         """Generate a Private Key and return it as a `Jwk` instance.
 
@@ -1307,7 +1318,7 @@ def to_jwk(
 ) -> Jwk:
     """Convert any supported kind of key to a `Jwk`.
 
-    This optionally check if that key is private or symmetric.
+    This optionally checks if that key is private or symmetric.
 
     The key can be any type supported by Jwk:
     - a `cryptography` key instance

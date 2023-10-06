@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import warnings
 from functools import cached_property
-from typing import Any, Iterable, Mapping, SupportsBytes
+from typing import TYPE_CHECKING, Any, Iterable, Mapping, SupportsBytes
 
 from binapy import BinaPy
 
@@ -16,6 +16,9 @@ from jwskate.jwa import (
 from jwskate.jwk import Jwk, SymmetricJwk, to_jwk
 from jwskate.jwk.alg import UnsupportedAlg, select_alg_class, select_alg_classes
 from jwskate.token import BaseCompactToken
+
+if TYPE_CHECKING:
+    from jwskate.jwt import SignedJwt
 
 
 class InvalidJwe(ValueError):
@@ -241,6 +244,26 @@ separated by dots."""
             alg=self.enc,
         )
         return plaintext
+
+    def decrypt_jwt(
+        self,
+        key: Jwk | dict[str, Any] | Any,
+        *,
+        alg: str | None = None,
+        algs: Iterable[str] | None = None,
+    ) -> SignedJwt:
+        """Convenience method to decrypt an inner JWT.
+
+        Takes the same args as decrypt(), but returns a `SignedJwt`.
+
+        Raises:
+            InvalidJwt: if the content is not a syntactically valid signed JWT.
+
+        """
+        from jwskate.jwt import SignedJwt
+
+        raw = self.decrypt(key, alg=alg, algs=algs)
+        return SignedJwt(raw)
 
     @classmethod
     def encrypt_with_password(

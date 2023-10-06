@@ -96,14 +96,13 @@ class JwtVerifier:
 
         if "kid" in jwt.headers:
             jwk = self.jwkset.get_jwk_by_kid(jwt.kid)
-            if not jwt.verify_signature(jwk, alg=self.alg, algs=self.algs):
-                raise InvalidSignature()
+            jwt.verify(jwk, alg=self.alg, algs=self.algs)
         else:
             for jwk in self.jwkset.verification_keys():
                 if jwt.verify_signature(jwk, alg=self.alg, algs=self.algs):
                     break
             else:
-                raise InvalidSignature()
+                raise InvalidSignature(jwt=jwt, key=self.jwkset, alg=self.alg, algs=self.algs)
 
         if jwt.is_expired(self.leeway):
             msg = f"Jwt token expired at {jwt.expires_at}"

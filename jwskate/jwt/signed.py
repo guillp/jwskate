@@ -6,7 +6,9 @@ from functools import cached_property
 from typing import Any, Iterable
 
 from binapy import BinaPy
+from typing_extensions import Self
 
+from jwskate.jwe import JweCompact
 from jwskate.jwk import Jwk, to_jwk
 
 from .base import InvalidJwt, Jwt
@@ -18,6 +20,12 @@ class ExpiredJwt(ValueError):
 
 class InvalidSignature(ValueError):
     """Raised when trying to validate a JWT with an invalid signature."""
+
+    def __init__(self, jwt: SignedJwt, key: Any, alg: str | None, algs: Iterable[str] | None):
+        self.jwt = jwt
+        self.key = key
+        self.alg = alg
+        self.algs = algs
 
 
 class InvalidClaim(ValueError):
@@ -98,6 +106,19 @@ class SignedJwt(Jwt):
         key = to_jwk(key)
 
         return key.verify(data=self.signed_part, signature=self.signature, alg=alg, algs=algs)
+
+    def verify(self, key: Jwk | Any, *, alg: str | None = None, algs: Iterable[str] | None = None) -> Self:
+        """Convenience method to verify the signature inline.
+
+        Returns `self` on success, raises an exception on failure.
+
+        Raises:
+            InvalidSignature: if the signature does not verify.
+
+        """
+        if self.verify_signature(key, alg=alg, algs=algs):
+            return self
+        raise InvalidSignature(jwt=self, key=key, alg=alg, algs=algs)
 
     def is_expired(self, leeway: int = 0) -> bool | None:
         """Check if this token is expired, based on its `exp` claim.
@@ -315,7 +336,7 @@ class SignedJwt(Jwt):
         """
         return self.value
 
-    def validate(  # noqa: C901
+    def validate(
         self,
         key: Jwk | dict[str, Any] | Any,
         *,
@@ -354,9 +375,7 @@ class SignedJwt(Jwt):
           ExpiredJwt: if the expiration date is passed
 
         """
-        if not self.verify_signature(key, alg, algs):
-            msg = "Signature is not valid."
-            raise InvalidSignature(msg)
+        self.verify(key, alg=alg, algs=algs)
 
         if issuer is not None and self.issuer != issuer:
             msg = "Unexpected issuer"
@@ -386,3 +405,23 @@ class SignedJwt(Jwt):
                     )
             elif claim != value:
                 raise InvalidClaim(key, f"unexpected value for claim {key}", claim)
+
+    def encrypt(
+        self, key: Any, enc: str, alg: str | None = None, extra_headers: dict[str, Any] | None = None
+    ) -> JweCompact:
+        """Encrypt this JWT into a JWE.
+
+        The result is an encrypted (outer) JWT containing a signed (inner) JWT.
+
+        Arguments:
+            key: the encryption key to use
+            enc: the encryption alg to use
+            alg: the key management alg to use
+            extra_headers: additional headers to include in the outer JWE.
+
+        """
+        extra_headers = extra_headers or {}
+        extra_headers.setdefault("cty", "JWT")
+
+        jwe = JweCompact.encrypt(self, key, enc=enc, alg=alg, extra_headers=extra_headers)
+        return jwe

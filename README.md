@@ -107,7 +107,7 @@ Now let's sign a JWT with the standardized lifetime, subject, audience and ID cl
 from jwskate import Jwk, JwtSigner
 
 private_jwk = Jwk.generate(alg="ES256")
-signer = JwtSigner(issuer="https://myissuer.com", jwk=private_jwk)
+signer = JwtSigner(issuer="https://myissuer.com", key=private_jwk)
 jwt = signer.sign(
     subject="some_sub",
     audience="some_aud",

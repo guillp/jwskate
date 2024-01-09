@@ -57,7 +57,7 @@ class JwtSigner:
 
     Args:
         issuer: the issuer string to use as `ìss` claim for signed tokens.
-        jwk: the private Jwk to use to sign tokens.
+        key: the private Jwk to use to sign tokens.
         alg: the signing alg to use to sign tokens.
         default_lifetime: the default lifetime, in seconds, to use for claim `exp`. This can be overridden
             when calling `.sign()`
@@ -68,16 +68,16 @@ class JwtSigner:
 
     def __init__(
         self,
-        issuer: str,
-        jwk: Jwk,
+        key: Jwk | Any,
         *,
+        issuer: str | None = None,
         alg: str | None = None,
         default_lifetime: int = 60,
         default_leeway: int | None = None,
     ):
         self.issuer = issuer
-        self.jwk = jwk
-        self.alg = jwk.alg or alg
+        self.jwk = Jwk(key)
+        self.alg = alg
         self.default_lifetime = default_lifetime
         self.default_leeway = default_leeway
 

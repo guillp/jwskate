@@ -98,12 +98,11 @@ from .jwk import (
     select_alg_classes,
     to_jwk,
 )
-from .jws import InvalidJws, JwsCompact, JwsJsonFlat, JwsJsonGeneral, JwsSignature
+from .jws import InvalidJws, InvalidSignature, JwsCompact, JwsJsonFlat, JwsJsonGeneral, JwsSignature
 from .jwt import (
     ExpiredJwt,
     InvalidClaim,
     InvalidJwt,
-    InvalidSignature,
     Jwt,
     JwtSigner,
     JwtVerifier,

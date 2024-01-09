@@ -11,22 +11,13 @@ from typing_extensions import Self
 
 from jwskate.jwe import JweCompact
 from jwskate.jwk import Jwk, to_jwk
+from jwskate.jws import InvalidSignature
 
 from .base import InvalidJwt, Jwt
 
 
 class ExpiredJwt(ValueError):
     """Raised when trying to validate an expired JWT token."""
-
-
-class InvalidSignature(ValueError):
-    """Raised when trying to validate a JWT with an invalid signature."""
-
-    def __init__(self, jwt: SignedJwt, key: Any, alg: str | None, algs: Iterable[str] | None):
-        self.jwt = jwt
-        self.key = key
-        self.alg = alg
-        self.algs = algs
 
 
 class InvalidClaim(ValueError):
@@ -140,7 +131,7 @@ class SignedJwt(Jwt):
         """
         if self.verify_signature(key, alg=alg, algs=algs):
             return self
-        raise InvalidSignature(jwt=self, key=key, alg=alg, algs=algs)
+        raise InvalidSignature(data=self, key=key, alg=alg, algs=algs)
 
     def is_expired(self, leeway: int = 0) -> bool | None:
         """Check if this token is expired, based on its `exp` claim.

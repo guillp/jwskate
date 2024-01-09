@@ -3,12 +3,23 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Any, Iterable, Mapping, TypeVar
+from typing import Any, Iterable, Mapping, SupportsBytes, TypeVar
 
 from binapy import BinaPy
 
 from jwskate.jwk import Jwk, to_jwk
 from jwskate.token import BaseJsonDict
+
+
+class InvalidSignature(ValueError):
+    """Raised when trying to validate a token with an invalid signature."""
+
+    def __init__(self, data: SupportsBytes, key: Any, alg: str | None, algs: Iterable[str] | None) -> None:
+        self.data = data
+        self.key = key
+        self.alg = alg
+        self.algs = algs
+
 
 S = TypeVar("S", bound="JwsSignature")
 

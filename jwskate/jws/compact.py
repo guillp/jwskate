@@ -1,4 +1,5 @@
 """This module implements the JWS Compact format."""
+
 from __future__ import annotations
 
 from functools import cached_property

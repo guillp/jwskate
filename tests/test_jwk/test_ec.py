@@ -113,15 +113,13 @@ def test_pem_key(crv: str) -> None:
 
 
 def test_public_private() -> None:
-    jwk = Jwk(
-        {
-            "kty": "EC",
-            "crv": "P-256",
-            "x": "WtjnvHG9b_IKBLn4QYTHz-AdoAiO_ork5LH1BL_5tyI",
-            "y": "C0YfOUDuCOvTCt7hAqO-f9z8_JdOnOPbfYmUk-RosHA",
-            "d": "EnGZlkoa4VUsnl72LcRRychNJ2FFknm_ph855tNuPZ8",
-        }
-    )
+    jwk = Jwk({
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "WtjnvHG9b_IKBLn4QYTHz-AdoAiO_ork5LH1BL_5tyI",
+        "y": "C0YfOUDuCOvTCt7hAqO-f9z8_JdOnOPbfYmUk-RosHA",
+        "d": "EnGZlkoa4VUsnl72LcRRychNJ2FFknm_ph855tNuPZ8",
+    })
 
     assert (
         ECJwk.public(

@@ -208,6 +208,7 @@ ignore = [
     "N818", # Exception names should be named with an Error suffix
     "PLR0912", # Too many branches
     "D107", # Missing docstring in `__init__`
+    "ISC001", # Implicitly concatenated string literals on one line
 ]
 exclude = [
     "tests"

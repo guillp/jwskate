@@ -1,4 +1,5 @@
 """This module implements the JWE Compact format."""
+
 from __future__ import annotations
 
 import warnings

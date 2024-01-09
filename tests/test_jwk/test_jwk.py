@@ -61,14 +61,12 @@ def test_invalid_jwk() -> None:
 
     with pytest.raises(InvalidJwk):
         # attribute 'd' (private exponent) is missing
-        Jwk(
-            {
-                "kty": "RSA",
-                "n": "oRHn4oGv23ylRL3RSsL4p_e6Ywinnj2N2tT5OLe5pEZTg-LFBhjFxcJaB-p1dh6XX47EtSfa-JHffU0o5ZRK2ySyNDtlrFAkOpAHH6U83ayE2QPYGzrFrrvHDa8wIMUWymzxpPwGgKBwZZqtTT6d-iy4Ux3AWV-bUv6Z7WijHnOy7aVzZ4dFERLVf2FaaYXDET7GO4v-oQ5ss_guYdmewN039jxkjz_KrA-0Fyhalf9hL8IHfpdpSlHosrmjORG5y9LkYK0J6zxSBF5ZvLIBK33BTzPPiCMwKLyAcV6qdcAcvV4kthKO0iUKBK4eE8D0N8HcSPvA9F_PpLS_k5F2lw",
-                "e": "AQAB",
-                "p": "0mzP9sbFxU5YxNNLgUEdRQSO-ojqWrzbI02PfQLGyzXumvOh_Qr73OpHStU8CAAcUBaQdRGidsVdb5cq6JG2zvbEEYiX-dCHqTJs8wfktGCL7eV-ZVh7fhJ1sYVBN20yv8aSH63uUPZnJXR1AUyrvRumuerdPxp8X951PESrJd0",
-            }
-        )
+        Jwk({
+            "kty": "RSA",
+            "n": "oRHn4oGv23ylRL3RSsL4p_e6Ywinnj2N2tT5OLe5pEZTg-LFBhjFxcJaB-p1dh6XX47EtSfa-JHffU0o5ZRK2ySyNDtlrFAkOpAHH6U83ayE2QPYGzrFrrvHDa8wIMUWymzxpPwGgKBwZZqtTT6d-iy4Ux3AWV-bUv6Z7WijHnOy7aVzZ4dFERLVf2FaaYXDET7GO4v-oQ5ss_guYdmewN039jxkjz_KrA-0Fyhalf9hL8IHfpdpSlHosrmjORG5y9LkYK0J6zxSBF5ZvLIBK33BTzPPiCMwKLyAcV6qdcAcvV4kthKO0iUKBK4eE8D0N8HcSPvA9F_PpLS_k5F2lw",
+            "e": "AQAB",
+            "p": "0mzP9sbFxU5YxNNLgUEdRQSO-ojqWrzbI02PfQLGyzXumvOh_Qr73OpHStU8CAAcUBaQdRGidsVdb5cq6JG2zvbEEYiX-dCHqTJs8wfktGCL7eV-ZVh7fhJ1sYVBN20yv8aSH63uUPZnJXR1AUyrvRumuerdPxp8X951PESrJd0",
+        })
 
     with pytest.raises(InvalidJwk):
         # k is not a str
@@ -84,15 +82,13 @@ def test_invalid_jwk() -> None:
 
     with pytest.raises(InvalidJwk):
         # key is public and has key_ops: ["sign"]
-        Jwk(
-            {
-                "kty": "EC",
-                "key_ops": ["sign"],
-                "crv": "P-256",
-                "x": "vGVh-60pT34a0JLeiaers66I0JLRilpf5tbnZsa-q3U",
-                "y": "y99gwPgQH1lrIBQPwgJoHCoeQjF96M7XfxGXu_Pjyzk",
-            }
-        )
+        Jwk({
+            "kty": "EC",
+            "key_ops": ["sign"],
+            "crv": "P-256",
+            "x": "vGVh-60pT34a0JLeiaers66I0JLRilpf5tbnZsa-q3U",
+            "y": "y99gwPgQH1lrIBQPwgJoHCoeQjF96M7XfxGXu_Pjyzk",
+        })
 
     with pytest.raises(TypeError):
         Jwk.from_cryptography_key(object())
@@ -185,16 +181,14 @@ def test_invalid_params() -> None:
         Jwk({"kty": "oct", "k": "foobar", "kid": 1.34}).kid
 
     with pytest.raises(InvalidJwk):
-        Jwk(
-            {
-                "kty": "EC",
-                "crv": "P-256",
-                "x": "SOlwe9_nRwz2f9Y2aSB9d7D-AXTSSBlAQd5HZUIEGLA",
-                "y": "Pzk9Gd4wwbx9STkK_RfWqxnfU9AwpvWZzf_K0GpaQZo",
-                "d": "Invalid-private-key--EHzgbRaNKRCMhk6jiCT-ZQ",
-                "alg": "ES256",
-            }
-        )
+        Jwk({
+            "kty": "EC",
+            "crv": "P-256",
+            "x": "SOlwe9_nRwz2f9Y2aSB9d7D-AXTSSBlAQd5HZUIEGLA",
+            "y": "Pzk9Gd4wwbx9STkK_RfWqxnfU9AwpvWZzf_K0GpaQZo",
+            "d": "Invalid-private-key--EHzgbRaNKRCMhk6jiCT-ZQ",
+            "alg": "ES256",
+        })
 
 
 def test_invalid_class_for_kty() -> None:
@@ -246,22 +240,20 @@ def test_use_key_ops_with_alg(alg: str, use: str, private_key_ops: tuple[str], p
 
 def test_thumbprint() -> None:
     # key from https://www.rfc-editor.org/rfc/rfc7638.html#section-3.1
-    jwk = Jwk(
-        {
-            "kty": "RSA",
-            "n": (
-                "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAt"
-                "VT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn6"
-                "4tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FD"
-                "W2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n9"
-                "1CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINH"
-                "aQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw"
-            ),
-            "e": "AQAB",
-            "alg": "RS256",
-            "kid": "2011-04-29",
-        }
-    )
+    jwk = Jwk({
+        "kty": "RSA",
+        "n": (
+            "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAt"
+            "VT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn6"
+            "4tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FD"
+            "W2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n9"
+            "1CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINH"
+            "aQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw"
+        ),
+        "e": "AQAB",
+        "alg": "RS256",
+        "kid": "2011-04-29",
+    })
 
     assert jwk.thumbprint() == "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"
     assert (

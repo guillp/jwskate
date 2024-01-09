@@ -1,4 +1,5 @@
 """This module implements direct use of a shared symmetric key as Key Management algorithm."""
+
 from __future__ import annotations
 
 from binapy import BinaPy

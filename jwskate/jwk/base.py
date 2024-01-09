@@ -8,6 +8,7 @@ specific key type and want to access its internal, type-dependent attributes, yo
 need to use the interface from `Jwk`.
 
 """
+
 from __future__ import annotations
 
 import warnings

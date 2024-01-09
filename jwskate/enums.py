@@ -3,6 +3,7 @@
 See [IANA JOSE](https://www.iana.org/assignments/jose/jose.xhtml).
 
 """
+
 from __future__ import annotations
 
 

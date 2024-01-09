@@ -1,4 +1,5 @@
-"""This modules contains the `Jwt` base class."""
+"""This module contains the `Jwt` base class."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -21,7 +22,7 @@ class InvalidJwt(ValueError):
 class Jwt(BaseCompactToken):
     """Represents a Json Web Token."""
 
-    def __new__(cls, value: bytes | str, max_size: int = 16 * 1024) -> SignedJwt | JweCompact | Jwt:  # type: ignore[misc] # noqa: E501
+    def __new__(cls, value: bytes | str, max_size: int = 16 * 1024) -> SignedJwt | JweCompact | Jwt:  # type: ignore[misc]
         """Allow parsing both Signed and Encrypted JWTs.
 
         This returns the appropriate subclass or instance depending on the number of dots (.) in the serialized JWT.
@@ -188,7 +189,9 @@ class Jwt(BaseCompactToken):
           the resulting JWE token, with the signed JWT as payload
 
         """
-        return cls.sign(claims, key=sign_key, alg=sign_alg, extra_headers=sign_extra_headers).encrypt(enc_key, enc=enc, alg=enc_alg, extra_headers=enc_extra_headers)
+        return cls.sign(claims, key=sign_key, alg=sign_alg, extra_headers=sign_extra_headers).encrypt(
+            enc_key, enc=enc, alg=enc_alg, extra_headers=enc_extra_headers
+        )
 
     @classmethod
     def decrypt_nested_jwt(cls, jwe: str | JweCompact, key: Jwk | dict[str, Any] | Any) -> SignedJwt:

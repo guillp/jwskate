@@ -1,4 +1,5 @@
 """This module implements AES-GCM based encryption algorithms."""
+
 from __future__ import annotations
 
 from typing import SupportsBytes

@@ -1,4 +1,5 @@
 """This module contains several utilities for algorithmic agility."""
+
 from __future__ import annotations
 
 import warnings

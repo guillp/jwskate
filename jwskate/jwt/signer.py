@@ -23,6 +23,7 @@ assert isinstance(signer.jwk, ECJwk) and signer.jwk.is_private
 ```
 
 """
+
 from __future__ import annotations
 
 import uuid

@@ -1,4 +1,5 @@
 """Tests for jwskate.jwa.encryption submodule."""
+
 from __future__ import annotations
 
 import pytest

@@ -7,6 +7,7 @@ cryptographic operations as methods. The cryptographic operations themselves are
 [RFC7518]: https://www.rfc-editor.org/rfc/rfc7518
 
 """
+
 from __future__ import annotations
 
 from .base import (

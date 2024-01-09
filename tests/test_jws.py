@@ -443,8 +443,8 @@ def test_verify_signature_by_jwcrypto(
         signature_alg: the signature alg
 
     """
-    import jwcrypto.jwk  # type: ignore[import]
-    import jwcrypto.jws  # type: ignore[import]
+    import jwcrypto.jwk  # type: ignore[import-untyped]
+    import jwcrypto.jws  # type: ignore[import-untyped]
 
     jwk = jwcrypto.jwk.JWK(**verification_jwk)
     jws = jwcrypto.jws.JWS()

@@ -179,7 +179,7 @@ class Jwk(BaseJsonDict):
 
                 for jwk_class in Jwk.__subclasses__():
                     if kty == jwk_class.KTY:
-                        return super().__new__(jwk_class)  # type: ignore[type-var]
+                        return super().__new__(jwk_class)
 
                 msg = "Unsupported Key Type"
                 raise InvalidJwk(msg, kty)
@@ -188,7 +188,7 @@ class Jwk(BaseJsonDict):
                 return cls.from_json(key)
             else:
                 return cls.from_cryptography_key(key, **kwargs)
-        return super().__new__(cls, key, **kwargs)  # type: ignore[type-var]
+        return super().__new__(cls, key, **kwargs)
 
     def __init__(self, params: dict[str, Any] | Any, *, include_kid_thumbprint: bool = False):
         if isinstance(params, dict):  # this is to avoid double init due to the __new__ above

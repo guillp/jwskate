@@ -632,9 +632,9 @@ def test_decrypt_by_jwcrypto(
         encryption_alg: the encryption alg
 
     """
-    import jwcrypto.jwe  # type: ignore[import]
-    import jwcrypto.jwk  # type: ignore[import]
-    from jwcrypto.common import InvalidJWEOperation, json_encode  # type: ignore[import]
+    import jwcrypto.jwe  # type: ignore[import-untyped]
+    import jwcrypto.jwk  # type: ignore[import-untyped]
+    from jwcrypto.common import InvalidJWEOperation, json_encode  # type: ignore[import-untyped]
 
     if key_management_alg in JWCRYPTO_UNSUPPORTED_ALGS:
         pytest.skip(f"jwcrypto doesn't support key management alg {key_management_alg}")

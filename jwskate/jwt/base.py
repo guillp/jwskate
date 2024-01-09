@@ -52,6 +52,7 @@ class Jwt(BaseCompactToken):
         cls,
         claims: dict[str, Any],
         key: Jwk | dict[str, Any] | Any,
+        *,
         alg: str | None = None,
         typ: str | None = "JWT",
         extra_headers: dict[str, Any] | None = None,
@@ -95,6 +96,7 @@ class Jwt(BaseCompactToken):
         claims: dict[str, Any],
         headers: dict[str, Any],
         key: Jwk | dict[str, Any] | Any,
+        *,
         alg: str | None = None,
     ) -> SignedJwt:
         """Sign provided headers and claims with a private key and return the resulting `SignedJwt`.
@@ -130,6 +132,7 @@ class Jwt(BaseCompactToken):
     def unprotected(
         cls,
         claims: dict[str, Any],
+        *,
         typ: str | None = "JWT",
         extra_headers: dict[str, Any] | None = None,
     ) -> SignedJwt:

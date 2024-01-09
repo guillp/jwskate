@@ -70,6 +70,7 @@ class JwtSigner:
         self,
         issuer: str,
         jwk: Jwk,
+        *,
         alg: str | None = None,
         default_lifetime: int = 60,
         default_leeway: int | None = None,
@@ -82,6 +83,7 @@ class JwtSigner:
 
     def sign(
         self,
+        *,
         subject: str | None = None,
         audience: str | Iterable[str] | None = None,
         extra_claims: dict[str, Any] | None = None,
@@ -146,6 +148,7 @@ class JwtSigner:
     @classmethod
     def with_random_key(
         cls,
+        *,
         issuer: str,
         alg: str,
         default_lifetime: int = 60,
@@ -166,10 +169,11 @@ class JwtSigner:
 
         """
         jwk = Jwk.generate_for_alg(alg, kid=kid).with_kid_thumbprint()
-        return cls(issuer, jwk, alg, default_lifetime, default_leeway)
+        return cls(issuer=issuer, key=jwk, alg=alg, default_lifetime=default_lifetime, default_leeway=default_leeway)
 
     def verifier(
         self,
+        *,
         audience: str,
         verifiers: Iterable[Callable[[SignedJwt], None]] | None = None,
         **kwargs: Any,

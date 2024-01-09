@@ -96,7 +96,7 @@ def test_unprotected() -> None:
 
 def test_jwt_signer_and_verifier(issuer: str, freezer: FrozenDateTimeFactory) -> None:
     audience = "some_audience"
-    signer = JwtSigner.with_random_key(issuer, alg="ES256")
+    signer = JwtSigner.with_random_key(issuer=issuer, alg="ES256")
     now = datetime.now(timezone.utc)
     jwt = signer.sign(subject="some_id", audience=audience, extra_claims={"foo": "bar"})
     assert isinstance(jwt, SignedJwt)

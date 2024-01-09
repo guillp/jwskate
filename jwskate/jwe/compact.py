@@ -221,6 +221,7 @@ separated by dots."""
     def decrypt(
         self,
         key: Jwk | dict[str, Any] | Any,
+        *,
         alg: str | None = None,
         algs: Iterable[str] | None = None,
     ) -> BinaPy:

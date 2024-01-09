@@ -136,7 +136,7 @@ class JwsCompact(BaseCompactToken):
         alg: str | None = None,
         algs: Iterable[str] | None = None,
     ) -> bool:
-        """Verify the signature from this JwsCompact using a Jwk.
+        """Verify the signature from this JwsCompact using a key.
 
         Args:
           key: the Jwk to use to validate this signature

@@ -37,13 +37,13 @@ from .verifier import JwtVerifier
 
 
 class JwtSigner:
-    """A helper class to easily sign JWTs with standardised claims.
+    """A helper class to easily sign JWTs with standardized claims.
 
-    The standardised claims include:
+    The standardized claims include:
 
-       - `ìat`: issued at date
+       - `Ìat`: issued at date
        - `exp`: expiration date
-       - `nbf`: not before date:
+       - `nbf`: not before date
        - `iss`: issuer identifier
        - `sub`: subject identifier
        - `aud`: audience identifier
@@ -174,7 +174,7 @@ class JwtSigner:
         verifiers: Iterable[Callable[[SignedJwt], None]] | None = None,
         **kwargs: Any,
     ) -> JwtVerifier:
-        """Return the matching JwtVerifier, initialized with the public key."""
+        """Return the matching `JwtVerifier`, initialized with the public key."""
         return JwtVerifier(
             issuer=self.issuer,
             jwkset=self.jwk.public_jwk().as_jwks(),

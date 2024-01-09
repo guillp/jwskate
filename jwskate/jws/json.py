@@ -1,4 +1,4 @@
-"""This module implement the JWS JSON flat and general formats."""
+"""This module implements the JWS JSON flat and general formats."""
 
 from __future__ import annotations
 

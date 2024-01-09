@@ -14,9 +14,9 @@ S = TypeVar("S", bound="JwsSignature")
 
 
 class JwsSignature(BaseJsonDict):
-    """Represents a JWS Signature.
+    """Represent a JWS Signature.
 
-    A JWS Signature has
+    A JWS Signature has:
 
      - a protected header (as a JSON object)
      - a signature value (as raw data)

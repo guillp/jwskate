@@ -246,7 +246,7 @@ class Jwt(BaseCompactToken):
 
     @classmethod
     def timestamp(cls, delta_seconds: int = 0) -> int:
-        """Return an integer timestamp that is suitable for use in Jwt tokens.
+        """Return an integer timestamp that is suitable for use in JWT tokens.
 
         Timestamps are used in particular for `iat`, `exp` and `nbf` claims.
 

@@ -116,6 +116,27 @@ class SignedJwt(Jwt):
         Raises:
             InvalidSignature: if the signature does not verify.
 
+        Return:
+            the same `SignedJwt`, if the signature is verified.
+
+        Usage:
+            ```python
+            jwt = SignedJwt(
+                "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJURVNUIn0.tIUFZqEZD12odEyBWscuxc4USspdYfJKhxPN0JXVMK97SUM69HrU5MGgocyyBbx1x9yIAkV7rNjcviqwGoVvsQ"
+            ).verify(
+                {
+                    "kty": "EC",
+                    "alg": "ES256",
+                    "crv": "P-256",
+                    "x": "T_RLrReYRPIknDpIEjLUoy7ibAbqJDfHe03mkEjI_oU",
+                    "y": "8MM4v58j8IHag6uibgC0Qn275bl9c9JR0UD0TwFgMPM",
+                }
+            )
+
+            # you can now do your business with this verified JWT:
+            assert jwt.claims == {"sub": "TEST"}
+            ```
+
         """
         if self.verify_signature(key, alg=alg, algs=algs):
             return self

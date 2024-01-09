@@ -224,7 +224,7 @@ separated by dots."""
         alg: str | None = None,
         algs: Iterable[str] | None = None,
     ) -> BinaPy:
-        """Decrypts this `Jwe` payload using a `Jwk`.
+        """Decrypt the payload from this JWE using a decryption key.
 
         Args:
           key: the decryption key

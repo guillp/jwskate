@@ -647,7 +647,7 @@ class Jwk(BaseJsonDict):
         return list(self.ENCRYPTION_ALGORITHMS)
 
     def sign(self, data: bytes | SupportsBytes, alg: str | None = None) -> BinaPy:
-        """Sign a data using this Jwk, and return the generated signature.
+        """Sign data using this Jwk, and return the generated signature.
 
         Args:
           data: the data to sign

@@ -98,7 +98,7 @@ class BaseCompactToken:
         if kid is None or not isinstance(kid, str):
             msg = "This token doesn't have a valid 'kid' header"
             raise AttributeError(msg)
-        return kid
+        return kid  # type: ignore[no-any-return]
 
     @cached_property
     def typ(self) -> str:

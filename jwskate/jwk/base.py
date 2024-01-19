@@ -305,12 +305,18 @@ class Jwk(BaseJsonDict):
         return alg
 
     @property
-    def kid(self) -> str | None:
-        """Return the JWK key ID (kid), if present."""
+    def kid(self) -> str:
+        """Return the JWK key ID (kid).
+
+        If the kid is not explicitly set, the RFC7638 key thumbprint is returned.
+
+        """
         kid = self.get("kid")
         if kid is not None and not isinstance(kid, str):  # pragma: no branch
             msg = f"invalid kid type {type(kid)}"
             raise TypeError(msg, kid)
+        if kid is None:
+            return self.thumbprint()
         return kid
 
     @property

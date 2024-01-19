@@ -150,9 +150,9 @@ class ECJwk(Jwk):
             dict(
                 kty=cls.KTY,
                 crv=crv,
-                x=BinaPy.from_int(x, coord_size).to("b64u").ascii(),
-                y=BinaPy.from_int(y, coord_size).to("b64u").ascii(),
-                d=BinaPy.from_int(d, coord_size).to("b64u").ascii(),
+                x=BinaPy.from_int(x, length=coord_size).to("b64u").ascii(),
+                y=BinaPy.from_int(y, length=coord_size).to("b64u").ascii(),
+                d=BinaPy.from_int(d, length=coord_size).to("b64u").ascii(),
                 **{k: v for k, v in params.items() if v is not None},
             )
         )
@@ -218,12 +218,12 @@ class ECJwk(Jwk):
             msg = f"Unsupported Curve {cryptography_key.curve.name}"
             raise NotImplementedError(msg)
 
-        x = BinaPy.from_int(public_numbers.x, crv.coordinate_size).to("b64u").ascii()
-        y = BinaPy.from_int(public_numbers.y, crv.coordinate_size).to("b64u").ascii()
+        x = BinaPy.from_int(public_numbers.x, length=crv.coordinate_size).to("b64u").ascii()
+        y = BinaPy.from_int(public_numbers.y, length=crv.coordinate_size).to("b64u").ascii()
         parameters = {"kty": KeyTypes.EC, "crv": crv.name, "x": x, "y": y}
         if isinstance(cryptography_key, ec.EllipticCurvePrivateKey):
             pn = cryptography_key.private_numbers()  # type: ignore[attr-defined]
-            d = BinaPy.from_int(pn.private_value, crv.coordinate_size).to("b64u").ascii()
+            d = BinaPy.from_int(pn.private_value, length=crv.coordinate_size).to("b64u").ascii()
             parameters["d"] = d
 
         return cls(parameters)

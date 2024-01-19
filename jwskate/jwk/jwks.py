@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
+
+from typing_extensions import override
 
 from jwskate.token import BaseJsonDict
 
@@ -17,8 +19,8 @@ class JwkSet(BaseJsonDict):
     methods to get the keys, add or remove keys, and verify signatures
     using keys from this set.
 
-    - a `dict` from the parsed JSON object representing this JwkSet (in paramter `jwks`)
-    - a list of `Jwk` (in parameter `keys`
+    - a `dict` from the parsed JSON object representing this JwkSet (in parameter `jwks`)
+    - a list of `Jwk` (in parameter `keys`)
     - nothing, to initialize an empty JwkSet
 
     Args:
@@ -29,21 +31,23 @@ class JwkSet(BaseJsonDict):
 
     def __init__(
         self,
-        jwks: dict[str, Any] | None = None,
-        keys: Iterable[Jwk | dict[str, Any]] | None = None,
+        jwks: Mapping[str, Any] | None = None,
+        keys: Iterable[Jwk | Mapping[str, Any]] | None = None,
     ):
-        if jwks is None and keys is None:
-            keys = []
+        super().__init__({k: v for k, v in jwks.items() if k != "keys"} if jwks else {})
+        if keys is None and jwks is not None and "keys" in jwks:
+            keys = jwks.get("keys")
+        if keys:
+            for key in keys:
+                self.add_jwk(key)
 
-        if jwks is not None:
-            keys = jwks.pop("keys", [])
-            super().__init__(jwks)  # init the dict with all the dict content that is not keys
+    @override
+    def __setitem__(self, name: str, value: Any) -> None:
+        if name == "keys":
+            for key in value:
+                self.add_jwk(key)
         else:
-            super().__init__()
-
-        if keys is not None:
-            for jwk in keys:
-                self.add_jwk(jwk)
+            super().__setitem__(name, value)
 
     @property
     def jwks(self) -> list[Jwk]:
@@ -53,7 +57,7 @@ class JwkSet(BaseJsonDict):
             a list of `Jwk`
 
         """
-        return self.get("keys", [])  # type: ignore[no-any-return]
+        return self.get("keys", [])
 
     def get_jwk_by_kid(self, kid: str) -> Jwk:
         """Return a Jwk from this JwkSet, based on its kid.
@@ -84,35 +88,23 @@ class JwkSet(BaseJsonDict):
 
     def add_jwk(
         self,
-        key: Jwk | dict[str, Any] | Any,
-        kid: str | None = None,
-        use: str | None = None,
+        key: Jwk | Mapping[str, Any] | Any,
     ) -> str:
         """Add a Jwk in this JwkSet.
 
         Args:
           key: the Jwk to add (either a `Jwk` instance, or a dict containing the Jwk parameters)
-          kid: the kid to use, if `jwk` doesn't contain one
-          use: the defined use for the added Jwk
 
         Returns:
-          the kid from the added Jwk (it may be generated if no kid is provided)
+          the key ID. It will be generated if missing from the given Jwk.
 
         """
-        key = to_jwk(key)
+        key = to_jwk(key).with_kid_thumbprint()
 
-        self.setdefault("keys", [])
+        self.data.setdefault("keys", [])
+        self.data["keys"].append(key)
 
-        kid = key.get("kid", kid)
-        if not kid:
-            kid = key.thumbprint()
-        key["kid"] = kid
-        use = key.get("use", use)
-        if use:
-            key["use"] = use
-        self.jwks.append(key)
-
-        return kid
+        return key.kid
 
     def remove_jwk(self, kid: str) -> None:
         """Remove a Jwk from this JwkSet, based on a `kid`.
@@ -198,7 +190,7 @@ class JwkSet(BaseJsonDict):
             jwk = self.get_jwk_by_kid(kid)
             return jwk.verify(data, signature, alg=alg, algs=algs)
 
-        # otherwise, try all keys which support the given alg(s)
+        # otherwise, try all keys that support the given alg(s)
         if algs is None:
             if alg is not None:
                 algs = (alg,)

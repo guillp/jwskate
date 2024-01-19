@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Mapping
 
 from jwskate import InvalidSignature, Jwk, JwkSet
 
@@ -45,7 +45,7 @@ class JwtVerifier:
 
     def __init__(
         self,
-        jwkset: JwkSet | Jwk | dict[str, Any],
+        jwkset: JwkSet | Jwk | Mapping[str, Any],
         *,
         issuer: str | None,
         audience: str | None = None,

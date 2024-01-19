@@ -140,11 +140,11 @@ separated by dots."""
     def encrypt(
         cls,
         plaintext: bytes | SupportsBytes,
-        key: Jwk | dict[str, Any] | Any,
+        key: Jwk | Mapping[str, Any] | Any,
         *,
         enc: str,
         alg: str | None = None,
-        extra_headers: dict[str, Any] | None = None,
+        extra_headers: Mapping[str, Any] | None = None,
         cek: bytes | None = None,
         iv: bytes | None = None,
         epk: Jwk | None = None,
@@ -188,7 +188,7 @@ separated by dots."""
 
     def unwrap_cek(
         self,
-        key_or_password: Jwk | dict[str, Any] | bytes | str,
+        key_or_password: Jwk | Mapping[str, Any] | bytes | str,
         alg: str | None = None,
         algs: Iterable[str] | None = None,
     ) -> Jwk:
@@ -220,7 +220,7 @@ separated by dots."""
 
     def decrypt(
         self,
-        key: Jwk | dict[str, Any] | Any,
+        key: Jwk | Mapping[str, Any] | Any,
         *,
         alg: str | None = None,
         algs: Iterable[str] | None = None,
@@ -249,7 +249,7 @@ separated by dots."""
 
     def decrypt_jwt(
         self,
-        key: Jwk | dict[str, Any] | Any,
+        key: Jwk | Mapping[str, Any] | Any,
         *,
         alg: str | None = None,
         algs: Iterable[str] | None = None,

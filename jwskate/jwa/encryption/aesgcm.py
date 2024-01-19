@@ -50,7 +50,7 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         if not isinstance(plaintext, bytes):
             plaintext = bytes(plaintext)
         ciphertext_with_tag = BinaPy(aead.AESGCM(self.key).encrypt(iv, plaintext, aad))
-        ciphertext, tag = ciphertext_with_tag.cut_at(-self.tag_size)
+        ciphertext, tag = ciphertext_with_tag.split_at(-self.tag_size)
         return ciphertext, tag
 
     def decrypt(

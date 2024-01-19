@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import json
+from collections import UserDict
 from functools import cached_property
-from typing import Any, Dict, TypeVar
+from typing import Any, TypeVar
+
+from typing_extensions import Self
 
 
 class BaseCompactToken:
@@ -141,14 +144,16 @@ class BaseCompactToken:
         return self.value
 
 
-D = TypeVar("D", bound="BaseJsonDict")
+def encode_user_dict(o: Any):
+    if isinstance(o, UserDict):
+        return o.data
+    return json.JSONEncoder.default(o)
 
-
-class BaseJsonDict(Dict[str, Any]):
+class BaseJsonDict(UserDict[str, Any]):
     """Base class Jwk and tokens in JSON representation."""
 
     @classmethod
-    def from_json(cls: type[D], j: str) -> D:
+    def from_json(cls, j: str) -> Self:
         """Initialize an object based on a string containing a JSON representation.
 
         Args:
@@ -171,4 +176,4 @@ class BaseJsonDict(Dict[str, Any]):
             a JSON representation of the current object
 
         """
-        return json.dumps(self, *args, **kwargs)
+        return json.dumps(self, *args, **kwargs, default=encode_user_dict)

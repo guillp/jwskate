@@ -1,15 +1,17 @@
 """This module implements the JWS Compact format."""
+
 from __future__ import annotations
 
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Iterable, SupportsBytes
 
 from binapy import BinaPy
+from typing_extensions import Self
 
 from jwskate.jwk.base import Jwk, to_jwk
 from jwskate.token import BaseCompactToken
 
-from .signature import JwsSignature
+from .signature import InvalidSignature, JwsSignature
 
 if TYPE_CHECKING:
     from .json import JwsJsonFlat, JwsJsonGeneral  # pragma: no cover
@@ -135,7 +137,7 @@ class JwsCompact(BaseCompactToken):
         alg: str | None = None,
         algs: Iterable[str] | None = None,
     ) -> bool:
-        """Verify the signature from this JwsCompact using a Jwk.
+        """Verify the signature from this JwsCompact using a key.
 
         Args:
           key: the Jwk to use to validate this signature
@@ -148,6 +150,51 @@ class JwsCompact(BaseCompactToken):
         """
         key = to_jwk(key)
         return key.verify(self.signed_part, self.signature, alg=alg, algs=algs)
+
+    def verify(
+        self,
+        key: Jwk | dict[str, Any] | Any,
+        *,
+        alg: str | None = None,
+        algs: Iterable[str] | None = None,
+    ) -> Self:
+        """Verify this JWS signature.
+
+        This is an alternative to `.verify_signature()` that raises an exception if the signature is not
+        verified.
+
+        Args:
+          key: the Jwk to use to validate this signature
+          alg: the alg to use, if there is only 1 allowed
+          algs: the allowed algs, if here are several
+
+        Raises:
+            InvalidSignature: if the signature does not verify
+
+        Returns:
+          The same JwsCompact
+
+        Usage:
+            ```python
+            jws = JwsCompact(
+                "eyJhbGciOm51bGx9.SGVsbG8gV29ybGQh.rd61m4AQ6dOqexdZC9revgictOzRd7dmHiQ5UMa9g66BhAO8crw_E_5SkydE-PNNzRkdFdq4P2YzzM1HgfnWlw"
+            ).verify(
+                {
+                    "kty": "EC",
+                    "alg": "ES256",
+                    "crv": "P-256",
+                    "x": "T_RLrReYRPIknDpIEjLUoy7ibAbqJDfHe03mkEjI_oU",
+                    "y": "8MM4v58j8IHag6uibgC0Qn275bl9c9JR0UD0TwFgMPM",
+                }
+            )
+
+            assert jws.payload == b"Hello World!"
+            ```
+
+        """
+        if self.verify_signature(key, alg=alg, algs=algs):
+            return self
+        raise InvalidSignature(data=self, key=key, alg=alg, algs=algs)
 
     def flat_json(self, unprotected_header: Any = None) -> JwsJsonFlat:
         """Create a JWS in JSON flat format based on this Compact JWS.

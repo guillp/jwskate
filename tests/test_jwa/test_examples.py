@@ -1,4 +1,5 @@
 """Tests for the jwkskate.jwa submodule."""
+
 from __future__ import annotations
 
 from binapy import BinaPy
@@ -123,24 +124,20 @@ def test_aes_192_hmac_sha384() -> None:
 
 def test_ecdhes() -> None:
     """Test derived from [RFC7518](https://datatracker.ietf.org/doc/html/rfc7518#appendix-C)."""
-    alice_ephemeral_key = Jwk(
-        {
-            "kty": "EC",
-            "crv": "P-256",
-            "x": "gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0",
-            "y": "SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps",
-            "d": "0_NxaRPUMQoAJt50Gz8YiTr8gRTwyEaCumd-MToTmIo",
-        }
-    )
-    bob_private_key = Jwk(
-        {
-            "kty": "EC",
-            "crv": "P-256",
-            "x": "weNJy2HscCSM6AEDTDg04biOvhFhyyWvOHQfeF_PxMQ",
-            "y": "e8lnCO-AlStT-NJVX-crhB7QRYhiix03illJOVAOyck",
-            "d": "VEmDZpDXXK8p8N0Cndsxs924q6nS1RXFASRl6BfUqdw",
-        }
-    )
+    alice_ephemeral_key = Jwk({
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0",
+        "y": "SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps",
+        "d": "0_NxaRPUMQoAJt50Gz8YiTr8gRTwyEaCumd-MToTmIo",
+    })
+    bob_private_key = Jwk({
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "weNJy2HscCSM6AEDTDg04biOvhFhyyWvOHQfeF_PxMQ",
+        "y": "e8lnCO-AlStT-NJVX-crhB7QRYhiix03illJOVAOyck",
+        "d": "VEmDZpDXXK8p8N0Cndsxs924q6nS1RXFASRl6BfUqdw",
+    })
 
     otherinfo = EcdhEs.otherinfo(alg="A128GCM", apu=b"Alice", apv=b"Bob", key_size=128)
     alice_cek = EcdhEs.derive(

@@ -1,4 +1,5 @@
 """This module implements Json Web Key Sets (JWKS)."""
+
 from __future__ import annotations
 
 from typing import Any, Iterable
@@ -52,7 +53,7 @@ class JwkSet(BaseJsonDict):
             a list of `Jwk`
 
         """
-        return self.get("keys", [])
+        return self.get("keys", [])  # type: ignore[no-any-return]
 
     def get_jwk_by_kid(self, kid: str) -> Jwk:
         """Return a Jwk from this JwkSet, based on its kid.

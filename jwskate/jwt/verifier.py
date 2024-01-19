@@ -1,11 +1,12 @@
 """High-Level facility to verify JWT tokens signature, validity dates, issuer, audiences, etc."""
+
 from __future__ import annotations
 
 from typing import Any, Callable, Iterable
 
-from jwskate import Jwk, JwkSet
+from jwskate import InvalidSignature, Jwk, JwkSet
 
-from .signed import ExpiredJwt, InvalidClaim, InvalidSignature, SignedJwt
+from .signed import ExpiredJwt, InvalidClaim, SignedJwt
 
 
 class JwtVerifier:
@@ -102,7 +103,7 @@ class JwtVerifier:
                 if jwt.verify_signature(jwk, alg=self.alg, algs=self.algs):
                     break
             else:
-                raise InvalidSignature(jwt=jwt, key=self.jwkset, alg=self.alg, algs=self.algs)
+                raise InvalidSignature(data=jwt, key=self.jwkset, alg=self.alg, algs=self.algs)
 
         if jwt.is_expired(self.leeway):
             msg = f"Jwt token expired at {jwt.expires_at}"

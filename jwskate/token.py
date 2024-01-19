@@ -1,4 +1,5 @@
 """This module contains base classes for all tokens types handled by `jwskate`."""
+
 from __future__ import annotations
 
 import json
@@ -81,7 +82,7 @@ class BaseCompactToken:
         if alg is None or not isinstance(alg, str):  # pragma: no branch
             msg = "This token doesn't have a valid 'alg' header"
             raise AttributeError(msg)
-        return alg
+        return alg  # type: ignore[no-any-return]
 
     @cached_property
     def kid(self) -> str:
@@ -97,7 +98,7 @@ class BaseCompactToken:
         if kid is None or not isinstance(kid, str):
             msg = "This token doesn't have a valid 'kid' header"
             raise AttributeError(msg)
-        return kid
+        return kid  # type: ignore[no-any-return]
 
     @cached_property
     def typ(self) -> str:
@@ -113,7 +114,7 @@ class BaseCompactToken:
         if typ is None or not isinstance(typ, str):  # pragma: no branch
             msg = "This token doesn't have a valid 'typ' header"
             raise AttributeError(msg)
-        return typ
+        return typ  # type: ignore[no-any-return]
 
     @cached_property
     def cty(self) -> str:
@@ -129,7 +130,7 @@ class BaseCompactToken:
         if cty is None or not isinstance(cty, str):  # pragma: no branch
             msg = "This token doesn't have a valid 'cty' header"
             raise AttributeError(msg)
-        return cty
+        return cty  # type: ignore[no-any-return]
 
     def __repr__(self) -> str:
         """Return the `str` representation of this token."""

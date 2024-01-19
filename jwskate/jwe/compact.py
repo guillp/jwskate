@@ -1,4 +1,5 @@
 """This module implements the JWE Compact format."""
+
 from __future__ import annotations
 
 import warnings
@@ -220,10 +221,11 @@ separated by dots."""
     def decrypt(
         self,
         key: Jwk | dict[str, Any] | Any,
+        *,
         alg: str | None = None,
         algs: Iterable[str] | None = None,
     ) -> BinaPy:
-        """Decrypts this `Jwe` payload using a `Jwk`.
+        """Decrypt the payload from this JWE using a decryption key.
 
         Args:
           key: the decryption key

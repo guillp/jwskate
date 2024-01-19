@@ -23,6 +23,7 @@ assert isinstance(signer.jwk, ECJwk) and signer.jwk.is_private
 ```
 
 """
+
 from __future__ import annotations
 
 import uuid
@@ -36,13 +37,13 @@ from .verifier import JwtVerifier
 
 
 class JwtSigner:
-    """A helper class to easily sign JWTs with standardised claims.
+    """A helper class to easily sign JWTs with standardized claims.
 
-    The standardised claims include:
+    The standardized claims include:
 
-       - `ìat`: issued at date
+       - `Ìat`: issued at date
        - `exp`: expiration date
-       - `nbf`: not before date:
+       - `nbf`: not before date
        - `iss`: issuer identifier
        - `sub`: subject identifier
        - `aud`: audience identifier
@@ -56,7 +57,7 @@ class JwtSigner:
 
     Args:
         issuer: the issuer string to use as `ìss` claim for signed tokens.
-        jwk: the private Jwk to use to sign tokens.
+        key: the private Jwk to use to sign tokens.
         alg: the signing alg to use to sign tokens.
         default_lifetime: the default lifetime, in seconds, to use for claim `exp`. This can be overridden
             when calling `.sign()`
@@ -67,20 +68,22 @@ class JwtSigner:
 
     def __init__(
         self,
-        issuer: str,
-        jwk: Jwk,
+        key: Jwk | Any,
+        *,
+        issuer: str | None = None,
         alg: str | None = None,
         default_lifetime: int = 60,
         default_leeway: int | None = None,
     ):
         self.issuer = issuer
-        self.jwk = jwk
-        self.alg = jwk.alg or alg
+        self.jwk = Jwk(key)
+        self.alg = alg
         self.default_lifetime = default_lifetime
         self.default_leeway = default_leeway
 
     def sign(
         self,
+        *,
         subject: str | None = None,
         audience: str | Iterable[str] | None = None,
         extra_claims: dict[str, Any] | None = None,
@@ -145,6 +148,7 @@ class JwtSigner:
     @classmethod
     def with_random_key(
         cls,
+        *,
         issuer: str,
         alg: str,
         default_lifetime: int = 60,
@@ -165,15 +169,16 @@ class JwtSigner:
 
         """
         jwk = Jwk.generate_for_alg(alg, kid=kid).with_kid_thumbprint()
-        return cls(issuer, jwk, alg, default_lifetime, default_leeway)
+        return cls(issuer=issuer, key=jwk, alg=alg, default_lifetime=default_lifetime, default_leeway=default_leeway)
 
     def verifier(
         self,
+        *,
         audience: str,
         verifiers: Iterable[Callable[[SignedJwt], None]] | None = None,
         **kwargs: Any,
     ) -> JwtVerifier:
-        """Return the matching JwtVerifier, initialized with the public key."""
+        """Return the matching `JwtVerifier`, initialized with the public key."""
         return JwtVerifier(
             issuer=self.issuer,
             jwkset=self.jwk.public_jwk().as_jwks(),

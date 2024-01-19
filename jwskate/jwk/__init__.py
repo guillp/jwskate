@@ -1,4 +1,5 @@
 """This module implements [Json Web Key RFC7517](https://tools.ietf.org/html/rfc7517)."""
+
 from __future__ import annotations
 
 from .alg import (

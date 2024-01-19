@@ -9,6 +9,7 @@ for convenience, you can import any class or component directly from the root
 provides a set of convenient wrappers around the `cryptography` module.
 
 """
+
 from __future__ import annotations
 
 __author__ = """Guillaume Pujol"""
@@ -97,12 +98,11 @@ from .jwk import (
     select_alg_classes,
     to_jwk,
 )
-from .jws import InvalidJws, JwsCompact, JwsJsonFlat, JwsJsonGeneral, JwsSignature
+from .jws import InvalidJws, InvalidSignature, JwsCompact, JwsJsonFlat, JwsJsonGeneral, JwsSignature
 from .jwt import (
     ExpiredJwt,
     InvalidClaim,
     InvalidJwt,
-    InvalidSignature,
     Jwt,
     JwtSigner,
     JwtVerifier,

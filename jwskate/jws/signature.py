@@ -1,21 +1,33 @@
 """This module implement JWS signatures."""
+
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Any, Iterable, Mapping, TypeVar
+from typing import Any, Iterable, Mapping, SupportsBytes, TypeVar
 
 from binapy import BinaPy
 
 from jwskate.jwk import Jwk, to_jwk
 from jwskate.token import BaseJsonDict
 
+
+class InvalidSignature(ValueError):
+    """Raised when trying to validate a token with an invalid signature."""
+
+    def __init__(self, data: SupportsBytes, key: Any, alg: str | None, algs: Iterable[str] | None) -> None:
+        self.data = data
+        self.key = key
+        self.alg = alg
+        self.algs = algs
+
+
 S = TypeVar("S", bound="JwsSignature")
 
 
 class JwsSignature(BaseJsonDict):
-    """Represents a JWS Signature.
+    """Represent a JWS Signature.
 
-    A JWS Signature has
+    A JWS Signature has:
 
      - a protected header (as a JSON object)
      - a signature value (as raw data)

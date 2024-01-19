@@ -18,18 +18,21 @@ from jwskate import Jwk
 
 # Let's generate a random private key, to use with alg 'RS256'.
 # Based on that alg, jwskate knows it must be an RSA key.
-# RSA keys can be of variable size, so let's pass the requested key size as parameter
+# RSA keys can be of any size, so let's pass the requested key size as parameter
 rsa_private_jwk = Jwk.generate(alg="RS256", key_size=2048)
 
 data = b"Signing is easy!"  # we will sign this
 signature = rsa_private_jwk.sign(data)  # done!
 
+print(signature)
+# b'-\xe89\x81\xc4\xb9.G\x11\xa6\x93/dm\xf0\xc8\x0f\xd....'
+
 # now extract the public key, and verify the signature with it
 rsa_public_jwk = rsa_private_jwk.public_jwk()
 assert rsa_public_jwk.verify(data, signature)
 
-# let's see what a Jwk looks like:
-assert isinstance(rsa_private_jwk, dict)  # Jwk are dict
+# let's see what a `Jwk` looks like:
+assert isinstance(rsa_private_jwk, dict)  # Jwk are dict subclasses
 
 print(rsa_private_jwk.with_usage_parameters())
 ```
@@ -98,13 +101,13 @@ assert jwt.verify_signature(private_jwk.public_jwk(), alg="ES256")
 # or with `alg` or `algs` params, and will ignore the 'alg' that is set in the JWT, for security reasons.
 ```
 
-Now let's sign a JWT with the standardised lifetime, subject, audience and ID claims, plus arbitrary custom claims:
+Now let's sign a JWT with the standardized lifetime, subject, audience and ID claims, plus arbitrary custom claims:
 
 ```python
 from jwskate import Jwk, JwtSigner
 
 private_jwk = Jwk.generate(alg="ES256")
-signer = JwtSigner(issuer="https://myissuer.com", jwk=private_jwk)
+signer = JwtSigner(issuer="https://myissuer.com", key=private_jwk)
 jwt = signer.sign(
     subject="some_sub",
     audience="some_aud",
@@ -114,7 +117,7 @@ jwt = signer.sign(
 print(jwt.claims)
 ```
 
-The generated JWT will include the standardised claims (`iss`, `aud`, `sub`, `iat`, `exp` and `jti`),
+The generated JWT will include the standardized claims (`iss`, `aud`, `sub`, `iat`, `exp` and `jti`),
 together with the `extra_claims` provided to `.sign()`:
 
 ```
@@ -163,17 +166,30 @@ together with the `extra_claims` provided to `.sign()`:
 | `RS256`         | RSASSA-PKCS1-v1_5 using SHA-256                  | `RSA`    | [RFC7518, Section 3.3]             |                                |
 | `RS384`         | RSASSA-PKCS1-v1_5 using SHA-384                  | `RSA`    | [RFC7518, Section 3.3]             |                                |
 | `RS512`         | RSASSA-PKCS1-v1_5 using SHA-512                  | `RSA`    | [RFC7518, Section 3.3]             |                                |
-| `ES256`         | ECDSA using P-256 and SHA-256                    | `EC`     | [RFC7518, Section 3.4]             |                                |
-| `ES384`         | ECDSA using P-384 and SHA-384                    | `EC`     | [RFC7518, Section 3.4]             |                                |
-| `ES512`         | ECDSA using P-521 and SHA-512                    | `EC`     | [RFC7518, Section 3.4]             |                                |
 | `PS256`         | RSASSA-PSS using SHA-256 and MGF1 with SHA-256   | `RSA`    | [RFC7518, Section 3.5]             |                                |
 | `PS384`         | RSASSA-PSS using SHA-384 and MGF1 with SHA-384   | `RSA`    | [RFC7518, Section 3.5]             |                                |
 | `PS512`         | RSASSA-PSS using SHA-512 and MGF1 with SHA-512   | `RSA`    | [RFC7518, Section 3.5]             |                                |
-| `EdDSA`         | EdDSA signature algorithms                       | `OKP`    | [RFC8037, Section 3.1]             | Ed2219 and Ed448 are supported |
+| `ES256`         | ECDSA using P-256 and SHA-256                    | `EC`     | [RFC7518, Section 3.4]             |                                |
+| `ES384`         | ECDSA using P-384 and SHA-384                    | `EC`     | [RFC7518, Section 3.4]             |                                |
+| `ES512`         | ECDSA using P-521 and SHA-512                    | `EC`     | [RFC7518, Section 3.4]             |                                |
 | `ES256K`        | ECDSA using secp256k1 curve and SHA-256          | `EC`     | [RFC8812, Section 3.2]             |                                |
+| `EdDSA`         | EdDSA signature algorithms                       | `OKP`    | [RFC8037, Section 3.1]             | Ed2219 and Ed448 are supported |
 | `HS1`           | HMAC using SHA-1                                 | `oct`    | https://www.w3.org/TR/WebCryptoAPI | Validation Only                |
-| `RS1`           | RSASSA-PKCS1-v1_5 with SHA-1                     | `oct`    | https://www.w3.org/TR/WebCryptoAPI | Validation Only                |
+| `RS1`           | RSASSA-PKCS1-v1_5 with SHA-1                     | `RSA`    | https://www.w3.org/TR/WebCryptoAPI | Validation Only                |
 | `none`          | No digital signature or MAC performed            |          | [RFC7518, Section 3.6]             | Not usable by mistake          |
+
+### Supported Encryption algorithms
+
+
+| Signature Alg   | Description                                                 | Reference                |
+|-----------------|-------------------------------------------------------------|--------------------------|
+| `A128CBC-HS256` | AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm | [RFC7518, Section 5.2.3] |
+| `A192CBC-HS384` | AES_192_CBC_HMAC_SHA_384 authenticated encryption algorithm | [RFC7518, Section 5.2.4] |
+| `A256CBC-HS512` | AES_256_CBC_HMAC_SHA_512 authenticated encryption algorithm | [RFC7518, Section 5.2.5] |
+| `A128GCM`       | AES GCM using 128-bit key                                   | [RFC7518, Section 5.3]   |
+| `A192GCM`       | AES GCM using 192-bit key                                   | [RFC7518, Section 5.3]   |
+| `A256GCM`       | AES GCM using 256-bit key                                   | [RFC7518, Section 5.3]   |
+
 
 ### Supported Key Management algorithms
 
@@ -200,17 +216,7 @@ together with the `extra_claims` provided to `.sign()`:
 | `PBES2-HS384+A192KW` | PBES2 with HMAC SHA-384 and "A192KW" wrapping  | `password`  | [RFC7518, Section 4.8]             |             |
 | `PBES2-HS512+A256KW` | PBES2 with HMAC SHA-512 and "A256KW" wrapping  | `password`  | [RFC7518, Section 4.8]             |             |
 
-### Supported Encryption algorithms
 
-
-| Signature Alg | Description                                                 | Reference                |
-| ------------- | ----------------------------------------------------------- | ------------------------ |
-| `A128CBC-HS256` | AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm | [RFC7518, Section 5.2.3] |
-| `A192CBC-HS384` | AES_192_CBC_HMAC_SHA_384 authenticated encryption algorithm | [RFC7518, Section 5.2.4] |
-| `A256CBC-HS512` | AES_256_CBC_HMAC_SHA_512 authenticated encryption algorithm | [RFC7518, Section 5.2.5] |
-| `A128GCM`       | AES GCM using 128-bit key                                   | [RFC7518, Section 5.3]   |
-| `A192GCM`       | AES GCM using 192-bit key                                   | [RFC7518, Section 5.3]   |
-| `A256GCM`       | AES GCM using 256-bit key                                   | [RFC7518, Section 5.3]   |
 
 ### Supported Elliptic Curves
 
@@ -220,13 +226,13 @@ together with the `extra_claims` provided to `.sign()`:
 | `P-256`     | P-256 Curve                           | `EC`     | signature, encryption | [RFC7518, Section 6.2.1.1] |
 | `P-384`     | P-384 Curve                           | `EC`     | signature, encryption | [RFC7518, Section 6.2.1.1] |
 | `P-521`     | P-521 Curve                           | `EC`     | signature, encryption | [RFC7518, Section 6.2.1.1] |
+| `secp256k1` | SECG secp256k1 curve                  | `EC`     | signature, encryption | [RFC8812, Section 3.1]     |
 | `Ed25519`   | Ed25519 signature algorithm key pairs | `OKP`    | signature             | [RFC8037, Section 3.1]     |
 | `Ed448`     | Ed448 signature algorithm key pairs   | `OKP`    | signature             | [RFC8037, Section 3.1]     |
 | `X25519`    | X25519 function key pairs             | `OKP`    | encryption            | [RFC8037, Section 3.2]     |
 | `X448`      | X448 function key pairs               | `OKP`    | encryption            | [RFC8037, Section 3.2]     |
-| `secp256k1` | SECG secp256k1 curve                  | `EC`     | signature, encryption | [RFC8812, Section 3.1]     |
 
-## Why a new lib ?
+## Why a new lib?
 
 There are already multiple modules implementing JOSE and Json Web Crypto related specifications in Python. However, I
 have been dissatisfied by all of them so far, so I decided to come up with my own module.

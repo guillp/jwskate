@@ -1,4 +1,5 @@
-"""This modules contains the `Jwt` base class."""
+"""This module contains the `Jwt` base class."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -21,7 +22,7 @@ class InvalidJwt(ValueError):
 class Jwt(BaseCompactToken):
     """Represents a Json Web Token."""
 
-    def __new__(cls, value: bytes | str, max_size: int = 16 * 1024) -> SignedJwt | JweCompact | Jwt:  # type: ignore[misc] # noqa: E501
+    def __new__(cls, value: bytes | str, max_size: int = 16 * 1024) -> SignedJwt | JweCompact | Jwt:  # type: ignore[misc]
         """Allow parsing both Signed and Encrypted JWTs.
 
         This returns the appropriate subclass or instance depending on the number of dots (.) in the serialized JWT.
@@ -51,6 +52,7 @@ class Jwt(BaseCompactToken):
         cls,
         claims: dict[str, Any],
         key: Jwk | dict[str, Any] | Any,
+        *,
         alg: str | None = None,
         typ: str | None = "JWT",
         extra_headers: dict[str, Any] | None = None,
@@ -94,6 +96,7 @@ class Jwt(BaseCompactToken):
         claims: dict[str, Any],
         headers: dict[str, Any],
         key: Jwk | dict[str, Any] | Any,
+        *,
         alg: str | None = None,
     ) -> SignedJwt:
         """Sign provided headers and claims with a private key and return the resulting `SignedJwt`.
@@ -129,6 +132,7 @@ class Jwt(BaseCompactToken):
     def unprotected(
         cls,
         claims: dict[str, Any],
+        *,
         typ: str | None = "JWT",
         extra_headers: dict[str, Any] | None = None,
     ) -> SignedJwt:
@@ -188,7 +192,9 @@ class Jwt(BaseCompactToken):
           the resulting JWE token, with the signed JWT as payload
 
         """
-        return cls.sign(claims, key=sign_key, alg=sign_alg, extra_headers=sign_extra_headers).encrypt(enc_key, enc=enc, alg=enc_alg, extra_headers=enc_extra_headers)
+        return cls.sign(claims, key=sign_key, alg=sign_alg, extra_headers=sign_extra_headers).encrypt(
+            enc_key, enc=enc, alg=enc_alg, extra_headers=enc_extra_headers
+        )
 
     @classmethod
     def decrypt_nested_jwt(cls, jwe: str | JweCompact, key: Jwk | dict[str, Any] | Any) -> SignedJwt:
@@ -243,7 +249,7 @@ class Jwt(BaseCompactToken):
 
     @classmethod
     def timestamp(cls, delta_seconds: int = 0) -> int:
-        """Return an integer timestamp that is suitable for use in Jwt tokens.
+        """Return an integer timestamp that is suitable for use in JWT tokens.
 
         Timestamps are used in particular for `iat`, `exp` and `nbf` claims.
 

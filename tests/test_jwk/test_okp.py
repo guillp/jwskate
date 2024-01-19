@@ -47,14 +47,12 @@ def test_generate_unsupported() -> None:
 
 def test_rfc8037_ed25519() -> None:
     """Test from [RFC8037][https://www.rfc-editor.org/rfc/rfc8037.html#appendix-A]."""
-    jwk = Jwk(
-        {
-            "kty": "OKP",
-            "crv": "Ed25519",
-            "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
-            "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
-        }
-    )
+    jwk = Jwk({
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+    })
     assert isinstance(jwk, OKPJwk)
     assert jwk.is_private
     assert jwk.private_key == bytes.fromhex("""
@@ -87,14 +85,12 @@ def test_rfc8037_ed25519() -> None:
 
 def test_rfc8037_x25519() -> None:
     """Test from [RFC8037 $A.6][https://www.rfc-editor.org/rfc/rfc8037.html#appendix-A.6]."""
-    public_jwk = Jwk(
-        {
-            "kty": "OKP",
-            "crv": "X25519",
-            "kid": "Bob",
-            "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
-        }
-    )
+    public_jwk = Jwk({
+        "kty": "OKP",
+        "crv": "X25519",
+        "kid": "Bob",
+        "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
+    })
     assert isinstance(public_jwk, OKPJwk)
     assert public_jwk.public_key == bytes.fromhex("""de 9e db 7d 7b 7d c1 b4 d3 5b 61 c2 ec e4 35 37
    3f 83 43 c8 5b 78 67 4d ad fc 7e 14 6f 88 2b 4f""")
@@ -104,13 +100,11 @@ def test_rfc8037_x25519() -> None:
 
     ephemeral_private_key = OKPJwk.from_bytes(ephemeral_secret, use="enc")
 
-    assert ephemeral_private_key.public_jwk() == Jwk(
-        {
-            "kty": "OKP",
-            "crv": "X25519",
-            "x": "hSDwCYkwp1R0i33ctD73Wg2_Og0mOBr066SpjqqbTmo",
-        }
-    )
+    assert ephemeral_private_key.public_jwk() == Jwk({
+        "kty": "OKP",
+        "crv": "X25519",
+        "x": "hSDwCYkwp1R0i33ctD73Wg2_Og0mOBr066SpjqqbTmo",
+    })
 
     ephemeral_private_key["kid"] = "Bob"
 
@@ -124,14 +118,12 @@ def test_rfc8037_x25519() -> None:
 
 def test_rfc8037_x448() -> None:
     """Test from [RFC8037 $A.7][https://www.rfc-editor.org/rfc/rfc8037.html#appendix-A.7]."""
-    public_jwk = Jwk(
-        {
-            "kty": "OKP",
-            "crv": "X448",
-            "kid": "Dave",
-            "x": "PreoKbDNIPW8_AtZm2_sz22kYnEHvbDU80W0MCfYuXL8PjT7QjKhPKcG3LV67D2uB73BxnvzNgk",
-        }
-    )
+    public_jwk = Jwk({
+        "kty": "OKP",
+        "crv": "X448",
+        "kid": "Dave",
+        "x": "PreoKbDNIPW8_AtZm2_sz22kYnEHvbDU80W0MCfYuXL8PjT7QjKhPKcG3LV67D2uB73BxnvzNgk",
+    })
     assert isinstance(public_jwk, OKPJwk)
     assert public_jwk.public_key == bytes.fromhex("""
    3e b7 a8 29 b0 cd 20 f5 bc fc 0b 59 9b 6f ec cf
@@ -147,13 +139,11 @@ def test_rfc8037_x448() -> None:
 
     ephemeral_private_key = OKPJwk.from_bytes(ephemeral_secret, use="enc")
 
-    assert ephemeral_private_key.public_jwk() == Jwk(
-        {
-            "kty": "OKP",
-            "crv": "X448",
-            "x": "mwj3zDG34-Z9ItWuoSEHSic70rg94Jxj-qc9LCLF2bvINmRyQdlT1AxbEtqIEg1TF3-A5TLEH6A",
-        }
-    )
+    assert ephemeral_private_key.public_jwk() == Jwk({
+        "kty": "OKP",
+        "crv": "X448",
+        "x": "mwj3zDG34-Z9ItWuoSEHSic70rg94Jxj-qc9LCLF2bvINmRyQdlT1AxbEtqIEg1TF3-A5TLEH6A",
+    })
 
     ephemeral_private_key["kid"] = "Bob"
 
@@ -302,14 +292,12 @@ def test_from_bytes(private_key: bytes, crv: str, use: str) -> None:
 
 
 def test_public_private() -> None:
-    jwk = Jwk(
-        {
-            "kty": "OKP",
-            "crv": "Ed25519",
-            "x": "SghwA3Kg8e1Z2v1xnfnexH7OE4G-cd1z__Q64RQR4EQ",
-            "d": "V7P8eIm8sZsvIlhOXMLiamWTUW68wpyFyW_1QrnzkAI",
-        }
-    )
+    jwk = Jwk({
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "SghwA3Kg8e1Z2v1xnfnexH7OE4G-cd1z__Q64RQR4EQ",
+        "d": "V7P8eIm8sZsvIlhOXMLiamWTUW68wpyFyW_1QrnzkAI",
+    })
 
     assert (
         OKPJwk.public(

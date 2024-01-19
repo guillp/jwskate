@@ -1,4 +1,5 @@
 """This module implement base classes for the algorithms defined in JWA."""
+
 from __future__ import annotations
 
 from contextlib import contextmanager

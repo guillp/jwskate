@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from collections import UserDict
 from functools import cached_property
@@ -168,15 +167,15 @@ class BaseJsonDict(BaseUserDict):
         """
         return cls(BinaPy(j).parse_from("json"))
 
-    def to_json(self, *args: Any, **kwargs: Any) -> str:
+    def to_json(self, *, compact: bool = True, **kwargs: Any) -> str:
         """Serialize the current object into a JSON representation.
 
         Args:
-          *args: additional args for json.dumps()
+          compact: if True, don't include whitespaces or newlines in the result
           **kwargs: additional kwargs for json.dumps()
 
         Returns:
             a JSON representation of the current object
 
         """
-        return BinaPy.serialize_to("json", self, *args, **kwargs).decode()
+        return BinaPy.serialize_to("json", self, compact=compact, **kwargs).decode()

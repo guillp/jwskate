@@ -115,9 +115,24 @@ def test_json() -> None:
     jwk = Jwk.from_json(j)
     assert (
         jwk.public_jwk().as_jwks().to_json()
-        == '{"keys": [{"kty": "RSA", "kid": "client_assertion_key", "n":'
-        ' "5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8",'
-        ' "e": "AQAB"}]}'
+        == '{"keys":[{"kty":"RSA","kid":"client_assertion_key","n":'
+        '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8",'
+        '"e":"AQAB"}]}'
+    )
+
+    assert (
+        jwk.public_jwk().as_jwks().to_json(compact=False)
+        == ('{\n'
+ '  "keys": [\n'
+ '    {\n'
+ '      "kty": "RSA", \n'
+ '      "kid": "client_assertion_key", \n'
+ '      "n": '
+ '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8", \n'
+ '      "e": "AQAB"\n'
+ '    }\n'
+ '  ]\n'
+ '}')
     )
 
 
@@ -144,11 +159,22 @@ def test_init_from_json() -> None:
     """
     jwk = Jwk(j)
     assert (
-        jwk.public_jwk().as_jwks().to_json()
-        == '{"keys": [{"kty": "RSA", "kid": "client_assertion_key", "n":'
-        ' "5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8",'
-        ' "e": "AQAB"}]}'
+        jwk.public_jwk().as_jwks().to_json(compact=True)
+        == '{"keys":[{"kty":"RSA","kid":"client_assertion_key","n":'
+        '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8",'
+        '"e":"AQAB"}]}'
     )
+    assert jwk.public_jwk().as_jwks().to_json(compact=False) == ('{\n'
+ '  "keys": [\n'
+ '    {\n'
+ '      "kty": "RSA", \n'
+ '      "kid": "client_assertion_key", \n'
+ '      "n": '
+ '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8", \n'
+ '      "e": "AQAB"\n'
+ '    }\n'
+ '  ]\n'
+ '}')
 
 
 def test_missing_kty() -> None:

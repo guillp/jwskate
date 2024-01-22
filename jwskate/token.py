@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+import sys
 from collections import UserDict
 from functools import cached_property
-from typing import Any, TypeVar
+from typing import Any
 
+from binapy import BinaPy
 from typing_extensions import Self
 
 
@@ -144,12 +146,13 @@ class BaseCompactToken:
         return self.value
 
 
-def encode_user_dict(o: Any):
-    if isinstance(o, UserDict):
-        return o.data
-    return json.JSONEncoder.default(o)
+if sys.version_info[:2] > (3, 8):
+    BaseUserDict = UserDict[str, Any]
+else:
+    BaseUserDict = UserDict
 
-class BaseJsonDict(UserDict[str, Any]):
+
+class BaseJsonDict(BaseUserDict):
     """Base class Jwk and tokens in JSON representation."""
 
     @classmethod
@@ -163,7 +166,7 @@ class BaseJsonDict(UserDict[str, Any]):
             the resulting object
 
         """
-        return cls(json.loads(j))
+        return cls(BinaPy(j).parse_from("json"))
 
     def to_json(self, *args: Any, **kwargs: Any) -> str:
         """Serialize the current object into a JSON representation.
@@ -176,4 +179,4 @@ class BaseJsonDict(UserDict[str, Any]):
             a JSON representation of the current object
 
         """
-        return json.dumps(self, *args, **kwargs, default=encode_user_dict)
+        return BinaPy.serialize_to("json", self, *args, **kwargs).decode()

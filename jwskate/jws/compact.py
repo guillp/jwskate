@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Iterable, SupportsBytes, Mapping
+from typing import TYPE_CHECKING, Any, Iterable, Mapping, SupportsBytes
 
 from binapy import BinaPy
 from typing_extensions import Self

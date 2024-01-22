@@ -78,7 +78,7 @@ class KeyManagementAlgs:
     A128GCMKW = "A128GCMKW"
     A192GCMKW = "A192GCMKW"
     A256GCMKW = "A256GCMKW"
-    dir = "dir"  # noqa: A003
+    dir = "dir"
 
     PBES2_HS256_A128KW = "PBES2-HS256+A128KW"
     PBES2_HS384_A192KW = "PBES2-HS384+A192KW"

@@ -33,6 +33,7 @@ assert rsa_public_jwk.verify(data, signature)
 
 # let's see what a `Jwk` looks like:
 from collections import UserDict
+
 assert isinstance(rsa_private_jwk, UserDict)  # Jwk are UserDicts
 
 print(rsa_private_jwk.with_usage_parameters())

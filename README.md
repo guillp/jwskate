@@ -1,17 +1,21 @@
-# JwSkate
+# ![jwskate](docs/logo.png)
 
 [![PyPi](https://img.shields.io/pypi/v/jwskate.svg)](https://pypi.python.org/pypi/jwskate)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![PyPi - License](https://img.shields.io/pypi/l/jwskate)](https://pypi.python.org/pypi/jwskate)
+[![PyPI - Downloads](https://img.shields.io/pypi/dw/jwskate)](https://pypi.python.org/pypi/jwskate)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
 A Pythonic implementation of the JOSE set of IETF specifications: [Json Web Signature][rfc7515], [Keys][rfc7517],
-[Algorithms][rfc7518], [Tokens][rfc7519] and [Encryption][rfc7516] (RFC7515 to 7519), and their extensions
-[ECDH Signatures][rfc8037] (RFC8037), [JWK Thumbprints][rfc7638] (RFC7638), and [JWK Thumbprint URI][rfc9278] (RFC9278),
-and with respects to [JWT Best Current Practices][rfc8725] (RFC8725).
+[Algorithms][rfc7518], [Tokens][rfc7519] and [Encryption][rfc7516] (RFC7515 to 7519), hence the name **JWSKATE**, and
+their extensions [ECDH Signatures][rfc8037] (RFC8037), [JWK Thumbprints][rfc7638] (RFC7638), and
+[JWK Thumbprint URI][rfc9278] (RFC9278), with respects to [JWT Best Current Practices][rfc8725] (RFC8725).
 
 - Free software: MIT
-- Documentation: [https://guillp.github.io/jwskate/](https://guillp.github.io/jwskate/)
+- Repository: https://github.com/guillp/jwskate/
+- Documentation: https://guillp.github.io/jwskate/
 
-Here is a quick usage example: generating a private RSA key, signing some data, then validating that signature with the matching public key:
+Here is a quick usage example: generating a private RSA key, signing some data, then validating that signature with the
+matching public key:
 
 ```python
 from jwskate import Jwk
@@ -119,8 +123,8 @@ jwt = signer.sign(
 print(jwt.claims)
 ```
 
-The generated JWT will include the standardized claims (`iss`, `aud`, `sub`, `iat`, `exp` and `jti`),
-together with the `extra_claims` provided to `.sign()`:
+The generated JWT will include the standardized claims (`iss`, `aud`, `sub`, `iat`, `exp` and `jti`), together with the
+`extra_claims` provided to `.sign()`:
 
 ```
 {'custom_claim1': 'value1',
@@ -192,7 +196,6 @@ together with the `extra_claims` provided to `.sign()`:
 | `A192GCM`       | AES GCM using 192-bit key                                   | [RFC7518, Section 5.3]   |
 | `A256GCM`       | AES GCM using 256-bit key                                   | [RFC7518, Section 5.3]   |
 
-
 ### Supported Key Management algorithms
 
 
@@ -245,10 +248,69 @@ have been dissatisfied by all of them so far, so I decided to come up with my ow
 - [AuthLib](https://docs.authlib.org/en/latest/jose/)
 
 Not to say that those are _bad_ libs (I actually use `jwcrypto` myself for `jwskate` unit tests), but they either don't
-support some important features, lack documentation, or more generally have APIs that don't feel easy-enough, Pythonic-enough
-to use.
+support some important features, lack documentation, or more generally have APIs that don't feel easy-enough,
+Pythonic-enough to use. See [Design](#Design) below for some of the design decisions that lead to `jwskate`.
 
 ## Design
+
+### Tokens are objects
+
+Since JSON Web Tokens (JWT) are more and more used, JWT generation and validation must be as easy to do as possible. The
+`Jwt` class wraps around a JWT value to allow easy access to its headers, claims and signature, and exposes methods to
+easily verify the signature.
+
+```python
+jwt = Jwt('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
+assert jwt.headers == {
+  "alg": "HS256",
+  "typ": "JWT"
+}
+
+assert jwt.claims == {
+  "sub": "1234567890",
+  "name": "John Doe",
+  "iat": 1516239022
+}
+
+assert jwt.signature == b'I\xf9J\xc7\x04IH\xc7\x8a(]\x90O\x87\xf0\xa4\xc7\x89\x7f~\x8f:N\xb2%_\xdau\x0b,\xc3\x97'
+```
+
+`Jwt` instances always represent a syntactically valid JWT. If you try to initialize one with a malformed value, you
+will get a `InvalidJwt` exception, with an helpful error message:
+
+```python
+jwt = Jwt('eyJhbGci-malformedheader.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
+# jwskate.jwt.base.InvalidJwt: Invalid JWT header: it must be a Base64URL-encoded JSON object
+```
+
+`Jwt` may be objects, but they are easy to serialize into their representation. Use either `str()` or `bytes()`
+depending on what type of value you need, or the `value` attribute:
+
+```python
+jwt = Jwt('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
+str(jwt)
+# 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+bytes(jwt)
+# b'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+assert jwt.value == bytes(jwt)
+```
+
+The same is true for JWS and JWE tokens.
+
+### Headers are auto-generated
+
+When signing a JWS, JWE or JWT, the headers are autogenerated by default, based on the used key.
+
+You may obviously add more custom headers {
+
+### `Jwk` as thin wrappers around `cryptography` keys
+
+`Jwk` keys are just _thin_ wrappers around keys from the `cryptography` module, or, in the case of symmetric keys,
+around `bytes`. But, unlike `cryptography`keys, they present a consistent interface for signature creation/verification,
+key management, and encryption/decryption, with all available algorithms.
+
+Everywhere a key is required as parameter, you may pass either a raw `cryptography` key instance, or a `Jwk` instance
+(which is actually a thin wrapper around a cryptography key), or a `Mapping` representing the JWK key.
 
 ### JWK are UserDicts
 
@@ -262,9 +324,9 @@ format. However, you cannot change the key cryptographic materials, since that w
 You can use `cryptography` to do the cryptographic operations that are described in
 [JWA](https://www.rfc-editor.org/info/rfc7518), but since `cryptography` is a general purpose library, its usage is not
 straightforward and gives you plenty of options to carefully select and combine, leaving room for mistakes, errors and
-confusion. It has also a quite inconsistent API to handle the different type of keys and algorithms. To work around
-this, `jwskate` comes with a set of consistent wrappers that implement the exact JWA specifications, with minimum risk
-of mistakes.
+confusion. It also has a quite inconsistent API to handle the different key types and algorithms. To work around this,
+`jwskate` comes with a set of consistent wrappers that implement the exact JWA specifications, with minimum risk of
+mistakes.
 
 ### Safe Signature Verification
 

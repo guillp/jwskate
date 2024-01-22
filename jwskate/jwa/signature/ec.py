@@ -44,7 +44,9 @@ class BaseECSignatureAlg(
         with self.private_key_required() as key:
             dss_sig = key.sign(data, ec.ECDSA(self.hashing_alg))
             r, s = asymmetric.utils.decode_dss_signature(dss_sig)
-            return BinaPy.from_int(r, self.curve.coordinate_size) + BinaPy.from_int(s, self.curve.coordinate_size)
+            return BinaPy.from_int(r, length=self.curve.coordinate_size) + BinaPy.from_int(
+                s, length=self.curve.coordinate_size
+            )
 
     @override
     def verify(self, data: bytes | SupportsBytes, signature: bytes | SupportsBytes) -> bool:

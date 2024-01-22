@@ -52,7 +52,7 @@ class JwsJsonFlat(JwsSignature):
     def sign(
         cls,
         payload: bytes,
-        key: Jwk | dict[str, Any] | Any,
+        key: Jwk | Mapping[str, Any] | Any,
         alg: str | None = None,
         extra_protected_headers: Mapping[str, Any] | None = None,
         header: Any | None = None,
@@ -115,7 +115,7 @@ class JwsJsonFlat(JwsSignature):
 
     def verify_signature(
         self,
-        key: Jwk | dict[str, Any] | Any,
+        key: Jwk | Mapping[str, Any] | Any,
         *,
         alg: str | None = None,
         algs: Iterable[str] | None = None,
@@ -218,7 +218,7 @@ class JwsJsonGeneral(BaseJsonDict):
 
     def add_signature(
         self,
-        key: Jwk | dict[str, Any] | Any,
+        key: Jwk | Mapping[str, Any] | Any,
         alg: str | None = None,
         extra_protected_headers: Mapping[str, Any] | None = None,
         header: Mapping[str, Any] | None = None,
@@ -306,7 +306,7 @@ class JwsJsonGeneral(BaseJsonDict):
 
     def verify_signature(
         self,
-        key: Jwk | dict[str, Any] | Any,
+        key: Jwk | Mapping[str, Any] | Any,
         *,
         alg: str | None = None,
         algs: Iterable[str] | None = None,

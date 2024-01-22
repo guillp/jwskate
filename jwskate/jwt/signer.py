@@ -27,7 +27,7 @@ assert isinstance(signer.jwk, ECJwk) and signer.jwk.is_private
 from __future__ import annotations
 
 import uuid
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Mapping
 
 from jwskate.jwk import Jwk
 
@@ -86,8 +86,8 @@ class JwtSigner:
         *,
         subject: str | None = None,
         audience: str | Iterable[str] | None = None,
-        extra_claims: dict[str, Any] | None = None,
-        extra_headers: dict[str, Any] | None = None,
+        extra_claims: Mapping[str, Any] | None = None,
+        extra_headers: Mapping[str, Any] | None = None,
         lifetime: int | None = None,
         leeway: int | None = None,
     ) -> SignedJwt:

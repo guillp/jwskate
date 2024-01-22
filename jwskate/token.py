@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-import json
+import sys
+from collections import UserDict
 from functools import cached_property
-from typing import Any, Dict, TypeVar
+from typing import Any
+
+from binapy import BinaPy
+from typing_extensions import Self
 
 
 class BaseCompactToken:
@@ -141,14 +145,17 @@ class BaseCompactToken:
         return self.value
 
 
-D = TypeVar("D", bound="BaseJsonDict")
+if sys.version_info[:2] > (3, 8):
+    BaseUserDict = UserDict[str, Any]
+else:
+    BaseUserDict = UserDict
 
 
-class BaseJsonDict(Dict[str, Any]):
+class BaseJsonDict(BaseUserDict):
     """Base class Jwk and tokens in JSON representation."""
 
     @classmethod
-    def from_json(cls: type[D], j: str) -> D:
+    def from_json(cls, j: str) -> Self:
         """Initialize an object based on a string containing a JSON representation.
 
         Args:
@@ -158,17 +165,17 @@ class BaseJsonDict(Dict[str, Any]):
             the resulting object
 
         """
-        return cls(json.loads(j))
+        return cls(BinaPy(j).parse_from("json"))
 
-    def to_json(self, *args: Any, **kwargs: Any) -> str:
+    def to_json(self, *, compact: bool = True, **kwargs: Any) -> str:
         """Serialize the current object into a JSON representation.
 
         Args:
-          *args: additional args for json.dumps()
+          compact: if True, don't include whitespaces or newlines in the result
           **kwargs: additional kwargs for json.dumps()
 
         Returns:
             a JSON representation of the current object
 
         """
-        return json.dumps(self, *args, **kwargs)
+        return BinaPy.serialize_to("json", self, compact=compact, **kwargs).decode()

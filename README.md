@@ -32,7 +32,9 @@ rsa_public_jwk = rsa_private_jwk.public_jwk()
 assert rsa_public_jwk.verify(data, signature)
 
 # let's see what a `Jwk` looks like:
-assert isinstance(rsa_private_jwk, dict)  # Jwk are dict subclasses
+from collections import UserDict
+
+assert isinstance(rsa_private_jwk, UserDict)  # Jwk are UserDicts
 
 print(rsa_private_jwk.with_usage_parameters())
 ```
@@ -248,12 +250,12 @@ to use.
 
 ## Design
 
-### JWK are dicts
+### JWK are UserDicts
 
 JWK are specified as JSON objects, which are parsed as `dict` in Python. The `Jwk` class in `jwskate` is actually a
-`dict` subclass, so you can use it exactly like you would use a `dict`: you can access its members, dump it back as JSON,
-etc. The same is true for Signed or Encrypted Json Web tokens in JSON format. However, you cannot change the key cryptographic
-materials, since that would lead to unusable keys.
+`UserDict` subclass, which is very similar to a standard `dict`. So you can use it exactly like you would use a `dict`:
+you can access its members, dump it back as JSON, etc. The same is true for Signed or Encrypted Json Web tokens in JSON
+format. However, you cannot change the key cryptographic materials, since that would lead to unusable keys.
 
 ### JWA Wrappers
 

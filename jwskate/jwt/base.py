@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
 from binapy import BinaPy
 
@@ -50,12 +50,12 @@ class Jwt(BaseCompactToken):
     @classmethod
     def sign(
         cls,
-        claims: dict[str, Any],
-        key: Jwk | dict[str, Any] | Any,
+        claims: Mapping[str, Any],
+        key: Jwk | Mapping[str, Any] | Any,
         *,
         alg: str | None = None,
         typ: str | None = "JWT",
-        extra_headers: dict[str, Any] | None = None,
+        extra_headers: Mapping[str, Any] | None = None,
     ) -> SignedJwt:
         """Sign a JSON payload with a private key and return the resulting `SignedJwt`.
 
@@ -93,9 +93,9 @@ class Jwt(BaseCompactToken):
     @classmethod
     def sign_arbitrary(
         cls,
-        claims: dict[str, Any],
-        headers: dict[str, Any],
-        key: Jwk | dict[str, Any] | Any,
+        claims: Mapping[str, Any],
+        headers: Mapping[str, Any],
+        key: Jwk | Mapping[str, Any] | Any,
         *,
         alg: str | None = None,
     ) -> SignedJwt:
@@ -131,10 +131,10 @@ class Jwt(BaseCompactToken):
     @classmethod
     def unprotected(
         cls,
-        claims: dict[str, Any],
+        claims: Mapping[str, Any],
         *,
         typ: str | None = "JWT",
-        extra_headers: dict[str, Any] | None = None,
+        extra_headers: Mapping[str, Any] | None = None,
     ) -> SignedJwt:
         """Generate a JWT that is not signed and not encrypted (with alg=none).
 
@@ -162,15 +162,15 @@ class Jwt(BaseCompactToken):
     @classmethod
     def sign_and_encrypt(
         cls,
-        claims: dict[str, Any],
-        sign_key: Jwk | dict[str, Any] | Any,
-        enc_key: Jwk | dict[str, Any] | Any,
+        claims: Mapping[str, Any],
+        sign_key: Jwk | Mapping[str, Any] | Any,
+        enc_key: Jwk | Mapping[str, Any] | Any,
         enc: str,
         *,
         sign_alg: str | None = None,
         enc_alg: str | None = None,
-        sign_extra_headers: dict[str, Any] | None = None,
-        enc_extra_headers: dict[str, Any] | None = None,
+        sign_extra_headers: Mapping[str, Any] | None = None,
+        enc_extra_headers: Mapping[str, Any] | None = None,
     ) -> JweCompact:
         """Sign a JWT, then encrypt it as JWE payload.
 
@@ -197,7 +197,7 @@ class Jwt(BaseCompactToken):
         )
 
     @classmethod
-    def decrypt_nested_jwt(cls, jwe: str | JweCompact, key: Jwk | dict[str, Any] | Any) -> SignedJwt:
+    def decrypt_nested_jwt(cls, jwe: str | JweCompact, key: Jwk | Mapping[str, Any] | Any) -> SignedJwt:
         """Decrypt a JWE that contains a nested signed JWT.
 
         It will return a [Jwt] instance for the inner JWT.
@@ -221,8 +221,8 @@ class Jwt(BaseCompactToken):
     def decrypt_and_verify(
         cls,
         jwt: str | JweCompact,
-        enc_key: Jwk | dict[str, Any] | Any,
-        sig_key: Jwk | dict[str, Any] | Any,
+        enc_key: Jwk | Mapping[str, Any] | Any,
+        sig_key: Jwk | Mapping[str, Any] | Any,
         sig_alg: str | None = None,
         sig_algs: Iterable[str] | None = None,
     ) -> SignedJwt:

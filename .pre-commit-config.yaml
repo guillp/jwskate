@@ -26,11 +26,11 @@ repos:
     hooks:
         - id: blacken-docs
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.11
+    rev: v0.1.13
     hooks:
         - id: ruff
           args: [ --fix ]
-        -   id: ruff-format
+        - id: ruff-format
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
     hooks:
@@ -44,6 +44,6 @@ repos:
         additional_dependencies:
             - types-cryptography==3.3.23.2
             - pytest-mypy==0.10.3
-            - binapy==0.7.0
+            - binapy==0.8.0
             - freezegun==1.2.2
             - jwcrypto==1.5.0

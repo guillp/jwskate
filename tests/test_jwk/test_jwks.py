@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from typing import Mapping, Any
+
 import pytest
 
 from jwskate import Jwk, JwkSet
 
 
 def test_jwkset() -> None:
-    keys = [
+    keys: list[Mapping[str, Any]] = [
         {
             "kty": "RSA",
             "n": "mUdmf5vJ3svsPSQ8BCOQVfwQdP8AmAEW21sYYUC5eSKR-pdwnRDBuFrIEjon2ry8cU-uaMjAoEZikPXcCTErye2Sj8fWQ8Wyo8DoGacJlFOJvs_18-CmNBc7oL8gBlYax3-feZZnaVIiJjvxQwUw5GQA6JTFnO8n2pnKMOOd8Gf6YrG-r0T6NXdviw0-2IW4f2UMJApqlu37yF8sgRNGZwDljNOkUtPK76Uz5T513Va4ckOqsVfnt4WoAkAkCl3eVBwGw3TJIbp_DaLUq53go0pXBCNxCHRD9mst69ZuknBLqn0SwKbQ9zJH9QvoqrEZ2q7GzkFzw70F6qH5MDEx2-dxQz_QccFV0XBpq4pkfuWzS8qKVO4QjyC7A0vIJUzrRHE2_moOtWvKTDsa7gfvK6kpnAW0iKnNchzBV0fzXWIIxRJ3_cc8Ue-KPRU9Wxm3heBOx_Qh-bKv9s9fVY9X6rimyX-pIwf-jkgWG8_FgTBuGkKTRcLi-XnwsCFIVNOtolmakbQHlin_lgDQm9s0nHoDJbZgAtzQfkIorclBJBzr2t__xgaZCfpSCLdwZFQvGEh1mK4WbSMMt5-L3zKsNLCBfdMbn2fS9n2hylfRwU_NZCY8f2RHAdP-z402Vq1c9-m2Ew3_695OmV5HoinJQPagY9hI-_EW8nhNWf8l4FE",
@@ -165,3 +167,15 @@ def test_contains() -> None:
 
     assert key1.public_jwk() not in jwkset.jwks
     assert key2 not in jwkset.jwks
+
+
+def test_update() -> None:
+    jwks = JwkSet()
+    assert not jwks.jwks
+    key1 = Jwk.generate(alg="ES256")
+    jwks.update(key1.as_jwks())
+    assert key1 in jwks.jwks
+    key2 = Jwk.generate(alg="ES256")
+    jwks.update(key2.as_jwks())
+    assert key2 in jwks.jwks
+    assert key1 in jwks.jwks # don't remove old keys

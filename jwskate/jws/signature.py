@@ -113,7 +113,7 @@ class JwsSignature(BaseJsonDict):
     def sign(
         cls: type[S],
         payload: bytes,
-        key: Jwk | dict[str, Any] | Any,
+        key: Jwk | Mapping[str, Any] | Any,
         alg: str | None = None,
         extra_protected_headers: Mapping[str, Any] | None = None,
         header: Any | None = None,
@@ -145,7 +145,7 @@ class JwsSignature(BaseJsonDict):
         return cls.from_parts(protected=headers, signature=signature, header=header, **kwargs)
 
     @classmethod
-    def assemble_signed_part(cls, headers: dict[str, Any], payload: bytes | str) -> bytes:
+    def assemble_signed_part(cls, headers: Mapping[str, Any], payload: bytes | str) -> bytes:
         """Assemble the protected header and payload to sign, as specified in.
 
         [RFC7515
@@ -169,7 +169,7 @@ class JwsSignature(BaseJsonDict):
     def verify(
         self,
         payload: bytes,
-        key: Jwk | dict[str, Any] | Any,
+        key: Jwk | Mapping[str, Any] | Any,
         *,
         alg: str | None = None,
         algs: Iterable[str] | None = None,

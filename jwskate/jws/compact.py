@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Iterable, SupportsBytes
+from typing import TYPE_CHECKING, Any, Iterable, Mapping, SupportsBytes
 
 from binapy import BinaPy
 from typing_extensions import Self
@@ -62,9 +62,9 @@ class JwsCompact(BaseCompactToken):
     def sign(
         cls,
         payload: bytes | SupportsBytes,
-        key: Jwk | dict[str, Any] | Any,
+        key: Jwk | Mapping[str, Any] | Any,
         alg: str | None = None,
-        extra_headers: dict[str, Any] | None = None,
+        extra_headers: Mapping[str, Any] | None = None,
     ) -> JwsCompact:
         """Sign a payload and returns the resulting JwsCompact.
 
@@ -132,7 +132,7 @@ class JwsCompact(BaseCompactToken):
 
     def verify_signature(
         self,
-        key: Jwk | dict[str, Any] | Any,
+        key: Jwk | Mapping[str, Any] | Any,
         *,
         alg: str | None = None,
         algs: Iterable[str] | None = None,
@@ -153,7 +153,7 @@ class JwsCompact(BaseCompactToken):
 
     def verify(
         self,
-        key: Jwk | dict[str, Any] | Any,
+        key: Jwk | Mapping[str, Any] | Any,
         *,
         alg: str | None = None,
         algs: Iterable[str] | None = None,

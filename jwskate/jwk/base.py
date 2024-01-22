@@ -12,6 +12,7 @@ need to use the interface from `Jwk`.
 from __future__ import annotations
 
 import warnings
+from copy import copy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Mapping, SupportsBytes
 
@@ -154,7 +155,7 @@ class Jwk(BaseJsonDict):
         "shake256": "shake256",
     }
 
-    def __new__(cls, key: Jwk | dict[str, Any] | Any, **kwargs: Any) -> Jwk:
+    def __new__(cls, key: Jwk | Mapping[str, Any] | Any, **kwargs: Any) -> Jwk:
         """Overridden `__new__` to make the Jwk constructor smarter.
 
         The `Jwk` constructor will accept:
@@ -171,7 +172,7 @@ class Jwk(BaseJsonDict):
         if cls == Jwk:
             if isinstance(key, Jwk):
                 return cls.from_cryptography_key(key.cryptography_key, **kwargs)
-            if isinstance(key, dict):
+            if isinstance(key, Mapping):
                 kty: str | None = key.get("kty")
                 if kty is None:
                     msg = "A Json Web Key must have a Key Type (kty)"
@@ -188,9 +189,9 @@ class Jwk(BaseJsonDict):
                 return cls.from_json(key)
             else:
                 return cls.from_cryptography_key(key, **kwargs)
-        return super().__new__(cls, key, **kwargs)
+        return super().__new__(cls)
 
-    def __init__(self, params: dict[str, Any] | Any, *, include_kid_thumbprint: bool = False):
+    def __init__(self, params: Mapping[str, Any] | Any, *, include_kid_thumbprint: bool = False):
         if isinstance(params, dict):  # this is to avoid double init due to the __new__ above
             super().__init__({key: val for key, val in params.items() if val is not None})
             self._validate()
@@ -275,7 +276,8 @@ class Jwk(BaseJsonDict):
             RuntimeError: when trying to modify cryptographic attributes
 
         """
-        if key in self.PARAMS:
+        # don't allow modifying private attributes after the key has been initialized
+        if key in self.PARAMS and hasattr(self, "cryptography_key"):
             msg = "JWK key attributes cannot be modified."
             raise RuntimeError(msg)
         super().__setitem__(key, value)
@@ -305,12 +307,18 @@ class Jwk(BaseJsonDict):
         return alg
 
     @property
-    def kid(self) -> str | None:
-        """Return the JWK key ID (kid), if present."""
+    def kid(self) -> str:
+        """Return the JWK key ID (kid).
+
+        If the kid is not explicitly set, the RFC7638 key thumbprint is returned.
+
+        """
         kid = self.get("kid")
         if kid is not None and not isinstance(kid, str):  # pragma: no branch
             msg = f"invalid kid type {type(kid)}"
             raise TypeError(msg, kid)
+        if kid is None:
+            return self.thumbprint()
         return kid
 
     @property
@@ -1220,7 +1228,7 @@ class Jwk(BaseJsonDict):
             a copy of this key, with the same value
 
         """
-        return Jwk(super().copy())
+        return Jwk(copy(self.data))
 
     def with_kid_thumbprint(self, *, force: bool = False) -> Jwk:
         """Include the JWK thumbprint as `kid`.

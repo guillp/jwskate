@@ -179,3 +179,28 @@ class BaseJsonDict(BaseUserDict):
 
         """
         return BinaPy.serialize_to("json", self, compact=compact, **kwargs).decode()
+
+    def to_dict(self) -> dict[str, Any]:
+        """Transform this UserDict into an actual `dict`.
+
+        This should only ever be required when serializing to JSON, since the default json
+        serializer doesn't know how to handle UserDicts.
+
+        """
+        return {
+            key: [
+                dict(inner)
+                if isinstance(inner, dict)
+                else inner.to_dict()
+                if isinstance(inner, BaseJsonDict)
+                else inner
+                for inner in val
+            ]
+            if isinstance(val, list)
+            else dict(val)
+            if isinstance(val, dict)
+            else val.to_dict()
+            if isinstance(val, BaseJsonDict)
+            else val
+            for key, val in self.data.items()
+        }

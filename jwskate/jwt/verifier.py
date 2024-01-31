@@ -74,7 +74,7 @@ class JwtVerifier:
         self.leeway = leeway
         self.verifiers = list(verifiers) if verifiers else []
 
-    def verify(self, jwt: SignedJwt | str) -> None:
+    def verify(self, jwt: SignedJwt | str | bytes) -> None:
         """Verify a given JWT token.
 
         This checks the token signature, issuer, audience and expiration date, plus any custom verification,

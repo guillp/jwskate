@@ -29,7 +29,7 @@ from __future__ import annotations
 import uuid
 from typing import Any, Callable, Iterable, Mapping
 
-from jwskate.jwk import Jwk
+from jwskate.jwk import Jwk, to_jwk
 
 from .base import Jwt
 from .signed import SignedJwt
@@ -76,7 +76,7 @@ class JwtSigner:
         default_leeway: int | None = None,
     ):
         self.issuer = issuer
-        self.jwk = Jwk(key)
+        self.jwk = to_jwk(key)
         self.alg = alg
         self.default_lifetime = default_lifetime
         self.default_leeway = default_leeway

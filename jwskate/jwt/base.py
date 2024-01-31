@@ -85,7 +85,7 @@ class Jwt(BaseCompactToken):
         headers = dict(alg=alg, **extra_headers)
         if typ:
             headers["typ"] = typ
-        if key.kid:
+        if "kid" in key:
             headers["kid"] = key.kid
 
         return cls.sign_arbitrary(claims=claims, headers=headers, key=key, alg=alg)

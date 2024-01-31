@@ -312,12 +312,17 @@ key management, and encryption/decryption, with all available algorithms.
 Everywhere a key is required as parameter, you may pass either a raw `cryptography` key instance, or a `Jwk` instance
 (which is actually a thin wrapper around a cryptography key), or a `Mapping` representing the JWK key.
 
-### JWK are UserDicts
+### `Jwk` are `UserDict` instances
 
 JWK are specified as JSON objects, which are parsed as `dict` in Python. The `Jwk` class in `jwskate` is actually a
 `UserDict` subclass, which is very similar to a standard `dict`. So you can use it exactly like you would use a `dict`:
 you can access its members, dump it back as JSON, etc. The same is true for Signed or Encrypted Json Web tokens in JSON
 format. However, you cannot change the key cryptographic materials, since that would lead to unusable keys.
+
+Note that the keys with a `JwkSet` are converted to instances of `Jwk` on initialization. This may introduce an issue
+if you try to serialize it to JSON with the standard `json` module, which does not handle `UserDict` by default. You may
+either use `JwkSet.to_json()` to get a JSON-serialized string, or `JwkSet.to_dict()` to get a standard `dict`, that is
+serializable by the standard `json` module.
 
 ### JWA Wrappers
 

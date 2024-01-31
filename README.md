@@ -260,26 +260,28 @@ Since JSON Web Tokens (JWT) are more and more used, JWT generation and validatio
 easily verify the signature.
 
 ```python
-jwt = Jwt('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
-assert jwt.headers == {
-  "alg": "HS256",
-  "typ": "JWT"
-}
+from jwskate import Jwt
 
-assert jwt.claims == {
-  "sub": "1234567890",
-  "name": "John Doe",
-  "iat": 1516239022
-}
+jwt = Jwt(
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+)
+assert jwt.headers == {"alg": "HS256", "typ": "JWT"}
 
-assert jwt.signature == b'I\xf9J\xc7\x04IH\xc7\x8a(]\x90O\x87\xf0\xa4\xc7\x89\x7f~\x8f:N\xb2%_\xdau\x0b,\xc3\x97'
+assert jwt.claims == {"sub": "1234567890", "name": "John Doe", "iat": 1516239022}
+
+assert (
+    jwt.signature
+    == b"I\xf9J\xc7\x04IH\xc7\x8a(]\x90O\x87\xf0\xa4\xc7\x89\x7f~\x8f:N\xb2%_\xdau\x0b,\xc3\x97"
+)
 ```
 
 `Jwt` instances always represent a syntactically valid JWT. If you try to initialize one with a malformed value, you
 will get a `InvalidJwt` exception, with an helpful error message:
 
 ```python
-jwt = Jwt('eyJhbGci-malformedheader.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
+jwt = Jwt(
+    "eyJhbGci-malformedheader.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+)
 # jwskate.jwt.base.InvalidJwt: Invalid JWT header: it must be a Base64URL-encoded JSON object
 ```
 
@@ -287,7 +289,9 @@ jwt = Jwt('eyJhbGci-malformedheader.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4g
 depending on what type of value you need, or the `value` attribute:
 
 ```python
-jwt = Jwt('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
+jwt = Jwt(
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+)
 str(jwt)
 # 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
 bytes(jwt)

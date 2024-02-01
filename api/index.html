@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.4">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.6">
     
     
       
@@ -23984,7 +23984,7 @@ if <code>None</code>, do nothing</p>
         <span class="n">headers</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">alg</span><span class="o">=</span><span class="n">alg</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_headers</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">typ</span><span class="p">:</span>
             <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;typ&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">typ</span>
-        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">kid</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;kid&quot;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
             <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;kid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">kid</span>
 
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">sign_arbitrary</span><span class="p">(</span><span class="n">claims</span><span class="o">=</span><span class="n">claims</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">alg</span><span class="o">=</span><span class="n">alg</span><span class="p">)</span>
@@ -24544,7 +24544,7 @@ use <code>.unprotected()</code> instead.</p>
     <span class="n">headers</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">alg</span><span class="o">=</span><span class="n">alg</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_headers</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">typ</span><span class="p">:</span>
         <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;typ&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">typ</span>
-    <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">kid</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s2">&quot;kid&quot;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
         <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;kid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">kid</span>
 
     <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">sign_arbitrary</span><span class="p">(</span><span class="n">claims</span><span class="o">=</span><span class="n">claims</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">alg</span><span class="o">=</span><span class="n">alg</span><span class="p">)</span>
@@ -29072,7 +29072,7 @@ included. This can be overridden when calling <code>.sign()</code></p>
         <span class="n">default_leeway</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">issuer</span> <span class="o">=</span> <span class="n">issuer</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">jwk</span> <span class="o">=</span> <span class="n">Jwk</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jwk</span> <span class="o">=</span> <span class="n">to_jwk</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alg</span> <span class="o">=</span> <span class="n">alg</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">default_lifetime</span> <span class="o">=</span> <span class="n">default_lifetime</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">default_leeway</span> <span class="o">=</span> <span class="n">default_leeway</span>
@@ -29758,11 +29758,13 @@ initialization time.</p>
 <span class="normal">4</span>
 <span class="normal">5</span>
 <span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">verifier</span><span class="p">(</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">verifier</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">audience</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">verifiers</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">SignedJwt</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span>
-    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">verifiers</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">Iterable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">SignedJwt</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JwtVerifier</span>
 </code></pre></div></td></tr></table></div>
@@ -30179,7 +30181,7 @@ initialization time.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">leeway</span> <span class="o">=</span> <span class="n">leeway</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verifiers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">verifiers</span><span class="p">)</span> <span class="k">if</span> <span class="n">verifiers</span> <span class="k">else</span> <span class="p">[]</span>
 
-    <span class="k">def</span> <span class="nf">verify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jwt</span><span class="p">:</span> <span class="n">SignedJwt</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">verify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jwt</span><span class="p">:</span> <span class="n">SignedJwt</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Verify a given JWT token.</span>
 
 <span class="sd">        This checks the token signature, issuer, audience and expiration date, plus any custom verification,</span>
@@ -30268,7 +30270,7 @@ initialization time.</p>
 
 
 <a href="#jwskate.jwt.JwtVerifier.verify" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">verify</span><span class="p">(</span><span class="n">jwt</span><span class="p">:</span> <span class="n">SignedJwt</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="doc-signature highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">verify</span><span class="p">(</span><span class="n">jwt</span><span class="p">:</span> <span class="n">SignedJwt</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div></td></tr></table></div>
 
   <div class="doc doc-contents ">
@@ -30293,7 +30295,7 @@ as configured at init time.</p>
         <tr>
           <td><code>jwt</code></td>
           <td>
-                <code><a class="autorefs autorefs-internal" title="jwskate.jwt.signed.SignedJwt" href="#jwskate.jwt.SignedJwt">SignedJwt</a> | str</code>
+                <code><a class="autorefs autorefs-internal" title="jwskate.jwt.signed.SignedJwt" href="#jwskate.jwt.SignedJwt">SignedJwt</a> | str | bytes</code>
           </td>
           <td>
             <div class="doc-md-description">
@@ -30345,7 +30347,7 @@ as configured at init time.</p>
 <span class="normal">110</span>
 <span class="normal">111</span>
 <span class="normal">112</span>
-<span class="normal">113</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">verify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jwt</span><span class="p">:</span> <span class="n">SignedJwt</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">113</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">verify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jwt</span><span class="p">:</span> <span class="n">SignedJwt</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify a given JWT token.</span>
 
 <span class="sd">    This checks the token signature, issuer, audience and expiration date, plus any custom verification,</span>
@@ -32551,20 +32553,22 @@ verified.</p>
   </span>
 
 <a href="#jwskate.jws.JwsJsonFlat.sign" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span>
-<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">sign</span><span class="p">(</span>
+<div class="doc-signature highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">sign</span><span class="p">(</span>
     <span class="n">payload</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
     <span class="n">key</span><span class="p">:</span> <span class="n">Jwk</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">,</span>
     <span class="n">alg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">extra_protected_headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">extra_protected_headers</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">header</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JwsJsonFlat</span>
@@ -33904,11 +33908,13 @@ verified.</p>
 <span class="normal">4</span>
 <span class="normal">5</span>
 <span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">add_signature</span><span class="p">(</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">add_signature</span><span class="p">(</span>
     <span class="n">key</span><span class="p">:</span> <span class="n">Jwk</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">,</span>
     <span class="n">alg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">extra_protected_headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">extra_protected_headers</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">header</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JwsJsonGeneral</span>
 </code></pre></div></td></tr></table></div>
@@ -35446,20 +35452,22 @@ and returns the choosen signature.</p>
   </span>
 
 <a href="#jwskate.jws.JwsSignature.sign" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span>
-<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">sign</span><span class="p">(</span>
+<div class="doc-signature highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">sign</span><span class="p">(</span>
     <span class="n">payload</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
     <span class="n">key</span><span class="p">:</span> <span class="n">Jwk</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">,</span>
     <span class="n">alg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">extra_protected_headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">extra_protected_headers</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">header</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">S</span>
@@ -43715,11 +43723,15 @@ which you can generate using the classmethod <code>generate_iv()</code>.</p>
 <span class="normal">4</span>
 <span class="normal">5</span>
 <span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">wrap_key_with_epk</span><span class="p">(</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">wrap_key_with_epk</span><span class="p">(</span>
     <span class="n">plainkey</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
-    <span class="n">ephemeral_private_key</span><span class="p">:</span> <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePrivateKey</span>
-    <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PrivateKey</span>
-    <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PrivateKey</span><span class="p">,</span>
+    <span class="n">ephemeral_private_key</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePrivateKey</span>
+        <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PrivateKey</span>
+        <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PrivateKey</span>
+    <span class="p">),</span>
     <span class="o">**</span><span class="n">headers</span><span class="p">:</span> <span class="n">Any</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BinaPy</span>
 </code></pre></div></td></tr></table></div>
@@ -43871,11 +43883,15 @@ which you can generate using the classmethod <code>generate_iv()</code>.</p>
 <span class="normal">4</span>
 <span class="normal">5</span>
 <span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">unwrap_key_with_epk</span><span class="p">(</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">unwrap_key_with_epk</span><span class="p">(</span>
     <span class="n">cipherkey</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="n">SupportsBytes</span><span class="p">,</span>
-    <span class="n">ephemeral_public_key</span><span class="p">:</span> <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePublicKey</span>
-    <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PublicKey</span>
-    <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PublicKey</span><span class="p">,</span>
+    <span class="n">ephemeral_public_key</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePublicKey</span>
+        <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PublicKey</span>
+        <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PublicKey</span>
+    <span class="p">),</span>
     <span class="o">**</span><span class="n">headers</span><span class="p">:</span> <span class="n">Any</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BinaPy</span>
 </code></pre></div></td></tr></table></div>
@@ -46021,20 +46037,28 @@ PBKDF iterations.</p>
   </span>
 
 <a href="#jwskate.jwa.EcdhEs.ecdh" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">ecdh</span><span class="p">(</span>
-    <span class="n">private_key</span><span class="p">:</span> <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePrivateKey</span>
-    <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PrivateKey</span>
-    <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PrivateKey</span><span class="p">,</span>
-    <span class="n">public_key</span><span class="p">:</span> <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePublicKey</span>
-    <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PublicKey</span>
-    <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PublicKey</span><span class="p">,</span>
+<div class="doc-signature highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">ecdh</span><span class="p">(</span>
+    <span class="n">private_key</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePrivateKey</span>
+        <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PrivateKey</span>
+        <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PrivateKey</span>
+    <span class="p">),</span>
+    <span class="n">public_key</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePublicKey</span>
+        <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PublicKey</span>
+        <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PublicKey</span>
+    <span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BinaPy</span>
 </code></pre></div></td></tr></table></div>
 
@@ -46218,14 +46242,22 @@ or the matching sender public key and recipient private key.</p>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">derive</span><span class="p">(</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">derive</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">private_key</span><span class="p">:</span> <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePrivateKey</span>
-    <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PrivateKey</span>
-    <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PrivateKey</span><span class="p">,</span>
-    <span class="n">public_key</span><span class="p">:</span> <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePublicKey</span>
-    <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PublicKey</span>
-    <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PublicKey</span><span class="p">,</span>
+    <span class="n">private_key</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePrivateKey</span>
+        <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PrivateKey</span>
+        <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PrivateKey</span>
+    <span class="p">),</span>
+    <span class="n">public_key</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePublicKey</span>
+        <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PublicKey</span>
+        <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PublicKey</span>
+    <span class="p">),</span>
     <span class="n">otherinfo</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
     <span class="n">key_size</span><span class="p">:</span> <span class="nb">int</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BinaPy</span>
@@ -46482,18 +46514,22 @@ or the matching sender public key and recipient private key.</p>
 
 
 <a href="#jwskate.jwa.EcdhEs.sender_key" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span>
-<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">sender_key</span><span class="p">(</span>
-    <span class="n">ephemeral_private_key</span><span class="p">:</span> <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePrivateKey</span>
-    <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PrivateKey</span>
-    <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PrivateKey</span><span class="p">,</span>
+<div class="doc-signature highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">sender_key</span><span class="p">(</span>
+    <span class="n">ephemeral_private_key</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePrivateKey</span>
+        <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PrivateKey</span>
+        <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PrivateKey</span>
+    <span class="p">),</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">alg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">key_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -46680,18 +46716,22 @@ or the matching sender public key and recipient private key.</p>
 
 
 <a href="#jwskate.jwa.EcdhEs.recipient_key" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span>
-<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">recipient_key</span><span class="p">(</span>
-    <span class="n">ephemeral_public_key</span><span class="p">:</span> <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePublicKey</span>
-    <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PublicKey</span>
-    <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PublicKey</span><span class="p">,</span>
+<div class="doc-signature highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">recipient_key</span><span class="p">(</span>
+    <span class="n">ephemeral_public_key</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">ec</span><span class="o">.</span><span class="n">EllipticCurvePublicKey</span>
+        <span class="o">|</span> <span class="n">x25519</span><span class="o">.</span><span class="n">X25519PublicKey</span>
+        <span class="o">|</span> <span class="n">x448</span><span class="o">.</span><span class="n">X448PublicKey</span>
+    <span class="p">),</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">alg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">key_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -49691,10 +49731,10 @@ key-elliptic-curve">IANA JOSE</a>.</p>
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.indexes", "navigation.tabs", "navigation.instant", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.c011b7c0.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.indexes", "navigation.tabs", "navigation.instant", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.7389ff0e.min.js"></script>
+      <script src="../assets/javascripts/bundle.e1c3ead8.min.js"></script>
       
     
   </body>

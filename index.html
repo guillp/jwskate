@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.4">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.6">
     
     
       
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#jwskate" class="md-skip">
+        <a href="#_1" class="md-skip">
           Skip to content
         </a>
       
@@ -382,13 +382,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#jwskate" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
-      JwSkate
+      
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="JwSkate">
+    <nav class="md-nav" aria-label="">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -471,9 +471,36 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#jwk-are-userdicts" class="md-nav__link">
+  <a href="#tokens-are-objects" class="md-nav__link">
     <span class="md-ellipsis">
-      JWK are UserDicts
+      Tokens are objects
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#headers-are-auto-generated" class="md-nav__link">
+    <span class="md-ellipsis">
+      Headers are auto-generated
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jwk-as-thin-wrapper-around-cryptography-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Jwk as thin wrapper around cryptography keys
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jwk-are-userdict-instances" class="md-nav__link">
+    <span class="md-ellipsis">
+      Jwk are UserDict instances
     </span>
   </a>
   
@@ -658,13 +685,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#jwskate" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
-      JwSkate
+      
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="JwSkate">
+    <nav class="md-nav" aria-label="">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -747,9 +774,36 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#jwk-are-userdicts" class="md-nav__link">
+  <a href="#tokens-are-objects" class="md-nav__link">
     <span class="md-ellipsis">
-      JWK are UserDicts
+      Tokens are objects
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#headers-are-auto-generated" class="md-nav__link">
+    <span class="md-ellipsis">
+      Headers are auto-generated
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jwk-as-thin-wrapper-around-cryptography-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Jwk as thin wrapper around cryptography keys
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jwk-are-userdict-instances" class="md-nav__link">
+    <span class="md-ellipsis">
+      Jwk are UserDict instances
     </span>
   </a>
   
@@ -822,18 +876,22 @@
   <h1>home</h1>
 
 <!-- BEGIN INCLUDE ../README.md -->
-<h2 id="jwskate">JwSkate<a class="headerlink" href="#jwskate" title="Permanent link">&para;</a></h2>
+<h2 id="_1"><img alt="jwskate" src="logo.png" /><a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p><a href="https://pypi.python.org/pypi/jwskate"><img alt="PyPi" src="https://img.shields.io/pypi/v/jwskate.svg" /></a>
-<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg" /></a></p>
+<a href="https://pypi.python.org/pypi/jwskate"><img alt="PyPi - License" src="https://img.shields.io/pypi/l/jwskate" /></a>
+<a href="https://pypi.python.org/pypi/jwskate"><img alt="PyPI - Downloads" src="https://img.shields.io/pypi/dw/jwskate" /></a>
+<a href="https://github.com/astral-sh/ruff"><img alt="Code style: ruff" src="https://img.shields.io/badge/code%20style-ruff-000000.svg" /></a></p>
 <p>A Pythonic implementation of the JOSE set of IETF specifications: <a href="https://www.rfc-editor.org/rfc/rfc7515.html">Json Web Signature</a>, <a href="https://www.rfc-editor.org/rfc/rfc7517.html">Keys</a>,
-<a href="https://www.rfc-editor.org/rfc/rfc7518.html">Algorithms</a>, <a href="https://www.rfc-editor.org/rfc/rfc7519.html">Tokens</a> and <a href="https://www.rfc-editor.org/rfc/rfc7516.html">Encryption</a> (RFC7515 to 7519), and their extensions
-<a href="https://www.rfc-editor.org/rfc/rfc8037.html">ECDH Signatures</a> (RFC8037), <a href="https://www.rfc-editor.org/rfc/rfc7638.html">JWK Thumbprints</a> (RFC7638), and <a href="https://www.rfc-editor.org/rfc/rfc9278.html">JWK Thumbprint URI</a> (RFC9278),
-and with respects to <a href="https://www.rfc-editor.org/rfc/rfc8725">JWT Best Current Practices</a> (RFC8725).</p>
+<a href="https://www.rfc-editor.org/rfc/rfc7518.html">Algorithms</a>, <a href="https://www.rfc-editor.org/rfc/rfc7519.html">Tokens</a> and <a href="https://www.rfc-editor.org/rfc/rfc7516.html">Encryption</a> (RFC7515 to 7519), hence the name <strong>JWSKATE</strong>, and
+their extensions <a href="https://www.rfc-editor.org/rfc/rfc8037.html">ECDH Signatures</a> (RFC8037), <a href="https://www.rfc-editor.org/rfc/rfc7638.html">JWK Thumbprints</a> (RFC7638), and
+<a href="https://www.rfc-editor.org/rfc/rfc9278.html">JWK Thumbprint URI</a> (RFC9278), with respects to <a href="https://www.rfc-editor.org/rfc/rfc8725">JWT Best Current Practices</a> (RFC8725).</p>
 <ul>
 <li>Free software: MIT</li>
-<li>Documentation: <a href="https://guillp.github.io/jwskate/">https://guillp.github.io/jwskate/</a></li>
+<li>Repository: https://github.com/guillp/jwskate/</li>
+<li>Documentation: https://guillp.github.io/jwskate/</li>
 </ul>
-<p>Here is a quick usage example: generating a private RSA key, signing some data, then validating that signature with the matching public key:</p>
+<p>Here is a quick usage example: generating a private RSA key, signing some data, then validating that signature with the
+matching public key:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1013,8 +1071,8 @@ and with respects to <a href="https://www.rfc-editor.org/rfc/rfc8725">JWT Best C
 
 <span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="o">.</span><span class="n">claims</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-<p>The generated JWT will include the standardized claims (<code>iss</code>, <code>aud</code>, <code>sub</code>, <code>iat</code>, <code>exp</code> and <code>jti</code>),
-together with the <code>extra_claims</code> provided to <code>.sign()</code>:</p>
+<p>The generated JWT will include the standardized claims (<code>iss</code>, <code>aud</code>, <code>sub</code>, <code>iat</code>, <code>exp</code> and <code>jti</code>), together with the
+<code>extra_claims</code> provided to <code>.sign()</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -1472,21 +1530,159 @@ have been dissatisfied by all of them so far, so I decided to come up with my ow
 <li><a href="https://docs.authlib.org/en/latest/jose/">AuthLib</a></li>
 </ul>
 <p>Not to say that those are <em>bad</em> libs (I actually use <code>jwcrypto</code> myself for <code>jwskate</code> unit tests), but they either don't
-support some important features, lack documentation, or more generally have APIs that don't feel easy-enough, Pythonic-enough
-to use.</p>
+support some important features, lack documentation, or more generally have APIs that don't feel easy-enough,
+Pythonic-enough to use. See <a href="..#Design">Design</a> below for some of the design decisions that lead to <code>jwskate</code>.</p>
 <h3 id="design">Design<a class="headerlink" href="#design" title="Permanent link">&para;</a></h3>
-<h4 id="jwk-are-userdicts">JWK are UserDicts<a class="headerlink" href="#jwk-are-userdicts" title="Permanent link">&para;</a></h4>
+<h4 id="tokens-are-objects">Tokens are objects<a class="headerlink" href="#tokens-are-objects" title="Permanent link">&para;</a></h4>
+<p>Since JSON Web Tokens (JWT) are more and more used, JWT generation and validation must be as easy to do as possible. The
+<code>Jwt</code> class wraps around a JWT value to allow easy access to its headers, claims and signature, and exposes methods to
+easily verify the signature.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">Jwt</span>
+
+<span class="n">jwt</span> <span class="o">=</span> <span class="n">Jwt</span><span class="p">(</span>
+    <span class="s2">&quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c&quot;</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">headers</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;alg&quot;</span><span class="p">:</span> <span class="s2">&quot;HS256&quot;</span><span class="p">,</span> <span class="s2">&quot;typ&quot;</span><span class="p">:</span> <span class="s2">&quot;JWT&quot;</span><span class="p">}</span>
+
+<span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">claims</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;sub&quot;</span><span class="p">:</span> <span class="s2">&quot;1234567890&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;John Doe&quot;</span><span class="p">,</span> <span class="s2">&quot;iat&quot;</span><span class="p">:</span> <span class="mi">1516239022</span><span class="p">}</span>
+
+<span class="k">assert</span> <span class="p">(</span>
+    <span class="n">jwt</span><span class="o">.</span><span class="n">signature</span>
+    <span class="o">==</span> <span class="sa">b</span><span class="s2">&quot;I</span><span class="se">\xf9</span><span class="s2">J</span><span class="se">\xc7\x04</span><span class="s2">IH</span><span class="se">\xc7\x8a</span><span class="s2">(]</span><span class="se">\x90</span><span class="s2">O</span><span class="se">\x87\xf0\xa4\xc7\x89\x7f</span><span class="s2">~</span><span class="se">\x8f</span><span class="s2">:N</span><span class="se">\xb2</span><span class="s2">%_</span><span class="se">\xda</span><span class="s2">u</span><span class="se">\x0b</span><span class="s2">,</span><span class="se">\xc3\x97</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<p><code>Jwt</code> instances always represent a syntactically valid JWT. If you try to initialize one with a malformed value, you
+will get a <code>InvalidJwt</code> exception, with an helpful error message:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">jwt</span> <span class="o">=</span> <span class="n">Jwt</span><span class="p">(</span>
+    <span class="s2">&quot;eyJhbGci-malformedheader.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c&quot;</span>
+<span class="p">)</span>
+<span class="c1"># jwskate.jwt.base.InvalidJwt: Invalid JWT header: it must be a Base64URL-encoded JSON object</span>
+</code></pre></div></td></tr></table></div>
+<p><code>Jwt</code> may be objects, but they are easy to serialize into their representation. Use either <code>str()</code> or <code>bytes()</code>
+depending on what type of value you need, or the <code>value</code> attribute:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">jwt</span> <span class="o">=</span> <span class="n">Jwt</span><span class="p">(</span>
+    <span class="s2">&quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c&quot;</span>
+<span class="p">)</span>
+<span class="nb">str</span><span class="p">(</span><span class="n">jwt</span><span class="p">)</span>
+<span class="c1"># &#39;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c&#39;</span>
+<span class="nb">bytes</span><span class="p">(</span><span class="n">jwt</span><span class="p">)</span>
+<span class="c1"># b&#39;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c&#39;</span>
+<span class="k">assert</span> <span class="n">jwt</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">jwt</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<p>The same is true for JWS and JWE tokens.</p>
+<h4 id="headers-are-auto-generated">Headers are auto-generated<a class="headerlink" href="#headers-are-auto-generated" title="Permanent link">&para;</a></h4>
+<p>When signing a JWS, JWE or JWT, the headers are autogenerated by default, based on the used key and algorithm.</p>
+<p>You may add your own custom headers using the <code>extra_headers</code> parameter, and/or set a custom <code>typ</code> header with the parameter of the same name:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">SymmetricJwk</span><span class="p">,</span> <span class="n">Jwt</span>
+
+<span class="n">jwk</span> <span class="o">=</span> <span class="n">SymmetricJwk</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;T0t4llyR@nd0M&quot;</span><span class="p">,</span> <span class="n">kid</span><span class="o">=</span><span class="s2">&quot;symmetric_key1&quot;</span><span class="p">)</span>
+<span class="n">jwt</span> <span class="o">=</span> <span class="n">Jwt</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span>
+    <span class="n">claims</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;my&quot;</span><span class="p">:</span> <span class="s2">&quot;claims&quot;</span><span class="p">},</span>
+    <span class="n">key</span><span class="o">=</span><span class="n">jwk</span><span class="p">,</span>
+    <span class="n">alg</span><span class="o">=</span><span class="s2">&quot;HS256&quot;</span><span class="p">,</span>
+    <span class="n">typ</span><span class="o">=</span><span class="s2">&quot;CustomJWT&quot;</span><span class="p">,</span>
+    <span class="n">extra_headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;custom_header&quot;</span><span class="p">:</span> <span class="s2">&quot;custom_value&quot;</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="p">)</span>
+<span class="c1"># eyJhbGciOiJIUzI1NiIsImN1c3RvbV9oZWFkZXIiOiJjdXN0b21fdmFsdWUiLCJ0eXAiOiJDdXN0b21KV1QiLCJraWQiOiJzeW1tZXRyaWNfa2V5MSJ9.eyJteSI6ImNsYWltcyJ9.ZqCp8Crq-mdCXLoy5NiEdPTSUlIFEjrzexA6mKHrMAc</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+<span class="c1"># {&#39;alg&#39;: &#39;HS256&#39;, &#39;custom_header&#39;: &#39;custom_value&#39;, &#39;typ&#39;: &#39;CustomJWT&#39;, &#39;kid&#39;: &#39;symmetric_key1&#39;}</span>
+</code></pre></div></td></tr></table></div>
+<p>If, for testing purposes, you need to fully control which headers are included in the JWT, even if they are inconsistent,
+you can use <code>Jwt.sign_arbitrary()</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">jwskate</span> <span class="kn">import</span> <span class="n">SymmetricJwk</span><span class="p">,</span> <span class="n">Jwt</span>
+
+<span class="n">jwk</span> <span class="o">=</span> <span class="n">SymmetricJwk</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;T0t4llyR@nd0M&quot;</span><span class="p">,</span> <span class="n">kid</span><span class="o">=</span><span class="s2">&quot;symmetric_key1&quot;</span><span class="p">)</span>
+<span class="n">jwt</span> <span class="o">=</span> <span class="n">Jwt</span><span class="o">.</span><span class="n">sign_arbitrary</span><span class="p">(</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;custom_header&quot;</span><span class="p">:</span> <span class="s2">&quot;custom_value&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;typ&quot;</span><span class="p">:</span> <span class="s2">&quot;WeirdJWT&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;kid&quot;</span><span class="p">:</span> <span class="s2">&quot;R@nd0m_KID&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;alg&quot;</span><span class="p">:</span> <span class="s2">&quot;WeirdAlg&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">claims</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;my&quot;</span><span class="p">:</span> <span class="s2">&quot;claims&quot;</span><span class="p">},</span>
+    <span class="n">key</span><span class="o">=</span><span class="n">jwk</span><span class="p">,</span>
+    <span class="n">alg</span><span class="o">=</span><span class="s2">&quot;HS256&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="p">)</span>
+<span class="c1"># eyJjdXN0b21faGVhZGVyIjoiY3VzdG9tX3ZhbHVlIiwidHlwIjoiV2VpcmRKV1QiLCJraWQiOiJSQG5kMG1fS0lEIiwiYWxnIjoiV2VpcmRBbGcifQ.eyJteSI6ImNsYWltcyJ9.bcTFqCSiVIbyJhxClgsBDIyhbvLXTOXOV55QGqo2mhw</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jwt</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>  <span class="c1"># you asked for inconsistent headers, you have them:</span>
+<span class="c1"># {&#39;custom_header&#39;: &#39;custom_value&#39;, &#39;typ&#39;: &#39;WeirdJWT&#39;, &#39;kid&#39;: &#39;R@nd0m_KID&#39;, &#39;alg&#39;: &#39;WeirdAlg&#39;}</span>
+</code></pre></div></td></tr></table></div>
+<h4 id="jwk-as-thin-wrapper-around-cryptography-keys"><code>Jwk</code> as thin wrapper around <code>cryptography</code> keys<a class="headerlink" href="#jwk-as-thin-wrapper-around-cryptography-keys" title="Permanent link">&para;</a></h4>
+<p><code>Jwk</code> keys are just <em>thin</em> wrappers around keys from the <code>cryptography</code> module, or, in the case of symmetric keys,
+around <code>bytes</code>. But, unlike <code>cryptography</code>keys, they present a consistent interface for signature creation/verification,
+key management, and encryption/decryption, with all available algorithms.</p>
+<p>Everywhere a key is required as parameter, you may pass either a raw <code>cryptography</code> key instance, or a <code>Jwk</code> instance
+(which is actually a thin wrapper around a cryptography key), or a <code>Mapping</code> representing the JWK key.</p>
+<h4 id="jwk-are-userdict-instances"><code>Jwk</code> are <code>UserDict</code> instances<a class="headerlink" href="#jwk-are-userdict-instances" title="Permanent link">&para;</a></h4>
 <p>JWK are specified as JSON objects, which are parsed as <code>dict</code> in Python. The <code>Jwk</code> class in <code>jwskate</code> is actually a
 <code>UserDict</code> subclass, which is very similar to a standard <code>dict</code>. So you can use it exactly like you would use a <code>dict</code>:
 you can access its members, dump it back as JSON, etc. The same is true for Signed or Encrypted Json Web tokens in JSON
 format. However, you cannot change the key cryptographic materials, since that would lead to unusable keys.</p>
+<p>Note that the keys with a <code>JwkSet</code> are converted to instances of <code>Jwk</code> on initialization. This may introduce an issue
+if you try to serialize it to JSON with the standard <code>json</code> module, which does not handle <code>UserDict</code> by default. You may
+either use <code>JwkSet.to_json()</code> to get a JSON-serialized string, or <code>JwkSet.to_dict()</code> to get a standard <code>dict</code>, that is
+serializable by the standard <code>json</code> module.</p>
 <h4 id="jwa-wrappers">JWA Wrappers<a class="headerlink" href="#jwa-wrappers" title="Permanent link">&para;</a></h4>
 <p>You can use <code>cryptography</code> to do the cryptographic operations that are described in
 <a href="https://www.rfc-editor.org/info/rfc7518">JWA</a>, but since <code>cryptography</code> is a general purpose library, its usage is not
 straightforward and gives you plenty of options to carefully select and combine, leaving room for mistakes, errors and
-confusion. It has also a quite inconsistent API to handle the different type of keys and algorithms. To work around
-this, <code>jwskate</code> comes with a set of consistent wrappers that implement the exact JWA specifications, with minimum risk
-of mistakes.</p>
+confusion. It also has a quite inconsistent API to handle the different key types and algorithms. To work around this,
+<code>jwskate</code> comes with a set of consistent wrappers that implement the exact JWA specifications, with minimum risk of
+mistakes.</p>
 <h4 id="safe-signature-verification">Safe Signature Verification<a class="headerlink" href="#safe-signature-verification" title="Permanent link">&para;</a></h4>
 <p>As advised in <a href="https://www.rfc-editor.org/rfc/rfc8725">JWT Best Practices</a> $3.1:</p>
 <p>For every signature verification method in <code>jwskate</code>, the expected signature(s) algorithm(s) must be specified. That is
@@ -1579,10 +1775,10 @@ an <code>alg</code> or <code>algs</code> which does not match that value, a <cod
     </div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.indexes", "navigation.tabs", "navigation.instant", "navigation.tabs.sticky"], "search": "assets/javascripts/workers/search.c011b7c0.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.indexes", "navigation.tabs", "navigation.instant", "navigation.tabs.sticky"], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.7389ff0e.min.js"></script>
+      <script src="assets/javascripts/bundle.e1c3ead8.min.js"></script>
       
     
   </body>

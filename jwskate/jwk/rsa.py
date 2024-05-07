@@ -34,7 +34,7 @@ class RSAJwk(Jwk):
 
     """
 
-    KTY = KeyTypes.RSA
+    KEY_TYPE = KeyTypes.RSA
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (rsa.RSAPrivateKey,)
     CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (rsa.RSAPublicKey,)
 
@@ -129,7 +129,7 @@ class RSAJwk(Jwk):
         """
         return cls(
             dict(
-                kty=cls.KTY,
+                kty=cls.KEY_TYPE,
                 n=BinaPy.from_int(n).to("b64u").ascii(),
                 e=BinaPy.from_int(e).to("b64u").ascii(),
                 **params,
@@ -169,7 +169,7 @@ class RSAJwk(Jwk):
         """
         return cls(
             dict(
-                kty=cls.KTY,
+                kty=cls.KEY_TYPE,
                 n=BinaPy.from_int(n).to("b64u").ascii(),
                 e=BinaPy.from_int(e).to("b64u").ascii(),
                 d=BinaPy.from_int(d).to("b64u").ascii(),

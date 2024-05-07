@@ -41,7 +41,7 @@ class SymmetricJwk(Jwk):
 
     """
 
-    KTY = KeyTypes.OCT
+    KEY_TYPE = KeyTypes.OCT
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (bytes,)
     CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (bytes,)
 
@@ -106,7 +106,7 @@ class SymmetricJwk(Jwk):
           the resulting `SymmetricJwk`
 
         """
-        return cls(dict(kty=cls.KTY, k=BinaPy(k).to("b64u").ascii(), **params))
+        return cls(dict(kty=cls.KEY_TYPE, k=BinaPy(k).to("b64u").ascii(), **params))
 
     @classmethod
     @override

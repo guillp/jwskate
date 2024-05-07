@@ -43,7 +43,7 @@ class ECJwk(Jwk):
 
     """
 
-    KTY = KeyTypes.EC
+    KEY_TYPE = KeyTypes.EC
 
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (ec.EllipticCurvePrivateKey,)
 
@@ -122,7 +122,7 @@ class ECJwk(Jwk):
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(
             dict(
-                kty=cls.KTY,
+                kty=cls.KEY_TYPE,
                 crv=crv,
                 x=BinaPy.from_int(x, length=coord_size).to("b64u").ascii(),
                 y=BinaPy.from_int(y, length=coord_size).to("b64u").ascii(),
@@ -148,7 +148,7 @@ class ECJwk(Jwk):
         coord_size = cls.get_curve(crv).coordinate_size
         return cls(
             dict(
-                kty=cls.KTY,
+                kty=cls.KEY_TYPE,
                 crv=crv,
                 x=BinaPy.from_int(x, length=coord_size).to("b64u").ascii(),
                 y=BinaPy.from_int(y, length=coord_size).to("b64u").ascii(),

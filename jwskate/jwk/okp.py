@@ -44,7 +44,7 @@ class OKPJwk(Jwk):
 
     """
 
-    KTY = KeyTypes.OKP
+    KEY_TYPE = KeyTypes.OKP
 
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES = (
         ed25519.Ed25519PrivateKey,
@@ -208,7 +208,7 @@ class OKPJwk(Jwk):
             ):
                 break
         else:
-            ", ".join(
+            supported_key_types = ", ".join(
                 name
                 for curve in OKPCurve.instances.values()
                 for name in (
@@ -218,7 +218,7 @@ class OKPJwk(Jwk):
             )
             msg = (
                 f"Unsupported key type for OKP: {type(cryptography_key)}. "
-                "Supported key types are: {supported_key_types}"
+                f"Supported key types are: {supported_key_types}"
             )
             raise TypeError(msg)
 
@@ -269,7 +269,7 @@ class OKPJwk(Jwk):
             the resulting `OKPJwk`
 
         """
-        return cls(dict(kty=cls.KTY, crv=crv, x=BinaPy(x).to("b64u").ascii(), **params))
+        return cls(dict(kty=cls.KEY_TYPE, crv=crv, x=BinaPy(x).to("b64u").ascii(), **params))
 
     @classmethod
     def private(cls, *, crv: str, x: bytes, d: bytes, **params: Any) -> OKPJwk:
@@ -287,7 +287,7 @@ class OKPJwk(Jwk):
         """
         return cls(
             dict(
-                kty=cls.KTY,
+                kty=cls.KEY_TYPE,
                 crv=crv,
                 x=BinaPy(x).to("b64u").ascii(),
                 d=BinaPy(d).to("b64u").ascii(),

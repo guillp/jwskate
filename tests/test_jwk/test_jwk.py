@@ -416,7 +416,7 @@ def test_aeskw_with_choosen_cek(alg: str, enc: str) -> None:
     recipient_jwk = Jwk.generate(alg=alg)
     choosen_cek = select_alg_class(SymmetricJwk.ENCRYPTION_ALGORITHMS, alg=enc).generate_key()
 
-    sender_cek, wrapped_cek, extra_headers = recipient_jwk.sender_key(enc=enc, cek=choosen_cek)
+    sender_cek, _, _ = recipient_jwk.sender_key(enc=enc, cek=choosen_cek)
     assert sender_cek.key == choosen_cek
 
 

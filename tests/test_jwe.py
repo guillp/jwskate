@@ -516,9 +516,7 @@ def decryption_jwk(
 
 @pytest.fixture(scope="module")
 def encryption_jwk(decryption_jwk: Jwk | bytes) -> Jwk | bytes:
-    if isinstance(decryption_jwk, SymmetricJwk):
-        return decryption_jwk
-    elif isinstance(decryption_jwk, bytes):
+    if isinstance(decryption_jwk, (SymmetricJwk, bytes)):
         return decryption_jwk
 
     return decryption_jwk.public_jwk()
@@ -634,7 +632,6 @@ def test_decrypt_by_jwcrypto(
     """
     import jwcrypto.jwe  # type: ignore[import-untyped]
     import jwcrypto.jwk  # type: ignore[import-untyped]
-    from jwcrypto.common import InvalidJWEOperation, json_encode  # type: ignore[import-untyped]
 
     if key_management_alg in JWCRYPTO_UNSUPPORTED_ALGS:
         pytest.skip(f"jwcrypto doesn't support key management alg {key_management_alg}")
@@ -674,7 +671,7 @@ def jwcrypto_encrypted_jwe(
     """
     import jwcrypto.jwe
     import jwcrypto.jwk
-    from jwcrypto.common import json_encode
+    from jwcrypto.common import json_encode  # type: ignore[import-untyped]
 
     if key_management_alg in JWCRYPTO_UNSUPPORTED_ALGS:
         pytest.skip(f"jwcrypto doesn't support key management alg {key_management_alg}")

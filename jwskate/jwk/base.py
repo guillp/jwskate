@@ -487,7 +487,7 @@ class Jwk(BaseJsonDict):
                 raise InvalidJwk(msg)
 
             if value is None:
-                pass
+                continue
             elif param.kind == "b64u":
                 if not isinstance(value, str):
                     msg = f"Parameter {param.description} ({name}) must be a string with a Base64URL-encoded value"
@@ -500,7 +500,7 @@ class Jwk(BaseJsonDict):
                     msg = f"Unsupported JWK param '{name}'"
                     raise InvalidJwk(msg)
             elif param.kind == "name":
-                pass
+                continue
             else:
                 msg = f"Unsupported param '{name}' type '{param.kind}'"
                 raise AssertionError(msg)  # pragma: no cover
@@ -824,7 +824,7 @@ class Jwk(BaseJsonDict):
 
         cek_headers: dict[str, Any] = {}
 
-        if isinstance(key_alg_wrapper, BaseRsaKeyWrap):
+        if isinstance(key_alg_wrapper, (BaseRsaKeyWrap, BaseAesKeyWrap)):
             if cek:
                 enc_alg_class.check_key(cek)
             else:
@@ -850,13 +850,6 @@ class Jwk(BaseJsonDict):
                     **headers,
                 )
                 wrapped_cek = BinaPy(b"")
-
-        elif isinstance(key_alg_wrapper, BaseAesKeyWrap):
-            if cek:
-                enc_alg_class.check_key(cek)
-            else:
-                cek = enc_alg_class.generate_key()
-            wrapped_cek = key_alg_wrapper.wrap_key(cek)
 
         elif isinstance(key_alg_wrapper, BaseAesGcmKeyWrap):
             if cek:

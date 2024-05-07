@@ -3,9 +3,9 @@ from __future__ import annotations
 from builtins import ValueError
 from datetime import datetime, timezone
 
+import freezegun
 import pytest
 from binapy import BinaPy
-from freezegun.api import FrozenDateTimeFactory
 
 from jwskate import (
     ExpectedAlgRequired,
@@ -94,7 +94,8 @@ def test_unprotected() -> None:
     assert jwt.signature == b""
 
 
-def test_jwt_signer_and_verifier(issuer: str, freezer: FrozenDateTimeFactory) -> None:
+@freezegun.freeze_time()
+def test_jwt_signer_and_verifier(issuer: str) -> None:
     audience = "some_audience"
     signer = JwtSigner.with_random_key(issuer=issuer, alg="ES256")
     now = datetime.now(timezone.utc)
@@ -545,8 +546,8 @@ def test_invalid_claims() -> None:
         jwt.jwt_token_id
 
 
-def test_timestamp(freezer: FrozenDateTimeFactory) -> None:
-    freezer.move_to("2022-10-07 10:40:15 UTC")
+@freezegun.freeze_time("2022-10-07 10:40:15 UTC")
+def test_timestamp() -> None:
     now_ts = Jwt.timestamp()
     assert isinstance(now_ts, int)
     assert now_ts == 1665139215
@@ -558,8 +559,8 @@ def test_timestamp(freezer: FrozenDateTimeFactory) -> None:
     assert Jwt.timestamp(-60) == 1665139155
 
 
-def test_verifier(freezer: FrozenDateTimeFactory) -> None:
-    freezer.move_to("2023-04-03 11:56:20 UTC")
+@freezegun.freeze_time("2023-04-03 11:56:20 UTC")
+def test_verifier() -> None:
     issuer = "https://my.issuer.local"
     audience = "myaudience"
     subject = "mysubject"

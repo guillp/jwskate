@@ -740,3 +740,20 @@ def test_verifier(freezer: FrozenDateTimeFactory) -> None:
             alg="ES256",
             verifiers=[suject_verifier, not_foo],
         ).verify(valid_jwt_without_kid)
+
+
+def test_unprotect() -> None:
+    claims = {"claim1": "value1", "claim2": "value2"}
+    jwk = Jwk.generate(alg="ES256")
+    jwt = Jwt.sign(claims, key=jwk)
+
+    ujwk = jwt.unprotect()
+    assert ujwk.alg == "none"
+    assert ujwk.claims == claims
+    assert ujwk.typ == "JWT"
+
+    ujwk2 = jwt.unprotect(alg="n0ne", typ="FOO", extra_headers={"jku": "https://foo.bar"})
+    assert ujwk2.alg == "n0ne"
+    assert ujwk2.claims == claims
+    assert ujwk2.typ == "FOO"
+    assert ujwk2.headers["jku"] == "https://foo.bar"

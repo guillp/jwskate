@@ -133,13 +133,18 @@ class Jwt(BaseCompactToken):
         cls,
         claims: Mapping[str, Any],
         *,
+        alg: str = "none",
         typ: str | None = "JWT",
         extra_headers: Mapping[str, Any] | None = None,
     ) -> SignedJwt:
-        """Generate a JWT that is not signed and not encrypted (with alg=none).
+        """Generate a JWT that is not signed and not encrypted.
+
+        Those unprotected Jwt should contain a `alg` header with value `"none"`, but you can change that value
+        by passing an `alg` parameter if you know what you are doing.
 
         Args:
           claims: the claims to set in the token.
+          alg: the `alg` value to set as header.
           typ: typ (token type) header to include. If `None`, do not include this header.
           extra_headers: additional headers to insert in the token.
 
@@ -149,7 +154,7 @@ class Jwt(BaseCompactToken):
         """
         from .signed import SignedJwt
 
-        headers = dict(extra_headers or {}, alg="none")
+        headers = dict(extra_headers or {}, alg=alg)
         if typ:
             headers["typ"] = typ
 

@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Mapping, SupportsByte
 from binapy import BinaPy
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.serialization import pkcs12
 from typing_extensions import Self
 
 from jwskate.jwa import (
@@ -1010,7 +1011,7 @@ class Jwk(BaseJsonDict):
         return JwkSet(keys=(self,))
 
     @classmethod
-    def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> Jwk:
+    def from_cryptography_key(cls, cryptography_key: Any, **kwargs: Any) -> Self:
         """Initialize a Jwk from a key from the `cryptography` library.
 
         The input key can be any private or public key supported by cryptography.
@@ -1026,7 +1027,7 @@ class Jwk(BaseJsonDict):
             TypeError: if the key type is not supported
 
         """
-        for jwk_class in Jwk.__subclasses__():
+        for jwk_class in cls.__subclasses__():
             for cryptography_class in (
                 jwk_class.CRYPTOGRAPHY_PRIVATE_KEY_CLASSES + jwk_class.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES
             ):
@@ -1191,6 +1192,36 @@ class Jwk(BaseJsonDict):
 
         cert = x509.load_pem_x509_certificate(x509_pem)
         return cls(cert.public_key())
+
+    @classmethod
+    def from_pkcs12(cls, p12: bytes, password: bytes | str | None) -> Self:
+        """Read a private key from a PKCS12 data, password-protected.
+
+        PKCS12 typically contain a private key and one or more associated certificates.
+        This will only read a single private key and return the matching `Jwk`.
+        PKCS12 files are binary, and usually have a `.p12` or `.pfx` extension.
+
+        PKCS12 files are typically protected with a password, which you must provide
+        as parameter to this method. If you provide a password as a `str`, it will be
+        encoded with UTF-8 before being used for decryption, just like OpenSSL>1.1.0
+        expects. If your PKCS12 file and password were generated with OpenSSL<=1.1.0,
+        you must provide the password as `bytes`, encoded with either 'ASCII' or 'ISO8859-1'
+
+        See:
+            https://www.openssl.org/docs/man3.0/man7/passphrase-encoding.html#:~:text=PKCS#12
+
+        Args:
+            p12: the raw PKCS12 binary data
+            password: the decryption password, if any.
+
+        Returns:
+            A `Jwk` instance with the private key read from the PKCS12 data
+
+        """
+        if isinstance(password, str):
+            password = password.encode("UTF-8")
+        key, _, _ = pkcs12.load_key_and_certificates(p12, password)
+        return cls.from_cryptography_key(key)
 
     @classmethod
     def generate(cls, *, alg: str | None = None, kty: str | None = None, **kwargs: Any) -> Jwk:

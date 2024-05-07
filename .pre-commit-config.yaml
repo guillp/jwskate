@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
     - id: trailing-whitespace
       args: [--markdown-linebreak-ext=md]
@@ -26,13 +26,13 @@ repos:
     hooks:
         - id: blacken-docs
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.15
+    rev: v0.4.3
     hooks:
         - id: ruff
           args: [ --fix ]
         - id: ruff-format
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.10.0
     hooks:
     -   id: mypy
         args:
@@ -46,4 +46,4 @@ repos:
             - pytest-mypy==0.10.3
             - binapy==0.8.0
             - freezegun==1.2.2
-            - jwcrypto==1.5.0
+            - jwcrypto==1.5.6

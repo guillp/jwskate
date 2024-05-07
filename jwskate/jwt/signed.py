@@ -1,10 +1,10 @@
-"""This modules contains classes and utilities to generate and validate signed JWT."""
+"""This module contains classes and utilities to generate and validate signed JWT."""
 
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from functools import cached_property
-from typing import Any, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
 from binapy import BinaPy
 from typing_extensions import Self
@@ -14,6 +14,9 @@ from jwskate.jwk import Jwk, to_jwk
 from jwskate.jws import InvalidSignature
 
 from .base import InvalidJwt, Jwt
+
+if TYPE_CHECKING:
+    from types import EllipsisType
 
 
 class ExpiredJwt(ValueError):
@@ -438,3 +441,21 @@ class SignedJwt(Jwt):
 
         jwe = JweCompact.encrypt(self, key, enc=enc, alg=alg, extra_headers=extra_headers)
         return jwe
+
+    def unprotect(
+        self, *, alg: str = "none", typ: str | None | EllipsisType = ..., extra_headers: Mapping[str, Any] | None = None
+    ) -> SignedJwt:
+        """Return a new Jwt with the same payload but without signature.
+
+        The JWT `alg` header will be set to `"none"` by default. You may change this by passing a `alg` parameter,
+        which can be useful for security testing or Capture-the-Flag scenarios.
+
+        Args:
+            alg: the `alg` value to set as header
+            typ: the `typ` value to set as header. Defaults to the same `typ` as in the original token.
+            extra_headers: additional headers to include in the unprotected JWT.
+
+        """
+        if typ is ...:
+            typ = self.typ
+        return self.unprotected(self.claims, alg=alg, typ=typ, extra_headers=extra_headers)

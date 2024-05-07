@@ -129,14 +129,14 @@ class Jwk(BaseJsonDict):
 
         """
         for jwk_class in Jwk.__subclasses__():
-            if kty == jwk_class.KTY:
+            if kty == jwk_class.KEY_TYPE:
                 return jwk_class.generate(**kwargs)
         msg = "Unsupported Key Type:"
         raise UnsupportedKeyType(msg, kty)
 
     PARAMS: Mapping[str, JwkParameter]
 
-    KTY: ClassVar[str]
+    KEY_TYPE: ClassVar[str]
 
     CRYPTOGRAPHY_PRIVATE_KEY_CLASSES: ClassVar[tuple[type[Any], ...]]
     CRYPTOGRAPHY_PUBLIC_KEY_CLASSES: ClassVar[tuple[type[Any], ...]]
@@ -180,7 +180,7 @@ class Jwk(BaseJsonDict):
                     raise InvalidJwk(msg)
 
                 for jwk_class in Jwk.__subclasses__():
-                    if kty == jwk_class.KTY:
+                    if kty == jwk_class.KEY_TYPE:
                         return super().__new__(jwk_class)
 
                 msg = "Unsupported Key Type"
@@ -291,7 +291,7 @@ class Jwk(BaseJsonDict):
             the key type
 
         """
-        return self.KTY
+        return self.KEY_TYPE
 
     @property
     def alg(self) -> str | None:
@@ -471,8 +471,8 @@ class Jwk(BaseJsonDict):
             InvalidJwk: if the JWK misses required members or has invalid members
 
         """
-        if self.get("kty") != self.KTY:
-            msg = f"This key 'kty' {self.get('kty')} doesn't match this Jwk subclass intended 'kty' {self.KTY}!"
+        if self.get("kty") != self.KEY_TYPE:
+            msg = f"This key 'kty' {self.get('kty')} doesn't match this Jwk subclass intended 'kty' {self.KEY_TYPE}!"
             raise TypeError(msg)
 
         jwk_is_private = False
@@ -765,7 +765,7 @@ class Jwk(BaseJsonDict):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def sender_key(  # noqa: C901
+    def sender_key(
         self,
         enc: str,
         *,

@@ -126,7 +126,7 @@ class ECJwk(Jwk):
                 crv=crv,
                 x=BinaPy.from_int(x, length=coord_size).to("b64u").ascii(),
                 y=BinaPy.from_int(y, length=coord_size).to("b64u").ascii(),
-                **{k: v for k, v in params.items() if v is not None},
+                **params,
             )
         )
 
@@ -153,7 +153,7 @@ class ECJwk(Jwk):
                 x=BinaPy.from_int(x, length=coord_size).to("b64u").ascii(),
                 y=BinaPy.from_int(y, length=coord_size).to("b64u").ascii(),
                 d=BinaPy.from_int(d, length=coord_size).to("b64u").ascii(),
-                **{k: v for k, v in params.items() if v is not None},
+                **params,
             )
         )
 
@@ -220,7 +220,7 @@ class ECJwk(Jwk):
 
         x = BinaPy.from_int(public_numbers.x, length=crv.coordinate_size).to("b64u").ascii()
         y = BinaPy.from_int(public_numbers.y, length=crv.coordinate_size).to("b64u").ascii()
-        parameters = {"kty": KeyTypes.EC, "crv": crv.name, "x": x, "y": y}
+        parameters = {"kty": KeyTypes.EC, "crv": crv.name, "x": x, "y": y, **kwargs}
         if isinstance(cryptography_key, ec.EllipticCurvePrivateKey):
             pn = cryptography_key.private_numbers()  # type: ignore[attr-defined]
             d = BinaPy.from_int(pn.private_value, length=crv.coordinate_size).to("b64u").ascii()

@@ -233,13 +233,13 @@ class Jwk(BaseJsonDict):
 
     @property
     def is_private(self) -> bool:
-        """Return `True` if the key is private, `False` otherwise.
-
-        Returns:
-            `True` if the key is private, `False` otherwise
-
-        """
+        """Return `True` if the key is private, `False` otherwise."""
         return True
+
+    @property
+    def is_public(self) -> bool:
+        """Return `True` if the key is *not private* and *not symmetric*, `False` otherwise."""
+        return not self.is_private and not self.is_symmetric
 
     @property
     def is_symmetric(self) -> bool:

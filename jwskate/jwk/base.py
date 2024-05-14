@@ -20,7 +20,7 @@ from binapy import BinaPy
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.serialization import pkcs12
-from typing_extensions import Self
+from typing_extensions import Self, deprecated
 
 from jwskate.jwa import (
     BaseAESEncryptionAlg,
@@ -1178,7 +1178,6 @@ class Jwk(BaseJsonDict):
             )
 
     @classmethod
-    def from_x509(cls, x509_pem: str | bytes) -> Self:
     def from_x509_cert(
         cls, cert: x509.Certificate, *, include_x5t: bool = False, include_x5t_s256: bool = False
     ) -> Self:
@@ -1203,12 +1202,27 @@ class Jwk(BaseJsonDict):
         if include_x5t_s256:
             extra["x5t#S256"] = BinaPy(cert.fingerprint(hashes.SHA256())).to("b64u").ascii()
         return cls.from_cryptography_key(cert.public_key(), **extra)
+
+    @classmethod
+    def from_x509_pem(cls, x509_pem: str | bytes, *, include_x5t: bool = False, include_x5t_s256: bool = False) -> Self:
         """Read the public key from a X509 certificate, PEM formatted."""
         if isinstance(x509_pem, str):
             x509_pem = x509_pem.encode()
 
         cert = x509.load_pem_x509_certificate(x509_pem)
-        return cls(cert.public_key())
+        return cls.from_x509_cert(cert, include_x5t=include_x5t, include_x5t_s256=include_x5t_s256)
+
+    @classmethod
+    def from_x509_der(cls, x509_der: bytes, *, include_x5t: bool = False, include_x5t_s256: bool = False) -> Self:
+        """Read the public key from a X509 certificate, DER formatted."""
+        cert = x509.load_der_x509_certificate(x509_der)
+        return cls.from_x509_cert(cert, include_x5t=include_x5t, include_x5t_s256=include_x5t_s256)
+
+    @classmethod
+    @deprecated("Use from_x509_pem() instead")
+    def from_x509(cls, x509_pem: str | bytes) -> Self:
+        """Deprecated. use Jwk.from_x509_pem() instead."""
+        return cls.from_x509_pem(x509_pem)
 
     @classmethod
     def from_pkcs12(cls, p12: bytes, password: bytes | str | None) -> Self:

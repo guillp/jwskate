@@ -1120,7 +1120,7 @@ class Jwk(BaseJsonDict):
         password: bytes | str | None = None,
         **kwargs: Any,
     ) -> Jwk:
-        """Load a `Jwk` from DER."""
+        """Load a `Jwk` from a DER encoded key."""
         password = password.encode("UTF-8") if isinstance(password, str) else password
 
         try:
@@ -1141,7 +1141,7 @@ class Jwk(BaseJsonDict):
         return cls.from_cryptography_key(cryptography_key, **kwargs)
 
     def to_der(self, password: bytes | str | None = None) -> BinaPy:
-        """Serialize this key to DER.
+        """Serialize this key to DER encoding.
 
         For private keys, you can provide a password for encryption. This password should be bytes. A `str` is also
         accepted, and will be encoded to `bytes` using UTF-8 before it is used as encryption key.

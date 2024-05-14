@@ -88,13 +88,11 @@ class RSAJwk(Jwk):
                 dp=priv.dmp1,
                 dq=priv.dmq1,
                 qi=priv.iqmp,
+                **kwargs,
             )
         elif isinstance(cryptography_key, rsa.RSAPublicKey):
             pub = cryptography_key.public_numbers()
-            return cls.public(
-                n=pub.n,
-                e=pub.e,
-            )
+            return cls.public(n=pub.n, e=pub.e, **kwargs)
         else:
             msg = "A RSAPrivateKey or a RSAPublicKey is required."
             raise TypeError(msg)

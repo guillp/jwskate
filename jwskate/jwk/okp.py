@@ -236,6 +236,7 @@ class OKPJwk(Jwk):
                 crv=crv.name,
                 x=pub,
                 d=priv,
+                **kwargs,
             )
         elif isinstance(cryptography_key, cls.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES):
             pub = cryptography_key.public_bytes(
@@ -245,6 +246,7 @@ class OKPJwk(Jwk):
             return cls.public(
                 crv=crv.name,
                 x=pub,
+                **kwargs,
             )
         msg = "Unsupported key type"
         raise TypeError(msg, type(cryptography_key))  # pragma: no-cover

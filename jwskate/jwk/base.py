@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Mapping, SupportsByte
 
 from binapy import BinaPy
 from cryptography import x509
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.serialization import pkcs12
 from typing_extensions import Self
 
@@ -1179,6 +1179,30 @@ class Jwk(BaseJsonDict):
 
     @classmethod
     def from_x509(cls, x509_pem: str | bytes) -> Self:
+    def from_x509_cert(
+        cls, cert: x509.Certificate, *, include_x5t: bool = False, include_x5t_s256: bool = False
+    ) -> Self:
+        """Load a Public Key from a `cryptography` X509 `Certificate` instance.
+
+        You may include the certificate thumbprint in the resulting `Jwk`:
+        - set `include_x5t` to `True` to include a `x5t` parameter (hashed with SHA1)
+        - set `include_x5t_s256` to `True` to include a `x5t#S256` parameter (hashed with SHA256)
+
+        Args:
+            cert: a `cryptography` `Certificate` instance
+            include_x5t: if `True`, include a `x5t` parameter
+            include_x5t_s256: if `True`, include a `x5t#256` parameter
+
+        Returns:
+            a `Jwk` instance initialized with the Certificate public key
+
+        """
+        extra = {}
+        if include_x5t:
+            extra["x5t"] = BinaPy(cert.fingerprint(hashes.SHA1())).to("b64u").ascii()  # noqa: S303
+        if include_x5t_s256:
+            extra["x5t#S256"] = BinaPy(cert.fingerprint(hashes.SHA256())).to("b64u").ascii()
+        return cls.from_cryptography_key(cert.public_key(), **extra)
         """Read the public key from a X509 certificate, PEM formatted."""
         if isinstance(x509_pem, str):
             x509_pem = x509_pem.encode()

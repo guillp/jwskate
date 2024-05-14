@@ -4,7 +4,9 @@ import secrets
 
 import pytest
 from binapy import BinaPy
+from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.serialization import Encoding
 
 from jwskate import (
     A128GCM,
@@ -499,12 +501,18 @@ Unyb2Oj6CDA9YFEcjRuaZBDtSKJ6AYOWFJO7CIHsjAZ0rBqfyfNdBd5DG4+ZJkD8
 """
     # this is the https cert for www.microsoft.com on 06/10/23
 
-    key = Jwk.from_x509(ms_cert)
+    key = Jwk.from_x509_pem(ms_cert, include_x5t=True, include_x5t_s256=True)
     assert key.kty == "RSA"
     assert not key.is_private
     assert not key.is_symmetric
+    assert key.is_public
     assert key.key_size == 2048
+    assert key["x5t"] == "4VebpVElzsOnjjn1XPgdqL-pT4g"
+    assert key["x5t#S256"] == "80gl5xzn_qHTiCyFX2TSvFv8RJCWgcm-nTNXvrKhrms"
     assert key == Jwk.from_x509(ms_cert.encode())
+
+    cert = x509.load_pem_x509_certificate(ms_cert.encode())
+    assert key == Jwk.from_x509_cert(cert) == Jwk.from_x509_der(cert.public_bytes(Encoding.DER))
 
 
 def test_from_pkcs12() -> None:
@@ -513,5 +521,7 @@ def test_from_pkcs12() -> None:
     jwk = Jwk.from_pkcs12(p12, "jwskate!")
     assert jwk.kty == "RSA"
     assert jwk.is_private
+    assert not jwk.is_symmetric
+    assert not jwk.is_public
     assert jwk == Jwk.from_pkcs12(p12, b"jwskate!")
 

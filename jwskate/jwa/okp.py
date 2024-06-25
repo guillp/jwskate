@@ -8,11 +8,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, ClassVar, runtime_checkable
+from typing import TYPE_CHECKING, Any, ClassVar, runtime_checkable
 
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
 from typing_extensions import Protocol
+
+if TYPE_CHECKING:
+    from cryptography.hazmat.primitives import serialization
 
 
 @runtime_checkable

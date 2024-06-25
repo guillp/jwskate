@@ -59,7 +59,7 @@ class EcdhEs(
         algorithm_id = BinaPy.from_int(len(alg), length=4) + BinaPy(alg)
         partyuinfo = BinaPy.from_int(len(apu), length=4) + apu
         partyvinfo = BinaPy.from_int(len(apv), length=4) + apv
-        supppubinfo = BinaPy.from_int(key_size or key_size, length=4)
+        supppubinfo = BinaPy.from_int(key_size, length=4)
         otherinfo = b"".join((algorithm_id, partyuinfo, partyvinfo, supppubinfo))
         return BinaPy(otherinfo)
 
@@ -137,10 +137,11 @@ class EcdhEs(
         """
         if isinstance(self.key, (ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey)):
             return ec.generate_private_key(self.key.curve)
-        elif isinstance(self.key, (x25519.X25519PrivateKey, x25519.X25519PublicKey)):
+        if isinstance(self.key, (x25519.X25519PrivateKey, x25519.X25519PublicKey)):
             return x25519.X25519PrivateKey.generate()
-        elif isinstance(self.key, (x448.X448PublicKey, x448.X448PrivateKey)):
+        if isinstance(self.key, (x448.X448PublicKey, x448.X448PrivateKey)):
             return x448.X448PrivateKey.generate()
+        raise ValueError(self.key)
 
     def sender_key(
         self,
@@ -166,13 +167,12 @@ class EcdhEs(
             apu = BinaPy(headers.get("apu", b"")).decode_from("b64u")
             apv = BinaPy(headers.get("apv", b"")).decode_from("b64u")
             otherinfo = self.otherinfo(alg, apu, apv, key_size)
-            cek = self.derive(
+            return self.derive(
                 private_key=ephemeral_private_key,
                 public_key=key,
                 otherinfo=otherinfo,
                 key_size=key_size,
             )
-            return cek
 
     def recipient_key(
         self,
@@ -198,13 +198,12 @@ class EcdhEs(
             apu = BinaPy(headers.get("apu", b"")).decode_from("b64u")
             apv = BinaPy(headers.get("apv", b"")).decode_from("b64u")
             otherinfo = self.otherinfo(alg, apu, apv, key_size)
-            cek = self.derive(
+            return self.derive(
                 private_key=key,
                 public_key=ephemeral_public_key,
                 otherinfo=otherinfo,
                 key_size=key_size,
             )
-            return cek
 
 
 class BaseEcdhEs_AesKw(EcdhEs):  # noqa: N801

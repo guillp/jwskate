@@ -163,7 +163,7 @@ class JwsSignature(BaseJsonDict):
             (
                 BinaPy.serialize_to("json", headers).to("b64u"),
                 BinaPy(payload).to("b64u"),
-            )
+            ),
         )
 
     def verify(

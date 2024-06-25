@@ -34,7 +34,7 @@ class JweCompact(BaseCompactToken):
 
     """
 
-    def __init__(self, value: bytes | str, max_size: int = 16 * 1024):
+    def __init__(self, value: bytes | str, max_size: int = 16 * 1024) -> None:
         super().__init__(value, max_size)
 
         parts = BinaPy(self.value).split(b".")
@@ -116,8 +116,8 @@ separated by dots."""
                     BinaPy(iv).to("b64u"),
                     BinaPy(ciphertext).to("b64u"),
                     BinaPy(tag).to("b64u"),
-                )
-            )
+                ),
+            ),
         )
 
     @cached_property
@@ -215,8 +215,7 @@ separated by dots."""
             algs=algs,
             strict=True,
         )
-        cek = jwk.recipient_key(self.wrapped_cek, **self.headers)
-        return cek
+        return jwk.recipient_key(self.wrapped_cek, **self.headers)
 
     def decrypt(
         self,
@@ -238,14 +237,13 @@ separated by dots."""
         """
         cek_jwk = self.unwrap_cek(key, alg=alg, algs=algs)
 
-        plaintext = cek_jwk.decrypt(
+        return cek_jwk.decrypt(
             ciphertext=self.ciphertext,
             iv=self.initialization_vector,
             tag=self.authentication_tag,
             aad=self.additional_authenticated_data,
             alg=self.enc,
         )
-        return plaintext
 
     def decrypt_jwt(
         self,
@@ -384,11 +382,10 @@ separated by dots."""
 
         """
         cek_jwk = self.unwrap_cek_with_password(password)
-        plaintext = cek_jwk.decrypt(
+        return cek_jwk.decrypt(
             ciphertext=self.ciphertext,
             iv=self.initialization_vector,
             tag=self.authentication_tag,
             aad=self.additional_authenticated_data,
             alg=self.enc,
         )
-        return plaintext

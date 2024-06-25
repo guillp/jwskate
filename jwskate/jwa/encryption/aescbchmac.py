@@ -155,7 +155,7 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
         mac = self.mac(ciphertext, iv=iv, aad=aad)
         if not constant_time.bytes_eq(mac, auth_tag):
-            raise MismatchingAuthTag()
+            raise MismatchingAuthTag
 
         cipher = ciphers.Cipher(algorithms.AES(self.aes_key), modes.CBC(iv)).decryptor()
         padded_text = cipher.update(ciphertext) + cipher.finalize()

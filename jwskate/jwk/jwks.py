@@ -33,7 +33,7 @@ class JwkSet(BaseJsonDict):
         self,
         jwks: Mapping[str, Any] | None = None,
         keys: Iterable[Jwk | Mapping[str, Any]] | None = None,
-    ):
+    ) -> None:
         super().__init__({k: v for k, v in jwks.items() if k != "keys"} if jwks else {})
         if keys is None and jwks is not None and "keys" in jwks:
             keys = jwks.get("keys")

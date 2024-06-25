@@ -40,7 +40,7 @@ class BaseCompactToken:
         self.value = value
         self.headers: dict[str, Any]
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Check that a Jwt is equal to another.
 
         Works with other instances of `Jwt`, or with `str` or `bytes`.

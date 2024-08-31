@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import SupportsBytes
-
-from binapy import BinaPy
+from typing import TYPE_CHECKING, SupportsBytes
 
 from jwskate.jwa.base import BaseKeyManagementAlg
 from jwskate.jwa.encryption.aesgcm import BaseAESGCM
+
+if TYPE_CHECKING:
+    from binapy import BinaPy
 
 
 class BaseAesGcmKeyWrap(BaseAESGCM, BaseKeyManagementAlg):

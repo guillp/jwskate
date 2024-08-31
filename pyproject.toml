@@ -111,14 +111,17 @@ dependencies = [
     "types-cryptography>=3.3.23.2",
     "binapy>=0.8.0",
     "jwcrypto>=1.5.6",
+    "pytest-freezer>=0.4.8"
 ]
 
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --install-types --non-interactive {args:jwskate tests}"
 style = [
     "ruff format {args:.}",
+    "ruff check {args:.}"
 ]
 fmt = [
+    "ruff format {args:.}",
     "ruff check --fix {args:.}",
     "style",
 ]
@@ -151,41 +154,10 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-select = [
-    "A",
-    "B",
-    "C",
-    "C4",
-    "D",
-    "DTZ",
-    "E",
-    "EM",
-    "ERA",
-    "F",
-    "FA",
-    "FBT",
-    "I",
-    "ICN",
-    "ISC",
-    "N",
-    "PGH",
-    "PLC",
-    "PLE",
-    "PLR",
-    "PLW",
-    "PTH",
-    "Q",
-    "RUF",
-    "S",
-    "SIM",
-    "T",
-    "TID",
-    "TRY",
-    "UP",
-    "W",
-    "YTT",
-]
+select = ["ALL"]
 ignore = [
+    "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
+    "COM812", # Trailing comma missing
     "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
     "N818", # Exception names should be named with an Error suffix
     "PLR0912", # Too many branches

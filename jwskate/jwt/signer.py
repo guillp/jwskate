@@ -27,13 +27,15 @@ assert isinstance(signer.jwk, ECJwk) and signer.jwk.is_private
 from __future__ import annotations
 
 import uuid
-from typing import Any, Callable, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping
 
 from jwskate.jwk import Jwk, to_jwk
 
 from .base import Jwt
-from .signed import SignedJwt
 from .verifier import JwtVerifier
+
+if TYPE_CHECKING:
+    from .signed import SignedJwt
 
 
 class JwtSigner:
@@ -74,7 +76,7 @@ class JwtSigner:
         alg: str | None = None,
         default_lifetime: int = 60,
         default_leeway: int | None = None,
-    ):
+    ) -> None:
         self.issuer = issuer
         self.jwk = to_jwk(key)
         self.alg = alg

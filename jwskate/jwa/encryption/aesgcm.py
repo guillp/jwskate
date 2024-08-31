@@ -94,7 +94,7 @@ class BaseAESGCM(BaseAESEncryptionAlg):
         try:
             return BinaPy(aead.AESGCM(self.key).decrypt(iv, ciphertext_with_tag, aad))
         except cryptography.exceptions.InvalidTag as exc:
-            raise MismatchingAuthTag() from exc
+            raise MismatchingAuthTag from exc
 
 
 class A128GCM(BaseAESGCM):

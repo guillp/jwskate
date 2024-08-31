@@ -406,24 +406,28 @@ class SignedJwt(Jwt):
             if expired is True:
                 msg = f"This token expired at {self.expires_at}"
                 raise ExpiredJwt(msg)
-            elif expired is None:
+            if expired is None:
                 msg = "This token does not contain an 'exp' claim."
                 raise InvalidClaim(msg, "exp")
 
-        for key, value in kwargs.items():
-            claim = self.get_claim(key)
+        for name, value in kwargs.items():
+            claim = self.get_claim(name)
             if callable(value):
                 if not value(claim):
                     raise InvalidClaim(
-                        key,
-                        f"value of claim {key} doesn't validate with the provided validator",
+                        name,
+                        f"value of claim {name} doesn't validate with the provided validator",
                         claim,
                     )
             elif claim != value:
-                raise InvalidClaim(key, f"unexpected value for claim {key}", claim)
+                raise InvalidClaim(name, f"unexpected value for claim {name}", claim)
 
     def encrypt(
-        self, key: Any, enc: str, alg: str | None = None, extra_headers: Mapping[str, Any] | None = None
+        self,
+        key: Any,
+        enc: str,
+        alg: str | None = None,
+        extra_headers: Mapping[str, Any] | None = None,
     ) -> JweCompact:
         """Encrypt this JWT into a JWE.
 
@@ -439,11 +443,14 @@ class SignedJwt(Jwt):
         extra_headers = dict(extra_headers) if extra_headers else {}
         extra_headers.setdefault("cty", "JWT")
 
-        jwe = JweCompact.encrypt(self, key, enc=enc, alg=alg, extra_headers=extra_headers)
-        return jwe
+        return JweCompact.encrypt(self, key, enc=enc, alg=alg, extra_headers=extra_headers)
 
     def unprotect(
-        self, *, alg: str = "none", typ: str | None | EllipsisType = ..., extra_headers: Mapping[str, Any] | None = None
+        self,
+        *,
+        alg: str = "none",
+        typ: str | None | EllipsisType = ...,
+        extra_headers: Mapping[str, Any] | None = None,
     ) -> SignedJwt:
         """Return a new Jwt with the same payload but without signature.
 

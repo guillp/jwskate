@@ -24,23 +24,23 @@ class BaseCompactToken:
     """
 
     def __init__(self, value: bytes | str, max_size: int = 16 * 1024) -> None:
+        if isinstance(value, str):
+            value = value.encode("ascii")
+
         if len(value) > max_size:
             msg = (
-                f"This JWT size exceeds {max_size} bytes, which is abnormally big. "
+                f"This JWT size of {len(value)} bytes exceeds {max_size} bytes, which is abnormally big. "
                 "This size limit is made to avoid potential JSON deserialization vulnerabilities or issues. "
                 "You can increase this limit by passing a different `max_size` value as parameter."
             )
             raise ValueError(msg)
-
-        if isinstance(value, str):
-            value = value.encode("ascii")
 
         value = b"".join(value.split())
 
         self.value = value
         self.headers: dict[str, Any]
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Check that a Jwt is equal to another.
 
         Works with other instances of `Jwt`, or with `str` or `bytes`.

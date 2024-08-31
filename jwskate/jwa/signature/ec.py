@@ -45,7 +45,8 @@ class BaseECSignatureAlg(
             dss_sig = key.sign(data, ec.ECDSA(self.hashing_alg))
             r, s = asymmetric.utils.decode_dss_signature(dss_sig)
             return BinaPy.from_int(r, length=self.curve.coordinate_size) + BinaPy.from_int(
-                s, length=self.curve.coordinate_size
+                s,
+                length=self.curve.coordinate_size,
             )
 
     @override

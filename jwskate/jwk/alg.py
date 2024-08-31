@@ -81,11 +81,10 @@ def select_alg_class(
             if jwk_alg != alg:
                 if strict:
                     raise MismatchingAlg(jwk_alg, alg)
-                else:
-                    warnings.warn(
-                        "This key has an 'alg' parameter, you should use that alg for each operation.",
-                        stacklevel=2,
-                    )
+                warnings.warn(
+                    "This key has an 'alg' parameter, you should use that alg for each operation.",
+                    stacklevel=2,
+                )
             choosen_alg = alg
         else:
             choosen_alg = jwk_alg
@@ -157,13 +156,12 @@ def select_alg_classes(
     if jwk_alg is not None and ((alg and alg != jwk_alg) or (algs and jwk_alg not in algs)):
         if strict:
             raise MismatchingAlg(jwk_alg, alg, algs)
-        else:
-            requested_alg = f"{alg=}" if alg else f"{algs=}"
-            warnings.warn(
-                f"This key has an 'alg' parameter with value {jwk_alg}, so you should use it with that alg only."
-                f"You requested {requested_alg}.",
-                stacklevel=2,
-            )
+        requested_alg = f"{alg=}" if alg else f"{algs=}"
+        warnings.warn(
+            f"This key has an 'alg' parameter with value {jwk_alg}, so you should use it with that alg only."
+            f"You requested {requested_alg}.",
+            stacklevel=2,
+        )
 
     possible_algs: list[str] = []
     if alg:
@@ -177,9 +175,8 @@ def select_alg_classes(
         possible_supported_algs = [supported_algs[alg] for alg in possible_algs if alg in supported_algs]
         if possible_supported_algs:
             return possible_supported_algs
-        else:
-            msg = f"None of the user-specified alg(s) are supported. {possible_algs}"
-            raise UnsupportedAlg(msg)
+        msg = f"None of the user-specified alg(s) are supported. {possible_algs}"
+        raise UnsupportedAlg(msg)
 
     msg = (
         "This key doesn't have an 'alg' parameter specifying which algorithm to use with that key, "

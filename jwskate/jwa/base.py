@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Generic, Iterator, SupportsBytes, TypeVar
+from typing import TYPE_CHECKING, Generic, Iterator, SupportsBytes, TypeVar
 
 import cryptography.exceptions
 from binapy import BinaPy
-from cryptography.hazmat.primitives import hashes
 from typing_extensions import Self, override
+
+if TYPE_CHECKING:
+    from cryptography.hazmat.primitives import hashes
 
 
 class PrivateKeyRequired(AttributeError):
@@ -50,7 +52,7 @@ class BaseAlg:
     @classmethod
     def with_random_key(cls) -> Self:
         """Initialize an instance of this alg with a randomly-generated key."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class BaseSymmetricAlg(BaseAlg):
@@ -61,7 +63,7 @@ class BaseSymmetricAlg(BaseAlg):
 
     """
 
-    def __init__(self, key: bytes):
+    def __init__(self, key: bytes) -> None:
         self.check_key(key)
         self.key = key
 
@@ -82,7 +84,6 @@ class BaseSymmetricAlg(BaseAlg):
             InvalidKey: if the key is not suitable for this algorithm
 
         """
-        pass
 
     @classmethod
     def supports_key(cls, key: bytes) -> bool:
@@ -123,7 +124,7 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
     private_key_class: type[Kpriv] | tuple[type[Kpriv], ...]
     public_key_class: type[Kpub] | tuple[type[Kpub], ...]
 
-    def __init__(self, key: Kpriv | Kpub):
+    def __init__(self, key: Kpriv | Kpub) -> None:
         self.check_key(key)
         self.key = key
 
@@ -156,7 +157,7 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
         """
         if not isinstance(self.key, self.private_key_class):
-            raise PrivateKeyRequired()
+            raise PrivateKeyRequired
         yield self.key  # type: ignore[misc]
 
     @contextmanager
@@ -171,14 +172,14 @@ class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
 
         """
         if not isinstance(self.key, self.public_key_class):
-            raise PublicKeyRequired()
+            raise PublicKeyRequired
         yield self.key  # type: ignore[misc]
 
     def public_key(self) -> Kpub:
         """Return the public key matching the private key."""
         if hasattr(self.key, "public_key"):
             return self.key.public_key()  # type: ignore[no-any-return]
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def public_alg(self) -> Self:
         """Return an alg instance initialised with the public key."""

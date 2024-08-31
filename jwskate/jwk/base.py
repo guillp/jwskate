@@ -106,9 +106,9 @@ class Jwk(BaseJsonDict):
         """
         for jwk_class in Jwk.__subclasses__():
             try:
-                jwk_class._get_alg_class(alg)
+                jwk_class.get_jwa_wrapper(alg)
                 return jwk_class.generate(alg=alg, **kwargs)
-            except UnsupportedAlg:
+            except UnsupportedAlg:  # noqa: PERF203
                 continue
 
         raise UnsupportedAlg(alg)
@@ -156,7 +156,7 @@ class Jwk(BaseJsonDict):
         "shake256": "shake256",
     }
 
-    def __new__(cls, key: Jwk | Mapping[str, Any] | Any, **kwargs: Any) -> Jwk:
+    def __new__(cls, key: Jwk | Mapping[str, Any] | Any, **kwargs: Any) -> Self:
         """Overridden `__new__` to make the Jwk constructor smarter.
 
         The `Jwk` constructor will accept:
@@ -170,7 +170,7 @@ class Jwk(BaseJsonDict):
             **kwargs: additional members to include in the Jwk
 
         """
-        if cls == Jwk:
+        if cls is Jwk:
             if isinstance(key, Jwk):
                 return cls.from_cryptography_key(key.cryptography_key, **kwargs)
             if isinstance(key, Mapping):
@@ -181,18 +181,17 @@ class Jwk(BaseJsonDict):
 
                 for jwk_class in Jwk.__subclasses__():
                     if kty == jwk_class.KEY_TYPE:
-                        return super().__new__(jwk_class)
+                        return super().__new__(jwk_class)  # type: ignore[return-value]
 
                 msg = "Unsupported Key Type"
                 raise InvalidJwk(msg, kty)
 
-            elif isinstance(key, str):
+            if isinstance(key, str):
                 return cls.from_json(key)
-            else:
-                return cls.from_cryptography_key(key, **kwargs)
+            return cls.from_cryptography_key(key, **kwargs)
         return super().__new__(cls)
 
-    def __init__(self, params: Mapping[str, Any] | Any, *, include_kid_thumbprint: bool = False):
+    def __init__(self, params: Mapping[str, Any] | Any, *, include_kid_thumbprint: bool = False) -> None:
         if isinstance(params, dict):  # this is to avoid double init due to the __new__ above
             super().__init__({key: val for key, val in params.items() if val is not None})
             self._validate()
@@ -205,7 +204,7 @@ class Jwk(BaseJsonDict):
             raise InvalidJwk(params) from exc
 
     @classmethod
-    def _get_alg_class(cls, alg: str) -> type[BaseAlg]:
+    def get_jwa_wrapper(cls, alg: str) -> type[BaseAlg]:
         """Given an alg identifier, return the matching JWA wrapper.
 
         Args:
@@ -332,9 +331,8 @@ class Jwk(BaseJsonDict):
 
         """
         if self.alg:
-            return self._get_alg_class(self.alg).use
-        else:
-            return self.get("use")
+            return self.get_jwa_wrapper(self.alg).use
+        return self.get("use")
 
     @property
     def key_ops(self) -> tuple[str, ...]:
@@ -356,7 +354,7 @@ class Jwk(BaseJsonDict):
         elif self.use == "enc":
             if self.is_symmetric:
                 if self.alg:
-                    alg_class = self._get_alg_class(self.alg)
+                    alg_class = self.get_jwa_wrapper(self.alg)
                     if issubclass(alg_class, BaseKeyManagementAlg):
                         key_ops = ("wrapKey", "unwrapKey")
                     elif issubclass(alg_class, BaseAESEncryptionAlg):
@@ -442,7 +440,7 @@ class Jwk(BaseJsonDict):
             if is_private and not self.is_private:
                 msg = "This key is public while a private key is expected."
                 raise ValueError(msg)
-            elif not is_private and self.is_private:
+            if not is_private and self.is_private:
                 msg = "This key is private while a public key is expected."
                 raise ValueError(msg)
 
@@ -488,7 +486,7 @@ class Jwk(BaseJsonDict):
 
             if value is None:
                 continue
-            elif param.kind == "b64u":
+            if param.kind == "b64u":
                 if not isinstance(value, str):
                     msg = f"Parameter {param.description} ({name}) must be a string with a Base64URL-encoded value"
                     raise InvalidJwk(msg)
@@ -582,7 +580,7 @@ class Jwk(BaseJsonDict):
         alg_class = self.signature_class(alg)
         if issubclass(alg_class, BaseSymmetricAlg):
             return alg_class(self.key)
-        elif issubclass(alg_class, BaseAsymmetricAlg):
+        if issubclass(alg_class, BaseAsymmetricAlg):
             return alg_class(self.cryptography_key)
         raise UnsupportedAlg(alg)  # pragma: no cover
 
@@ -603,7 +601,7 @@ class Jwk(BaseJsonDict):
         alg_class = self.encryption_class(alg)
         if issubclass(alg_class, BaseSymmetricAlg):
             return alg_class(self.key)
-        elif issubclass(alg_class, BaseAsymmetricAlg):  # pragma: no cover
+        if issubclass(alg_class, BaseAsymmetricAlg):  # pragma: no cover
             return alg_class(self.cryptography_key)  # pragma: no cover
         raise UnsupportedAlg(alg)  # pragma: no cover
 
@@ -624,7 +622,7 @@ class Jwk(BaseJsonDict):
         alg_class = self.key_management_class(alg)
         if issubclass(alg_class, BaseSymmetricAlg):
             return alg_class(self.key)
-        elif issubclass(alg_class, BaseAsymmetricAlg):
+        if issubclass(alg_class, BaseAsymmetricAlg):
             return alg_class(self.cryptography_key)
         raise UnsupportedAlg(alg)  # pragma: no cover
 
@@ -701,7 +699,7 @@ class Jwk(BaseJsonDict):
             public_jwk = self
         if algs is None and alg:
             algs = [alg]
-        for alg in algs or (None,):
+        for alg in algs or (None,):  # noqa: PLR1704
             wrapper = public_jwk.signature_wrapper(alg)
             if wrapper.verify(data, signature):
                 return True
@@ -840,7 +838,10 @@ class Jwk(BaseJsonDict):
                 else:
                     cek = enc_alg_class.generate_key()
                 wrapped_cek = key_alg_wrapper.wrap_key_with_epk(
-                    cek, epk.cryptography_key, alg=key_alg_wrapper.name, **headers
+                    cek,
+                    epk.cryptography_key,
+                    alg=key_alg_wrapper.name,
+                    **headers,
                 )
             else:
                 cek = key_alg_wrapper.sender_key(
@@ -989,7 +990,7 @@ class Jwk(BaseJsonDict):
                 use=self.get("use"),
                 key_ops=key_ops,
                 **params,
-            )
+            ),
         )
 
     def as_jwks(self) -> JwkSet:
@@ -1065,11 +1066,11 @@ class Jwk(BaseJsonDict):
 
         try:
             cryptography_key = serialization.load_pem_private_key(pem, password)
-        except Exception as private_exc:
+        except Exception as private_exc:  # noqa: BLE001
             try:
                 cryptography_key = serialization.load_pem_public_key(pem)
 
-            except Exception:
+            except Exception:  # noqa: BLE001
                 msg = "The provided data is not a private or a public PEM encoded key."
                 raise ValueError(msg) from private_exc
             if password is not None:
@@ -1104,14 +1105,13 @@ class Jwk(BaseJsonDict):
                 serialization.PrivateFormat.PKCS8,
                 encryption,
             ).decode()
-        else:
-            if password:
-                msg = "Public keys cannot be encrypted when serialized."
-                raise ValueError(msg)
-            return self.cryptography_key.public_bytes(  # type: ignore[no-any-return]
-                serialization.Encoding.PEM,
-                serialization.PublicFormat.SubjectPublicKeyInfo,
-            ).decode()
+        if password:
+            msg = "Public keys cannot be encrypted when serialized."
+            raise ValueError(msg)
+        return self.cryptography_key.public_bytes(  # type: ignore[no-any-return]
+            serialization.Encoding.PEM,
+            serialization.PublicFormat.SubjectPublicKeyInfo,
+        ).decode()
 
     @classmethod
     def from_der(
@@ -1125,10 +1125,10 @@ class Jwk(BaseJsonDict):
 
         try:
             cryptography_key = serialization.load_der_private_key(der, password)
-        except Exception as private_exc:
+        except Exception as private_exc:  # noqa: BLE001
             try:
                 cryptography_key = serialization.load_der_public_key(der)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 msg = "The provided data is not a private or a public DER encoded key."
                 raise ValueError(msg) from private_exc
             if password is not None:
@@ -1164,22 +1164,25 @@ class Jwk(BaseJsonDict):
                     serialization.Encoding.DER,
                     serialization.PrivateFormat.PKCS8,
                     encryption,
-                )
+                ),
             )
-        else:
-            if password:
-                msg = "Public keys cannot be encrypted when serialized."
-                raise ValueError(msg)
-            return BinaPy(
-                self.cryptography_key.public_bytes(
-                    serialization.Encoding.DER,
-                    serialization.PublicFormat.SubjectPublicKeyInfo,
-                )
-            )
+        if password:
+            msg = "Public keys cannot be encrypted when serialized."
+            raise ValueError(msg)
+        return BinaPy(
+            self.cryptography_key.public_bytes(
+                serialization.Encoding.DER,
+                serialization.PublicFormat.SubjectPublicKeyInfo,
+            ),
+        )
 
     @classmethod
     def from_x509_cert(
-        cls, cert: x509.Certificate, *, include_x5t: bool = False, include_x5t_s256: bool = False
+        cls,
+        cert: x509.Certificate,
+        *,
+        include_x5t: bool = False,
+        include_x5t_s256: bool = False,
     ) -> Self:
         """Load a Public Key from a `cryptography` X509 `Certificate` instance.
 
@@ -1347,7 +1350,7 @@ class Jwk(BaseJsonDict):
             msg = "An algorithm is required to set the usage parameters"
             raise ExpectedAlgRequired(msg)
 
-        self._get_alg_class(alg)  # raises an exception if alg is not supported
+        self.get_jwa_wrapper(alg)  # raises an exception if alg is not supported
 
         jwk = self.copy()
         if with_alg:
@@ -1374,7 +1377,7 @@ class Jwk(BaseJsonDict):
 
         return jwk
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare JWK keys, ignoring optional/informational fields."""
         other = to_jwk(other)
         return super(Jwk, self.minimize()).__eq__(other.minimize())

@@ -238,7 +238,7 @@ class OKPJwk(Jwk):
                 d=priv,
                 **kwargs,
             )
-        elif isinstance(cryptography_key, cls.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES):
+        if isinstance(cryptography_key, cls.CRYPTOGRAPHY_PUBLIC_KEY_CLASSES):
             pub = cryptography_key.public_bytes(
                 encoding=serialization.Encoding.Raw,
                 format=serialization.PublicFormat.Raw,
@@ -255,8 +255,7 @@ class OKPJwk(Jwk):
     def _to_cryptography_key(self) -> Any:
         if self.is_private:
             return self.curve.cryptography_private_key_class.from_private_bytes(self.private_key)
-        else:
-            return self.curve.cryptography_public_key_class.from_public_bytes(self.public_key)
+        return self.curve.cryptography_public_key_class.from_public_bytes(self.public_key)
 
     @classmethod
     def public(cls, *, crv: str, x: bytes, **params: Any) -> OKPJwk:
@@ -294,7 +293,7 @@ class OKPJwk(Jwk):
                 x=BinaPy(x).to("b64u").ascii(),
                 d=BinaPy(d).to("b64u").ascii(),
                 **params,
-            )
+            ),
         )
 
     @classmethod

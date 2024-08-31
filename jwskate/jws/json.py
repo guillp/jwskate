@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Any, Callable, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping
 
 from binapy import BinaPy
 
-from jwskate.jwk.base import Jwk
 from jwskate.token import BaseJsonDict
 
 from .compact import JwsCompact
 from .signature import JwsSignature
+
+if TYPE_CHECKING:
+    from jwskate.jwk.base import Jwk
 
 
 class JwsJsonFlat(JwsSignature):

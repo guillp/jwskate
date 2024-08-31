@@ -33,7 +33,7 @@ class JwkSet(BaseJsonDict):
         self,
         jwks: Mapping[str, Any] | None = None,
         keys: Iterable[Jwk | Mapping[str, Any]] | None = None,
-    ):
+    ) -> None:
         super().__init__({k: v for k, v in jwks.items() if k != "keys"} if jwks else {})
         if keys is None and jwks is not None and "keys" in jwks:
             keys = jwks.get("keys")
@@ -198,7 +198,7 @@ class JwkSet(BaseJsonDict):
             algs = list(algs)
 
         for jwk in self.verification_keys():
-            for alg in algs or (None,):
+            for alg in algs or (None,):  # noqa: PLR1704
                 if alg in jwk.supported_signing_algorithms() and jwk.verify(data, signature, alg=alg):
                     return True
 

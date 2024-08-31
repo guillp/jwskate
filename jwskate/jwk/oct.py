@@ -112,7 +112,7 @@ class SymmetricJwk(Jwk):
     @override
     def generate(cls, *, alg: str | None = None, key_size: int | None = None, **params: Any) -> SymmetricJwk:
         if alg:
-            alg_class = cls._get_alg_class(alg)
+            alg_class = cls.get_jwa_wrapper(alg)
             # special cases for AES or HMAC based algs which require a specific key size
             if issubclass(alg_class, (BaseAESEncryptionAlg, BaseAesKeyWrap)):
                 if key_size is not None and key_size != alg_class.key_size:

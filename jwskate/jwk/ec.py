@@ -127,7 +127,7 @@ class ECJwk(Jwk):
                 x=BinaPy.from_int(x, length=coord_size).to("b64u").ascii(),
                 y=BinaPy.from_int(y, length=coord_size).to("b64u").ascii(),
                 **params,
-            )
+            ),
         )
 
     @classmethod
@@ -154,7 +154,7 @@ class ECJwk(Jwk):
                 y=BinaPy.from_int(y, length=coord_size).to("b64u").ascii(),
                 d=BinaPy.from_int(d, length=coord_size).to("b64u").ascii(),
                 **params,
-            )
+            ),
         )
 
     @classmethod
@@ -169,7 +169,7 @@ class ECJwk(Jwk):
                 "You must explicitly pass an 'alg' or 'crv' parameter to select the appropriate Curve."
             )
             raise ValueError(msg)
-        elif crv:
+        if crv:
             curve = cls.get_curve(crv)
         elif alg:
             if alg in cls.SIGNATURE_ALGORITHMS:
@@ -241,12 +241,11 @@ class ECJwk(Jwk):
                     curve=self.curve.cryptography_curve,
                 ),
             ).private_key()
-        else:
-            return ec.EllipticCurvePublicNumbers(
-                x=self.x_coordinate,
-                y=self.y_coordinate,
-                curve=self.curve.cryptography_curve,
-            ).public_key()
+        return ec.EllipticCurvePublicNumbers(
+            x=self.x_coordinate,
+            y=self.y_coordinate,
+            curve=self.curve.cryptography_curve,
+        ).public_key()
 
     @property
     def coordinate_size(self) -> int:

@@ -28,7 +28,7 @@ class BasePbes2(BaseKeyManagementAlg):
 
     MIN_SALT_SIZE = 8
 
-    def __init__(self, password: SupportsBytes | bytes | str):
+    def __init__(self, password: SupportsBytes | bytes | str) -> None:
         if isinstance(password, str):
             password = password.encode("utf-8")
         if not isinstance(password, bytes):

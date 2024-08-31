@@ -40,7 +40,7 @@ class Jwt(BaseCompactToken):
                 from .signed import SignedJwt
 
                 return super().__new__(SignedJwt)
-            elif value.count(b".") == 4:  # noqa: PLR2004
+            if value.count(b".") == 4:  # noqa: PLR2004
                 from jwskate.jwe import JweCompact
 
                 return JweCompact(value, max_size)
@@ -198,7 +198,10 @@ class Jwt(BaseCompactToken):
 
         """
         return cls.sign(claims, key=sign_key, alg=sign_alg, extra_headers=sign_extra_headers).encrypt(
-            enc_key, enc=enc, alg=enc_alg, extra_headers=enc_extra_headers
+            enc_key,
+            enc=enc,
+            alg=enc_alg,
+            extra_headers=enc_extra_headers,
         )
 
     @classmethod

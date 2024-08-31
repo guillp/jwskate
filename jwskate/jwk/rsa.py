@@ -90,12 +90,11 @@ class RSAJwk(Jwk):
                 qi=priv.iqmp,
                 **kwargs,
             )
-        elif isinstance(cryptography_key, rsa.RSAPublicKey):
+        if isinstance(cryptography_key, rsa.RSAPublicKey):
             pub = cryptography_key.public_numbers()
             return cls.public(n=pub.n, e=pub.e, **kwargs)
-        else:
-            msg = "A RSAPrivateKey or a RSAPublicKey is required."
-            raise TypeError(msg)
+        msg = "A RSAPrivateKey or a RSAPublicKey is required."
+        raise TypeError(msg)
 
     @override
     def _to_cryptography_key(self) -> rsa.RSAPrivateKey | rsa.RSAPublicKey:
@@ -109,8 +108,7 @@ class RSAJwk(Jwk):
                 self.first_crt_coefficient,
                 rsa.RSAPublicNumbers(self.exponent, self.modulus),
             ).private_key()
-        else:
-            return rsa.RSAPublicNumbers(e=self.exponent, n=self.modulus).public_key()
+        return rsa.RSAPublicNumbers(e=self.exponent, n=self.modulus).public_key()
 
     @classmethod
     def public(cls, *, n: int, e: int = 65537, **params: Any) -> RSAJwk:
@@ -131,7 +129,7 @@ class RSAJwk(Jwk):
                 n=BinaPy.from_int(n).to("b64u").ascii(),
                 e=BinaPy.from_int(e).to("b64u").ascii(),
                 **params,
-            )
+            ),
         )
 
     @classmethod
@@ -177,7 +175,7 @@ class RSAJwk(Jwk):
                 dq=BinaPy.from_int(dq).to("b64u").ascii() if dq is not None else None,
                 qi=BinaPy.from_int(qi).to("b64u").ascii() if qi is not None else None,
                 **params,
-            )
+            ),
         )
 
     @classmethod
@@ -317,7 +315,7 @@ class RSAJwk(Jwk):
                 "dp": BinaPy.from_int(self.first_factor_crt_exponent).to("b64u").ascii(),
                 "dq": BinaPy.from_int(self.second_factor_crt_exponent).to("b64u").ascii(),
                 "qi": BinaPy.from_int(self.first_crt_coefficient).to("b64u").ascii(),
-            }
+            },
         )
 
         return RSAJwk(jwk)

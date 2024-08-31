@@ -132,15 +132,16 @@ class EcdhEs(
         """Generate an ephemeral key that is suitable for use with this algorithm.
 
         Returns:
-            a generated EllipticCurvePrivateKey, on the same curve as this algorithm key
+            a generated key, on the same curve as this algorithm key
 
         """
         if isinstance(self.key, (ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey)):
             return ec.generate_private_key(self.key.curve)
-        elif isinstance(self.key, (x25519.X25519PrivateKey, x25519.X25519PublicKey)):
+        if isinstance(self.key, (x25519.X25519PrivateKey, x25519.X25519PublicKey)):
             return x25519.X25519PrivateKey.generate()
-        elif isinstance(self.key, (x448.X448PublicKey, x448.X448PrivateKey)):
+        if isinstance(self.key, (x448.X448PublicKey, x448.X448PrivateKey)):
             return x448.X448PrivateKey.generate()
+        raise NotImplementedError
 
     def sender_key(
         self,
@@ -166,13 +167,12 @@ class EcdhEs(
             apu = BinaPy(headers.get("apu", b"")).decode_from("b64u")
             apv = BinaPy(headers.get("apv", b"")).decode_from("b64u")
             otherinfo = self.otherinfo(alg, apu, apv, key_size)
-            cek = self.derive(
+            return self.derive(
                 private_key=ephemeral_private_key,
                 public_key=key,
                 otherinfo=otherinfo,
                 key_size=key_size,
             )
-            return cek
 
     def recipient_key(
         self,
@@ -198,13 +198,12 @@ class EcdhEs(
             apu = BinaPy(headers.get("apu", b"")).decode_from("b64u")
             apv = BinaPy(headers.get("apv", b"")).decode_from("b64u")
             otherinfo = self.otherinfo(alg, apu, apv, key_size)
-            cek = self.derive(
+            return self.derive(
                 private_key=key,
                 public_key=ephemeral_public_key,
                 otherinfo=otherinfo,
                 key_size=key_size,
             )
-            return cek
 
 
 class BaseEcdhEs_AesKw(EcdhEs):  # noqa: N801

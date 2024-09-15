@@ -22,14 +22,15 @@ class InvalidJwt(ValueError):
 class Jwt(BaseCompactToken):
     """Represents a Json Web Token."""
 
-    def __new__(cls, value: bytes | str, max_size: int = 16 * 1024) -> SignedJwt | JweCompact | Jwt:  # type: ignore[misc]
+    def __new__(cls, value: bytes | str, *, max_size: int = 16 * 1024) -> SignedJwt | JweCompact | Jwt:  # type: ignore[misc]
         """Allow parsing both Signed and Encrypted JWTs.
 
         This returns the appropriate subclass or instance depending on the number of dots (.) in the serialized JWT.
 
         Args:
             value: the token value
-            max_size: maximum allowed size for the token
+            max_size: maximum allowed size for the JWE token, in bytes.
+                Pass a negative or 0 value to disable this check.
 
         """
         if not isinstance(value, bytes):
@@ -43,7 +44,7 @@ class Jwt(BaseCompactToken):
             if value.count(b".") == 4:  # noqa: PLR2004
                 from jwskate.jwe import JweCompact
 
-                return JweCompact(value, max_size)
+                return JweCompact(value, max_size=max_size)
 
         return super().__new__(cls)
 
@@ -126,7 +127,7 @@ class Jwt(BaseCompactToken):
         claims_part = BinaPy.serialize_to("json", claims).to("b64u")
         signed_value = b".".join((headers_part, claims_part))
         signature = key.sign(signed_value, alg=alg).to("b64u")
-        return SignedJwt(b".".join((signed_value, signature)))
+        return SignedJwt(b".".join((signed_value, signature)), max_size=0)
 
     @classmethod
     def unprotected(
@@ -162,7 +163,7 @@ class Jwt(BaseCompactToken):
         claims_part = BinaPy.serialize_to("json", claims).to("b64u")
         signed_value = b".".join((headers_part, claims_part))
         signature = b""
-        return SignedJwt(b".".join((signed_value, signature)))
+        return SignedJwt(b".".join((signed_value, signature)), max_size=0)
 
     @classmethod
     def sign_and_encrypt(
@@ -205,7 +206,9 @@ class Jwt(BaseCompactToken):
         )
 
     @classmethod
-    def decrypt_nested_jwt(cls, jwe: str | JweCompact, key: Jwk | Mapping[str, Any] | Any) -> SignedJwt:
+    def decrypt_nested_jwt(
+        cls, jwe: str | JweCompact, key: Jwk | Mapping[str, Any] | Any, *, max_size: int = 16 * 1024
+    ) -> SignedJwt:
         """Decrypt a JWE that contains a nested signed JWT.
 
         It will return a [Jwt] instance for the inner JWT.
@@ -213,6 +216,9 @@ class Jwt(BaseCompactToken):
         Args:
             jwe: the JWE containing a nested Token
             key: the decryption key
+            max_size: maximum allowed size for the JWE token, in bytes.
+                If `jwe` is already a `JweCompact` instance, this is ignored.
+                Pass a negative or 0 value to disable this check.
 
         Returns:
             the inner JWT
@@ -222,7 +228,7 @@ class Jwt(BaseCompactToken):
 
         """
         if not isinstance(jwe, JweCompact):
-            jwe = JweCompact(jwe)
+            jwe = JweCompact(jwe, max_size=max_size)
         return jwe.decrypt_jwt(key)
 
     @classmethod

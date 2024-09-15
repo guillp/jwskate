@@ -31,11 +31,13 @@ class JweCompact(BaseCompactToken):
 
     Args:
         value: the compact representation for this Jwe
+        max_size: maximum allowed size for the JWE token, in bytes.
+            Pass a negative or 0 value to disable this check.
 
     """
 
     def __init__(self, value: bytes | str, max_size: int = 16 * 1024) -> None:
-        super().__init__(value, max_size)
+        super().__init__(value, max_size=max_size)
 
         parts = BinaPy(self.value).split(b".")
         if len(parts) != 5:  # noqa: PLR2004
@@ -94,6 +96,7 @@ separated by dots."""
         iv: bytes,
         ciphertext: bytes,
         tag: bytes,
+        max_size: int = 16 * 1024,
     ) -> JweCompact:
         """Initialize a `JweCompact` from its different parts (header, cek, iv, ciphertext, tag).
 
@@ -103,6 +106,8 @@ separated by dots."""
           iv: the raw IV
           ciphertext: the raw ciphertext
           tag: the authentication tag
+          max_size: maximum allowed size for the JWE token, in bytes.
+            Pass a negative or 0 value to disable this check.
 
         Returns:
             the initialized `JweCompact` instance
@@ -118,6 +123,7 @@ separated by dots."""
                     BinaPy(tag).to("b64u"),
                 ),
             ),
+            max_size=max_size,
         )
 
     @cached_property
@@ -251,6 +257,7 @@ separated by dots."""
         *,
         alg: str | None = None,
         algs: Iterable[str] | None = None,
+        max_size: int = 16 * 1024,
     ) -> SignedJwt:
         """Convenience method to decrypt an inner JWT.
 
@@ -263,7 +270,7 @@ separated by dots."""
         from jwskate.jwt import SignedJwt
 
         raw = self.decrypt(key, alg=alg, algs=algs)
-        return SignedJwt(raw)
+        return SignedJwt(raw, max_size=max_size)
 
     @classmethod
     def encrypt_with_password(

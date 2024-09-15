@@ -74,7 +74,7 @@ class JwtVerifier:
         self.leeway = leeway
         self.verifiers = list(verifiers) if verifiers else []
 
-    def verify(self, jwt: SignedJwt | str | bytes) -> None:
+    def verify(self, jwt: SignedJwt | str | bytes, *, max_size: int = 16 * 1024) -> None:
         """Verify a given JWT token.
 
         This checks the token signature, issuer, audience and expiration date, plus any custom verification,
@@ -82,10 +82,13 @@ class JwtVerifier:
 
         Args:
             jwt: the JWT token to verify
+            max_size: maximum allowed size for the JWE token, in bytes.
+              If `jwt` is already a `SignedJwt` instance, this is ignored.
+              Pass a negative or 0 value to disable this check.
 
         """
         if not isinstance(jwt, SignedJwt):
-            jwt = SignedJwt(jwt)
+            jwt = SignedJwt(jwt, max_size=max_size)
 
         if self.issuer and jwt.issuer != self.issuer:
             msg = "Mismatching issuer"

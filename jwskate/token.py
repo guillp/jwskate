@@ -20,14 +20,15 @@ class BaseCompactToken:
         value: the string or bytes representation of this JWS/JWE/JWT
         max_size: if the JWT length is larger than this value, raise a `ValueError`.
             This is to avoid JSON deserialization vulnerabilities.
+            Set to 0 or negative value to accept a token of any size.
 
     """
 
-    def __init__(self, value: bytes | str, max_size: int = 16 * 1024) -> None:
+    def __init__(self, value: bytes | str, *, max_size: int = 16 * 1024) -> None:
         if isinstance(value, str):
             value = value.encode("ascii")
 
-        if len(value) > max_size:
+        if 0 < max_size < len(value):
             msg = (
                 f"This JWT size of {len(value)} bytes exceeds {max_size} bytes, which is abnormally big. "
                 "This size limit is made to avoid potential JSON deserialization vulnerabilities or issues. "

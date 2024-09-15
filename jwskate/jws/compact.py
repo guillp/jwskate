@@ -26,11 +26,13 @@ class JwsCompact(BaseCompactToken):
 
     Args:
         value: the JWS token value
+        max_size: maximum allowed size for the JWE token, in bytes.
+            Pass a negative or 0 value to disable this check.
 
     """
 
-    def __init__(self, value: bytes | str, max_size: int = 16 * 1024) -> None:
-        super().__init__(value, max_size)
+    def __init__(self, value: bytes | str, *, max_size: int = 16 * 1024) -> None:
+        super().__init__(value, max_size=max_size)
 
         parts = BinaPy(self.value).split(b".")
 

@@ -36,11 +36,13 @@ class SignedJwt(Jwt):
 
     Args:
         value: the token value.
+        max_size: maximum allowed size for the JWE token, in bytes.
+            Pass a negative or 0 value to disable this check.
 
     """
 
-    def __init__(self, value: bytes | str) -> None:
-        super().__init__(value)
+    def __init__(self, value: bytes | str, *, max_size: int = 16 * 104) -> None:
+        super().__init__(value, max_size=max_size)
 
         parts = BinaPy(self.value).split(b".")
         if len(parts) != 3:  # noqa: PLR2004

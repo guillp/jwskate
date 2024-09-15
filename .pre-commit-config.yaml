@@ -9,7 +9,7 @@ repos:
       args: [--unsafe]
     - id: no-commit-to-branch
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.3
+    rev: v0.6.5
     hooks:
         - id: ruff
           args: [ --fix ]
@@ -28,5 +28,5 @@ repos:
             - types-cryptography==3.3.23.2
             - pytest-mypy==0.10.3
             - binapy==0.8.0
-            - freezegun==1.2.2
-            - jwcrypto==1.5.0
+            - freezegun==1.5.1
+            - jwcrypto==1.5.6

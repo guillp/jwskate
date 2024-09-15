@@ -81,10 +81,10 @@ class JwtVerifier:
         as configured at init time.
 
         Args:
-            jwt: the JWT token to verify
-            max_size: maximum allowed size for the JWE token, in bytes.
-              If `jwt` is already a `SignedJwt` instance, this is ignored.
-              Pass a negative or 0 value to disable this check.
+          jwt: the JWT token to verify
+          max_size: maximum allowed size for the JWE token, in bytes.
+            If `jwt` is already a `SignedJwt` instance, this is ignored.
+            Pass a negative or 0 value to disable this check.
 
         """
         if not isinstance(jwt, SignedJwt):

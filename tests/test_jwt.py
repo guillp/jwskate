@@ -488,16 +488,19 @@ def test_large_jwt() -> None:
     with pytest.raises(ValueError, match="is abnormally big"):
         Jwt(
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
-            f"{BinaPy.serialize_to('json', {f'claim{i}': f'value{i}' for i in range(16_000)}).to("b64u").ascii()}"
+            f"{BinaPy.serialize_to('json', {f'claim{i}': f'value{i}' for i in range(16_000)}).to('b64u').ascii()}"
             ".bl5iNgXfkbmgDXItaUx7_1lUMNtOffihsShVP8MeE1g"
         )
 
-    assert isinstance(Jwt(
+    assert isinstance(
+        Jwt(
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
-            f"{BinaPy.serialize_to('json', {f'claim{i}': f'value{i}' for i in range(16_000)}).to("b64u").ascii()}"
+            f"{BinaPy.serialize_to('json', {f'claim{i}': f'value{i}' for i in range(16_000)}).to('b64u').ascii()}"
             ".bl5iNgXfkbmgDXItaUx7_1lUMNtOffihsShVP8MeE1g",
-            max_size=0
-        ), SignedJwt)
+            max_size=0,
+        ),
+        SignedJwt,
+    )
 
 
 def test_eq() -> None:

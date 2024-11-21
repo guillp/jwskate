@@ -412,17 +412,17 @@ class SignedJwt(Jwt):
                 msg = "This token does not contain an 'exp' claim."
                 raise InvalidClaim(msg, "exp")
 
-        for name, value in kwargs.items():
-            claim = self.get_claim(name)
+        for claim_name, value in kwargs.items():
+            claim = self.get_claim(claim_name)
             if callable(value):
                 if not value(claim):
                     raise InvalidClaim(
-                        name,
-                        f"value of claim {name} doesn't validate with the provided validator",
+                        claim_name,
+                        f"value of claim '{claim_name}' doesn't validate with the provided validator",
                         claim,
                     )
             elif claim != value:
-                raise InvalidClaim(name, f"unexpected value for claim {name}", claim)
+                raise InvalidClaim(claim_name, f"unexpected value for claim {key}", claim)
 
     def encrypt(
         self,

@@ -12,6 +12,7 @@ need to use the interface from `Jwk`.
 from __future__ import annotations
 
 import warnings
+from contextlib import suppress
 from copy import copy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Mapping, SupportsBytes
@@ -105,11 +106,9 @@ class Jwk(BaseJsonDict):
 
         """
         for jwk_class in Jwk.__subclasses__():
-            try:
+            with suppress(UnsupportedAlg):
                 jwk_class.get_jwa_wrapper(alg)
                 return jwk_class.generate(alg=alg, **kwargs)
-            except UnsupportedAlg:  # noqa: PERF203
-                continue
 
         raise UnsupportedAlg(alg)
 
@@ -161,7 +160,7 @@ class Jwk(BaseJsonDict):
 
         The `Jwk` constructor will accept:
 
-            - a `dict` with the parsed Jwk content
+            - a `dict` with the parsed `Jwk` content
             - another `Jwk`, which will be used as-is instead of creating a copy
             - an instance from a `cryptography` public or private key class
 
@@ -188,6 +187,7 @@ class Jwk(BaseJsonDict):
 
             if isinstance(key, str):
                 return cls.from_json(key)
+
             return cls.from_cryptography_key(key, **kwargs)
         return super().__new__(cls)
 
@@ -486,6 +486,7 @@ class Jwk(BaseJsonDict):
 
             if value is None:
                 continue
+
             if param.kind == "b64u":
                 if not isinstance(value, str):
                     msg = f"Parameter {param.description} ({name}) must be a string with a Base64URL-encoded value"
@@ -699,8 +700,8 @@ class Jwk(BaseJsonDict):
             public_jwk = self
         if algs is None and alg:
             algs = [alg]
-        for alg in algs or (None,):  # noqa: PLR1704
-            wrapper = public_jwk.signature_wrapper(alg)
+        for candidate_alg in algs or (None,):
+            wrapper = public_jwk.signature_wrapper(candidate_alg)
             if wrapper.verify(data, signature):
                 return True
 
@@ -1066,11 +1067,11 @@ class Jwk(BaseJsonDict):
 
         try:
             cryptography_key = serialization.load_pem_private_key(pem, password)
-        except Exception as private_exc:  # noqa: BLE001
+        except ValueError as private_exc:
             try:
                 cryptography_key = serialization.load_pem_public_key(pem)
 
-            except Exception:  # noqa: BLE001
+            except ValueError:
                 msg = "The provided data is not a private or a public PEM encoded key."
                 raise ValueError(msg) from private_exc
             if password is not None:
@@ -1105,6 +1106,7 @@ class Jwk(BaseJsonDict):
                 serialization.PrivateFormat.PKCS8,
                 encryption,
             ).decode()
+
         if password:
             msg = "Public keys cannot be encrypted when serialized."
             raise ValueError(msg)
@@ -1125,10 +1127,10 @@ class Jwk(BaseJsonDict):
 
         try:
             cryptography_key = serialization.load_der_private_key(der, password)
-        except Exception as private_exc:  # noqa: BLE001
+        except ValueError as private_exc:
             try:
                 cryptography_key = serialization.load_der_public_key(der)
-            except Exception:  # noqa: BLE001
+            except ValueError:
                 msg = "The provided data is not a private or a public DER encoded key."
                 raise ValueError(msg) from private_exc
             if password is not None:
@@ -1166,6 +1168,7 @@ class Jwk(BaseJsonDict):
                     encryption,
                 ),
             )
+
         if password:
             msg = "Public keys cannot be encrypted when serialized."
             raise ValueError(msg)
@@ -1224,7 +1227,11 @@ class Jwk(BaseJsonDict):
     @classmethod
     @deprecated("Use from_x509_pem() instead")
     def from_x509(cls, x509_pem: str | bytes) -> Self:
-        """Deprecated. use Jwk.from_x509_pem() instead."""
+        """Deprecated.
+
+        Use Jwk.from_x509_pem() instead.
+
+        """
         return cls.from_x509_pem(x509_pem)
 
     @classmethod

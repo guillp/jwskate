@@ -198,8 +198,12 @@ class JwkSet(BaseJsonDict):
             algs = list(algs)
 
         for jwk in self.verification_keys():
-            for alg in algs or (None,):  # noqa: PLR1704
-                if alg in jwk.supported_signing_algorithms() and jwk.verify(data, signature, alg=alg):
+            for candidate_alg in algs or (None,):
+                if candidate_alg in jwk.supported_signing_algorithms() and jwk.verify(
+                    data,
+                    signature,
+                    alg=candidate_alg,
+                ):
                     return True
 
         # no key matches, so consider the signature invalid

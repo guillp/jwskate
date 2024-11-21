@@ -207,7 +207,11 @@ class Jwt(BaseCompactToken):
 
     @classmethod
     def decrypt_nested_jwt(
-        cls, jwe: str | JweCompact, key: Jwk | Mapping[str, Any] | Any, *, max_size: int = 16 * 1024
+        cls,
+        jwe: str | JweCompact,
+        key: Jwk | Mapping[str, Any] | Any,
+        *,
+        max_size: int = 16 * 1024,
     ) -> SignedJwt:
         """Decrypt a JWE that contains a nested signed JWT.
 

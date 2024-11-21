@@ -509,7 +509,7 @@ Unyb2Oj6CDA9YFEcjRuaZBDtSKJ6AYOWFJO7CIHsjAZ0rBqfyfNdBd5DG4+ZJkD8
     assert key.key_size == 2048
     assert key["x5t"] == "4VebpVElzsOnjjn1XPgdqL-pT4g"
     assert key["x5t#S256"] == "80gl5xzn_qHTiCyFX2TSvFv8RJCWgcm-nTNXvrKhrms"
-    assert key == Jwk.from_x509(ms_cert.encode())
+    assert key == Jwk.from_x509_pem(ms_cert.encode())
 
     cert = x509.load_pem_x509_certificate(ms_cert.encode())
     assert key == Jwk.from_x509_cert(cert) == Jwk.from_x509_der(cert.public_bytes(Encoding.DER))

@@ -1,8 +1,13 @@
 # ![jwskate](docs/logo.png)
 
+[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 [![PyPi](https://img.shields.io/pypi/v/jwskate.svg)](https://pypi.python.org/pypi/jwskate)
 [![PyPi - License](https://img.shields.io/pypi/l/jwskate)](https://pypi.python.org/pypi/jwskate)
 [![PyPI - Downloads](https://img.shields.io/pypi/dw/jwskate)](https://pypi.python.org/pypi/jwskate)
+[![Supported Versions](https://img.shields.io/pypi/pyversions/jwskate.svg)](https://pypi.org/project/jwskate)
+[![PyPI status](https://img.shields.io/pypi/status/jwskate.svg)](https://pypi.python.org/pypi/jwskate/)
+[![GitHub commits](https://badgen.net/github/commits/guillp/jwskate)](https://github.com/guillp/jwskate/commit/)
+[![GitHub latest commit](https://badgen.net/github/last-commit/guillp/jwskate)](https://github.com/guillp/jwskate/commit/)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
 A Pythonic implementation of the JOSE set of IETF specifications: [Json Web Signature][rfc7515], [Keys][rfc7517],

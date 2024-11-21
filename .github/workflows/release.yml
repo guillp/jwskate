@@ -8,7 +8,7 @@ on:
   push:
     branches: [ release ]
     tags:
-      - 'v*'
+      - 'v*.*.*'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -41,6 +41,9 @@ jobs:
           unreleased: true
           addSections: '{"documentation":{"prefix":"**Documentation:**","labels":["documentation"]}}'
           output: CHANGELOG.md
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
 
       - uses: actions/setup-python@v5
         with:

@@ -43,7 +43,7 @@ jobs:
           output: CHANGELOG.md
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v4
 
       - uses: actions/setup-python@v5
         with:

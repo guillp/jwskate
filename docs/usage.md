@@ -687,7 +687,7 @@ encryption alg (`enc`):
 from jwskate import JweCompact, Jwk
 
 plaintext = b"Encrypting JWE is easy!"
-private_jwk = Jwk.generate_for_kty("EC")
+private_jwk = Jwk.generate_for_kty("EC", crv="P-256")
 public_jwk = private_jwk.public_jwk()
 
 jwe = JweCompact.encrypt(plaintext, public_jwk, alg="ECDH-ES+A128KW", enc="A128GCM")

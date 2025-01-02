@@ -353,9 +353,9 @@ methods:
 from jwskate import Jwk
 
 data = b"Signing is easy!"
-jwk = Jwk.generate_for_kty("EC", crv="P-256")
+jwk = Jwk.generate(alg="ES256")
 
-signature = jwk.sign(data, alg="ES256")
+signature = jwk.sign(data)
 assert jwk.verify(data, signature, alg="ES256")
 assert not jwk.verify(
     data,
@@ -374,7 +374,7 @@ from jwskate import Jwk
 
 data = b"Encryption is easy!"
 alg = "A256GCM"
-jwk = Jwk.generate_for_kty("oct", key_size=256, alg=alg)
+jwk = Jwk.generate(alg=alg)
 
 ciphertext, iv, tag = jwk.encrypt(data)
 
@@ -391,7 +391,7 @@ from jwskate import Jwk
 data = b"Authenticated Encryption is easy!"
 alg = "A256GCM"
 aad = b"This is my auth tag"
-jwk = Jwk.generate_for_kty("oct", key_size=256, alg=alg)
+jwk = Jwk.generate(alg=alg)
 
 ciphertext, iv, tag = jwk.encrypt(data, aad=aad)
 
@@ -687,10 +687,10 @@ encryption alg (`enc`):
 from jwskate import JweCompact, Jwk
 
 plaintext = b"Encrypting JWE is easy!"
-private_jwk = Jwk.generate_for_kty("EC", crv="P-256")
+private_jwk = Jwk.generate(alg="ECDH-ES+A128KW", crv="P-256")
 public_jwk = private_jwk.public_jwk()
 
-jwe = JweCompact.encrypt(plaintext, public_jwk, alg="ECDH-ES+A128KW", enc="A128GCM")
+jwe = JweCompact.encrypt(plaintext, public_jwk, enc="A128GCM")
 str(jwe)
 # 'eyJlcGsiOnsia3R5IjoiRUMiLCJjcnYiOiJQLTI1NiIsIngiOiI3a2VIdGxXdnVQQWVfYzR3d1hsNXFBZENHYzNKSk9KX0c5WThWU29Cc0tBIiwieSI6ImlyVFpRVzFlckZUSGd4WG1nUVdpcTVBYXdNOXNtamxybE96X2RTMmpld1kifSwiYWxnIjoiRUNESC1FUytBMTI4S1ciLCJlbmMiOiJBMTI4R0NNIn0.s7iUWLT2TG_kRnxuRvMxL5lY1oVRRVlI.kQaT5CM0HYfdwQ9H.49Trq2lpEtOEk8u_HP20TuJ80xpkqK8.RsQMBzvLj5i9bk4eew21gg'
 ```
@@ -822,8 +822,8 @@ signature alg to use (if the key doesn't have an 'alg' parameter).
 from jwskate import Jwt, Jwk
 
 claims = {"claim1": "value1", "claim2": "value2"}
-jwk = Jwk.generate_for_kty("EC", crv="P-256")
-jwt = Jwt.sign(claims, jwk, alg="ES256")
+jwk = Jwk.generate(alg="ES256")
+jwt = Jwt.sign(claims, jwk)
 
 print(jwt)
 # eyJhbGciOiJFUzI1NiJ9.eyJjbGFpbTEiOiJ2YWx1ZTEiLCJjbGFpbTIiOiJ2YWx1ZTIifQ.mqqXTljXQwNff0Sah88oFGBNWC9XpZxUj3WDa9-00UAyuEoL6cey-rHQNtmYgYgPRgI_HnWpRm5M4_a9qv9m0g
@@ -838,11 +838,11 @@ one in the used JWK. You can add additional headers by using the `extra_headers`
 from jwskate import Jwt, Jwk
 
 claims = {"claim1": "value1", "claim2": "value2"}
-jwk = Jwk.generate_for_kty("EC", crv="P-256")
-jwt = Jwt.sign(claims, jwk, alg="ES256", extra_headers={"header1": "value1"})
+jwk = Jwk.generate(alg="ES256")
+jwt = Jwt.sign(claims, jwk, extra_headers={"header1": "value1"})
 
 print(jwt)
 # eyJoZWFkZXIxIjoidmFsdWUxIiwiYWxnIjoiRVMyNTYifQ.eyJjbGFpbTEiOiJ2YWx1ZTEiLCJjbGFpbTIiOiJ2YWx1ZTIifQ.m0Bi8D6Rdi6HeH4J45JPSaeGPxjboAf_-efQ3mUAi6Gs0ipC0MXg9rd727IIINUsVfU0geUn7IwA1HjoTOsHvg
 print(jwt.headers)
-# {'header1': 'value1', 'alg': 'ES256'}
+# {'header1': 'value1', 'alg': 'ES256', 'typ': 'JWT'}
 ```

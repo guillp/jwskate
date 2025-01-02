@@ -127,6 +127,11 @@ class Jwk(BaseJsonDict):
             UnsupportedKeyType: if the specified key type (`kty`) is not supported
 
         """
+        warnings.warn(
+            "Use 'generate' instead (https://github.com/guillp/jwskate/pull/38#issuecomment-2568152368).",
+            DeprecationWarning,
+            stacklevel=2
+        )
         for jwk_class in Jwk.__subclasses__():
             if kty == jwk_class.KEY_TYPE:
                 return jwk_class.generate(**kwargs)

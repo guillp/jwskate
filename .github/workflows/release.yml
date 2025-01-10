@@ -26,6 +26,7 @@ jobs:
 
     permissions:
         id-token: write  # required for trusted publishing to PyPI
+        contents: write
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:

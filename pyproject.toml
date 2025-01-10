@@ -1,9 +1,10 @@
 [project]
 name = "jwskate"
+version = "0.12.1"
 description = "A Pythonic implementation of the JOSE / JSON Web Crypto related RFCs (JWS, JWK, JWA, JWT, JWE)"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 authors = [
     { name = "Guillaume Pujol", email = "guillp.dev@pm.me" }
 ]
@@ -15,7 +16,6 @@ classifiers = [
     'Topic :: Security',
     'License :: OSI Approved :: MIT License',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
@@ -33,8 +33,6 @@ homepage = "https://github.com/guillp/jwskate"
 documentation = "https://guillp.github.io/jwskate/"
 pypi = "https://pypi.org/project/jwskate/"
 
-
-[tool]
 [tool.hatch.version]
 source = "vcs"
 
@@ -94,7 +92,7 @@ wrap-descriptions = 120
 blank = true
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py39"
 line-length = 120
 exclude = [
     "tests"

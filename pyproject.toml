@@ -1,6 +1,5 @@
 [project]
 name = "jwskate"
-version = "0.12.1"
 description = "A Pythonic implementation of the JOSE / JSON Web Crypto related RFCs (JWS, JWK, JWA, JWT, JWE)"
 readme = "README.md"
 license = "MIT"

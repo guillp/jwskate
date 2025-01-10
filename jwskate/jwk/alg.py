@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import warnings
-from typing import Iterable, Mapping, Type, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from jwskate.jwa import BaseAlg
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
 
 
 class UnsupportedAlg(ValueError):
@@ -35,7 +38,7 @@ class MismatchingAlg(ValueError):
         self.algs = list(algs) if algs else None
 
 
-T = TypeVar("T", bound=Type[BaseAlg])
+T = TypeVar("T", bound=type[BaseAlg])
 
 
 def select_alg_class(

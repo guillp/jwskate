@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from collections import UserDict
 from functools import cached_property
 from typing import Any
@@ -146,10 +145,7 @@ class BaseCompactToken:
         return self.value
 
 
-if sys.version_info[:2] > (3, 8):
-    BaseUserDict = UserDict[str, Any]
-else:
-    BaseUserDict = UserDict
+BaseUserDict = UserDict[str, Any]
 
 
 class BaseJsonDict(BaseUserDict):

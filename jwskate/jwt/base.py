@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Iterable, Mapping
+from typing import TYPE_CHECKING, Any
 
 from binapy import BinaPy
 
@@ -12,6 +12,8 @@ from jwskate.jwk import Jwk, to_jwk
 from jwskate.token import BaseCompactToken
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+
     from jwskate import SignedJwt  # pragma: no cover
 
 

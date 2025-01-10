@@ -27,7 +27,7 @@ assert isinstance(signer.jwk, ECJwk) and signer.jwk.is_private
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Callable
 
 from jwskate.jwk import Jwk, to_jwk
 
@@ -35,6 +35,8 @@ from .base import Jwt
 from .verifier import JwtVerifier
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+
     from .signed import SignedJwt
 
 

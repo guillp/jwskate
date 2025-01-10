@@ -12,10 +12,11 @@ need to use the interface from `Jwk`.
 from __future__ import annotations
 
 import warnings
+from collections.abc import Iterable, Mapping
 from contextlib import suppress
 from copy import copy
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Mapping, SupportsBytes
+from typing import TYPE_CHECKING, Any, ClassVar, SupportsBytes
 
 from binapy import BinaPy
 from cryptography import x509
@@ -130,7 +131,7 @@ class Jwk(BaseJsonDict):
         warnings.warn(
             "Use 'generate' instead (https://github.com/guillp/jwskate/pull/38#issuecomment-2568152368).",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
         for jwk_class in Jwk.__subclasses__():
             if kty == jwk_class.KEY_TYPE:
@@ -1383,7 +1384,7 @@ class Jwk(BaseJsonDict):
         """
         jwk = self.copy()
         for key in self.keys():
-            if key == "kty" or key in self.PARAMS and self.PARAMS[key].is_required:
+            if key == "kty" or (key in self.PARAMS and self.PARAMS[key].is_required):
                 continue
             del jwk[key]
 

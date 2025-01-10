@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Any, Mapping
+from typing import TYPE_CHECKING, Any
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import serialization
@@ -31,6 +31,9 @@ from jwskate.jwa import (
 
 from .alg import UnsupportedAlg
 from .base import Jwk, JwkParameter
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 class UnsupportedOKPCurve(KeyError):

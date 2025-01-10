@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Callable
 
 from jwskate import InvalidSignature, Jwk, JwkSet
 
 from .signed import ExpiredJwt, InvalidClaim, SignedJwt
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
 
 
 class JwtVerifier:

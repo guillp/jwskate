@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Mapping
+from typing import TYPE_CHECKING, Any
 
 from typing_extensions import override
 
 from jwskate.token import BaseJsonDict
 
 from .base import Jwk, to_jwk
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
 
 
 class JwkSet(BaseJsonDict):

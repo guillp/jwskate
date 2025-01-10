@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import warnings
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Iterable, Mapping, SupportsBytes
+from typing import TYPE_CHECKING, Any, SupportsBytes
 
 from binapy import BinaPy
 
@@ -19,6 +19,8 @@ from jwskate.jwk.alg import UnsupportedAlg, select_alg_class, select_alg_classes
 from jwskate.token import BaseCompactToken
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+
     from jwskate.jwt import SignedJwt
 
 

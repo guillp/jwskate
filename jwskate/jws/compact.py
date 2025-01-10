@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Iterable, Mapping, SupportsBytes
+from typing import TYPE_CHECKING, Any, SupportsBytes
 
 from binapy import BinaPy
 from typing_extensions import Self
@@ -14,6 +14,8 @@ from jwskate.token import BaseCompactToken
 from .signature import InvalidSignature, JwsSignature
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+
     from .json import JwsJsonFlat, JwsJsonGeneral  # pragma: no cover
 
 

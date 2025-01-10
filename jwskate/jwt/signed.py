@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Iterable, Mapping
+from typing import TYPE_CHECKING, Any
 
 from binapy import BinaPy
 from typing_extensions import Self
@@ -16,6 +16,7 @@ from jwskate.jws import InvalidSignature
 from .base import InvalidJwt, Jwt
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
     from types import EllipsisType
 
 

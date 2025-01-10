@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import warnings
 from functools import cached_property
-from typing import Any, Mapping
+from typing import TYPE_CHECKING, Any
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -30,6 +30,9 @@ from jwskate.jwa import (
 
 from .alg import UnsupportedAlg
 from .base import Jwk, JwkParameter
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 class UnsupportedEllipticCurve(KeyError):

@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Generic, Iterator, SupportsBytes, TypeVar
+from typing import TYPE_CHECKING, Generic, SupportsBytes, TypeVar
 
 import cryptography.exceptions
 from binapy import BinaPy
 from typing_extensions import Self, override
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from cryptography.hazmat.primitives import hashes
 
 

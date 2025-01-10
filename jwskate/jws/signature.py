@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Any, Iterable, Mapping, SupportsBytes, TypeVar
+from typing import TYPE_CHECKING, Any, SupportsBytes, TypeVar
 
 from binapy import BinaPy
 
 from jwskate.jwk import Jwk, to_jwk
 from jwskate.token import BaseJsonDict
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
 
 
 class InvalidSignature(ValueError):

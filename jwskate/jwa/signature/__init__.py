@@ -8,16 +8,10 @@ from .hmac import HS256, HS384, HS512, BaseHMACSigAlg
 from .rsa import PS256, PS384, PS512, RS256, RS384, RS512, BaseRSASigAlg
 
 __all__ = [
-    "BaseECSignatureAlg",
-    "BaseHMACSigAlg",
-    "BaseRSASigAlg",
     "ES256",
     "ES256K",
     "ES384",
     "ES512",
-    "Ed25519Dsa",
-    "Ed448Dsa",
-    "EdDsa",
     "HS256",
     "HS384",
     "HS512",
@@ -27,4 +21,10 @@ __all__ = [
     "RS256",
     "RS384",
     "RS512",
+    "BaseECSignatureAlg",
+    "BaseHMACSigAlg",
+    "BaseRSASigAlg",
+    "Ed448Dsa",
+    "Ed25519Dsa",
+    "EdDsa",
 ]

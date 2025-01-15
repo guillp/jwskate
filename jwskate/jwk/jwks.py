@@ -14,6 +14,14 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
 
 
+class NoKeyFoundWithThisKid(KeyError):
+    """Raised when no key with the specified Key ID is found."""
+
+    def __init__(self, kid: str) -> None:
+        super().__init__(f"No key with Key ID '{kid}' found in this JwkSet.")
+        self.kid = kid
+
+
 class JwkSet(BaseJsonDict):
     """A set of JWK keys, with methods for easy management of keys.
 
@@ -78,7 +86,7 @@ class JwkSet(BaseJsonDict):
         jwk = next(filter(lambda j: j.get("kid") == kid, self.jwks), None)
         if isinstance(jwk, Jwk):
             return jwk
-        raise KeyError(kid)
+        raise NoKeyFoundWithThisKid(kid)
 
     def __len__(self) -> int:
         """Return the number of Jwk in this JwkSet.
@@ -142,7 +150,7 @@ class JwkSet(BaseJsonDict):
             a public JwkSet
 
         """
-        return JwkSet(keys=(key.public_jwk() for key in self.jwks))
+        return JwkSet(keys=(key.public_jwk() for key in self.jwks if not key.is_symmetric))
 
     def verification_keys(self) -> list[Jwk]:
         """Return the list of keys from this JWKS that are usable for signature verification.

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, SupportsBytes
 from binapy import BinaPy
 from typing_extensions import Self
 
+from jwskate import JwkSet
 from jwskate.jwk.base import Jwk, to_jwk
 from jwskate.token import BaseCompactToken
 
@@ -136,7 +137,7 @@ class JwsCompact(BaseCompactToken):
 
     def verify_signature(
         self,
-        key: Jwk | Mapping[str, Any] | Any,
+        key: Jwk | JwkSet | Mapping[str, Any] | Any,
         *,
         alg: str | None = None,
         algs: Iterable[str] | None = None,
@@ -152,7 +153,8 @@ class JwsCompact(BaseCompactToken):
          `True` if the signature matches, `False` otherwise
 
         """
-        key = to_jwk(key)
+        key = key.get_jwk_by_kid(self.kid) if isinstance(key, JwkSet) else to_jwk(key)
+
         return key.verify(self.signed_part, self.signature, alg=alg, algs=algs)
 
     def verify(

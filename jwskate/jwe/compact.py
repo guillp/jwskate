@@ -14,7 +14,7 @@ from jwskate.jwa import (
     Pbes2_HS384_A192KW,
     Pbes2_HS512_A256KW,
 )
-from jwskate.jwk import Jwk, SymmetricJwk, to_jwk
+from jwskate.jwk import Jwk, JwkSet, SymmetricJwk, to_jwk
 from jwskate.jwk.alg import UnsupportedAlg, select_alg_class, select_alg_classes
 from jwskate.token import BaseCompactToken
 
@@ -29,7 +29,7 @@ class InvalidJwe(ValueError):
 
 
 class JweCompact(BaseCompactToken):
-    """Represents a Json Web Encryption object, in compact representation, as defined in RFC7516.
+    """Represents a JSON Web Encryption object, in compact representation, as defined in RFC7516.
 
     Args:
         value: the compact representation for this Jwe
@@ -196,7 +196,7 @@ separated by dots."""
 
     def unwrap_cek(
         self,
-        key_or_password: Jwk | Mapping[str, Any] | bytes | str,
+        key_or_password: Jwk | JwkSet | Mapping[str, Any] | bytes | str,
         alg: str | None = None,
         algs: Iterable[str] | None = None,
     ) -> Jwk:
@@ -214,8 +214,11 @@ separated by dots."""
         if isinstance(key_or_password, (bytes, str)):
             password = key_or_password
             return self.unwrap_cek_with_password(password)
+        if isinstance(key_or_password, JwkSet):
+            jwk = key_or_password.get_jwk_by_kid(self.kid)
+        else:
+            jwk = to_jwk(key_or_password)
 
-        jwk = to_jwk(key_or_password)
         select_alg_classes(
             jwk.KEY_MANAGEMENT_ALGORITHMS,
             jwk_alg=self.alg,
@@ -227,7 +230,7 @@ separated by dots."""
 
     def decrypt(
         self,
-        key: Jwk | Mapping[str, Any] | Any,
+        key: Jwk | JwkSet | Mapping[str, Any] | Any,
         *,
         alg: str | None = None,
         algs: Iterable[str] | None = None,

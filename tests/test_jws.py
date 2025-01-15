@@ -8,12 +8,14 @@ from jwskate import (
     ECJwk,
     InvalidJws,
     Jwk,
+    JwkSet,
     JwsCompact,
     JwsJsonFlat,
     JwsJsonGeneral,
     JwsSignature,
     OKPJwk,
     RSAJwk,
+    SignatureAlgs,
     SymmetricJwk,
 )
 
@@ -540,3 +542,12 @@ def test_jws_from_parts() -> None:
     ) == JwsCompact(
         "eyJhbGciOm51bGx9.dGhpc19pc19hX3Rlc3Q.xZdQ-v6xqUpJGeuRIGVTs9gv56eQ_T_q-4OQdFS3IkkC3o-QM6vP39wHf5iNoHrZww9SrXHXb0oaF4RQZyKRGg"
     )
+
+
+def test_verify_with_jwkset() -> None:
+    key_ec = Jwk.generate(alg=SignatureAlgs.ES256).with_kid_thumbprint()
+    key_rsa = Jwk.generate(alg=SignatureAlgs.RS256).with_kid_thumbprint()
+
+    jwks = JwkSet(keys=[key_ec, key_rsa])
+    jwe = JwsCompact.sign(b"this_is_a_test", key_ec)
+    assert jwe.verify_signature(jwks.public_jwks())

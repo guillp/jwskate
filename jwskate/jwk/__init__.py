@@ -11,7 +11,7 @@ from .alg import (
 )
 from .base import InvalidJwk, Jwk, UnsupportedKeyType, to_jwk
 from .ec import ECJwk, UnsupportedEllipticCurve
-from .jwks import JwkSet
+from .jwks import JwkSet, NoKeyFoundWithThisKid
 from .oct import SymmetricJwk
 from .okp import OKPJwk, UnsupportedOKPCurve
 from .rsa import RSAJwk
@@ -23,6 +23,7 @@ __all__ = [
     "Jwk",
     "JwkSet",
     "MismatchingAlg",
+    "NoKeyFoundWithThisKid",
     "OKPJwk",
     "RSAJwk",
     "SymmetricJwk",

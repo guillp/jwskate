@@ -85,8 +85,9 @@ def select_alg_class(
                 if strict:
                     raise MismatchingAlg(jwk_alg, alg)
                 warnings.warn(
-                    "This key has an 'alg' parameter, you should use that alg for each operation.",
-                    stacklevel=2,
+                    f"This key has an 'alg' parameter {jwk_alg}, which should be used for each operation."
+                    f" The algorithm is {alg}.",
+                    stacklevel=3,
                 )
             choosen_alg = alg
         else:
@@ -103,7 +104,7 @@ def select_alg_class(
     try:
         return supported_algs[choosen_alg]
     except KeyError:
-        msg = f"Alg {choosen_alg} is not supported. Supported algs: {list(supported_algs)}."
+        msg = f"Alg {choosen_alg} is not supported by this key. Supported algs are: {', '.join(supported_algs)}."
         raise UnsupportedAlg(msg) from None
 
 
@@ -178,7 +179,10 @@ def select_alg_classes(
         possible_supported_algs = [supported_algs[alg] for alg in possible_algs if alg in supported_algs]
         if possible_supported_algs:
             return possible_supported_algs
-        msg = f"None of the user-specified alg(s) are supported. {possible_algs}"
+        msg = (
+            f"None of the user-specified alg(s) are supported by this key."
+            f" Supported algs are {', '.join(possible_algs)}."
+        )
         raise UnsupportedAlg(msg)
 
     msg = (

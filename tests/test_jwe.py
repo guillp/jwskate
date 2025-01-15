@@ -11,6 +11,8 @@ from jwskate import (
     InvalidJwe,
     JweCompact,
     Jwk,
+    JwkSet,
+    KeyManagementAlgs,
     RSAJwk,
     SymmetricJwk,
     UnsupportedAlg,
@@ -792,3 +794,13 @@ def test_invalid_password_encryption() -> None:
         match=r"Invalid JWE: invalid value for the 'p2c' header, must be a positive integer.",
     ):
         jwe_invalid_p2c.decrypt_with_password("password")
+
+
+
+def test_decrypt_with_jwkset() -> None:
+    key_ec = Jwk.generate(alg=KeyManagementAlgs.ECDH_ES_A128KW).with_kid_thumbprint()
+    key_rsa = Jwk.generate(alg=KeyManagementAlgs.RSA_OAEP_256).with_kid_thumbprint()
+
+    jwks = JwkSet(keys=[key_ec, key_rsa])
+    jwe = JweCompact.encrypt(b"this_is_a_test", key_ec.public_jwk(), enc="A128GCM")
+    assert jwe.decrypt(jwks)

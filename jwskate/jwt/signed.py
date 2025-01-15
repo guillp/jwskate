@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 from binapy import BinaPy
 from typing_extensions import Self
 
+from jwskate import JwkSet
 from jwskate.jwe import JweCompact
 from jwskate.jwk import Jwk, to_jwk
 from jwskate.jws import InvalidSignature
@@ -86,7 +87,7 @@ class SignedJwt(Jwt):
 
     def verify_signature(
         self,
-        key: Jwk | Mapping[str, Any] | Any,
+        key: Jwk | JwkSet | Mapping[str, Any] | Any,
         alg: str | None = None,
         algs: Iterable[str] | None = None,
     ) -> bool:
@@ -101,7 +102,7 @@ class SignedJwt(Jwt):
             `True` if the token signature is verified, `False` otherwise
 
         """
-        key = to_jwk(key)
+        key = key.get_jwk_by_kid(self.kid) if isinstance(key, JwkSet) else to_jwk(key)
 
         return key.verify(data=self.signed_part, signature=self.signature, alg=alg, algs=algs)
 

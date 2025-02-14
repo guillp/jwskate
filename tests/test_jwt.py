@@ -15,9 +15,11 @@ from jwskate import (
     InvalidSignature,
     JweCompact,
     Jwk,
+    JwkSet,
     Jwt,
     JwtSigner,
     JwtVerifier,
+    NoKeyFoundWithThisKid,
     SignatureAlgs,
     SignedJwt,
     SymmetricJwk,
@@ -762,9 +764,22 @@ def test_unprotect() -> None:
     assert ujwk.alg == "none"
     assert ujwk.claims == claims
     assert ujwk.typ == "JWT"
+    assert ujwk.signature == b''
 
     ujwk2 = jwt.unprotect(alg="n0ne", typ="FOO", extra_headers={"jku": "https://foo.bar"})
     assert ujwk2.alg == "n0ne"
     assert ujwk2.claims == claims
     assert ujwk2.typ == "FOO"
     assert ujwk2.headers["jku"] == "https://foo.bar"
+
+
+def test_verify_with_jwkset() -> None:
+    key_ec = Jwk.generate(alg=SignatureAlgs.ES256).with_kid_thumbprint()
+    key_rsa = Jwk.generate(alg=SignatureAlgs.RS256).with_kid_thumbprint()
+
+    jwks = JwkSet(keys=[key_ec, key_rsa])
+    jwt = Jwt.sign({"iss": "joe"}, key_ec)
+    assert jwt.verify_signature(jwks.public_jwks())
+
+    with pytest.raises(NoKeyFoundWithThisKid):
+        jwt.verify_signature(key_rsa.as_jwks())

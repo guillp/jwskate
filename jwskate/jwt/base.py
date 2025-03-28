@@ -9,7 +9,7 @@ from binapy import BinaPy
 
 from jwskate.jwe import JweCompact
 from jwskate.jwk import Jwk, to_jwk
-from jwskate.token import BaseCompactToken
+from jwskate.token import BaseCompactToken, BaseJsonDict
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
@@ -19,6 +19,30 @@ if TYPE_CHECKING:
 
 class InvalidJwt(ValueError):
     """Raised when an invalid Jwt is parsed."""
+
+
+class ClaimError(ValueError):
+    """Raised when a missing, invalid or unexpected claim is found in a token."""
+
+    def __init__(self, message: str, token: BaseCompactToken | BaseJsonDict, name: str, value: Any = None) -> None:
+        super().__init__(message)
+        self.token = token
+        self.name = name
+        self.value = value
+
+
+class MissingClaim(ClaimError):
+    """Raised when accessing a claim that is missing in a token."""
+
+    def __init__(self, token: BaseCompactToken | BaseJsonDict, name: str) -> None:
+        super().__init__(f"Claim '{name}' is missing.", token, name)
+
+
+class InvalidClaim(ClaimError):
+    """Raised when a claim contains an unexpected value."""
+
+    def __init__(self, token: BaseCompactToken | BaseJsonDict, name: str, value: Any) -> None:
+        super().__init__(f"Invalid value for claim '{name}': {value} (of type `{type(value)}`)", token, name, value)
 
 
 class Jwt(BaseCompactToken):

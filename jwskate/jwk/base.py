@@ -24,6 +24,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.serialization import pkcs12
 from typing_extensions import Self, deprecated
 
+from jwskate.exceptions import JwskateError
 from jwskate.jwa import (
     BaseAESEncryptionAlg,
     BaseAesGcmKeyWrap,
@@ -46,15 +47,41 @@ if TYPE_CHECKING:
     from .jwks import JwkSet  # pragma: no cover
 
 
-class UnsupportedKeyType(ValueError):
+class UnsupportedKeyType(JwskateError):
     """Raised when an unsupported Key Type is requested."""
 
 
-class InvalidJwk(ValueError):
+class InvalidJwk(JwskateError):
     """Raised when an invalid JWK is encountered."""
 
 
 @dataclass
+class ParameterError(JwskateError):
+    """Raised when a missing, invalid or unexpected parameter is found in a Jwk."""
+
+    def __init__(self, message: str, jwk: Jwk, param: str, value: Any = None) -> None:
+        super().__init__(message)
+        self.jwk = jwk
+        self.param = param
+        self.value = value
+
+
+class MissingParameter(ParameterError):
+    """Raised when trying to access a missing parameter in a Jwk."""
+
+    def __init__(self, jwk: Jwk, param: str) -> None:
+        super().__init__(f"Parameter {param} is missing from this Jwk", jwk, param)
+
+
+class InvalidParameter(ParameterError):
+    """Raised when a parameter with an unexpected type is found in a Jwk."""
+
+
+class UnsupportedThumbprintHashAlg(JwskateError):
+    """Raised when an unsupported hash algorithm is requested for a key thumbprint."""
+
+
+@dataclass(slots=True, frozen=True)
 class JwkParameter:
     """Describe known JWK parameters."""
 
@@ -263,12 +290,12 @@ class Jwk(BaseJsonDict):
             the param value
 
         Raises:
-            AttributeError: if the param is not found
+            MissingParameter: if the param is not found
 
         """
         value = self.get(param)
         if value is None:
-            raise AttributeError(param)
+            raise AttributeError(self, param)
         return value
 
     def __setitem__(self, key: str, value: Any) -> None:
@@ -308,8 +335,8 @@ class Jwk(BaseJsonDict):
         """
         alg = self.get("alg")
         if alg is not None and not isinstance(alg, str):  # pragma: no branch
-            msg = f"Invalid alg type {type(alg)}"
-            raise TypeError(msg, alg)
+            msg = f"Invalid 'alg' type `{type(alg)}`, should be `str`."
+            raise InvalidParameter(msg, self, "alg", alg)
         return alg
 
     @property
@@ -321,8 +348,8 @@ class Jwk(BaseJsonDict):
         """
         kid = self.get("kid")
         if kid is not None and not isinstance(kid, str):  # pragma: no branch
-            msg = f"invalid kid type {type(kid)}"
-            raise TypeError(msg, kid)
+            msg = f"Invalid 'kid' type `{type(kid)}`, should be `str`."
+            raise InvalidParameter(msg, self, "kid", kid)
         if kid is None:
             return self.thumbprint()
         return kid
@@ -388,8 +415,7 @@ class Jwk(BaseJsonDict):
         """
         alg = self.IANA_HASH_FUNCTION_NAMES.get(hashalg)
         if not alg:
-            msg = f"Unsupported hash alg {hashalg}"
-            raise ValueError(msg)
+            raise UnsupportedThumbprintHashAlg(hashalg)
 
         t = {"kty": self.get("kty")}
         for name, param in self.PARAMS.items():
@@ -589,7 +615,7 @@ class Jwk(BaseJsonDict):
             return alg_class(self.key)
         if issubclass(alg_class, BaseAsymmetricAlg):
             return alg_class(self.cryptography_key)
-        raise UnsupportedAlg(alg)  # pragma: no cover
+        raise AssertionError
 
     def encryption_wrapper(self, alg: str | None = None) -> BaseAESEncryptionAlg:
         """Initialize an encryption wrapper with this key.
@@ -631,7 +657,7 @@ class Jwk(BaseJsonDict):
             return alg_class(self.key)
         if issubclass(alg_class, BaseAsymmetricAlg):
             return alg_class(self.cryptography_key)
-        raise UnsupportedAlg(alg)  # pragma: no cover
+        raise AssertionError
 
     def supported_signing_algorithms(self) -> list[str]:
         """Return the list of Signature algorithms that can be used with this key.

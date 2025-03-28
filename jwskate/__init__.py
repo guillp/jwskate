@@ -16,6 +16,7 @@ __author__ = """Guillaume Pujol"""
 __email__ = "guill.p.linux@gmail.com"
 
 from .enums import EncryptionAlgs, KeyManagementAlgs, KeyTypes, SignatureAlgs
+from .exceptions import JwskateError
 from .jwa import (
     A128CBC_HS256,
     A128GCM,
@@ -65,6 +66,7 @@ from .jwa import (
     Ed25519,
     EdDsa,
     EllipticCurve,
+    InvalidKey,
     MismatchingAuthTag,
     OKPCurve,
     Pbes2_HS256_A128KW,
@@ -84,6 +86,7 @@ from .jwk import (
     ECJwk,
     ExpectedAlgRequired,
     InvalidJwk,
+    InvalidParameter,
     Jwk,
     JwkSet,
     MismatchingAlg,
@@ -95,6 +98,7 @@ from .jwk import (
     UnsupportedEllipticCurve,
     UnsupportedKeyType,
     UnsupportedOKPCurve,
+    UnsupportedThumbprintHashAlg,
     select_alg_class,
     select_alg_classes,
     to_jwk,
@@ -107,8 +111,10 @@ from .jwt import (
     Jwt,
     JwtSigner,
     JwtVerifier,
+    MissingClaim,
     SignedJwt,
 )
+from .token import HeaderError, InvalidHeader, MaximumTokenSizeExceeded, MissingHeader
 
 __all__ = [
     "A128CBC_HS256",
@@ -163,11 +169,15 @@ __all__ = [
     "EncryptionAlgs",
     "ExpectedAlgRequired",
     "ExpiredJwt",
+    "HeaderError",
     "InvalidClaim",
+    "InvalidHeader",
     "InvalidJwe",
     "InvalidJwk",
     "InvalidJws",
     "InvalidJwt",
+    "InvalidKey",
+    "InvalidParameter",
     "InvalidSignature",
     "JweCompact",
     "Jwk",
@@ -176,13 +186,17 @@ __all__ = [
     "JwsJsonFlat",
     "JwsJsonGeneral",
     "JwsSignature",
+    "JwskateError",
     "Jwt",
     "JwtSigner",
     "JwtVerifier",
     "KeyManagementAlgs",
     "KeyTypes",
+    "MaximumTokenSizeExceeded",
     "MismatchingAlg",
     "MismatchingAuthTag",
+    "MissingClaim",
+    "MissingHeader",
     "NoKeyFoundWithThisKid",
     "OKPCurve",
     "OKPJwk",
@@ -204,6 +218,7 @@ __all__ = [
     "UnsupportedEllipticCurve",
     "UnsupportedKeyType",
     "UnsupportedOKPCurve",
+    "UnsupportedThumbprintHashAlg",
     "secp256k1",
     "select_alg_class",
     "select_alg_classes",

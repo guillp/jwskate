@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from builtins import ValueError
 from datetime import datetime, timezone
 
 import freezegun
@@ -11,6 +10,7 @@ from jwskate import (
     ExpectedAlgRequired,
     ExpiredJwt,
     InvalidClaim,
+    InvalidHeader,
     InvalidJwt,
     InvalidSignature,
     JweCompact,
@@ -19,6 +19,9 @@ from jwskate import (
     Jwt,
     JwtSigner,
     JwtVerifier,
+    MaximumTokenSizeExceeded,
+    MissingClaim,
+    MissingHeader,
     NoKeyFoundWithThisKid,
     SignatureAlgs,
     SignedJwt,
@@ -28,15 +31,17 @@ from jwskate import (
 
 
 def test_signed_jwt() -> None:
-    jwk = Jwk({
-        "kty": "EC",
-        "alg": "ES256",
-        "kid": "my_key",
-        "crv": "P-256",
-        "x": "WtjnvHG9b_IKBLn4QYTHz-AdoAiO_ork5LH1BL_5tyI",
-        "y": "C0YfOUDuCOvTCt7hAqO-f9z8_JdOnOPbfYmUk-RosHA",
-        "d": "EnGZlkoa4VUsnl72LcRRychNJ2FFknm_ph855tNuPZ8",
-    })
+    jwk = Jwk(
+        {
+            "kty": "EC",
+            "alg": "ES256",
+            "kid": "my_key",
+            "crv": "P-256",
+            "x": "WtjnvHG9b_IKBLn4QYTHz-AdoAiO_ork5LH1BL_5tyI",
+            "y": "C0YfOUDuCOvTCt7hAqO-f9z8_JdOnOPbfYmUk-RosHA",
+            "d": "EnGZlkoa4VUsnl72LcRRychNJ2FFknm_ph855tNuPZ8",
+        }
+    )
 
     jwt = Jwt(
         "eyJhbGciOiJFUzI1NiIsImtpZCI6Im15X2tleSJ9.eyJhY3IiOiIyIiwiYW1yIjpbInB3ZCIsIm90cCJdLCJhdWQiOiJjbGllbnRfaWQiLCJhdXRoX3RpbWUiOjE2MjkyMDQ1NjAsImV4cCI6MTYyOTIwNDYyMCwiaWF0IjoxNjI5MjA0NTYwLCJuYmYiOjE2MjkyMDQ1NjAsImlzcyI6Imh0dHBzOi8vbXlhcy5sb2NhbCIsIm5vbmNlIjoibm9uY2UiLCJzdWIiOiIxMjM0NTYifQ.RhLqE8VGBjIRag4w9ps1oUQlxumma1fQzFH2UTrMDCjW2iTGdqhkOjpzb5bdI6tkQRRP64IGP4_CBa2BR7p26Q"
@@ -82,7 +87,7 @@ def test_signed_jwt() -> None:
         jwt.validate(Jwk.generate(alg="ES256").public_jwk())
 
     # invalid audience
-    with pytest.raises(InvalidClaim, match="audience"):
+    with pytest.raises(InvalidClaim, match="Invalid value for claim 'aud'"):
         jwt.validate(
             jwk.public_jwk(),
             audience="foo",
@@ -114,13 +119,13 @@ def test_jwt_signer_and_verifier(issuer: str) -> None:
     @verifier.custom_verifier
     def foobar_verifier(j: SignedJwt) -> None:
         if j.foo != "bar":
-            raise ValueError("This JWT is not FooBar compliant!")
+            raise ValueError("This JWT is not FooBar compliant!")  # noqa: EM101, TRY003
 
     verifier.verify(jwt)
 
     @verifier.custom_verifier
     def failing_verifier(j: SignedJwt) -> None:
-        raise ValueError("This token will never be valid")
+        raise ValueError("This token will never be valid")  # noqa: EM101, TRY003
 
     with pytest.raises(ValueError):
         verifier.verify(jwt)
@@ -167,7 +172,7 @@ def test_empty_jwt(private_jwk: Jwk) -> None:
 
     jwt.validate(key=private_jwk.public_jwk(), check_exp=False)
 
-    with pytest.raises(InvalidClaim):
+    with pytest.raises(MissingClaim, match="exp"):
         jwt.validate(key=private_jwk.public_jwk())
 
 
@@ -242,51 +247,53 @@ def test_encrypted_jwt() -> None:
     )
     assert jwt.authentication_tag.to("b64u") == b"fiK51VwhsxJ-siBMR-YFiA"
 
-    jwk = Jwk({
-        "kty": "RSA",
-        "n": (
-            "sXchDaQebHnPiGvyDOAT4saGEUetSyo9MKLOoWFsueri23bOdgWp4Dy1Wl"
-            "UzewbgBHod5pcM9H95GQRV3JDXboIRROSBigeC5yjU1hGzHHyXss8UDpre"
-            "cbAYxknTcQkhslANGRUZmdTOQ5qTRsLAt6BTYuyvVRdhS8exSZEy_c4gs_"
-            "7svlJJQ4H9_NxsiIoLwAEk7-Q3UXERGYw_75IDrGA84-lA_-Ct4eTlXHBI"
-            "Y2EaV7t7LjJaynVJCpkv4LKjTTAumiGUIuQhrNhZLuF_RJLqHpM2kgWFLU"
-            "7-VTdL1VbC2tejvcI2BlMkEpk1BzBZI0KQB0GaDWFLN-aEAw3vRw"
-        ),
-        "e": "AQAB",
-        "d": (
-            "VFCWOqXr8nvZNyaaJLXdnNPXZKRaWCjkU5Q2egQQpTBMwhprMzWzpR8Sxq"
-            "1OPThh_J6MUD8Z35wky9b8eEO0pwNS8xlh1lOFRRBoNqDIKVOku0aZb-ry"
-            "nq8cxjDTLZQ6Fz7jSjR1Klop-YKaUHc9GsEofQqYruPhzSA-QgajZGPbE_"
-            "0ZaVDJHfyd7UUBUKunFMScbflYAAOYJqVIVwaYR5zWEEceUjNnTNo_CVSj"
-            "-VvXLO5VZfCUAVLgW4dpf1SrtZjSt34YLsRarSb127reG_DUwg9Ch-Kyvj"
-            "T1SkHgUWRVGcyly7uvVGRSDwsXypdrNinPA4jlhoNdizK2zF2CWQ"
-        ),
-        "p": (
-            "9gY2w6I6S6L0juEKsbeDAwpd9WMfgqFoeA9vEyEUuk4kLwBKcoe1x4HG68"
-            "ik918hdDSE9vDQSccA3xXHOAFOPJ8R9EeIAbTi1VwBYnbTp87X-xcPWlEP"
-            "krdoUKW60tgs1aNd_Nnc9LEVVPMS390zbFxt8TN_biaBgelNgbC95sM"
-        ),
-        "q": (
-            "uKlCKvKv_ZJMVcdIs5vVSU_6cPtYI1ljWytExV_skstvRSNi9r66jdd9-y"
-            "BhVfuG4shsp2j7rGnIio901RBeHo6TPKWVVykPu1iYhQXw1jIABfw-MVsN"
-            "-3bQ76WLdt2SDxsHs7q7zPyUyHXmps7ycZ5c72wGkUwNOjYelmkiNS0"
-        ),
-        "dp": (
-            "w0kZbV63cVRvVX6yk3C8cMxo2qCM4Y8nsq1lmMSYhG4EcL6FWbX5h9yuv"
-            "ngs4iLEFk6eALoUS4vIWEwcL4txw9LsWH_zKI-hwoReoP77cOdSL4AVcra"
-            "Hawlkpyd2TWjE5evgbhWtOxnZee3cXJBkAi64Ik6jZxbvk-RR3pEhnCs"
-        ),
-        "dq": (
-            "o_8V14SezckO6CNLKs_btPdFiO9_kC1DsuUTd2LAfIIVeMZ7jn1Gus_Ff"
-            "7B7IVx3p5KuBGOVF8L-qifLb6nQnLysgHDh132NDioZkhH7mI7hPG-PYE_"
-            "odApKdnqECHWw0J-F0JWnUd6D2B_1TvF9mXA2Qx-iGYn8OVV1Bsmp6qU"
-        ),
-        "qi": (
-            "eNho5yRBEBxhGBtQRww9QirZsB66TrfFReG_CcteI1aCneT0ELGhYlRlC"
-            "tUkTRclIfuEPmNsNDPbLoLqqCVznFbvdB7x-Tl-m0l_eFTj2KiqwGqE9PZ"
-            "B9nNTwMVvH3VRRSLWACvPnSiwP8N5Usy-WRXS-V7TbpxIhvepTfE0NNo"
-        ),
-    })
+    jwk = Jwk(
+        {
+            "kty": "RSA",
+            "n": (
+                "sXchDaQebHnPiGvyDOAT4saGEUetSyo9MKLOoWFsueri23bOdgWp4Dy1Wl"
+                "UzewbgBHod5pcM9H95GQRV3JDXboIRROSBigeC5yjU1hGzHHyXss8UDpre"
+                "cbAYxknTcQkhslANGRUZmdTOQ5qTRsLAt6BTYuyvVRdhS8exSZEy_c4gs_"
+                "7svlJJQ4H9_NxsiIoLwAEk7-Q3UXERGYw_75IDrGA84-lA_-Ct4eTlXHBI"
+                "Y2EaV7t7LjJaynVJCpkv4LKjTTAumiGUIuQhrNhZLuF_RJLqHpM2kgWFLU"
+                "7-VTdL1VbC2tejvcI2BlMkEpk1BzBZI0KQB0GaDWFLN-aEAw3vRw"
+            ),
+            "e": "AQAB",
+            "d": (
+                "VFCWOqXr8nvZNyaaJLXdnNPXZKRaWCjkU5Q2egQQpTBMwhprMzWzpR8Sxq"
+                "1OPThh_J6MUD8Z35wky9b8eEO0pwNS8xlh1lOFRRBoNqDIKVOku0aZb-ry"
+                "nq8cxjDTLZQ6Fz7jSjR1Klop-YKaUHc9GsEofQqYruPhzSA-QgajZGPbE_"
+                "0ZaVDJHfyd7UUBUKunFMScbflYAAOYJqVIVwaYR5zWEEceUjNnTNo_CVSj"
+                "-VvXLO5VZfCUAVLgW4dpf1SrtZjSt34YLsRarSb127reG_DUwg9Ch-Kyvj"
+                "T1SkHgUWRVGcyly7uvVGRSDwsXypdrNinPA4jlhoNdizK2zF2CWQ"
+            ),
+            "p": (
+                "9gY2w6I6S6L0juEKsbeDAwpd9WMfgqFoeA9vEyEUuk4kLwBKcoe1x4HG68"
+                "ik918hdDSE9vDQSccA3xXHOAFOPJ8R9EeIAbTi1VwBYnbTp87X-xcPWlEP"
+                "krdoUKW60tgs1aNd_Nnc9LEVVPMS390zbFxt8TN_biaBgelNgbC95sM"
+            ),
+            "q": (
+                "uKlCKvKv_ZJMVcdIs5vVSU_6cPtYI1ljWytExV_skstvRSNi9r66jdd9-y"
+                "BhVfuG4shsp2j7rGnIio901RBeHo6TPKWVVykPu1iYhQXw1jIABfw-MVsN"
+                "-3bQ76WLdt2SDxsHs7q7zPyUyHXmps7ycZ5c72wGkUwNOjYelmkiNS0"
+            ),
+            "dp": (
+                "w0kZbV63cVRvVX6yk3C8cMxo2qCM4Y8nsq1lmMSYhG4EcL6FWbX5h9yuv"
+                "ngs4iLEFk6eALoUS4vIWEwcL4txw9LsWH_zKI-hwoReoP77cOdSL4AVcra"
+                "Hawlkpyd2TWjE5evgbhWtOxnZee3cXJBkAi64Ik6jZxbvk-RR3pEhnCs"
+            ),
+            "dq": (
+                "o_8V14SezckO6CNLKs_btPdFiO9_kC1DsuUTd2LAfIIVeMZ7jn1Gus_Ff"
+                "7B7IVx3p5KuBGOVF8L-qifLb6nQnLysgHDh132NDioZkhH7mI7hPG-PYE_"
+                "odApKdnqECHWw0J-F0JWnUd6D2B_1TvF9mXA2Qx-iGYn8OVV1Bsmp6qU"
+            ),
+            "qi": (
+                "eNho5yRBEBxhGBtQRww9QirZsB66TrfFReG_CcteI1aCneT0ELGhYlRlC"
+                "tUkTRclIfuEPmNsNDPbLoLqqCVznFbvdB7x-Tl-m0l_eFTj2KiqwGqE9PZ"
+                "B9nNTwMVvH3VRRSLWACvPnSiwP8N5Usy-WRXS-V7TbpxIhvepTfE0NNo"
+            ),
+        }
+    )
 
     assert jwt.decrypt(jwk).parse_from("json") == {
         "iss": "joe",
@@ -478,7 +485,7 @@ def test_sign_then_encrypt() -> None:
 
 
 def test_sign_without_alg() -> None:
-    jwk = Jwk.generate_for_kty("EC", crv="P-256")
+    jwk = Jwk.generate(kty="EC", crv="P-256")
     with pytest.raises(ValueError, match="signing alg is required"):
         Jwt.sign({"foo": "bar"}, jwk)
 
@@ -487,7 +494,7 @@ def test_sign_without_alg() -> None:
 
 
 def test_large_jwt() -> None:
-    with pytest.raises(ValueError, match="is abnormally big"):
+    with pytest.raises(MaximumTokenSizeExceeded):
         Jwt(
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
             f"{BinaPy.serialize_to('json', {f'claim{i}': f'value{i}' for i in range(16_000)}).to('b64u').ascii()}"
@@ -528,13 +535,13 @@ def test_invalid_headers() -> None:
     jwt = Jwt(
         "eyJhbGciOjEsImtpZCI6MSwidHlwIjoxLCJjdHkiOjF9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.cOUKU1ijv3KiN2KK_o50RU978I9MzQ4lNw2y7nOGAdM"
     )
-    with pytest.raises(AttributeError):
+    with pytest.raises(InvalidHeader):
         jwt.alg
-    with pytest.raises(AttributeError):
+    with pytest.raises(InvalidHeader):
         jwt.kid
-    with pytest.raises(AttributeError):
+    with pytest.raises(InvalidHeader):
         jwt.typ
-    with pytest.raises(AttributeError):
+    with pytest.raises(InvalidHeader):
         jwt.cty
 
 
@@ -576,24 +583,26 @@ def test_verifier() -> None:
     issuer = "https://my.issuer.local"
     audience = "myaudience"
     subject = "mysubject"
-    private_jwk = Jwk({
-        "kty": "EC",
-        "crv": "P-256",
-        "alg": "ES256",
-        "kid": "MUBAl25sdPAIlnA_8-BnMcIe5e8LnlI5pHF6Zy-icvw",
-        "x": "ftZqn6yrLR_4AytQz8Q_badHRTQ2Vc6Eg46ICsMuuMM",
-        "y": "C4wIeHH0aIW5Tf1_EPnJkse-vcoDNd-kh8P6-Ci2MI8",
-        "d": "3vyhseJLd51ZXdlrCHAPH1uv5Bp9IvnA8UB92ksu4MU",
-    })
+    private_jwk = Jwk(
+        {
+            "kty": "EC",
+            "crv": "P-256",
+            "alg": "ES256",
+            "kid": "MUBAl25sdPAIlnA_8-BnMcIe5e8LnlI5pHF6Zy-icvw",
+            "x": "ftZqn6yrLR_4AytQz8Q_badHRTQ2Vc6Eg46ICsMuuMM",
+            "y": "C4wIeHH0aIW5Tf1_EPnJkse-vcoDNd-kh8P6-Ci2MI8",
+            "d": "3vyhseJLd51ZXdlrCHAPH1uv5Bp9IvnA8UB92ksu4MU",
+        }
+    )
     jwks = private_jwk.public_jwk().as_jwks()
 
-    def suject_verifier(j: SignedJwt) -> None:
-        if j.subject != subject:
-            raise ValueError("Invalid Subject", jwt)
+    def suject_verifier(jwt: SignedJwt) -> None:
+        if jwt.subject != subject:
+            raise ValueError("Invalid Subject", jwt)  # noqa: EM101, TRY003
 
-    def not_foo(j: SignedJwt) -> None:
-        if "foo" in j.claims:
-            raise ValueError("Token is foo!", jwt)
+    def not_foo(jwt: SignedJwt) -> None:
+        if "foo" in jwt.claims:
+            raise ValueError("Token is foo!", jwt)  # noqa: EM101, TRY003
 
     verifier = JwtVerifier(
         jwks,
@@ -616,7 +625,7 @@ def test_verifier() -> None:
         )
     )
 
-    with pytest.raises(InvalidClaim, match="issuer"):
+    with pytest.raises(InvalidClaim, match="Invalid value for claim 'iss'"):
         verifier.verify(
             Jwt.sign(
                 {
@@ -630,7 +639,7 @@ def test_verifier() -> None:
             )
         )
 
-    with pytest.raises(InvalidClaim, match="audience"):
+    with pytest.raises(InvalidClaim, match="Invalid value for claim 'aud'"):
         verifier.verify(
             Jwt.sign(
                 {
@@ -645,17 +654,19 @@ def test_verifier() -> None:
         )
 
     with pytest.raises(InvalidSignature):
-        jwt = Jwt.sign(
-            {
-                "iss": "https://my.issuer.local",
-                "aud": "myaudience",
-                "iat": 1680523071,
-                "exp": 1680523131,
-                "sub": "mysubject",
-            },
-            private_jwk,
+        verifier.verify(
+            Jwt.sign(
+                {
+                    "iss": "https://my.issuer.local",
+                    "aud": "myaudience",
+                    "iat": 1680523071,
+                    "exp": 1680523131,
+                    "sub": "mysubject",
+                },
+                private_jwk,
+            ).value[:-17]
+            + b"--wrong_signature"
         )
-        verifier.verify(str(jwt)[:-17] + "--wrong_signature")
 
     with pytest.raises(ExpiredJwt):
         verifier.verify(
@@ -764,7 +775,7 @@ def test_unprotect() -> None:
     assert ujwk.alg == "none"
     assert ujwk.claims == claims
     assert ujwk.typ == "JWT"
-    assert ujwk.signature == b''
+    assert ujwk.signature == b""
 
     ujwk2 = jwt.unprotect(alg="n0ne", typ="FOO", extra_headers={"jku": "https://foo.bar"})
     assert ujwk2.alg == "n0ne"
@@ -777,9 +788,13 @@ def test_verify_with_jwkset() -> None:
     key_ec = Jwk.generate(alg=SignatureAlgs.ES256).with_kid_thumbprint()
     key_rsa = Jwk.generate(alg=SignatureAlgs.RS256).with_kid_thumbprint()
 
-    jwks = JwkSet(keys=[key_ec, key_rsa])
+    jwks = JwkSet(keys=[key_ec, key_rsa]).public_jwks()
     jwt = Jwt.sign({"iss": "joe"}, key_ec)
-    assert jwt.verify_signature(jwks.public_jwks())
+    assert jwt.verify_signature(jwks)
 
     with pytest.raises(NoKeyFoundWithThisKid):
         jwt.verify_signature(key_rsa.as_jwks())
+
+    jwt_without_kid = Jwt.sign_arbitrary(claims={"iss": "joe"}, headers={}, key=key_ec)
+    with pytest.raises(MissingHeader):
+        jwt_without_kid.verify_signature(jwks)

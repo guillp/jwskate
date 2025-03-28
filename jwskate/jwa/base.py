@@ -5,9 +5,10 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Generic, SupportsBytes, TypeVar
 
-import cryptography.exceptions
 from binapy import BinaPy
 from typing_extensions import Self, override
+
+from jwskate.exceptions import JwskateError
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -15,15 +16,15 @@ if TYPE_CHECKING:
     from cryptography.hazmat.primitives import hashes
 
 
-class PrivateKeyRequired(AttributeError):
+class PrivateKeyRequired(JwskateError):
     """Raised when a public key is provided for an operation that requires a private key."""
 
 
-class PublicKeyRequired(AttributeError):
+class PublicKeyRequired(JwskateError):
     """Raised when a private key is provided for an operation that requires a public key."""
 
 
-class InvalidKey(ValueError):
+class InvalidKey(JwskateError):
     """Raised when an unsuitable key is provided to an algorithm."""
 
 
@@ -341,5 +342,5 @@ class BaseKeyManagementAlg(BaseAlg):
     use = "enc"
 
 
-class MismatchingAuthTag(cryptography.exceptions.InvalidTag):
+class MismatchingAuthTag(JwskateError):
     """Raised during decryption, when the Authentication Tag doesn't match the expected value."""

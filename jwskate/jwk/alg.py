@@ -5,21 +5,32 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING, TypeVar
 
+from jwskate.exceptions import JwskateError
 from jwskate.jwa import BaseAlg
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Iterable, Mapping, Sequence
 
 
-class UnsupportedAlg(ValueError):
-    """Raised when a unsupported alg is requested."""
+class UnsupportedAlg(JwskateError):
+    """Raised when an unsupported alg is requested."""
+
+    def __init__(self, alg: str, supported_algs: Sequence[str] | None = None) -> None:
+        super().__init__(
+            f"""\
+Alg '{alg}' is not supported.
+Supported algs are: {", ".join(supported_algs)}.
+"""
+            if supported_algs
+            else f"Alg '{alg}' is not supported."
+        )
 
 
-class ExpectedAlgRequired(ValueError):
+class ExpectedAlgRequired(JwskateError):
     """Raised when the expected signature alg(s) must be provided."""
 
 
-class MismatchingAlg(ValueError):
+class MismatchingAlg(JwskateError):
     """Raised when attempting a cryptographic operation with an unexpected algorithm.
 
     Signature verification or a decryption operation with an algorithm that does not match the
@@ -104,8 +115,7 @@ def select_alg_class(
     try:
         return supported_algs[choosen_alg]
     except KeyError:
-        msg = f"Alg '{choosen_alg}' is not supported by this key. Supported algs are: {', '.join(supported_algs)}."
-        raise UnsupportedAlg(msg) from None
+        raise UnsupportedAlg(alg=choosen_alg, supported_algs=tuple(supported_algs)) from None
 
 
 def select_alg_classes(

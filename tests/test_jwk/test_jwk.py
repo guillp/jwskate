@@ -14,12 +14,14 @@ from jwskate import (
     EcdhEs_A128KW,
     EncryptionAlgs,
     InvalidJwk,
+    InvalidParameter,
     Jwk,
     KeyManagementAlgs,
     RSAJwk,
     SignatureAlgs,
     SymmetricJwk,
     UnsupportedKeyType,
+    UnsupportedThumbprintHashAlg,
     select_alg_class,
     to_jwk,
 )
@@ -206,10 +208,10 @@ def test_setattr() -> None:
 
 
 def test_invalid_params() -> None:
-    with pytest.raises(TypeError):
+    with pytest.raises(InvalidParameter):
         Jwk({"kty": "oct", "k": "foobar", "alg": 1.34}).alg
 
-    with pytest.raises(TypeError):
+    with pytest.raises(InvalidParameter):
         Jwk({"kty": "oct", "k": "foobar", "kid": 1.34}).kid
 
     with pytest.raises(InvalidJwk):
@@ -312,7 +314,7 @@ def test_thumbprint() -> None:
 
 def test_invalid_thumbprint_hash() -> None:
     jwk = Jwk.generate(kty="EC", crv="P-256")
-    with pytest.raises(ValueError):
+    with pytest.raises(UnsupportedThumbprintHashAlg):
         jwk.thumbprint(hashalg="foo")
 
 

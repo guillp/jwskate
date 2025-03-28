@@ -10,6 +10,7 @@ from jwskate import (
     ExpectedAlgRequired,
     ExpiredJwt,
     InvalidClaim,
+    InvalidHeader,
     InvalidJwt,
     InvalidSignature,
     JweCompact,
@@ -18,6 +19,9 @@ from jwskate import (
     Jwt,
     JwtSigner,
     JwtVerifier,
+    MaximumTokenSizeExceeded,
+    MissingClaim,
+    MissingHeader,
     NoKeyFoundWithThisKid,
     SignatureAlgs,
     SignedJwt,
@@ -83,7 +87,7 @@ def test_signed_jwt() -> None:
         jwt.validate(Jwk.generate(alg="ES256").public_jwk())
 
     # invalid audience
-    with pytest.raises(InvalidClaim, match="audience"):
+    with pytest.raises(InvalidClaim, match="Invalid value for claim 'aud'"):
         jwt.validate(
             jwk.public_jwk(),
             audience="foo",
@@ -168,7 +172,7 @@ def test_empty_jwt(private_jwk: Jwk) -> None:
 
     jwt.validate(key=private_jwk.public_jwk(), check_exp=False)
 
-    with pytest.raises(InvalidClaim):
+    with pytest.raises(MissingClaim, match="exp"):
         jwt.validate(key=private_jwk.public_jwk())
 
 
@@ -481,7 +485,7 @@ def test_sign_then_encrypt() -> None:
 
 
 def test_sign_without_alg() -> None:
-    jwk = Jwk.generate_for_kty("EC", crv="P-256")
+    jwk = Jwk.generate(kty="EC", crv="P-256")
     with pytest.raises(ValueError, match="signing alg is required"):
         Jwt.sign({"foo": "bar"}, jwk)
 
@@ -490,7 +494,7 @@ def test_sign_without_alg() -> None:
 
 
 def test_large_jwt() -> None:
-    with pytest.raises(ValueError, match="is abnormally big"):
+    with pytest.raises(MaximumTokenSizeExceeded):
         Jwt(
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
             f"{BinaPy.serialize_to('json', {f'claim{i}': f'value{i}' for i in range(16_000)}).to('b64u').ascii()}"
@@ -531,13 +535,13 @@ def test_invalid_headers() -> None:
     jwt = Jwt(
         "eyJhbGciOjEsImtpZCI6MSwidHlwIjoxLCJjdHkiOjF9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.cOUKU1ijv3KiN2KK_o50RU978I9MzQ4lNw2y7nOGAdM"
     )
-    with pytest.raises(AttributeError):
+    with pytest.raises(InvalidHeader):
         jwt.alg
-    with pytest.raises(AttributeError):
+    with pytest.raises(InvalidHeader):
         jwt.kid
-    with pytest.raises(AttributeError):
+    with pytest.raises(InvalidHeader):
         jwt.typ
-    with pytest.raises(AttributeError):
+    with pytest.raises(InvalidHeader):
         jwt.cty
 
 
@@ -592,12 +596,12 @@ def test_verifier() -> None:
     )
     jwks = private_jwk.public_jwk().as_jwks()
 
-    def suject_verifier(j: SignedJwt) -> None:
-        if j.subject != subject:
+    def suject_verifier(jwt: SignedJwt) -> None:
+        if jwt.subject != subject:
             raise ValueError("Invalid Subject", jwt)  # noqa: EM101, TRY003
 
-    def not_foo(j: SignedJwt) -> None:
-        if "foo" in j.claims:
+    def not_foo(jwt: SignedJwt) -> None:
+        if "foo" in jwt.claims:
             raise ValueError("Token is foo!", jwt)  # noqa: EM101, TRY003
 
     verifier = JwtVerifier(
@@ -621,7 +625,7 @@ def test_verifier() -> None:
         )
     )
 
-    with pytest.raises(InvalidClaim, match="issuer"):
+    with pytest.raises(InvalidClaim, match="Invalid value for claim 'iss'"):
         verifier.verify(
             Jwt.sign(
                 {
@@ -635,7 +639,7 @@ def test_verifier() -> None:
             )
         )
 
-    with pytest.raises(InvalidClaim, match="audience"):
+    with pytest.raises(InvalidClaim, match="Invalid value for claim 'aud'"):
         verifier.verify(
             Jwt.sign(
                 {
@@ -782,9 +786,13 @@ def test_verify_with_jwkset() -> None:
     key_ec = Jwk.generate(alg=SignatureAlgs.ES256).with_kid_thumbprint()
     key_rsa = Jwk.generate(alg=SignatureAlgs.RS256).with_kid_thumbprint()
 
-    jwks = JwkSet(keys=[key_ec, key_rsa])
+    jwks = JwkSet(keys=[key_ec, key_rsa]).public_jwks()
     jwt = Jwt.sign({"iss": "joe"}, key_ec)
-    assert jwt.verify_signature(jwks.public_jwks())
+    assert jwt.verify_signature(jwks)
 
     with pytest.raises(NoKeyFoundWithThisKid):
         jwt.verify_signature(key_rsa.as_jwks())
+
+    jwt_without_kid = Jwt.sign_arbitrary(claims={"iss": "joe"}, headers={}, key=key_ec)
+    with pytest.raises(MissingHeader):
+        jwt_without_kid.verify_signature(jwks)

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, SupportsBytes
 
 from binapy import BinaPy
 
+from jwskate.exceptions import JwskateError
 from jwskate.jwa import (
     BasePbes2,
     Pbes2_HS256_A128KW,
@@ -24,8 +25,12 @@ if TYPE_CHECKING:
     from jwskate.jwt import SignedJwt
 
 
-class InvalidJwe(ValueError):
+class InvalidJwe(JwskateError):
     """Raised when an invalid JWE token is parsed."""
+
+    def __init__(self, message: str, token: Any) -> None:
+        super().__init__(f"Invalid JWE: {message}", token)
+        self.token = token
 
 
 class JweCompact(BaseCompactToken):
@@ -38,56 +43,61 @@ class JweCompact(BaseCompactToken):
 
     """
 
+    PBES2_ALGORITHMS: Mapping[str, type[BasePbes2]] = {
+        alg.name: alg for alg in [Pbes2_HS256_A128KW, Pbes2_HS384_A192KW, Pbes2_HS512_A256KW]
+    }
+
     def __init__(self, value: bytes | str, max_size: int = 16 * 1024) -> None:
         super().__init__(value, max_size=max_size)
 
         parts = BinaPy(self.value).split(b".")
         if len(parts) != 5:  # noqa: PLR2004
-            msg = """Invalid JWE: a JWE must contain:
+            msg = """a JWE must contain:
     - a header,
-    - an encrypted key,
+    - an encrypted key (CEK),
     - an IV,
     - a ciphertext
     - an authentication tag
-separated by dots."""
-            raise InvalidJwe(msg)
+separated by dots.
+There must be 4 dots in total."""
+            raise InvalidJwe(msg, value)
 
         header, cek, iv, ciphertext, auth_tag = parts
         try:
             headers = header.decode_from("b64u").parse_from("json")
         except ValueError as exc:
-            msg = "Invalid JWE header: it must be a Base64URL-encoded JSON object."
-            raise InvalidJwe(msg) from exc
+            msg = "header part (before the first dot) must be a Base64URL-encoded JSON object."
+            raise InvalidJwe(msg, self) from exc
         enc = headers.get("enc")
         if enc is None or not isinstance(enc, str):
-            msg = "Invalid JWE header: this JWE doesn't have a valid 'enc' header."
-            raise InvalidJwe(msg)
+            msg = "this JWE does not have a valid 'enc' header."
+            raise InvalidJwe(msg, self)
         self.headers = headers
         self.additional_authenticated_data = header
 
         try:
             self.wrapped_cek = cek.decode_from("b64u")
         except ValueError as exc:
-            msg = "Invalid JWE CEK: it must be a Base64URL-encoded binary data."
-            raise InvalidJwe(msg) from exc
+            msg = "CEK part (between first and second dots) must be a Base64URL-encoded binary data."
+            raise InvalidJwe(msg, self) from exc
 
         try:
             self.initialization_vector = iv.decode_from("b64u")
         except ValueError as exc:
-            msg = "Invalid JWE IV: it must be a Base64URL-encoded binary data."
-            raise InvalidJwe(msg) from exc
+            msg = "IV part (between second and third dots) must be a Base64URL-encoded binary data."
+            raise InvalidJwe(msg, self) from exc
 
         try:
             self.ciphertext = ciphertext.decode_from("b64u")
         except ValueError as exc:
-            msg = "Invalid JWE ciphertext: it must be a Base64URL-encoded binary data."
-            raise InvalidJwe(msg) from exc
+            msg = "Ciphertext (between third and fourth dots) must be a Base64URL-encoded binary data."
+            raise InvalidJwe(msg, self) from exc
 
         try:
             self.authentication_tag = BinaPy(auth_tag).decode_from("b64u")
         except ValueError as exc:
-            msg = "Invalid JWE authentication tag: it must be a Base64URL-encoded binary data."
-            raise InvalidJwe(msg) from exc
+            msg = "Authentication Tag (after fourth and last dot) must be a Base64URL-encoded binary data."
+            raise InvalidJwe(msg, self) from exc
 
     @classmethod
     def from_parts(
@@ -136,9 +146,6 @@ separated by dots."""
 
         Returns:
             the enc value
-
-        Raises:
-            AttributeError: if there is no enc header or it is not a string
 
         """
         return self.get_header("enc")  # type: ignore[no-any-return]
@@ -189,10 +196,6 @@ separated by dots."""
         ciphertext, iv, tag = cek_jwk.encrypt(plaintext, aad=aad, iv=iv, enc=enc)
 
         return cls.from_parts(headers=headers, cek=wrapped_cek, iv=iv, ciphertext=ciphertext, tag=tag)
-
-    PBES2_ALGORITHMS: Mapping[str, type[BasePbes2]] = {
-        alg.name: alg for alg in [Pbes2_HS256_A128KW, Pbes2_HS384_A192KW, Pbes2_HS512_A256KW]
-    }
 
     def unwrap_cek(
         self,
@@ -347,7 +350,7 @@ separated by dots."""
 
         Raises:
             UnsupportedAlg: if the token key management algorithm is not supported
-            AttributeError: if the token misses the PBES2-related headers
+            InvalidJwe: if the token misses the PBES2-related headers
 
         """
         keyalg = select_alg_class(
@@ -359,17 +362,16 @@ separated by dots."""
 
         p2s = self.headers.get("p2s")
         if p2s is None:
-            msg = "Invalid JWE: a required 'p2s' header is missing."
-            raise InvalidJwe(msg)
+            msg = "a required 'p2s' header is missing."
+            raise InvalidJwe(msg, self)
         salt = BinaPy(p2s).decode_from("b64u")
         p2c = self.headers.get("p2c")
         if p2c is None:
-            msg = "Invalid JWE: a required 'p2c' header is missing."
-            raise InvalidJwe(msg)
+            msg = "a required 'p2c' header is missing."
+            raise InvalidJwe(msg, self)
         if not isinstance(p2c, int) or p2c < 1:
-            msg = "Invalid JWE: invalid value for the 'p2c' header, must be a positive integer."
-            raise InvalidJwe(msg)
-
+            msg = "value for the 'p2c' header must be a positive integer."
+            raise InvalidJwe(msg, self)
         wrapper = keyalg(password)
         cek = wrapper.unwrap_key(self.wrapped_cek, salt=salt, count=p2c)
         return SymmetricJwk.from_bytes(cek)
@@ -393,4 +395,20 @@ separated by dots."""
             tag=self.authentication_tag,
             aad=self.additional_authenticated_data,
             enc=self.enc,
+        )
+
+    def replace_headers(self, headers: Mapping[str, Any]) -> JweCompact:
+        """Return another token with the headers replaced by provided ones.
+
+        For testing purposes only!
+
+        Args:
+            headers: the new headers to include in the new token.
+        """
+        return self.from_parts(
+            headers=headers,
+            cek=self.wrapped_cek,
+            iv=self.initialization_vector,
+            ciphertext=self.ciphertext,
+            tag=self.authentication_tag,
         )

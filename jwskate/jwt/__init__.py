@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from .base import InvalidJwt, Jwt
-from .signed import ExpiredJwt, InvalidClaim, SignedJwt
+from .base import InvalidClaim, InvalidJwt, Jwt, MissingClaim
+from .signed import ExpiredJwt, SignedJwt
 from .signer import JwtSigner
 from .verifier import JwtVerifier
 
@@ -14,5 +14,6 @@ __all__ = [
     "Jwt",
     "JwtSigner",
     "JwtVerifier",
+    "MissingClaim",
     "SignedJwt",
 ]

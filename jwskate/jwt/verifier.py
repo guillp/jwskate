@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Any, Callable
 
 from jwskate import InvalidSignature, Jwk, JwkSet
 
-from .signed import ExpiredJwt, InvalidClaim, SignedJwt
+from .base import InvalidClaim
+from .signed import ExpiredJwt, SignedJwt
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
@@ -94,12 +95,10 @@ class JwtVerifier:
             jwt = SignedJwt(jwt, max_size=max_size)
 
         if self.issuer and jwt.issuer != self.issuer:
-            msg = "Mismatching issuer"
-            raise InvalidClaim(msg, self.issuer, jwt.issuer)
+            raise InvalidClaim(jwt, "iss", jwt.issuer)
 
         if self.audience and self.audience not in jwt.audiences:
-            msg = "Mismatching audience"
-            raise InvalidClaim(msg, self.audience, jwt.audiences)
+            raise InvalidClaim(jwt, "aud", jwt.audiences)
 
         if "kid" in jwt.headers:
             jwk = self.jwkset.get_jwk_by_kid(jwt.kid)
@@ -112,8 +111,7 @@ class JwtVerifier:
                 raise InvalidSignature(data=jwt, key=self.jwkset, alg=self.alg, algs=self.algs)
 
         if jwt.is_expired(self.leeway):
-            msg = f"Jwt token expired at {jwt.expires_at}"
-            raise ExpiredJwt(msg)
+            raise ExpiredJwt(jwt)
 
         for verifier in self.verifiers:
             verifier(jwt)

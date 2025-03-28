@@ -9,6 +9,50 @@ from typing import Any
 from binapy import BinaPy
 from typing_extensions import Self
 
+from jwskate.exceptions import JwskateError
+
+
+class HeaderError(JwskateError):
+    """Raised when a token header is missing, unexpected, or invalid."""
+
+    def __init__(self, message: str, token: BaseCompactToken | BaseJsonDict, name: str, value: Any = None) -> None:
+        super().__init__(message)
+        self.token = token
+        self.name = name
+        self.value = value
+
+
+class MissingHeader(HeaderError):
+    """Raised when trying to access a header that is not present in a token."""
+
+    def __init__(self, token: BaseCompactToken | BaseJsonDict, name: str) -> None:
+        super().__init__(message=f"This token doesn't have a valid '{name}' claim.", token=token, name=name)
+
+
+class InvalidHeader(HeaderError):
+    """Raised when a header does not have the expected type in a token."""
+
+    def __init__(self, token: BaseCompactToken | BaseJsonDict, name: str, value: Any) -> None:
+        super().__init__(
+            message=f"This token header '{name}'"
+            " contains an unexpected value {claim_value}"
+            " of type {type(claim_value)}",
+            token=token,
+            name=name,
+            value=value,
+        )
+
+
+class MaximumTokenSizeExceeded(JwskateError):
+    """Raised when a token value exceeds the maximum defined by `max_size`."""
+
+    def __init__(self, token_size: int, max_size: int) -> None:
+        super().__init__(
+            f"This JWT size of {token_size} bytes exceeds {max_size} bytes, which is abnormally big. "
+            "This size limit is made to avoid potential JSON deserialization vulnerabilities or issues. "
+            "You can increase this limit by passing a different `max_size` value as parameter."
+        )
+
 
 class BaseCompactToken:
     """Base class for all tokens in Compact representation.
@@ -17,10 +61,12 @@ class BaseCompactToken:
 
     Args:
         value: the string or bytes representation of this JWS/JWE/JWT
-        max_size: if the JWT length is larger than this value, raise a `ValueError`.
+        max_size: if the JWT length is larger than this value, raise a `MaximumTokenSizeExceeded`.
             This is to avoid JSON deserialization vulnerabilities.
             Set to 0 or negative value to accept a token of any size.
 
+    Raises:
+        MaximumTokenSizeExceeded: if the token size exceeds `max_size`.
     """
 
     def __init__(self, value: bytes | str, *, max_size: int = 16 * 1024) -> None:
@@ -28,12 +74,7 @@ class BaseCompactToken:
             value = value.encode("ascii")
 
         if 0 < max_size < len(value):
-            msg = (
-                f"This JWT size of {len(value)} bytes exceeds {max_size} bytes, which is abnormally big. "
-                "This size limit is made to avoid potential JSON deserialization vulnerabilities or issues. "
-                "You can increase this limit by passing a different `max_size` value as parameter."
-            )
-            raise ValueError(msg)
+            raise MaximumTokenSizeExceeded(token_size=len(value), max_size=max_size)
 
         value = b"".join(value.split())
 
@@ -79,14 +120,16 @@ class BaseCompactToken:
         Returns:
             the `alg` value
         Raises:
-            AttributeError: if the `alg` header value is not a string
+            MissingClaim: if the 'alg` header is missing
+            InvalidClaim: if the `alg` header value is not a string
 
         """
         alg = self.get_header("alg")
-        if alg is None or not isinstance(alg, str):  # pragma: no branch
-            msg = "This token doesn't have a valid 'alg' header"
-            raise AttributeError(msg)
-        return alg  # type: ignore[no-any-return]
+        if alg is None:
+            raise MissingHeader(self, "alg")
+        if not isinstance(alg, str):
+            raise InvalidHeader(self, "alg", alg)
+        return alg
 
     @cached_property
     def kid(self) -> str:
@@ -95,14 +138,16 @@ class BaseCompactToken:
         Returns:
             the `kid` value
         Raises:
-            AttributeError: if the `kid` header value is not a string
+            MissingClaim: if the `kid` header is missing
+            InvalidClaim: if the `kid` header value is not a string
 
         """
         kid = self.get_header("kid")
-        if kid is None or not isinstance(kid, str):
-            msg = "This token doesn't have a valid 'kid' header"
-            raise AttributeError(msg)
-        return kid  # type: ignore[no-any-return]
+        if kid is None:
+            raise MissingHeader(self, "kid")
+        if not isinstance(kid, str):
+            raise InvalidHeader(self, "kid", kid)
+        return kid
 
     @cached_property
     def typ(self) -> str:
@@ -111,30 +156,34 @@ class BaseCompactToken:
         Returns:
             the `typ` value
         Raises:
-            AttributeError: if the `typ` header value is not a string
+            MissingClaim: if the `typ` header is missing
+            InvalidClaim: if the `typ` header value is not a string
 
         """
         typ = self.get_header("typ")
-        if typ is None or not isinstance(typ, str):  # pragma: no branch
-            msg = "This token doesn't have a valid 'typ' header"
-            raise AttributeError(msg)
-        return typ  # type: ignore[no-any-return]
+        if typ is None:
+            raise MissingHeader(self, "typ")
+        if not isinstance(typ, str):
+            raise InvalidHeader(self, "typ", typ)
+        return typ
 
     @cached_property
     def cty(self) -> str:
-        """Get the Type (typ) from this token headers.
+        """Get the Content Type (typ) from this token's headers.
 
         Returns:
             the `cty` value
         Raises:
-            AttributeError: if the `cty` header value is not a string
+            MissingClaim: if the `cty` header is missing
+            InvalidClaim: if the `cty` header value is not a string
 
         """
         cty = self.get_header("cty")
-        if cty is None or not isinstance(cty, str):  # pragma: no branch
-            msg = "This token doesn't have a valid 'cty' header"
-            raise AttributeError(msg)
-        return cty  # type: ignore[no-any-return]
+        if cty is None:
+            raise MissingHeader(self, "cty")
+        if not isinstance(cty, str):
+            raise InvalidHeader(self, "cty", cty)
+        return cty
 
     def __repr__(self) -> str:
         """Return the `str` representation of this token."""

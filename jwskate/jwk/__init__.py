@@ -9,7 +9,7 @@ from .alg import (
     select_alg_class,
     select_alg_classes,
 )
-from .base import InvalidJwk, Jwk, UnsupportedKeyType, to_jwk
+from .base import InvalidJwk, InvalidParameter, Jwk, UnsupportedKeyType, UnsupportedThumbprintHashAlg, to_jwk
 from .ec import ECJwk, UnsupportedEllipticCurve
 from .jwks import JwkSet, NoKeyFoundWithThisKid
 from .oct import SymmetricJwk
@@ -20,6 +20,7 @@ __all__ = [
     "ECJwk",
     "ExpectedAlgRequired",
     "InvalidJwk",
+    "InvalidParameter",
     "Jwk",
     "JwkSet",
     "MismatchingAlg",
@@ -31,6 +32,7 @@ __all__ = [
     "UnsupportedEllipticCurve",
     "UnsupportedKeyType",
     "UnsupportedOKPCurve",
+    "UnsupportedThumbprintHashAlg",
     "select_alg_class",
     "select_alg_classes",
     "to_jwk",

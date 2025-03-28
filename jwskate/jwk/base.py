@@ -81,7 +81,7 @@ class UnsupportedThumbprintHashAlg(JwskateError):
     """Raised when an unsupported hash algorithm is requested for a key thumbprint."""
 
 
-@dataclass(slots=True, frozen=True)
+@dataclass
 class JwkParameter:
     """Describe known JWK parameters."""
 

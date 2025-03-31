@@ -64,12 +64,14 @@ def test_invalid_jwk() -> None:
 
     with pytest.raises(InvalidJwk):
         # attribute 'd' (private exponent) is missing
-        Jwk({
-            "kty": "RSA",
-            "n": "oRHn4oGv23ylRL3RSsL4p_e6Ywinnj2N2tT5OLe5pEZTg-LFBhjFxcJaB-p1dh6XX47EtSfa-JHffU0o5ZRK2ySyNDtlrFAkOpAHH6U83ayE2QPYGzrFrrvHDa8wIMUWymzxpPwGgKBwZZqtTT6d-iy4Ux3AWV-bUv6Z7WijHnOy7aVzZ4dFERLVf2FaaYXDET7GO4v-oQ5ss_guYdmewN039jxkjz_KrA-0Fyhalf9hL8IHfpdpSlHosrmjORG5y9LkYK0J6zxSBF5ZvLIBK33BTzPPiCMwKLyAcV6qdcAcvV4kthKO0iUKBK4eE8D0N8HcSPvA9F_PpLS_k5F2lw",
-            "e": "AQAB",
-            "p": "0mzP9sbFxU5YxNNLgUEdRQSO-ojqWrzbI02PfQLGyzXumvOh_Qr73OpHStU8CAAcUBaQdRGidsVdb5cq6JG2zvbEEYiX-dCHqTJs8wfktGCL7eV-ZVh7fhJ1sYVBN20yv8aSH63uUPZnJXR1AUyrvRumuerdPxp8X951PESrJd0",
-        })
+        Jwk(
+            {
+                "kty": "RSA",
+                "n": "oRHn4oGv23ylRL3RSsL4p_e6Ywinnj2N2tT5OLe5pEZTg-LFBhjFxcJaB-p1dh6XX47EtSfa-JHffU0o5ZRK2ySyNDtlrFAkOpAHH6U83ayE2QPYGzrFrrvHDa8wIMUWymzxpPwGgKBwZZqtTT6d-iy4Ux3AWV-bUv6Z7WijHnOy7aVzZ4dFERLVf2FaaYXDET7GO4v-oQ5ss_guYdmewN039jxkjz_KrA-0Fyhalf9hL8IHfpdpSlHosrmjORG5y9LkYK0J6zxSBF5ZvLIBK33BTzPPiCMwKLyAcV6qdcAcvV4kthKO0iUKBK4eE8D0N8HcSPvA9F_PpLS_k5F2lw",
+                "e": "AQAB",
+                "p": "0mzP9sbFxU5YxNNLgUEdRQSO-ojqWrzbI02PfQLGyzXumvOh_Qr73OpHStU8CAAcUBaQdRGidsVdb5cq6JG2zvbEEYiX-dCHqTJs8wfktGCL7eV-ZVh7fhJ1sYVBN20yv8aSH63uUPZnJXR1AUyrvRumuerdPxp8X951PESrJd0",
+            }
+        )
 
     with pytest.raises(InvalidJwk):
         # k is not a str
@@ -85,13 +87,15 @@ def test_invalid_jwk() -> None:
 
     with pytest.raises(InvalidJwk):
         # key is public and has key_ops: ["sign"]
-        Jwk({
-            "kty": "EC",
-            "key_ops": ["sign"],
-            "crv": "P-256",
-            "x": "vGVh-60pT34a0JLeiaers66I0JLRilpf5tbnZsa-q3U",
-            "y": "y99gwPgQH1lrIBQPwgJoHCoeQjF96M7XfxGXu_Pjyzk",
-        })
+        Jwk(
+            {
+                "kty": "EC",
+                "key_ops": ["sign"],
+                "crv": "P-256",
+                "x": "vGVh-60pT34a0JLeiaers66I0JLRilpf5tbnZsa-q3U",
+                "y": "y99gwPgQH1lrIBQPwgJoHCoeQjF96M7XfxGXu_Pjyzk",
+            }
+        )
 
     with pytest.raises(TypeError):
         Jwk.from_cryptography_key(object())
@@ -122,19 +126,18 @@ def test_json() -> None:
         '"e":"AQAB"}]}'
     )
 
-    assert (
-        jwk.public_jwk().as_jwks().to_json(compact=False)
-        == ('{\n'
- '  "keys": [\n'
- '    {\n'
- '      "kty": "RSA", \n'
- '      "kid": "client_assertion_key", \n'
- '      "n": '
- '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8", \n'
- '      "e": "AQAB"\n'
- '    }\n'
- '  ]\n'
- '}')
+    assert jwk.public_jwk().as_jwks().to_json(compact=False) == (
+        "{\n"
+        '  "keys": [\n'
+        "    {\n"
+        '      "kty": "RSA", \n'
+        '      "kid": "client_assertion_key", \n'
+        '      "n": '
+        '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8", \n'
+        '      "e": "AQAB"\n'
+        "    }\n"
+        "  ]\n"
+        "}"
     )
 
 
@@ -165,17 +168,19 @@ def test_init_from_json() -> None:
         '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8",'
         '"e":"AQAB"}]}'
     )
-    assert jwk.public_jwk().as_jwks().to_json(compact=False) == ('{\n'
- '  "keys": [\n'
- '    {\n'
- '      "kty": "RSA", \n'
- '      "kid": "client_assertion_key", \n'
- '      "n": '
- '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8", \n'
- '      "e": "AQAB"\n'
- '    }\n'
- '  ]\n'
- '}')
+    assert jwk.public_jwk().as_jwks().to_json(compact=False) == (
+        "{\n"
+        '  "keys": [\n'
+        "    {\n"
+        '      "kty": "RSA", \n'
+        '      "kid": "client_assertion_key", \n'
+        '      "n": '
+        '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8", \n'
+        '      "e": "AQAB"\n'
+        "    }\n"
+        "  ]\n"
+        "}"
+    )
 
 
 def test_missing_kty() -> None:
@@ -208,14 +213,16 @@ def test_invalid_params() -> None:
         Jwk({"kty": "oct", "k": "foobar", "kid": 1.34}).kid
 
     with pytest.raises(InvalidJwk):
-        Jwk({
-            "kty": "EC",
-            "crv": "P-256",
-            "x": "SOlwe9_nRwz2f9Y2aSB9d7D-AXTSSBlAQd5HZUIEGLA",
-            "y": "Pzk9Gd4wwbx9STkK_RfWqxnfU9AwpvWZzf_K0GpaQZo",
-            "d": "Invalid-private-key--EHzgbRaNKRCMhk6jiCT-ZQ",
-            "alg": "ES256",
-        })
+        Jwk(
+            {
+                "kty": "EC",
+                "crv": "P-256",
+                "x": "SOlwe9_nRwz2f9Y2aSB9d7D-AXTSSBlAQd5HZUIEGLA",
+                "y": "Pzk9Gd4wwbx9STkK_RfWqxnfU9AwpvWZzf_K0GpaQZo",
+                "d": "Invalid-private-key--EHzgbRaNKRCMhk6jiCT-ZQ",
+                "alg": "ES256",
+            }
+        )
 
 
 def test_invalid_class_for_kty() -> None:
@@ -267,20 +274,22 @@ def test_use_key_ops_with_alg(alg: str, use: str, private_key_ops: tuple[str], p
 
 def test_thumbprint() -> None:
     # key from https://www.rfc-editor.org/rfc/rfc7638.html#section-3.1
-    jwk = Jwk({
-        "kty": "RSA",
-        "n": (
-            "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAt"
-            "VT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn6"
-            "4tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FD"
-            "W2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n9"
-            "1CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINH"
-            "aQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw"
-        ),
-        "e": "AQAB",
-        "alg": "RS256",
-        "kid": "2011-04-29",
-    })
+    jwk = Jwk(
+        {
+            "kty": "RSA",
+            "n": (
+                "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAt"
+                "VT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn6"
+                "4tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FD"
+                "W2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n9"
+                "1CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINH"
+                "aQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw"
+            ),
+            "e": "AQAB",
+            "alg": "RS256",
+            "kid": "2011-04-29",
+        }
+    )
 
     assert jwk.thumbprint() == "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"
     assert (

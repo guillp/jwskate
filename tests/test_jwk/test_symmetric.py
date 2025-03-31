@@ -62,15 +62,15 @@ def test_aesgcmkw() -> None:
 
     # missing 'iv' in headers
     with pytest.raises(ValueError):
-        jwk.recipient_key(wrapped_cek, enc, **{"tag": headers["tag"]})
+        jwk.recipient_key(wrapped_cek, enc, tag=headers["tag"])
 
     # missing 'tag' in headers
     with pytest.raises(ValueError):
-        jwk.recipient_key(wrapped_cek, enc, **{"iv": headers["iv"]})
+        jwk.recipient_key(wrapped_cek, enc, iv=headers["iv"])
 
 
 @pytest.mark.parametrize(
-    "alg, key_size",
+    ("alg", "key_size"),
     [
         ("HS256", 256),
         ("HS384", 384),

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, SupportsBytes, TypeVar
+from typing import TYPE_CHECKING, Any, SupportsBytes
 
 from binapy import BinaPy
 from typing_extensions import Self
@@ -23,9 +23,6 @@ class InvalidSignature(ValueError):
         self.key = key
         self.alg = alg
         self.algs = algs
-
-
-S = TypeVar("S", bound="JwsSignature")
 
 
 class JwsSignature(BaseJsonDict):

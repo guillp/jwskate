@@ -43,7 +43,7 @@ class SignedJwt(Jwt):
 
     """
 
-    def __init__(self, value: bytes | str, *, max_size: int = 16 * 104) -> None:
+    def __init__(self, value: bytes | str, *, max_size: int = 16 * 1024) -> None:
         super().__init__(value, max_size=max_size)
 
         parts = BinaPy(self.value).split(b".")

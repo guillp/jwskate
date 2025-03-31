@@ -89,16 +89,17 @@ def test_generate_for_alg(alg: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "kty, kwargs",
-    (
+    ("kty", "kwargs"),
+    [
         (KeyTypes.EC, {"crv": "P-256"}),
-        (KeyTypes.OCT, {}),
-        (KeyTypes.RSA, {}),
+        (KeyTypes.OCT, {"key_size": 128}),
+        (KeyTypes.RSA, {"key_size": 1024}),
         (KeyTypes.OKP, {"crv": "Ed25519"}),
-    ),
+    ],
 )
 def test_generate_for_kty(kty: str, kwargs: dict[str, str]) -> None:
-    jwk = Jwk.generate_for_kty(kty, **kwargs)
+    with pytest.warns(DeprecationWarning):
+        jwk = Jwk.generate_for_kty(kty, **kwargs)
     assert jwk.kty == kty
 
 

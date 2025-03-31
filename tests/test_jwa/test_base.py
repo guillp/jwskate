@@ -53,7 +53,7 @@ def test_private_public_key_required() -> None:
     with private_wrapper.private_key_required():
         assert True
 
-    with pytest.raises(PublicKeyRequired):
+    with pytest.raises(PublicKeyRequired):  # noqa: SIM117
         with private_wrapper.public_key_required():
             pass
 
@@ -61,14 +61,14 @@ def test_private_public_key_required() -> None:
     with public_wrapper.public_key_required():
         assert True
 
-    with pytest.raises(PrivateKeyRequired):
+    with pytest.raises(PrivateKeyRequired):  # noqa: SIM117
         with public_wrapper.private_key_required():
             pass
 
 
 @pytest.mark.parametrize(
     "alg_class",
-    (
+    [
         A128CBC_HS256,
         A128GCM,
         A128GCMKW,
@@ -104,7 +104,7 @@ def test_private_public_key_required() -> None:
         RsaEsOaepSha384,
         RsaEsOaepSha512,
         RsaEsPcks1v1_5,
-    ),
+    ],
 )
 def test_init_with_random_key(alg_class: type[BaseAlg]) -> None:
     alg = alg_class.with_random_key()

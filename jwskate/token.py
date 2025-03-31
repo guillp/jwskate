@@ -106,7 +106,7 @@ class BaseCompactToken:
 
     @cached_property
     def typ(self) -> str:
-        """Get the Type (typ) from this token headers.
+        """Get the Type (typ) from this token's headers.
 
         Returns:
             the `typ` value

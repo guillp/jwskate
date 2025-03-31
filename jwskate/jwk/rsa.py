@@ -39,20 +39,20 @@ class RSAJwk(Jwk):
     CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (rsa.RSAPublicKey,)
 
     PARAMS = {
-        "n": JwkParameter("Modulus", is_private=False, is_required=True, kind="b64u"),
-        "e": JwkParameter("Exponent", is_private=False, is_required=True, kind="b64u"),
-        "d": JwkParameter("Private Exponent", is_private=True, is_required=True, kind="b64u"),
-        "p": JwkParameter("First Prime Factor", is_private=True, is_required=False, kind="b64u"),
-        "q": JwkParameter("Second Prime Factor", is_private=True, is_required=False, kind="b64u"),
-        "dp": JwkParameter("First Factor CRT Exponent", is_private=True, is_required=False, kind="b64u"),
+        "n": JwkParameter(description="Modulus", is_private=False, is_required=True, kind="b64u"),
+        "e": JwkParameter(description="Exponent", is_private=False, is_required=True, kind="b64u"),
+        "d": JwkParameter(description="Private Exponent", is_private=True, is_required=True, kind="b64u"),
+        "p": JwkParameter(description="First Prime Factor", is_private=True, is_required=False, kind="b64u"),
+        "q": JwkParameter(description="Second Prime Factor", is_private=True, is_required=False, kind="b64u"),
+        "dp": JwkParameter(description="First Factor CRT Exponent", is_private=True, is_required=False, kind="b64u"),
         "dq": JwkParameter(
-            "Second Factor CRT Exponent",
+            description="Second Factor CRT Exponent",
             is_private=True,
             is_required=False,
             kind="b64u",
         ),
-        "qi": JwkParameter("First CRT Coefficient", is_private=True, is_required=False, kind="b64u"),
-        "oth": JwkParameter("Other Primes Info", is_private=True, is_required=False, kind="unsupported"),
+        "qi": JwkParameter(description="First CRT Coefficient", is_private=True, is_required=False, kind="b64u"),
+        "oth": JwkParameter(description="Other Primes Info", is_private=True, is_required=False, kind="unsupported"),
     }
 
     SIGNATURE_ALGORITHMS = {sigalg.name: sigalg for sigalg in [RS256, RS384, RS512, PS256, PS384, PS512]}

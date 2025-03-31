@@ -6,6 +6,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, SupportsBytes, TypeVar
 
 from binapy import BinaPy
+from typing_extensions import Self
 
 from jwskate.jwk import Jwk, to_jwk
 from jwskate.token import BaseJsonDict
@@ -41,12 +42,12 @@ class JwsSignature(BaseJsonDict):
 
     @classmethod
     def from_parts(
-        cls: type[S],
+        cls,
         protected: Mapping[str, Any],
         signature: bytes,
         header: Any | None,
         **kwargs: Any,
-    ) -> S:
+    ) -> Self:
         """Initialize a JwsSignature based on the provided parts.
 
         Args:
@@ -114,14 +115,14 @@ class JwsSignature(BaseJsonDict):
 
     @classmethod
     def sign(
-        cls: type[S],
+        cls,
         payload: bytes,
         key: Jwk | Mapping[str, Any] | Any,
         alg: str | None = None,
         extra_protected_headers: Mapping[str, Any] | None = None,
         header: Any | None = None,
         **kwargs: Any,
-    ) -> S:
+    ) -> Self:
         """Sign a payload and return the generated JWS signature.
 
         Args:

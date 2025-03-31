@@ -64,9 +64,9 @@ class OKPJwk(Jwk):
     )
 
     PARAMS = {
-        "crv": JwkParameter("Curve", is_private=False, is_required=True, kind="name"),
-        "x": JwkParameter("Public Key", is_private=False, is_required=True, kind="b64u"),
-        "d": JwkParameter("Private Key", is_private=True, is_required=True, kind="b64u"),
+        "crv": JwkParameter(description="Curve", is_private=False, is_required=True, kind="name"),
+        "x": JwkParameter(description="Public Key", is_private=False, is_required=True, kind="b64u"),
+        "d": JwkParameter(description="Private Key", is_private=True, is_required=True, kind="b64u"),
     }
 
     CURVES: Mapping[str, OKPCurve] = {curve.name: curve for curve in [Ed25519, Ed448, X448, X25519]}

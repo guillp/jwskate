@@ -22,7 +22,7 @@ class InvalidJwt(ValueError):
 
 
 class Jwt(BaseCompactToken):
-    """Represents a Json Web Token."""
+    """Represents a JSON Web Token."""
 
     def __new__(cls, value: bytes | str, *, max_size: int = 16 * 1024) -> SignedJwt | JweCompact | Jwt:  # type: ignore[misc]
         """Allow parsing both Signed and Encrypted JWTs.
@@ -105,6 +105,7 @@ class Jwt(BaseCompactToken):
         """Sign provided headers and claims with a private key and return the resulting `SignedJwt`.
 
         This does not check the consistency between headers, key, alg and kid.
+
         DO NOT USE THIS METHOD UNLESS YOU KNOW WHAT YOU ARE DOING!!!
         Use `Jwt.sign()` to make sure you are signing tokens properly.
 

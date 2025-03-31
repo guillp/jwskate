@@ -13,7 +13,7 @@ provides a set of convenient wrappers around the `cryptography` module.
 from __future__ import annotations
 
 __author__ = """Guillaume Pujol"""
-__email__ = "guill.p.linux@gmail.com"
+__email__ = "guillp.dev@pm.me"
 
 from .enums import EncryptionAlgs, KeyManagementAlgs, KeyTypes, SignatureAlgs
 from .jwa import (

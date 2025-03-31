@@ -4,9 +4,7 @@ description = "A Pythonic implementation of the JOSE / JSON Web Crypto related R
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
-authors = [
-    { name = "Guillaume Pujol", email = "guillp.dev@pm.me" }
-]
+authors = [{ name = "Guillaume Pujol", email = "guillp.dev@pm.me" }]
 dynamic = ["version"]
 
 classifiers = [
@@ -21,11 +19,7 @@ classifiers = [
     'Programming Language :: Python :: 3.12',
     'Programming Language :: Python :: 3.13',
 ]
-dependencies = [
-    "cryptography>=3.4",
-    "typing-extensions>=4.3",
-    "binapy>=0.8",
-]
+dependencies = ["cryptography>=3.4", "typing-extensions>=4.3", "binapy>=0.8"]
 
 [project.urls]
 homepage = "https://github.com/guillp/jwskate"
@@ -66,6 +60,7 @@ dev = [
     "pre-commit>=4.0.0",
     "pytest-cov>=5.0.0",
     "pytest>=8.3.3",
+    "pytest-cov>=6.0.0",
     "pytest-freezer>=0.4.8",
     "pytest-mypy>=0.10.3",
     "mkdocs>=1.6.1",
@@ -96,20 +91,41 @@ blank = true
 [tool.ruff]
 target-version = "py39"
 line-length = 120
-exclude = [
-    "tests"
-]
+
 
 [tool.ruff.lint]
 extend-select = ["ALL"]
 ignore = [
-    "A005", # Module name shadows a Python standard-library module
-    "ANN401",
-    "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
-    "N818", # Exception names should be named with an Error suffix
+    "A005",    # Module name shadows a Python standard-library module
+    "ANN401",  # `Any` type in function args
+    "COM812",  # Missing trailing comma in a tuple
+    "RUF012",  # Mutable class attributes should be annotated with `typing.ClassVar`
+    "N818",    # Exception names should be named with an Error suffix
     "PLR0912", # Too many branches
-    "D107", # Missing docstring in `__init__`
-    "ISC001", # Implicitly concatenated string literals on one line
+    "D107",    # Missing docstring in `__init__`
+    "ISC001",  # Implicitly concatenated string literals on one line
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**.py" = [
+    "ARG001",
+    "B018",
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "F821",
+    "N806",
+    "PGH005",
+    "PLR0913",
+    "PLR0915",
+    "PLR2004",
+    "S101",
+    "S106",
+    "S113",
+    "PT011",
+    "E501",
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -121,9 +137,7 @@ max-args = 10
 
 
 [tool.coverage.run]
-omit = [
-    "tests/"
-]
+omit = ["tests/"]
 
 [tool.coverage.report]
 exclude_lines = [

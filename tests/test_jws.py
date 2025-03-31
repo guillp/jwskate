@@ -23,8 +23,7 @@ from jwskate import (
 def test_jws_compact(private_jwk: Jwk) -> None:
     jws = JwsCompact.sign(payload=b"Hello World!", key=private_jwk, alg="RS256")
     assert (
-        str(jws)
-        == "eyJhbGciOiJSUzI1NiIsImtpZCI6IkpXSy1BQkNEIn0.SGVsbG8gV29ybGQh.1eucS9ZaTnAJyfVNhxLJ_phFN1rexm0l"
+        str(jws) == "eyJhbGciOiJSUzI1NiIsImtpZCI6IkpXSy1BQkNEIn0.SGVsbG8gV29ybGQh.1eucS9ZaTnAJyfVNhxLJ_phFN1rexm0l"
         "-nIXWBjUImdS29z55BuxH6NjGpltSXKrgYxYQxqGCsGIxlSVoIEhKVdhE1Vd9NPJRyw7I4zBRdwVvcqMRODMqDxCiqbDQ"
         "_5bI5jAqFEJAFCXZo2T4ixlxs-2eXtmSEp6vX51Tg1pvicM5_YrKfS8Jn3lt9xW5RaNKUJ94KVLlov_IncFsh2bg5jdo1"
         "SEoUxlB2II0JdlfCsgHohJd58eWjFToeNtH1eiXGeZOHblMLz5a5AhY8jY3C424-tggj6BK6fwpedddFD3mtFFTNw6KT-"
@@ -153,7 +152,7 @@ def ec_p256_private_jwk() -> Jwk:
 
 @pytest.fixture(scope="session")
 def ec_p384_private_jwk() -> Jwk:
-    return Jwk.generate_for_kty("EC", crv="P-384")
+    return Jwk.generate(kty="EC", crv="P-384")
 
 
 @pytest.fixture(scope="session")
@@ -245,9 +244,9 @@ def symmetric_signature_jwk() -> Jwk:
 def signature_payload() -> bytes:
     """This is the payload from [https://datatracker.ietf.org/doc/html/rfc7520#section-4]."""
     return (
-        "It’s a dangerous business, Frodo, going out your door. "
+        "It’s a dangerous business, Frodo, going out your door. "  # noqa: RUF001
         "You step onto the road, and if you don't keep your feet, "
-        "there’s no knowing where you might be swept off to."
+        "there’s no knowing where you might be swept off to."  # noqa: RUF001
     ).encode()
 
 
@@ -272,7 +271,7 @@ def signature_alg(request: pytest.FixtureRequest) -> str:
     return request.param  # type: ignore[no-any-return]
 
 
-@pytest.fixture()
+@pytest.fixture
 def signature_jwk(
     signature_alg: str,
     rsa_private_jwk: Jwk,
@@ -298,7 +297,7 @@ def signature_jwk(
     pytest.skip(f"No key supports this signature alg: {signature_alg}")  # pragma: no cover
 
 
-@pytest.fixture()
+@pytest.fixture
 def verification_jwk(signature_jwk: Jwk) -> Jwk:
     if isinstance(signature_jwk, SymmetricJwk):
         return signature_jwk
@@ -308,7 +307,7 @@ def verification_jwk(signature_jwk: Jwk) -> Jwk:
     return public_jwk
 
 
-@pytest.fixture()
+@pytest.fixture
 def signed_jws_compact(signature_payload: bytes, signature_jwk: Jwk, signature_alg: str) -> JwsCompact:
     jws = JwsCompact.sign(payload=signature_payload, key=signature_jwk, alg=signature_alg)
     assert isinstance(jws, JwsCompact)
@@ -349,14 +348,14 @@ def test_supportsbytes(
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def signed_jws_json_flat(signature_payload: bytes, signature_jwk: Jwk, signature_alg: str) -> JwsJsonFlat:
     jws = JwsJsonFlat.sign(payload=signature_payload, key=signature_jwk, alg=signature_alg)
     assert isinstance(jws, JwsJsonFlat)
     return jws
 
 
-@pytest.fixture()
+@pytest.fixture
 def signed_jws_json_general(signature_payload: bytes, signature_jwk: Jwk, signature_alg: str) -> JwsJsonGeneral:
     jws = JwsJsonGeneral.sign(signature_payload, (signature_jwk, signature_alg))
     assert isinstance(jws, JwsJsonGeneral)
@@ -454,7 +453,7 @@ def test_verify_signature_by_jwcrypto(
     jws.verify(jwk)
 
 
-@pytest.fixture()
+@pytest.fixture
 def jwcrypto_signed_jws(signature_payload: bytes, signature_jwk: Jwk, signature_alg: str) -> str:
     """Sign a JWS using `jwcrypto`, to make sure it verifies with `jwskate`.
 
@@ -478,7 +477,7 @@ def jwcrypto_signed_jws(signature_payload: bytes, signature_jwk: Jwk, signature_
         alg=signature_alg,
         protected=BinaPy.serialize_to("json", {"alg": signature_alg}).decode(),
     )
-    token: str = jws.serialize(True)
+    token: str = jws.serialize(compact=True)
     return token
 
 

@@ -46,7 +46,7 @@ class SymmetricJwk(Jwk):
     CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (bytes,)
 
     PARAMS = {
-        "k": JwkParameter("Key Value", is_private=True, is_required=True, kind="b64u"),
+        "k": JwkParameter(description="Key Value", is_private=True, is_required=True, kind="b64u"),
     }
 
     SIGNATURE_ALGORITHMS = {sigalg.name: sigalg for sigalg in [HS256, HS384, HS512]}

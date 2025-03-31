@@ -54,7 +54,7 @@ class InvalidJwk(ValueError):
     """Raised when an invalid JWK is encountered."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class JwkParameter:
     """Describe known JWK parameters."""
 

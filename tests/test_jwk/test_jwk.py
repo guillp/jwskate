@@ -34,7 +34,7 @@ def test_public_jwk() -> None:
 
 
 def test_jwk_copy() -> None:
-    jwk1 = Jwk.generate_for_kty("RSA")
+    jwk1 = Jwk.generate(kty="RSA")
 
     jwk2 = Jwk(jwk1)
     assert jwk1 is not jwk2
@@ -64,12 +64,14 @@ def test_invalid_jwk() -> None:
 
     with pytest.raises(InvalidJwk):
         # attribute 'd' (private exponent) is missing
-        Jwk({
-            "kty": "RSA",
-            "n": "oRHn4oGv23ylRL3RSsL4p_e6Ywinnj2N2tT5OLe5pEZTg-LFBhjFxcJaB-p1dh6XX47EtSfa-JHffU0o5ZRK2ySyNDtlrFAkOpAHH6U83ayE2QPYGzrFrrvHDa8wIMUWymzxpPwGgKBwZZqtTT6d-iy4Ux3AWV-bUv6Z7WijHnOy7aVzZ4dFERLVf2FaaYXDET7GO4v-oQ5ss_guYdmewN039jxkjz_KrA-0Fyhalf9hL8IHfpdpSlHosrmjORG5y9LkYK0J6zxSBF5ZvLIBK33BTzPPiCMwKLyAcV6qdcAcvV4kthKO0iUKBK4eE8D0N8HcSPvA9F_PpLS_k5F2lw",
-            "e": "AQAB",
-            "p": "0mzP9sbFxU5YxNNLgUEdRQSO-ojqWrzbI02PfQLGyzXumvOh_Qr73OpHStU8CAAcUBaQdRGidsVdb5cq6JG2zvbEEYiX-dCHqTJs8wfktGCL7eV-ZVh7fhJ1sYVBN20yv8aSH63uUPZnJXR1AUyrvRumuerdPxp8X951PESrJd0",
-        })
+        Jwk(
+            {
+                "kty": "RSA",
+                "n": "oRHn4oGv23ylRL3RSsL4p_e6Ywinnj2N2tT5OLe5pEZTg-LFBhjFxcJaB-p1dh6XX47EtSfa-JHffU0o5ZRK2ySyNDtlrFAkOpAHH6U83ayE2QPYGzrFrrvHDa8wIMUWymzxpPwGgKBwZZqtTT6d-iy4Ux3AWV-bUv6Z7WijHnOy7aVzZ4dFERLVf2FaaYXDET7GO4v-oQ5ss_guYdmewN039jxkjz_KrA-0Fyhalf9hL8IHfpdpSlHosrmjORG5y9LkYK0J6zxSBF5ZvLIBK33BTzPPiCMwKLyAcV6qdcAcvV4kthKO0iUKBK4eE8D0N8HcSPvA9F_PpLS_k5F2lw",
+                "e": "AQAB",
+                "p": "0mzP9sbFxU5YxNNLgUEdRQSO-ojqWrzbI02PfQLGyzXumvOh_Qr73OpHStU8CAAcUBaQdRGidsVdb5cq6JG2zvbEEYiX-dCHqTJs8wfktGCL7eV-ZVh7fhJ1sYVBN20yv8aSH63uUPZnJXR1AUyrvRumuerdPxp8X951PESrJd0",
+            }
+        )
 
     with pytest.raises(InvalidJwk):
         # k is not a str
@@ -85,13 +87,15 @@ def test_invalid_jwk() -> None:
 
     with pytest.raises(InvalidJwk):
         # key is public and has key_ops: ["sign"]
-        Jwk({
-            "kty": "EC",
-            "key_ops": ["sign"],
-            "crv": "P-256",
-            "x": "vGVh-60pT34a0JLeiaers66I0JLRilpf5tbnZsa-q3U",
-            "y": "y99gwPgQH1lrIBQPwgJoHCoeQjF96M7XfxGXu_Pjyzk",
-        })
+        Jwk(
+            {
+                "kty": "EC",
+                "key_ops": ["sign"],
+                "crv": "P-256",
+                "x": "vGVh-60pT34a0JLeiaers66I0JLRilpf5tbnZsa-q3U",
+                "y": "y99gwPgQH1lrIBQPwgJoHCoeQjF96M7XfxGXu_Pjyzk",
+            }
+        )
 
     with pytest.raises(TypeError):
         Jwk.from_cryptography_key(object())
@@ -117,25 +121,23 @@ def test_json() -> None:
     )
     jwk = Jwk.from_json(j)
     assert (
-        jwk.public_jwk().as_jwks().to_json()
-        == '{"keys":[{"kty":"RSA","kid":"client_assertion_key","n":'
+        jwk.public_jwk().as_jwks().to_json() == '{"keys":[{"kty":"RSA","kid":"client_assertion_key","n":'
         '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8",'
         '"e":"AQAB"}]}'
     )
 
-    assert (
-        jwk.public_jwk().as_jwks().to_json(compact=False)
-        == ('{\n'
- '  "keys": [\n'
- '    {\n'
- '      "kty": "RSA", \n'
- '      "kid": "client_assertion_key", \n'
- '      "n": '
- '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8", \n'
- '      "e": "AQAB"\n'
- '    }\n'
- '  ]\n'
- '}')
+    assert jwk.public_jwk().as_jwks().to_json(compact=False) == (
+        "{\n"
+        '  "keys": [\n'
+        "    {\n"
+        '      "kty": "RSA", \n'
+        '      "kid": "client_assertion_key", \n'
+        '      "n": '
+        '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8", \n'
+        '      "e": "AQAB"\n'
+        "    }\n"
+        "  ]\n"
+        "}"
     )
 
 
@@ -162,22 +164,23 @@ def test_init_from_json() -> None:
     """
     jwk = Jwk(j)
     assert (
-        jwk.public_jwk().as_jwks().to_json(compact=True)
-        == '{"keys":[{"kty":"RSA","kid":"client_assertion_key","n":'
+        jwk.public_jwk().as_jwks().to_json(compact=True) == '{"keys":[{"kty":"RSA","kid":"client_assertion_key","n":'
         '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8",'
         '"e":"AQAB"}]}'
     )
-    assert jwk.public_jwk().as_jwks().to_json(compact=False) == ('{\n'
- '  "keys": [\n'
- '    {\n'
- '      "kty": "RSA", \n'
- '      "kid": "client_assertion_key", \n'
- '      "n": '
- '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8", \n'
- '      "e": "AQAB"\n'
- '    }\n'
- '  ]\n'
- '}')
+    assert jwk.public_jwk().as_jwks().to_json(compact=False) == (
+        "{\n"
+        '  "keys": [\n'
+        "    {\n"
+        '      "kty": "RSA", \n'
+        '      "kid": "client_assertion_key", \n'
+        '      "n": '
+        '"5nHd3aefARenRFQn-wVrjBLS-5A0uUiHWfOUt8EpjwE3wADAvVPKLbvRQJfugyrn_RpnLqqZFkwYrVD_u1Uzl9J17XJG75jGjCf-gVs1t9FPpgEsJGYK4RK2_f40AxAc6hKomB9q6_dqIxChDxVCrIrrWd9kRk0T86d8Ade3J4f_iMbremm3woSwI6QD056DkRtAD_v2PZQbUBgSru-PsrJ5l_pxxlGPxzAM4_XH8VfogXI8pWv2UDE1IguVeh371ESCbQbJ7SX2jgNzcvvZMMWs0syfF7P0BzGrh_ONsRcxmtjZgtcOA0TCu2-v8qx7GisgqOWOrzWs7ej5RUsu1sxtT53JG2Y3lrPrgajXTB56mSUaL9ivxEfUD17X_cUznGDNoVqcRdfa27rCtWqd8gL-C7M9bYYgcfpCRPllRvGmWP9oarrG4XoIO17QuhZ5tAoz8oFLM9o6pzR2CeDvmSqFbbTHXYdcpCuvYukIimZP6RruMU9O9YQjgCEGWx06WoTnDqWWjbrId8VqP0xJ_6w0j6av3EWGKLETBbaYRXys4OOy-JZRRHydg-es4tkir4xkMvIG8plxoz_mZbTyO9GA5tMHWzbQciUQFf95Gpiwsa5RDdGZx-guBAN56mtKnUzVG_PmUJ8-pzTATkjVpThBRLWaVPFi0eWLEc2NbF8", \n'
+        '      "e": "AQAB"\n'
+        "    }\n"
+        "  ]\n"
+        "}"
+    )
 
 
 def test_missing_kty() -> None:
@@ -210,14 +213,16 @@ def test_invalid_params() -> None:
         Jwk({"kty": "oct", "k": "foobar", "kid": 1.34}).kid
 
     with pytest.raises(InvalidJwk):
-        Jwk({
-            "kty": "EC",
-            "crv": "P-256",
-            "x": "SOlwe9_nRwz2f9Y2aSB9d7D-AXTSSBlAQd5HZUIEGLA",
-            "y": "Pzk9Gd4wwbx9STkK_RfWqxnfU9AwpvWZzf_K0GpaQZo",
-            "d": "Invalid-private-key--EHzgbRaNKRCMhk6jiCT-ZQ",
-            "alg": "ES256",
-        })
+        Jwk(
+            {
+                "kty": "EC",
+                "crv": "P-256",
+                "x": "SOlwe9_nRwz2f9Y2aSB9d7D-AXTSSBlAQd5HZUIEGLA",
+                "y": "Pzk9Gd4wwbx9STkK_RfWqxnfU9AwpvWZzf_K0GpaQZo",
+                "d": "Invalid-private-key--EHzgbRaNKRCMhk6jiCT-ZQ",
+                "alg": "ES256",
+            }
+        )
 
 
 def test_invalid_class_for_kty() -> None:
@@ -226,7 +231,7 @@ def test_invalid_class_for_kty() -> None:
 
 
 @pytest.mark.parametrize(
-    "kty, private_key_ops, public_key_ops",
+    ("kty", "private_key_ops", "public_key_ops"),
     [
         ("RSA", ("sign",), ("verify",)),
         ("RSA", ("unwrapKey",), ("wrapKey",)),
@@ -244,7 +249,7 @@ def test_key_ops_without_alg(kty: str, private_key_ops: tuple[str], public_key_o
 
 
 @pytest.mark.parametrize(
-    "alg, use, private_key_ops, public_key_ops",
+    ("alg", "use", "private_key_ops", "public_key_ops"),
     [
         ("RS256", "sig", ("sign",), ("verify",)),
         ("HS256", "sig", ("sign", "verify"), ("sign", "verify")),
@@ -269,20 +274,22 @@ def test_use_key_ops_with_alg(alg: str, use: str, private_key_ops: tuple[str], p
 
 def test_thumbprint() -> None:
     # key from https://www.rfc-editor.org/rfc/rfc7638.html#section-3.1
-    jwk = Jwk({
-        "kty": "RSA",
-        "n": (
-            "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAt"
-            "VT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn6"
-            "4tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FD"
-            "W2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n9"
-            "1CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINH"
-            "aQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw"
-        ),
-        "e": "AQAB",
-        "alg": "RS256",
-        "kid": "2011-04-29",
-    })
+    jwk = Jwk(
+        {
+            "kty": "RSA",
+            "n": (
+                "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAt"
+                "VT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn6"
+                "4tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FD"
+                "W2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n9"
+                "1CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINH"
+                "aQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw"
+            ),
+            "e": "AQAB",
+            "alg": "RS256",
+            "kid": "2011-04-29",
+        }
+    )
 
     assert jwk.thumbprint() == "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"
     assert (
@@ -304,9 +311,9 @@ def test_thumbprint() -> None:
 
 
 def test_invalid_thumbprint_hash() -> None:
-    jwk = Jwk.generate_for_kty("EC", crv="P-256")
+    jwk = Jwk.generate(kty="EC", crv="P-256")
     with pytest.raises(ValueError):
-        jwk.thumbprint("foo")
+        jwk.thumbprint(hashalg="foo")
 
 
 def test_generate_invalid_kty() -> None:
@@ -516,7 +523,9 @@ Unyb2Oj6CDA9YFEcjRuaZBDtSKJ6AYOWFJO7CIHsjAZ0rBqfyfNdBd5DG4+ZJkD8
 
 
 def test_from_pkcs12() -> None:
-    p12 = BinaPy("""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""").decode_from("b64")
+    p12 = BinaPy(
+        """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"""
+    ).decode_from("b64")
 
     jwk = Jwk.from_pkcs12(p12, "jwskate!")
     assert jwk.kty == "RSA"
@@ -524,4 +533,3 @@ def test_from_pkcs12() -> None:
     assert not jwk.is_symmetric
     assert not jwk.is_public
     assert jwk == Jwk.from_pkcs12(p12, b"jwskate!")
-

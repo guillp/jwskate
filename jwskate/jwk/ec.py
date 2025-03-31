@@ -53,10 +53,10 @@ class ECJwk(Jwk):
     CRYPTOGRAPHY_PUBLIC_KEY_CLASSES = (ec.EllipticCurvePublicKey,)
 
     PARAMS: Mapping[str, JwkParameter] = {
-        "crv": JwkParameter("Curve", is_private=False, is_required=True, kind="name"),
-        "x": JwkParameter("X Coordinate", is_private=False, is_required=True, kind="b64u"),
-        "y": JwkParameter("Y Coordinate", is_private=False, is_required=True, kind="b64u"),
-        "d": JwkParameter("ECC Private Key", is_private=True, is_required=True, kind="b64u"),
+        "crv": JwkParameter(description="Curve", is_private=False, is_required=True, kind="name"),
+        "x": JwkParameter(description="X Coordinate", is_private=False, is_required=True, kind="b64u"),
+        "y": JwkParameter(description="Y Coordinate", is_private=False, is_required=True, kind="b64u"),
+        "d": JwkParameter(description="ECC Private Key", is_private=True, is_required=True, kind="b64u"),
     }
 
     CURVES: Mapping[str, EllipticCurve] = {curve.name: curve for curve in [P_256, P_384, P_521, secp256k1]}

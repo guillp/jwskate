@@ -186,7 +186,7 @@ separated by dots."""
 
         aad = BinaPy.serialize_to("json", headers).to("b64u")
 
-        ciphertext, iv, tag = cek_jwk.encrypt(plaintext, aad=aad, iv=iv, alg=enc)
+        ciphertext, iv, tag = cek_jwk.encrypt(plaintext, aad=aad, iv=iv, enc=enc)
 
         return cls.from_parts(headers=headers, cek=wrapped_cek, iv=iv, ciphertext=ciphertext, tag=tag)
 
@@ -208,7 +208,7 @@ separated by dots."""
           algs: allowed key managements algorithms, if there are several
 
         Returns:
-            the unwrapped CEK, as a SymmetricJwk
+            the unwrapped CEK
 
         """
         if isinstance(key_or_password, (bytes, str)):
@@ -253,7 +253,7 @@ separated by dots."""
             iv=self.initialization_vector,
             tag=self.authentication_tag,
             aad=self.additional_authenticated_data,
-            alg=self.enc,
+            enc=self.enc,
         )
 
     def decrypt_jwt(
@@ -340,7 +340,7 @@ separated by dots."""
 
         headers = {"alg": alg, "enc": enc, "p2s": BinaPy(salt).to("b64u").ascii(), "p2c": count}
         aad = BinaPy.serialize_to("json", headers).to("b64u")
-        ciphertext, iv, tag = cek_jwk.encrypt(plaintext=plaintext, aad=aad, alg=enc, iv=iv)
+        ciphertext, iv, tag = cek_jwk.encrypt(plaintext=plaintext, aad=aad, enc=enc, iv=iv)
 
         return cls.from_parts(headers=headers, cek=wrapped_cek, iv=iv, ciphertext=ciphertext, tag=tag)
 
@@ -399,5 +399,5 @@ separated by dots."""
             iv=self.initialization_vector,
             tag=self.authentication_tag,
             aad=self.additional_authenticated_data,
-            alg=self.enc,
+            enc=self.enc,
         )

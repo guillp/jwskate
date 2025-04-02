@@ -6,7 +6,7 @@ from typing import SupportsBytes
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import hashes, hmac
-from typing_extensions import Self, override
+from typing_extensions import override
 
 from jwskate.jwa.base import BaseSignatureAlg, BaseSymmetricAlg
 
@@ -18,9 +18,9 @@ class BaseHMACSigAlg(BaseSymmetricAlg, BaseSignatureAlg):
     min_key_size: int
 
     @classmethod
-    @override
-    def with_random_key(cls) -> Self:
-        return cls(BinaPy.random_bits(cls.min_key_size))
+    def generate_key(cls) -> BinaPy:
+        """Generate a key of an appropriate size for this HMAC alg subclass."""
+        return BinaPy.random_bits(cls.min_key_size)
 
     @override
     def sign(self, data: bytes | SupportsBytes) -> BinaPy:

@@ -54,7 +54,7 @@ class BaseAlg:
     @classmethod
     def with_random_key(cls) -> Self:
         """Initialize an instance of this alg with a randomly-generated key."""
-        raise NotImplementedError
+        return cls(cls.generate_key())  # type: ignore[call-arg, attr-defined]
 
 
 class BaseSymmetricAlg(BaseAlg):

@@ -204,7 +204,11 @@ class SymmetricJwk(Jwk):
 
         """
         if alg:
-            warnings.deprecated("Use `enc` parameter instead of `alg` to specify the encryption algorithm to use.")
+            warnings.warn(
+                "Use `enc` parameter instead of `alg` to specify the encryption algorithm to use.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             enc = enc or alg
 
         wrapper = self.encryption_wrapper(enc)
@@ -239,7 +243,11 @@ class SymmetricJwk(Jwk):
 
         """
         if alg:
-            warnings.deprecated("Use `enc` parameter instead of `alg` to specify the encryption algorithm to use.")
+            warnings.warn(
+                "Use `enc` parameter instead of `alg` to specify the encryption algorithm to use.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             enc = enc or alg
 
         aad = b"" if aad is None else aad

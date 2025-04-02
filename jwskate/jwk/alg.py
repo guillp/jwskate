@@ -104,7 +104,7 @@ def select_alg_class(
     try:
         return supported_algs[choosen_alg]
     except KeyError:
-        msg = f"Alg {choosen_alg} is not supported by this key. Supported algs are: {', '.join(supported_algs)}."
+        msg = f"Alg '{choosen_alg}' is not supported by this key. Supported algs are: {', '.join(supported_algs)}."
         raise UnsupportedAlg(msg) from None
 
 
@@ -163,7 +163,7 @@ def select_alg_classes(
         requested_alg = f"{alg=}" if alg else f"{algs=}"
         warnings.warn(
             f"This key has an 'alg' parameter with value {jwk_alg}, so you should use it with that alg only."
-            f"You requested {requested_alg}.",
+            f"You requested '{requested_alg}'.",
             stacklevel=2,
         )
 
@@ -181,7 +181,7 @@ def select_alg_classes(
             return possible_supported_algs
         msg = (
             f"None of the user-specified alg(s) are supported by this key."
-            f" Supported algs are {', '.join(possible_algs)}."
+            f" Supported algs are '{', '.join(possible_algs)}'."
         )
         raise UnsupportedAlg(msg)
 

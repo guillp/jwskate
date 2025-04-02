@@ -15,7 +15,7 @@ from jwskate.jwa import (
     Pbes2_HS512_A256KW,
 )
 from jwskate.jwk import Jwk, JwkSet, SymmetricJwk, to_jwk
-from jwskate.jwk.alg import UnsupportedAlg, select_alg_class, select_alg_classes
+from jwskate.jwk.alg import select_alg_class, select_alg_classes
 from jwskate.token import BaseCompactToken
 
 if TYPE_CHECKING:
@@ -196,14 +196,14 @@ separated by dots."""
 
     def unwrap_cek(
         self,
-        key_or_password: Jwk | JwkSet | Mapping[str, Any] | bytes | str,
+        key: Jwk | JwkSet | Mapping[str, Any] | bytes | str | Any,
         alg: str | None = None,
         algs: Iterable[str] | None = None,
-    ) -> Jwk:
-        """Unwrap the CEK from this `Jwe` using the provided key or password.
+    ) -> SymmetricJwk:
+        """Unwrap the CEK from this `Jwe` using the provided key.
 
         Args:
-          key_or_password: the decryption JWK or password
+          key: the decryption key
           alg: allowed key management algorithm, if there is only 1
           algs: allowed key managements algorithms, if there are several
 
@@ -211,13 +211,10 @@ separated by dots."""
             the unwrapped CEK
 
         """
-        if isinstance(key_or_password, (bytes, str)):
-            password = key_or_password
-            return self.unwrap_cek_with_password(password)
-        if isinstance(key_or_password, JwkSet):
-            jwk = key_or_password.get_jwk_by_kid(self.kid)
+        if isinstance(key, JwkSet):  # noqa: SIM108
+            jwk = key.get_jwk_by_kid(self.kid)
         else:
-            jwk = to_jwk(key_or_password)
+            jwk = to_jwk(key)
 
         select_alg_classes(
             jwk.KEY_MANAGEMENT_ALGORITHMS,
@@ -312,16 +309,10 @@ separated by dots."""
             ValueError: if the `count` parameter is not a positive integer
 
         """
-        keyalg = cls.PBES2_ALGORITHMS.get(alg)
-        if keyalg is None:
-            msg = (
-                f"Unsupported password-based encryption algorithm '{alg}'. "
-                "Value must be one of {list(cls.PBES2_ALGORITHMS.keys())}."
-            )
-            raise UnsupportedAlg(msg)
+        keyalg = select_alg_class(cls.PBES2_ALGORITHMS, alg=alg)
 
         if cek is None:
-            cek_jwk = SymmetricJwk.generate_for_alg(enc)
+            cek_jwk = SymmetricJwk.generate(alg=enc)
             cek = cek_jwk.key
         else:
             cek_jwk = SymmetricJwk.from_bytes(cek)
@@ -344,11 +335,12 @@ separated by dots."""
 
         return cls.from_parts(headers=headers, cek=wrapped_cek, iv=iv, ciphertext=ciphertext, tag=tag)
 
-    def unwrap_cek_with_password(self, password: bytes | str) -> Jwk:
+    def unwrap_cek_with_password(self, password: bytes | str, alg: str | None = None) -> SymmetricJwk:
         """Unwrap a CEK using a password. Works only for password-encrypted JWE Tokens.
 
         Args:
           password: the decryption password
+          alg: the PBES2 alg to use
 
         Returns:
             the CEK, as a SymmetricJwk instance
@@ -358,13 +350,13 @@ separated by dots."""
             AttributeError: if the token misses the PBES2-related headers
 
         """
-        keyalg = self.PBES2_ALGORITHMS.get(self.alg)
-        if keyalg is None:
-            msg = (
-                f"Unsupported password-based encryption algorithm '{self.alg}'. "
-                "Value must be one of {list(self.PBES2_ALGORITHMS.keys())}."
-            )
-            raise UnsupportedAlg(msg)
+        keyalg = select_alg_class(
+            self.PBES2_ALGORITHMS,
+            jwk_alg=self.alg,
+            alg=alg,
+            strict=True,
+        )
+
         p2s = self.headers.get("p2s")
         if p2s is None:
             msg = "Invalid JWE: a required 'p2s' header is missing."
@@ -377,6 +369,7 @@ separated by dots."""
         if not isinstance(p2c, int) or p2c < 1:
             msg = "Invalid JWE: invalid value for the 'p2c' header, must be a positive integer."
             raise InvalidJwe(msg)
+
         wrapper = keyalg(password)
         cek = wrapper.unwrap_key(self.wrapped_cek, salt=salt, count=p2c)
         return SymmetricJwk.from_bytes(cek)
@@ -384,7 +377,7 @@ separated by dots."""
     def decrypt_with_password(self, password: bytes | str) -> bytes:
         """Decrypt this JWE with a password.
 
-        This only works for tokens encrypted with a password.
+        This only works for tokens encrypted with a PBES2 based alg and a password.
 
         Args:
           password: the password to use

@@ -1,3 +1,5 @@
+from jwskate import JweCompact
+
 # ![jwskate](docs/logo.png)
 
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
@@ -69,15 +71,12 @@ The result of this print will look like this (with the random parts abbreviated 
 Now let's sign a JWT containing arbitrary claims, this time using an Elliptic Curve (`EC`) key:
 
 ```python
-from jwskate import Jwk, Jwt
+from jwskate import Jwk, Jwt, InvalidSignature
 
-# This time let's try an EC key, based on `alg` parameter,
-# and let's specify an arbitrary Key ID (kid).
-# additional args are either options (like 'key_size' above for RSA keys)
-# or additional parameters to include in the JWK
+# This time let's try to use the "ES256" alg, which is an ECDSA signature alg.
+# Let's specify an arbitrary Key ID (kid).
 private_jwk = Jwk.generate(alg="ES256", kid="my_key")
-# note that based only on the `alg` value, the appropriate key type and curve
-# are automatically deduced and included in the JWK
+# Note that the appropriate key type and curve are determined automatically, based only on the `alg` value
 print(private_jwk)
 # {'kty': 'EC', 'crv': 'P-256', 'x': 'Ppe...', 'y': '9Si...', 'd': 'g09...', 'alg': 'ES256'}
 assert private_jwk.kty == "EC"
@@ -92,19 +91,27 @@ claims = {"sub": "some_sub", "claim1": "value1"}
 
 jwt = Jwt.sign(claims, private_jwk)
 # that's it! we have a signed JWT.
-print(jwt)
-# eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.SBQIlGlFdwoEMViWUFsBmCsXShtOq4lnp3Im5ZVh1PFCGJFdW-dTG9qJjlFSAA_BkM5PF9u38PL7Ai9cC2_DJw
+
+# let's see what this looks like
 assert isinstance(jwt, Jwt)  # Jwt are objects
-assert jwt.claims == claims  # claims can be accessed as a dict
+print(jwt)  # they can be serialized to string with the `__str__` method
+# eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzb21lX3N1YiIsImNsYWltMSI6InZhbHVlMSJ9.SBQIlGlFdwoEMViWUFsBmCsXShtOq4lnp3Im5ZVh1PFCGJFdW-dTG9qJjlFSAA_BkM5PF9u38PL7Ai9cC2_DJw
+assert jwt.claims == claims  # claims can be accessed as a `dict`
 assert jwt.headers == {"typ": "JWT", "alg": "ES256", "kid": "my_key"}  # headers too
 assert jwt.sub == "some_sub"  # individual claims can be accessed as attributes
-assert jwt["claim1"] == "value1"  # or as dict items (with "subscription")
+assert jwt["claim1"] == "value1"  # or as `dict` items (with "subscription")
 assert jwt.alg == "ES256"  # alg and kid headers are also accessible as attributes
 assert jwt.kid == private_jwk.kid
 # notice that alg and kid are automatically set with appropriate values taken from our private jwk
 assert isinstance(jwt.signature, bytes)  # signature is accessible too
+
 # verifying the jwt signature is as easy as:
 assert jwt.verify_signature(private_jwk.public_jwk())
+# or, if you want an exception to be raised if the signature is invalid:
+try:
+    jwt.verify(private_jwk.public_jwk())
+except InvalidSignature:
+    print("Invalid signature!")  # this will not be printed, since the signature is valid
 # since our jwk contains an 'alg' parameter (here 'ES256'), the signature is automatically verified using that alg
 # you could also specify an alg manually, useful for keys with no "alg" hint:
 assert jwt.verify_signature(private_jwk.public_jwk(), alg="ES256")
@@ -112,14 +119,16 @@ assert jwt.verify_signature(private_jwk.public_jwk(), alg="ES256")
 # or with `alg` or `algs` params, and will ignore the 'alg' that is set in the JWT, for security reasons.
 ```
 
-Now let's sign a JWT with the standardized lifetime, subject, audience and ID claims, plus arbitrary custom claims:
+For most applications, you will often sign with the same key and issuer, and with a pre-determined token lifetime.
+So you can create a `JwtSigner` object to simplify this for you:
+
 
 ```python
 from jwskate import Jwk, JwtSigner
 
 private_jwk = Jwk.generate(alg="ES256")
-signer = JwtSigner(issuer="https://myissuer.com", key=private_jwk)
-jwt = signer.sign(
+signer = JwtSigner(issuer="https://myissuer.com", key=private_jwk, default_lifetime=60)  # those values are pre-determined
+jwt = signer.sign(  # so you only have to specify the variable claims when signing tokens
     subject="some_sub",
     audience="some_aud",
     extra_claims={"custom_claim1": "value1", "custom_claim2": "value2"},
@@ -132,14 +141,15 @@ The generated JWT will include the standardized claims (`iss`, `aud`, `sub`, `ia
 `extra_claims` provided to `.sign()`:
 
 ```
-{'custom_claim1': 'value1',
- 'custom_claim2': 'value2',
- 'iss': 'https://myissuer.com',
- 'aud': 'some_aud',
- 'sub': 'some_sub',
- 'iat': 1648823184,
- 'exp': 1648823244,
- 'jti': '3b400e27-c111-4013-84e0-714acd76bf3a'
+{
+  'custom_claim1': 'value1',
+  'custom_claim2': 'value2',
+  'iss': 'https://myissuer.com',
+  'aud': 'some_aud',
+  'sub': 'some_sub',
+  'iat': 1648823184,
+  'exp': 1648823244,
+  'jti': '3b400e27-c111-4013-84e0-714acd76bf3a'
 }
 ```
 
@@ -308,9 +318,13 @@ The same is true for JWS and JWE tokens.
 
 ### Headers are auto-generated
 
-When signing a JWS, JWE or JWT, the headers are autogenerated by default, based on the used key and algorithm.
+When signing a JWS, JWE or JWT, the headers `alg`, `kid` and `typ` are autogenerated by default:
+- `alg`: the signature or key-management alg
+- `kid`: if the signature or key-management key has a `kid`, this will automatically be included in the headers.
+- `typ`: will have value `"JWT"` by default.
 
-You may add your own custom headers using the `extra_headers` parameter, and/or set a custom `typ` header with the parameter of the same name:
+You may add your own custom headers using the `extra_headers` parameter, and/or set a custom `typ` header with the
+parameter of the same name:
 
 ```python
 from jwskate import SymmetricJwk, Jwt
@@ -356,11 +370,104 @@ print(jwt.headers)  # you asked for inconsistent headers, you have them:
 ### `Jwk` as thin wrapper around `cryptography` keys
 
 `Jwk` keys are just _thin_ wrappers around keys from the `cryptography` module, or, in the case of symmetric keys,
-around `bytes`. But, unlike `cryptography`keys, they present a consistent interface for signature creation/verification,
-key management, and encryption/decryption, with all available algorithms.
+around `bytes`. But, unlike `cryptography` keys, they present a consistent interface for signature
+creation/verification, key management, and encryption/decryption, regardless of the algorithm:
 
-Everywhere a key is required as parameter, you may pass either a raw `cryptography` key instance, or a `Jwk` instance
-(which is actually a thin wrapper around a cryptography key), or a `Mapping` representing the JWK key.
+- For signature generation and verification, use `Jwk.sign()` and `Jwk.verify()` respectively
+- For content encryption using a Key-Management alg and a symmetric Content-Encryption Key (CEK):
+  - use `Jwk.sender_key()` to generate and wrap or otherwise derive a Content Encryption Key
+  - use `Jwk.encrypt()` on that CEK to encrypt your data
+- For decryption on the recipient side:
+  - use `Jwk.recipient_key()` to unwrap or otherwise derive the CEK
+  - use `Jwk.decrypt()` on that CEK to decrypt the encrypted data
+
+Here is an example usage of signature and verification:
+
+```python
+from jwskate import Jwk, SignatureAlgs
+
+# I'll use a symmetric key for this example, but the same applies to asymmetric keys
+sig_key = Jwk.generate(alg=SignatureAlgs.HS256, kid="example_signature_key")  # symmetric key
+
+# use `Jwk.sign()` and `Jwk.verify()` to sign and verify data
+data = b"Something to sign"
+signature = sig_key.sign(data)
+if not sig_key.verify(data, signature[:-7] + b"altered"):
+    print("Invalid signature!")
+
+```
+
+Here is an example of data encryption using a Key-Management alg and a Content-Encryption Key.
+This example uses a Symmetric Key, but the interface is the same with private/public keys (excepted that encryption must be done with the public key).
+
+```python
+from jwskate import Jwk, EncryptionAlgs, KeyManagementAlgs
+# generate a suitabe key
+key_mgmt_key = Jwk.generate(alg=KeyManagementAlgs.A256KW, kid="example_key_management_key")
+# First, choose your symmetric encryption alg
+enc = EncryptionAlgs.A256GCM
+# Use `Jwk.sender_key()` and `Jwk.recipient_key()` to generate or otherwise derive the CEK
+# This will return a 3-tuple with the clear-text CEK, the wrapped CEK and extra headers to include in the token, if any
+cek, wrapped_cek, headers = key_mgmt_key.sender_key(enc=enc)
+# use the clear-text CEK to encrypt your data
+secret_message = b"Encryption is easy!"
+ciphertext, iv, tag = cek.encrypt(secret_message, enc=enc)
+# you may also include Additional Authentication Data (AAD) with the `aad` parameter to `cek.encrypt()` above
+# send the ciphertext, the wrapped CEK, IV, tag, AAD (if any) and extra headers to the recipient
+
+recipient_cek = key_mgmt_key.recipient_key(wrapped_cek, enc=enc, **headers)
+assert recipient_cek == cek  # the CEK is the same as the one we used to encrypt the data
+cleartext = recipient_cek.decrypt(ciphertext, iv=iv, tag=tag, enc=enc) # if there is AAD, you must also include it here
+assert cleartext == secret_message
+```
+
+All of the above is much easier if you use a JWE to encrypt your data:
+
+```python
+from jwskate import Jwk, JweCompact, EncryptionAlgs, KeyManagementAlgs
+
+key = Jwk.generate(alg=KeyManagementAlgs.A256GCMKW)
+jwe = JweCompact.encrypt(b"This is a secret message", key=key, enc=EncryptionAlgs.A256CBC_HS512)
+print(jwe)
+
+# the resulting JWE contains everything the recipient needs to be able to decrypt your message, excepted the key of course!
+assert jwe.alg == "A256GCMKW" # key-management alg is part of the headers
+assert jwe.enc == "A256CBC-HS512" # as well as content-encryption alg
+assert isinstance(jwe.ciphertext, bytes) # the encrypted data
+assert isinstance(jwe.wrapped_cek, bytes) # the CEK, if is it encrypted (empty if it is otherwise derived)
+assert isinstance(jwe.initialization_vector, bytes) # the IV used for encryption
+assert isinstance(jwe.authentication_tag, bytes) # the authentication tag
+assert isinstance(jwe.additional_authenticated_data) # theJWE header part is used as AAD
+
+# on recipient side, decryption is as easy as:
+assert jwe.decrypt(key) == b"This is a secret message"
+```
+
+The `Jwk` layer is so thin, that everywhere a key is required as parameter, you may pass either:
+- a `Jwk` instance,
+- or a `Mapping` (typically a `dict`) representing the JWK key,
+- a raw `cryptography` key instance, or a `bytes` if it is a symmetric key, but in that case, you must specify the `alg`
+to use, since that is not part of the key.
+
+As long as the provided key is suitable for the chosen algorithm, any of the above will work. Here is an example of
+encrypting JWE tokens with raw `cryptography` keys:
+
+```python
+from jwskate import JweCompact
+secret_message = b"my_very_secret_message"
+
+# symmetric encryption with A128GCMKW and a 128 bit `bytes` key
+aes_key = b"very_secret_key!"
+jwe = JweCompact.encrypt(secret_message, key=aes_key, alg="A128GCMKW", enc="A128GCM")
+assert jwe.decrypt(key=aes_key) == secret_message
+
+# or, for asymmetric encryption with ECDH-ES+A256KW and a raw `cryptography` key (e.g. X25519):
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+eckey = X25519PrivateKey.generate()
+
+jwe = JweCompact.encrypt(secret_message, key=eckey.public_key(), alg="ECDH-ES+A256KW", enc="A256GCM")
+assert jwe.decrypt(key=eckey) == secret_message
+```
 
 ### `Jwk` are `UserDict` instances
 
@@ -369,10 +476,9 @@ JWK are specified as JSON objects, which are parsed as `dict` in Python. The `Jw
 you can access its members, dump it back as JSON, etc. The same is true for Signed or Encrypted Json Web tokens in JSON
 format. However, you cannot change the key cryptographic materials, since that would lead to unusable keys.
 
-Note that the keys with a `JwkSet` are converted to instances of `Jwk` on initialization. This may introduce an issue
-if you try to serialize it to JSON with the standard `json` module, which does not handle `UserDict` by default. You may
-either use `JwkSet.to_json()` to get a JSON-serialized string, or `JwkSet.to_dict()` to get a standard `dict`, that is
-serializable by the standard `json` module.
+Unfortunately, `UserDict` is not natively serializable with the default JSON dump. To workaround that, you may either
+use `Jwk.to_json()` / `JwkSet.to_json()` to get a JSON-serialized string, or `Jwk.to_dict()` / `JwkSet.to_dict()` to get
+a standard `dict`, that is serializable by the standard `json` module.
 
 ### JWA Wrappers
 
@@ -382,6 +488,31 @@ straightforward and gives you plenty of options to carefully select and combine,
 confusion. It also has a quite inconsistent API to handle the different key types and algorithms. To work around this,
 `jwskate` comes with a set of consistent wrappers that implement the exact JWA specifications, with minimum risk of
 mistakes.
+
+Here is an example of using raw JWA wrappers:
+
+```python
+from jwskate import A256KW, A256GCM  # pick any key-management and content-encryption algs
+
+# on sender side, you have a message to encrypt and a pre-shared key with the recipient
+secret_message = b"This is a secret message"
+
+shared_key = A256KW.generate_key() # let's generate a suitable pre-shared key for this example, using this helper
+a256kw = A256KW(shared_key) # you can initialize a JWA wrapper with a key of your choice this way
+
+a256gcm = A256GCM.with_random_key() # or you can initialize them with a randomly generated key, as a one-liner
+iv = A256GCM.generate_iv() # helper method for generating Initialisation Vectors of the appropriate size
+ciphertext, tag = a256gcm.encrypt(secret_message, iv=iv) # use the Content-Encryption JWA wrapper to encrypt your message
+
+wrapped_cek = a256kw.wrap_key(a256gcm.key) # and/or use the Key-Management JWA wrapper to wrap the CEK
+
+# on recipient side, you receive ciphertext, iv, tag and wrapped_cek,
+# and you are supposed to know the shared_key and algorithms to use
+cek = A256KW(shared_key).unwrap_key(wrapped_cek) # so you can unwrap the CEK
+cleartext = A256GCM(cek).decrypt(ciphertext, iv=iv, auth_tag=tag) # and decrypt the ciphertext and validating the tag
+
+assert cleartext == secret_message
+```
 
 ### Safe Signature Verification
 

@@ -778,7 +778,7 @@ def test_invalid_password_encryption() -> None:
     assert jwe_invalid_alg.alg == "foo"
     with pytest.raises(
         UnsupportedAlg,
-        match=r"None of the user-specified alg\(s\) are supported by this key",
+        match=r"Alg 'foo' is not supported by this key",
     ):
         jwe_invalid_alg.decrypt_with_password("password")
 

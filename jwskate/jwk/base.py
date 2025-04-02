@@ -28,7 +28,6 @@ from jwskate.jwa import (
     BaseAESEncryptionAlg,
     BaseAesGcmKeyWrap,
     BaseAesKeyWrap,
-    BaseAlg,
     BaseAsymmetricAlg,
     BaseEcdhEs_AesKw,
     BaseKeyManagementAlg,
@@ -44,6 +43,7 @@ from .alg import ExpectedAlgRequired, UnsupportedAlg, select_alg_class
 
 if TYPE_CHECKING:
     from .jwks import JwkSet  # pragma: no cover
+    from .oct import SymmetricJwk
 
 
 class UnsupportedKeyType(ValueError):
@@ -210,7 +210,7 @@ class Jwk(BaseJsonDict):
             raise InvalidJwk(params) from exc
 
     @classmethod
-    def get_jwa_wrapper(cls, alg: str) -> type[BaseAlg]:
+    def get_jwa_wrapper(cls, alg: str) -> type[BaseSignatureAlg | BaseKeyManagementAlg | BaseAESEncryptionAlg]:
         """Given an alg identifier, return the matching JWA wrapper.
 
         Args:
@@ -220,7 +220,7 @@ class Jwk(BaseJsonDict):
             the matching JWA wrapper
 
         """
-        alg_class: type[BaseAlg] | None
+        alg_class: type[BaseSignatureAlg | BaseKeyManagementAlg | BaseAESEncryptionAlg] | None
 
         alg_class = cls.SIGNATURE_ALGORITHMS.get(alg)
         if alg_class is not None:
@@ -713,63 +713,6 @@ class Jwk(BaseJsonDict):
 
         return False
 
-    def encrypt(
-        self,
-        plaintext: bytes | SupportsBytes,
-        *,
-        aad: bytes | None = None,
-        alg: str | None = None,
-        iv: bytes | None = None,
-    ) -> tuple[BinaPy, BinaPy, BinaPy]:
-        """Encrypt a plaintext with Authenticated Encryption using this key.
-
-        Authenticated Encryption with Associated Data (AEAD) is supported,
-        by passing Additional Authenticated Data (`aad`).
-
-        This returns a tuple with 3 raw data, in order:
-        - the encrypted Data
-        - the Initialization Vector that was used to encrypt data
-        - the generated Authentication Tag
-
-        Args:
-          plaintext: the data to encrypt.
-          aad: the Additional Authenticated Data (AAD) to include in the authentication tag
-          alg: the alg to use to encrypt the data
-          iv: the Initialization Vector to use. If `None`, an IV is randomly generated.
-              If a value is provided, the returned IV will be that same value. You should never reuse the same IV!
-
-        Returns:
-          a tuple (ciphertext, iv, authentication_tag), as raw data
-
-        """
-        raise NotImplementedError  # pragma: no cover
-
-    def decrypt(
-        self,
-        ciphertext: bytes | SupportsBytes,
-        *,
-        iv: bytes | SupportsBytes,
-        tag: bytes | SupportsBytes,
-        aad: bytes | SupportsBytes | None = None,
-        alg: str | None = None,
-    ) -> BinaPy:
-        """Decrypt an encrypted data using this Jwk, and return the encrypted result.
-
-        This is implemented by subclasses.
-
-        Args:
-          ciphertext: the data to decrypt
-          iv: the Initialization Vector (IV) that was used for encryption
-          tag: the Authentication Tag that will be verified while decrypting data
-          aad: the Additional Authentication Data (AAD) to verify the Tag against
-          alg: the alg to use for decryption
-
-        Returns:
-          the clear-text data
-
-        """
-        raise NotImplementedError  # pragma: no cover
-
     def sender_key(
         self,
         enc: str,
@@ -778,7 +721,7 @@ class Jwk(BaseJsonDict):
         cek: bytes | None = None,
         epk: Jwk | None = None,
         **headers: Any,
-    ) -> tuple[Jwk, BinaPy, Mapping[str, Any]]:
+    ) -> tuple[SymmetricJwk, BinaPy, Mapping[str, Any]]:
         """Produce a Content Encryption Key, to use for encryption.
 
         This method is meant to be used by encrypted token senders.
@@ -786,7 +729,7 @@ class Jwk(BaseJsonDict):
 
         Returns a tuple with 3 items:
 
-        - the clear text CEK, as a SymmetricJwk instance.
+        - the clear text CEK, as a `SymmetricJwk` instance.
         Use this key to encrypt your message, but do not communicate this key to anyone!
         - the encrypted CEK, as bytes. You must send this to your recipient.
         This may be `None` for Key Management algs which derive a CEK instead of generating one.
@@ -887,23 +830,23 @@ class Jwk(BaseJsonDict):
         *,
         alg: str | None = None,
         **headers: Any,
-    ) -> Jwk:
+    ) -> SymmetricJwk:
         """Produce a Content Encryption Key, to use for decryption.
 
         This method is meant to be used by encrypted token recipient.
         Senders should use the matching method `Jwk.sender_key()`.
 
         Args:
-          wrapped_cek: the wrapped CEK
-          enc: the encryption algorithm to use with the CEK
-          alg: the Key Management algorithm to use to unwrap the CEK
-          **headers: additional headers used to decrypt the CEK (e.g. "epk" for ECDH algs, "iv", "tag" for AES-GCM algs)
+          wrapped_cek: The wrapped CEK.
+          enc: The encryption algorithm to use with the CEK.
+          alg: The Key Management algorithm to use to unwrap the CEK.
+          **headers: Additional headers used to decrypt the CEK (e.g. "epk" for ECDH algs, "iv", "tag" for AES-GCM algs)
 
         Returns:
-          the clear-text CEK, as a SymmetricJwk instance
+          The clear-text CEK.
 
         Raises:
-            UnsupportedAlg: if the requested alg identifier is not supported
+            UnsupportedAlg: If the requested alg identifier is not supported.
 
         """
         from jwskate import SymmetricJwk

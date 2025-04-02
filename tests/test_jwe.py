@@ -469,7 +469,7 @@ def password(request: pytest.FixtureRequest) -> bytes:
 
 
 @pytest.fixture(scope="module")
-def decryption_jwk(
+def decryption_key(
     key_management_alg: str,
     encryption_alg: str,
     rsa_private_jwk: Jwk,
@@ -520,11 +520,11 @@ def decryption_jwk(
 
 
 @pytest.fixture(scope="module")
-def encryption_jwk(decryption_jwk: Jwk | bytes) -> Jwk | bytes:
-    if isinstance(decryption_jwk, (SymmetricJwk, bytes)):
-        return decryption_jwk
+def encryption_jwk(decryption_key: Jwk | bytes) -> Jwk | bytes:
+    if isinstance(decryption_key, (SymmetricJwk, bytes)):
+        return decryption_key
 
-    return decryption_jwk.public_jwk()
+    return decryption_key.public_jwk()
 
 
 @pytest.fixture(scope="module")
@@ -570,7 +570,7 @@ def test_supportsbytes(
     key_management_alg: str,
     encryption_alg: str,
     encrypted_jwe: JweCompact,
-    decryption_jwk: Jwk,
+    decryption_key: Jwk | bytes,
 ) -> None:
     if isinstance(encryption_jwk, Jwk):
         jwe = JweCompact.encrypt(
@@ -579,6 +579,7 @@ def test_supportsbytes(
             alg=key_management_alg,
             enc=encryption_alg,
         )
+        assert jwe.decrypt(decryption_key) == encrypted_jwe.decrypt(decryption_key)
     else:
         password = bytes(encryption_jwk)
         jwe = JweCompact.encrypt_with_password(
@@ -587,10 +588,10 @@ def test_supportsbytes(
             alg=key_management_alg,
             enc=encryption_alg,
         )
+        assert jwe.decrypt_with_password(password) == encrypted_jwe.decrypt_with_password(password)
 
-    assert jwe.decrypt(decryption_jwk) == encrypted_jwe.decrypt(decryption_jwk)
-    if not isinstance(decryption_jwk, bytes):
-        cek = decryption_jwk.recipient_key(SupportsBytesTester(jwe.wrapped_cek), **jwe.headers)
+    if not isinstance(decryption_key, bytes):
+        cek = decryption_key.recipient_key(SupportsBytesTester(jwe.wrapped_cek), **jwe.headers)
         assert (
             cek.decrypt(
                 SupportsBytesTester(jwe.ciphertext),
@@ -606,22 +607,22 @@ def test_supportsbytes(
 def test_decrypt(
     encryption_plaintext: bytes,
     encrypted_jwe: JweCompact,
-    decryption_jwk: Jwk | bytes,
+    decryption_key: Jwk | bytes,
     key_management_alg: str,
     encryption_alg: str,
 ) -> None:
     assert encrypted_jwe.alg == key_management_alg
     assert encrypted_jwe.enc == encryption_alg
-    if isinstance(decryption_jwk, Jwk):
-        assert encrypted_jwe.decrypt(decryption_jwk) == encryption_plaintext
+    if isinstance(decryption_key, Jwk):
+        assert encrypted_jwe.decrypt(decryption_key) == encryption_plaintext
     else:
-        assert encrypted_jwe.decrypt_with_password(decryption_jwk) == encryption_plaintext
+        assert encrypted_jwe.decrypt_with_password(decryption_key) == encryption_plaintext
 
 
 def test_decrypt_by_jwcrypto(
     encryption_plaintext: bytes,
     encrypted_jwe: JweCompact,
-    decryption_jwk: Jwk,
+    decryption_key: Jwk,
     key_management_alg: str,
     encryption_alg: str,
 ) -> None:
@@ -630,7 +631,7 @@ def test_decrypt_by_jwcrypto(
     Args:
         encryption_plaintext: the expected plaintext
         encrypted_jwe: the Jwe encrypted by jwskate to decrypt
-        decryption_jwk: the Jwk containing the decryption key
+        decryption_key: the Jwk containing the decryption key
         key_management_alg: the key management alg
         encryption_alg: the encryption alg
 
@@ -645,11 +646,11 @@ def test_decrypt_by_jwcrypto(
 
     jwe = jwcrypto.jwe.JWE(algs=jwe_algs_and_rsa1_5)
     jwe.deserialize(str(encrypted_jwe))
-    if isinstance(decryption_jwk, Jwk):
-        jwk = jwcrypto.jwk.JWK(**decryption_jwk)
+    if isinstance(decryption_key, Jwk):
+        jwk = jwcrypto.jwk.JWK(**decryption_key)
         jwe.decrypt(jwk)
     else:
-        password = decryption_jwk
+        password = decryption_key
         jwe.decrypt(password)
 
     assert jwe.plaintext == encryption_plaintext
@@ -701,7 +702,7 @@ def jwcrypto_encrypted_jwe(
 def test_decrypt_from_jwcrypto(
     encryption_plaintext: bytes,
     jwcrypto_encrypted_jwe: str,
-    decryption_jwk: Jwk,
+    decryption_key: Jwk | bytes,
     key_management_alg: str,
     encryption_alg: str,
 ) -> None:
@@ -710,7 +711,7 @@ def test_decrypt_from_jwcrypto(
     Args:
         encryption_plaintext: the plaintext
         jwcrypto_encrypted_jwe: the JWE to validate
-        decryption_jwk: the decryption key
+        decryption_key: the decryption key
         key_management_alg: the key management alg
         encryption_alg: the encryption alg
 
@@ -718,11 +719,18 @@ def test_decrypt_from_jwcrypto(
     jwe = JweCompact(jwcrypto_encrypted_jwe)
     assert jwe.alg == key_management_alg
     assert jwe.enc == encryption_alg
-    try:
-        assert jwe.decrypt(decryption_jwk) == encryption_plaintext
-    except Exception:  # noqa: BLE001
-        cek = jwe.unwrap_cek(decryption_jwk)
-        pytest.fail(f"Decryption by JWSkate failed for {jwcrypto_encrypted_jwe}, CEK={cek}")
+    if isinstance(decryption_key, Jwk):
+        try:
+            assert jwe.decrypt(decryption_key) == encryption_plaintext
+        except Exception:  # noqa: BLE001
+            cek = jwe.unwrap_cek(decryption_key)
+            pytest.fail(f"Decryption by JWSkate failed for {jwcrypto_encrypted_jwe}, CEK={cek}")
+    else:
+        try:
+            assert jwe.decrypt_with_password(decryption_key) == encryption_plaintext
+        except Exception:  # noqa: BLE001
+            cek = jwe.unwrap_cek(decryption_key)
+            pytest.fail(f"Decryption by JWSkate failed for {jwcrypto_encrypted_jwe}, CEK={cek}")
 
 
 def test_invalid_enc_header() -> None:
@@ -735,7 +743,7 @@ def test_invalid_enc_header() -> None:
 def test_invalid_password_encryption() -> None:
     with pytest.raises(
         UnsupportedAlg,
-        match="Unsupported password-based encryption algorithm 'foo'",
+        match="Alg 'foo' is not supported by this key",
     ):
         JweCompact.encrypt_with_password(b"payload", "password", alg="foo", enc="A128GCM")
 
@@ -770,7 +778,7 @@ def test_invalid_password_encryption() -> None:
     assert jwe_invalid_alg.alg == "foo"
     with pytest.raises(
         UnsupportedAlg,
-        match="Unsupported password-based encryption algorithm 'foo'",
+        match=r"Alg 'foo' is not supported by this key",
     ):
         jwe_invalid_alg.decrypt_with_password("password")
 

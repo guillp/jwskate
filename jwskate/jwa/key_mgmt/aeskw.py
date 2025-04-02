@@ -6,7 +6,7 @@ from typing import SupportsBytes
 
 from binapy import BinaPy
 from cryptography.hazmat.primitives import keywrap
-from typing_extensions import Self, override
+from typing_extensions import override
 
 from jwskate.jwa.base import BaseKeyManagementAlg, BaseSymmetricAlg, InvalidKey
 
@@ -36,9 +36,9 @@ class BaseAesKeyWrap(BaseKeyManagementAlg, BaseSymmetricAlg):
             raise InvalidKey(msg)
 
     @classmethod
-    @override
-    def with_random_key(cls) -> Self:
-        return cls(BinaPy.random_bits(cls.key_size))
+    def generate_key(cls) -> BinaPy:
+        """Generate a key of an appropriate size for this AES alg subclass."""
+        return BinaPy.random_bits(cls.key_size)
 
     def wrap_key(self, plainkey: bytes) -> BinaPy:
         """Wrap a key.

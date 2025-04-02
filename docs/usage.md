@@ -452,7 +452,7 @@ plaintext_cek, encrypted_cek, extra_headers = rcpt_public_jwk.sender_key(enc_alg
 #  'x': '_26Ak6hccBPzFe2t2CYwFMH8jkKm-UWajOrci9KIPfg',
 #  'y': 'nVXtV6YcU1IsT8qL9zAbvMrvXvhdEvMoeVfDeF-bsRs'}}
 
-encrypted_message, iv, tag = plaintext_cek.encrypt(plaintext_message, alg=enc_alg)
+encrypted_message, iv, tag = plaintext_cek.encrypt(plaintext_message, enc=enc_alg)
 # encrypted_message: b'\xb5J\x16\x08\x82Xp\x0f,\x0eu\xe5\xd6\xa6y\xe0J\xae\xcbu\xf8B\xbd'
 # iv: b'K"H\xf3@\tt\\\xc78\xc2D'
 # tag: b'\xc4\xee\xcf`\xfa\\\x8e\x9dn\xc4>D\xd8\x1d\x8c\x1a'
@@ -501,7 +501,7 @@ cek = recipient_private_jwk.recipient_key(
     encrypted_cek, enc="A256GCM", alg="ECDH-ES", **extra_headers
 )
 # and decrypt the message with that CEK (and the IV, Auth Tag and encryption alg identifier provided by sender)
-plaintext_message = cek.decrypt(encrypted_message, iv=iv, tag=tag, alg=enc_alg)
+plaintext_message = cek.decrypt(encrypted_message, iv=iv, tag=tag, enc=enc_alg)
 
 assert plaintext_message == b"Key Management and Encryption are easy!"
 ```

@@ -172,14 +172,14 @@ class SymmetricJwk(Jwk):
         """The key size, in bits."""
         return len(self.key) * 8
 
-    @override
     def encrypt(
         self,
         plaintext: bytes | SupportsBytes,
         *,
         aad: bytes | None = None,
-        alg: str | None = None,
+        enc: str | None = None,
         iv: bytes | None = None,
+        alg: str | None = None,
     ) -> tuple[BinaPy, BinaPy, BinaPy]:
         """Encrypt arbitrary data using this key.
 
@@ -193,23 +193,31 @@ class SymmetricJwk(Jwk):
         If an IV was provided as parameter, the same IV is returned.
 
         Args:
-          plaintext: the plaintext to encrypt
-          aad: the Additional Authentication Data, if any
-          alg: the encryption alg to use
-          iv: the IV to use, if you want a specific value
+          plaintext: The plaintext to encrypt.
+          aad: The Additional Authentication Data, if any.
+          enc: The encryption alg to use.
+          iv: The IV to use, if you want a specific value.
+          alg: (DEPRECATED) The encryption alg to use. Use `enc` instead.
 
         Returns:
-            a (ciphertext, authentication_tag, iv) tuple
+            A (ciphertext, authentication_tag, iv) tuple.
 
         """
-        wrapper = self.encryption_wrapper(alg)
+        if alg:
+            warnings.warn(
+                "Use `enc` parameter instead of `alg` to specify the encryption algorithm to use.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            enc = enc or alg
+
+        wrapper = self.encryption_wrapper(enc)
         if iv is None:
             iv = wrapper.generate_iv()
 
         ciphertext, tag = wrapper.encrypt(plaintext, iv=iv, aad=aad)
         return ciphertext, BinaPy(iv), tag
 
-    @override
     def decrypt(
         self,
         ciphertext: bytes | SupportsBytes,
@@ -217,21 +225,31 @@ class SymmetricJwk(Jwk):
         iv: bytes | SupportsBytes,
         tag: bytes | SupportsBytes,
         aad: bytes | SupportsBytes | None = None,
+        enc: str | None = None,
         alg: str | None = None,
     ) -> BinaPy:
         """Decrypt arbitrary data, and verify Additional Authenticated Data.
 
         Args:
-          ciphertext: the encrypted data
-          iv: the Initialization Vector (must be the same as generated during encryption)
-          tag: the authentication tag
-          aad: the Additional Authenticated Data (must be the same data used during encryption)
-          alg: the decryption alg (must be the same as used during encryption)
+          ciphertext: The encrypted data.
+          iv: The Initialization Vector (must be the same as generated during encryption).
+          tag: The Authentication Tag.
+          aad: The Additional Authenticated Data (must be the same data used during encryption).
+          enc: The decryption alg (must be the same as used during encryption).
+          alg: (DEPRECATED) The decryption alg. Use `enc` instead.
 
         Returns:
-            the decrypted clear-text
+            The decrypted clear-text.
 
         """
+        if alg:
+            warnings.warn(
+                "Use `enc` parameter instead of `alg` to specify the encryption algorithm to use.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            enc = enc or alg
+
         aad = b"" if aad is None else aad
         if not isinstance(aad, bytes):
             aad = bytes(aad)
@@ -240,7 +258,7 @@ class SymmetricJwk(Jwk):
         if not isinstance(tag, bytes):
             tag = bytes(tag)
 
-        wrapper = self.encryption_wrapper(alg)
+        wrapper = self.encryption_wrapper(enc)
         plaintext: bytes = wrapper.decrypt(ciphertext, auth_tag=tag, iv=iv, aad=aad)
 
         return BinaPy(plaintext)

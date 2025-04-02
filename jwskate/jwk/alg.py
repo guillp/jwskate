@@ -85,8 +85,8 @@ def select_alg_class(
                 if strict:
                     raise MismatchingAlg(jwk_alg, alg)
                 warnings.warn(
-                    f"This key has an 'alg' parameter {jwk_alg}, which should be used for each operation."
-                    f" The algorithm is {alg}.",
+                    f"This key has an 'alg' parameter '{jwk_alg}', which should be used for each operation,"
+                    f" but requested algorithm is '{alg}'.",
                     stacklevel=3,
                 )
             choosen_alg = alg

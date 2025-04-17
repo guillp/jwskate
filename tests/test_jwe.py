@@ -8,14 +8,12 @@ import jwskate.jwa
 from jwskate import (
     P_521,
     ECJwk,
-    EncryptionAlgs,
     InvalidJwe,
     InvalidKey,
     JweCompact,
     Jwk,
     JwkSet,
     KeyManagementAlgs,
-    MissingHeader,
     RSAJwk,
     SymmetricJwk,
     UnsupportedAlg,
@@ -746,7 +744,7 @@ def test_invalid_enc_header() -> None:
 def test_invalid_password_encryption() -> None:
     with pytest.raises(
         UnsupportedAlg,
-        match="Alg 'foo' is not supported by this key",
+        match="Alg 'foo' is not supported.",
     ):
         JweCompact.encrypt_with_password(b"payload", "password", alg="foo", enc="A128GCM")
 
@@ -781,7 +779,7 @@ def test_invalid_password_encryption() -> None:
     assert jwe_invalid_alg.alg == "foo"
     with pytest.raises(
         UnsupportedAlg,
-        match=r"Alg 'foo' is not supported by this key",
+        match=r"Alg 'foo' is not supported.",
     ):
         jwe_invalid_alg.decrypt_with_password("password")
 

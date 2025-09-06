@@ -14,19 +14,21 @@ from jwskate.jwe import JweCompact
 from jwskate.jwk import Jwk, to_jwk
 from jwskate.jws import InvalidSignature
 
-from .base import InvalidJwt, Jwt
+from .base import ClaimError, InvalidClaim, InvalidJwt, Jwt, MissingClaim
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
     from types import EllipsisType
 
 
-class ExpiredJwt(ValueError):
+class ExpiredJwt(ClaimError):
     """Raised when trying to validate an expired JWT token."""
 
-
-class InvalidClaim(ValueError):
-    """Raised when trying to validate a JWT with unexpected claims."""
+    def __init__(self, token: SignedJwt) -> None:
+        if token.expires_at is None:
+            super().__init__("This token has no expiration date.", token, "exp")
+        else:
+            super().__init__(f"This token expired at {token.expires_at.isoformat()}.", token, "exp")
 
 
 class SignedJwt(Jwt):
@@ -398,33 +400,29 @@ class SignedJwt(Jwt):
         self.verify(key, alg=alg, algs=algs)
 
         if issuer is not None and self.issuer != issuer:
-            msg = "Unexpected issuer"
-            raise InvalidClaim(msg, "iss", self.issuer)
+            raise InvalidClaim(self, "iss", self.issuer)
 
         if audience is not None and (self.audiences is None or audience not in self.audiences):
-            msg = "Unexpected audience"
-            raise InvalidClaim(msg, "aud", self.audiences)
+            raise InvalidClaim(self, "aud", self.audiences)
 
         if check_exp:
             expired = self.is_expired()
             if expired is True:
-                msg = f"This token expired at {self.expires_at}"
-                raise ExpiredJwt(msg)
+                raise ExpiredJwt(self)
             if expired is None:
-                msg = "This token does not contain an 'exp' claim."
-                raise InvalidClaim(msg, "exp")
+                raise MissingClaim(self, "exp")
 
         for claim_name, value in kwargs.items():
             claim = self.get_claim(claim_name)
             if callable(value):
                 if not value(claim):
                     raise InvalidClaim(
+                        self,
                         claim_name,
-                        f"value of claim '{claim_name}' doesn't validate with the provided validator",
                         claim,
                     )
             elif claim != value:
-                raise InvalidClaim(claim_name, f"unexpected value for claim {key}", claim)
+                raise InvalidClaim(self, claim_name, claim)
 
     def encrypt(
         self,

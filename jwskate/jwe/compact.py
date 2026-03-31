@@ -269,7 +269,7 @@ separated by dots."""
             InvalidJwt: if the content is not a syntactically valid signed JWT.
 
         """
-        from jwskate.jwt import SignedJwt
+        from jwskate.jwt import SignedJwt  # noqa: PLC0415
 
         raw = self.decrypt(key, alg=alg, algs=algs)
         return SignedJwt(raw, max_size=max_size)

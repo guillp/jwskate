@@ -81,9 +81,7 @@ print(jwkset)
 
 # compared to a raw dict, a JwkSet offers convenience methods like:
 if jwkset.is_private:  # returns True if the jwks contains at least one private key
-    raise ValueError(
-        "JWKS contains private keys!"
-    )  # an exposed JWKS should only contain public keys
+    raise ValueError("JWKS contains private keys!")  # an exposed JWKS should only contain public keys
 
 my_jwk = jwkset.get_jwk_by_kid("my_key_id")  # gets a key by key id (kid)
 # select keys that is suitable for signature verification
@@ -182,9 +180,7 @@ with open("my_public_key.pem", "rb") as finput:
     public_pem_from_file = finput.read()
 public_jwk_from_pem_file = (
     Jwk.from_pem(public_pem_from_file)
-    .with_usage_parameters(
-        alg="ES256"
-    )  # alg is not part of the PEM, so you can add it back
+    .with_usage_parameters(alg="ES256")  # alg is not part of the PEM, so you can add it back
     .with_kid_thumbprint()  # adds back the thumbprint as kid
 )
 assert public_jwk_from_pem_file == public_jwk
@@ -202,9 +198,7 @@ with open("my_public_key.pem", "rb") as finput:
     public_pem_from_file = finput.read()
 public_jwk_from_der_file = (
     Jwk.from_pem(public_pem_from_file)
-    .with_usage_parameters(
-        alg="ES256"
-    )  # alg is not part of the DER, so you can add it back
+    .with_usage_parameters(alg="ES256")  # alg is not part of the DER, so you can add it back
     .with_kid_thumbprint()  # adds back the thumbprint as kid
 )
 assert public_jwk_from_der_file == public_jwk
@@ -254,22 +248,18 @@ if jwt.verify_signature(b"your-256-bit-secret", alg="HS256"):  # this returns a 
     print("signature is verified")
 
 # or, if you prefer an exception
-jwt.verify(
-    b"your-256-bit-secret", alg="HS256"
-)  # this raises an exception if the signature is invalid
+jwt.verify(b"your-256-bit-secret", alg="HS256")  # this raises an exception if the signature is invalid
 ```
 
 # Signing an arbitrary JWT
 
-To have full control over the claims that are signed, use the low-level `Jwt.sign()` method.
-You provide the full set of claims to sign and those will be signed _exactly_ as-is:
+To have full control over the claims that are signed, use the low-level `Jwt.sign()` method. You provide the full set of
+claims to sign and those will be signed _exactly_ as-is:
 
 ```python
 from jwskate import Jwk, Jwt
 
-sign_key = Jwk.generate(
-    alg="ES256"
-)  # here we generate a key, but you usually want to load your own key
+sign_key = Jwk.generate(alg="ES256")  # here we generate a key, but you usually want to load your own key
 
 claims = {"iss": "my_issuer", "iat": 1695715510, "sub": "my_sub"}
 jwt = Jwt.sign(claims, sign_key)
@@ -280,9 +270,8 @@ print(jwt)
 
 # Signing a "proper" JWT
 
-To have jwskate help you with the "standardized" claims such as `iat`, `exp`, `iss`, use a `JwtSigner`.
-You pre-configure it with an issuer, a signing key and alg, and a default lifetime. You can then use it to sign
-your claims:
+To have jwskate help you with the "standardized" claims such as `iat`, `exp`, `iss`, use a `JwtSigner`. You
+pre-configure it with an issuer, a signing key and alg, and a default lifetime. You can then use it to sign your claims:
 
 ```python
 from jwskate import JwtSigner, Jwk
@@ -315,7 +304,8 @@ print(jwt.claims)
 
 # Signing and encrypting a nested JWT
 
-It is trivial to sign then encrypt a JWT. You just need a signing key, an encryption key, and the claims you need to sign. `jwskate` handles everything else for you!
+It is trivial to sign then encrypt a JWT. You just need a signing key, an encryption key, and the claims you need to
+sign. `jwskate` handles everything else for you!
 
 ```python
 from jwskate import Jwk, Jwt
@@ -341,9 +331,7 @@ print(
 # 'enc': 'A256GCM'}
 
 # to decode and verify the inner signed JWT:
-inner_signed_jwt = signed_and_encryted_jwt.decrypt_jwt(enc_key).verify(
-    sig_key.public_jwk()
-)
+inner_signed_jwt = signed_and_encryted_jwt.decrypt_jwt(enc_key).verify(sig_key.public_jwk())
 
 print(inner_signed_jwt)
 # eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJteV9pc3N1ZXIiLCJpYXQiOjE2OTU3MTU1MTAsInN1YiI6Im15X3N1YiJ9.smfmqDYveE4TQboXhzxb7qddrITvU7JpWNwSfLj4XDOt8-tHe-pAuZ5EYJD0p4cynS1OwhT8LGSWnVpi7bPBCw

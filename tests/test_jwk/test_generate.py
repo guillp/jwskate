@@ -98,7 +98,7 @@ def test_generate_for_alg(alg: str) -> None:
     ],
 )
 def test_generate_for_kty(kty: str, kwargs: dict[str, str]) -> None:
-    with pytest.warns(DeprecationWarning):
+    with pytest.warns(DeprecationWarning, match="Use 'generate' instead"):
         jwk = Jwk.generate_for_kty(kty, **kwargs)
     assert jwk.kty == kty
 
@@ -112,7 +112,7 @@ def test_generate() -> None:
     assert ec_jwk.curve == P_521
 
     assert Jwk.generate(kty="RSA", alg="RS256")
-    with pytest.raises(ValueError, match="Incompatible .* parameters"):
+    with pytest.raises(ValueError, match=r"Incompatible .* parameters"):
         Jwk.generate(kty="RSA", alg="ES512")
 
     with pytest.raises(ValueError, match="must provide a hint"):

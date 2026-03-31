@@ -274,7 +274,7 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Args:
             signature_chooser: a callable that takes the list of signatures from this JWS as parameter
-                and returns the choosen signature.
+                and returns the chosen signature.
 
         Returns:
             A JwsCompact with the payload and the chosen signature from this JWS.
@@ -294,7 +294,7 @@ class JwsJsonGeneral(BaseJsonDict):
 
         Args:
             signature_chooser:  a callable that takes the list of signatures from this JWS as parameter
-                and returns the choosen signature.
+                and returns the chosen signature.
 
         Returns:
             A JwsJsonFlat with the payload and the chosen signature from this JWS.

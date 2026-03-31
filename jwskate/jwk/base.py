@@ -22,7 +22,7 @@ from binapy import BinaPy
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.serialization import pkcs12
-from typing_extensions import Self, deprecated
+from typing_extensions import Self, deprecated, override
 
 from jwskate.jwa import (
     BaseAESEncryptionAlg,
@@ -756,7 +756,7 @@ class Jwk(BaseJsonDict):
             UnsupportedAlg: if the requested alg identifier is not supported
 
         """
-        from jwskate import SymmetricJwk
+        from jwskate import SymmetricJwk  # noqa: PLC0415
 
         if not self.is_symmetric and self.is_private:
             warnings.warn(
@@ -849,7 +849,7 @@ class Jwk(BaseJsonDict):
             UnsupportedAlg: If the requested alg identifier is not supported.
 
         """
-        from jwskate import SymmetricJwk
+        from jwskate import SymmetricJwk  # noqa: PLC0415
 
         if not self.is_symmetric and not self.is_private:
             msg = (
@@ -950,7 +950,7 @@ class Jwk(BaseJsonDict):
             a JwsSet with this single key
 
         """
-        from .jwks import JwkSet
+        from .jwks import JwkSet  # noqa: PLC0415
 
         return JwkSet(keys=(self,))
 
@@ -1337,6 +1337,10 @@ class Jwk(BaseJsonDict):
         """Compare JWK keys, ignoring optional/informational fields."""
         other = to_jwk(other)
         return super(Jwk, self.minimize()).__eq__(other.minimize())
+
+    @override
+    def __hash__(self) -> int:
+        return hash(self.cryptography_key)
 
 
 def to_jwk(

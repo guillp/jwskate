@@ -40,11 +40,11 @@ class Jwt(BaseCompactToken):
 
         if cls == Jwt:
             if value.count(b".") == 2:  # noqa: PLR2004
-                from .signed import SignedJwt
+                from .signed import SignedJwt  # noqa: PLC0415
 
                 return super().__new__(SignedJwt)
             if value.count(b".") == 4:  # noqa: PLR2004
-                from jwskate.jwe import JweCompact
+                from jwskate.jwe import JweCompact  # noqa: PLC0415
 
                 return JweCompact(value, max_size=max_size)
 
@@ -116,7 +116,7 @@ class Jwt(BaseCompactToken):
              alg: the alg to use for signing
 
         """
-        from .signed import SignedJwt
+        from .signed import SignedJwt  # noqa: PLC0415
 
         key = to_jwk(key)
 
@@ -156,7 +156,7 @@ class Jwt(BaseCompactToken):
             the resulting token
 
         """
-        from .signed import SignedJwt
+        from .signed import SignedJwt  # noqa: PLC0415
 
         headers = dict(extra_headers or {}, alg=alg)
         if typ:

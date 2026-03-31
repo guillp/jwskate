@@ -4,59 +4,62 @@ repo_url: https://github.com/guillp/jwskate
 repo_name: jwskate
 strict: true
 nav:
-  - home: index.md
-  - installation: installation.md
-  - usage: usage.md
-  - examples: recipes.md
-  - API: api.md
-  - contributing: contributing.md
-  #- authors: authors.md
-  #- history: history.md
+    - home: index.md
+    - installation: installation.md
+    - usage: usage.md
+    - examples: recipes.md
+    - API: api.md
+    - contributing: contributing.md
+    #- authors: authors.md
+    #- history: history.md
 theme:
-  name: material
-  language: en
-  #logo: assets/logo.png
-  palette:
-    primary: light blue
-  features:
-    - navigation.indexes
-    - navigation.tabs
-    - navigation.instant
-    - navigation.tabs.sticky
+    name: material
+    language: en
+    #logo: assets/logo.png
+    palette:
+        primary: light blue
+    features:
+        - navigation.indexes
+        - navigation.tabs
+        - navigation.instant
+        - navigation.tabs.sticky
 markdown_extensions:
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - pymdownx.critic
-  - pymdownx.caret
-  - pymdownx.mark
-  - pymdownx.tilde
-  - pymdownx.tabbed
-  - attr_list
-  - pymdownx.arithmatex:
-      generic: true
-  - pymdownx.highlight:
-      linenums: true
-  - pymdownx.superfences
-  - pymdownx.details
-  - admonition
-  - toc:
-      baselevel: 2
-      permalink: true
-      slugify: !!python/object/apply:pymdownx.slugs.slugify {kwds: {case: lower}}
-  - meta
+    - pymdownx.emoji:
+          emoji_index: !!python/name:material.extensions.emoji.twemoji
+          emoji_generator: !!python/name:material.extensions.emoji.to_svg
+    - pymdownx.critic
+    - pymdownx.caret
+    - pymdownx.mark
+    - pymdownx.tilde
+    - pymdownx.tabbed
+    - attr_list
+    - pymdownx.arithmatex:
+          generic: true
+    - pymdownx.highlight:
+          linenums: true
+    - pymdownx.superfences
+    - pymdownx.details
+    - admonition
+    - toc:
+          baselevel: 2
+          permalink: true
+          slugify:
+              !!python/object/apply:pymdownx.slugs.slugify {
+                  kwds: { case: lower },
+              }
+    - meta
 plugins:
-  - include-markdown
-  - search:
-      lang: en
-  - mkdocstrings:
-      enable_inventory: true
+    - include-markdown
+    - search:
+          lang: en
+    - mkdocstrings:
+          enable_inventory: true
 extra:
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/guillp/jwskate
-      name: Github
-    - icon: material/email
-      link: "mailto:guill.p.linux@gmail.com"
+    social:
+        - icon: fontawesome/brands/github
+          link: https://github.com/guillp/jwskate
+          name: Github
+        - icon: material/email
+          link: "mailto:guill.p.linux@gmail.com"
 watch:
-- jwskate
+    - jwskate

@@ -112,7 +112,7 @@ Kpriv = TypeVar("Kpriv")
 Kpub = TypeVar("Kpub")
 
 
-class BaseAsymmetricAlg(Generic[Kpriv, Kpub], BaseAlg):
+class BaseAsymmetricAlg(BaseAlg, Generic[Kpriv, Kpub]):
     """Base class for asymmetric algorithms. Those can be initialised with a private or public key.
 
     The available cryptographic operations will depend on the alg and

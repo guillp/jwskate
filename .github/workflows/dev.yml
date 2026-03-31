@@ -4,77 +4,77 @@ name: dev workflow
 
 # Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
-  push:
-    branches: [ main, release ]
-  pull_request:
-    branches: [ main, release ]
+    # Triggers the workflow on push or pull request events but only for the main branch
+    push:
+        branches: [main, release]
+    pull_request:
+        branches: [main, release]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+    # Allows you to run this workflow manually from the Actions tab
+    workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  test:
-    # The type of runner that the job will run on
-    strategy:
-      matrix:
-        python-version:
-          - '3.9'
-          - '3.10'
-          - '3.11'
-          - '3.12'
-          - '3.13'
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    # This workflow contains a single job called "build"
+    test:
+        # The type of runner that the job will run on
+        strategy:
+            matrix:
+                python-version:
+                    - "3.9"
+                    - "3.10"
+                    - "3.11"
+                    - "3.12"
+                    - "3.13"
+                    - "3.14"
+                os: [ubuntu-latest]
+        runs-on: ${{ matrix.os }}
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v5
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-            enable-cache: true
-            cache-dependency-glob: "uv.lock"
-      - uses: actions/setup-python@v5
-        with:
-            python-version: ${{ matrix.python-version }}
+        # Steps represent a sequence of tasks that will be executed as part of the job
+        steps:
+            # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+            - uses: actions/checkout@v5
+            - name: Install uv
+              uses: astral-sh/setup-uv@v6
+              with:
+                  enable-cache: true
+                  cache-dependency-glob: "uv.lock"
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: uv sync --all-extras --dev
+            - name: Install dependencies
+              run: uv sync --all-extras --dev
 
-      - name: Run tests
-        run: uv run pytest
+            - name: Run tests
+              run: uv run pytest
 
-  coverage_tests:
-    # if any test failed, we should not publish
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v6
-      - name: Set up Python
-        run: uv python install
+    coverage_tests:
+        # if any test failed, we should not publish
+        needs: test
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+            - uses: astral-sh/setup-uv@v6
+            - name: Set up Python
+              run: uv python install
 
-      - name: Install dependencies
-        run: |
-              uv sync --all-extras --dev
+            - name: Install dependencies
+              run: |
+                  uv sync --all-extras --dev
 
-      - name: Run tests with coverage
-        run: uv run pytest --cov=jwskate --cov-report=xml
+            - name: Run tests with coverage
+              run: uv run pytest --cov=jwskate --cov-report=xml
 
-      - name: Build documentation
-        run: uv run mkdocs build --strict
+            - name: Build documentation
+              run: uv run mkdocs build --strict
 
-      - name: Build wheels and source tarball
-        run: uv build
+            - name: Build wheels and source tarball
+              run: uv build
 
-      - uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
-          files: coverage.xml
-          verbose: true
-
+            - uses: codecov/codecov-action@v5
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  fail_ci_if_error: true
+                  files: coverage.xml
+                  verbose: true

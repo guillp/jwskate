@@ -93,7 +93,7 @@ class KeyManagementAlgs:
         A128GCMKW,
         A192GCMKW,
         A256GCMKW,
-        dir,
+        dir,  # noqa: A003
     }
     ALL_ASYMMETRIC = {
         RSA1_5,

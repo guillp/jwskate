@@ -40,10 +40,10 @@ class BaseAesCbcHmacSha2(BaseAESEncryptionAlg):
 
     def mac(
         self,
-        ciphertext: bytes | SupportsBytes,
+        ciphertext: bytes | SupportsBytes | bytearray,
         *,
-        iv: bytes | SupportsBytes,
-        aad: bytes | SupportsBytes | None = None,
+        iv: bytes | SupportsBytes | bytearray,
+        aad: bytes | SupportsBytes | bytearray | None = None,
     ) -> BinaPy:
         """Produce a Message Authentication Code for the given `ciphertext`, `iv` and `aad`.
 

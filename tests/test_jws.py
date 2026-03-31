@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import jwcrypto.jwk  # type: ignore[import-untyped]
+import jwcrypto.jws  # type: ignore[import-untyped]
 import pytest
 from binapy import BinaPy
 
@@ -444,9 +446,6 @@ def test_verify_signature_by_jwcrypto(
         signature_alg: the signature alg
 
     """
-    import jwcrypto.jwk  # type: ignore[import-untyped]
-    import jwcrypto.jws  # type: ignore[import-untyped]
-
     jwk = jwcrypto.jwk.JWK(**verification_jwk)
     jws = jwcrypto.jws.JWS()
     jws.deserialize(str(signed_jws_compact))
@@ -466,9 +465,6 @@ def jwcrypto_signed_jws(signature_payload: bytes, signature_jwk: Jwk, signature_
         a JWS token
 
     """
-    import jwcrypto.jwk
-    import jwcrypto.jws
-
     jwk = jwcrypto.jwk.JWK(**signature_jwk)
     jws = jwcrypto.jws.JWS(signature_payload)
 

@@ -100,8 +100,8 @@ class JwsCompact(BaseCompactToken):
     @classmethod
     def from_parts(
         cls,
-        signed_part: bytes | SupportsBytes | str,
-        signature: bytes | SupportsBytes,
+        signed_part: bytes | SupportsBytes | str | bytearray,
+        signature: bytes | SupportsBytes | bytearray,
     ) -> JwsCompact:
         """Construct a JWS token based on its signed part and signature values.
 
@@ -212,7 +212,7 @@ class JwsCompact(BaseCompactToken):
             the resulting token
 
         """
-        from .json import JwsJsonFlat
+        from .json import JwsJsonFlat  # noqa: PLC0415
 
         protected, payload, signature = self.value.split(b".")
 

@@ -7,7 +7,7 @@ from functools import cached_property
 from typing import Any
 
 from binapy import BinaPy
-from typing_extensions import Self
+from typing_extensions import Self, override
 
 
 class BaseCompactToken:
@@ -143,6 +143,10 @@ class BaseCompactToken:
     def __bytes__(self) -> bytes:
         """Return the `bytes` representation of this token."""
         return self.value
+
+    @override
+    def __hash__(self) -> int:
+        return hash(self.value)
 
 
 BaseUserDict = UserDict[str, Any]

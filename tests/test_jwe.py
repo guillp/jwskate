@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from typing import SupportsBytes
 
+import jwcrypto.jwe  # type: ignore[import-untyped]
+import jwcrypto.jwk  # type: ignore[import-untyped]
 import pytest
+from jwcrypto.common import json_encode  # type: ignore[import-untyped]
 
 import jwskate.jwa
 from jwskate import (
@@ -166,11 +169,11 @@ def test_jwe_decrypt() -> None:
 def test_invalid_jwe() -> None:
     with pytest.raises(InvalidJwe, match="Invalid JWE"):
         JweCompact("foo")
-    with pytest.raises(InvalidJwe, match="Invalid JWE header: .*$"):
+    with pytest.raises(InvalidJwe, match=r"Invalid JWE header: .*$"):
         JweCompact("foo!.foo!.foo!.foo!.foo!")
-    with pytest.raises(InvalidJwe, match="Invalid JWE CEK: .*$"):
+    with pytest.raises(InvalidJwe, match=r"Invalid JWE CEK: .*$"):
         JweCompact("eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ.foo!.foo!.foo!.foo!")
-    with pytest.raises(InvalidJwe, match="Invalid JWE IV: .*$"):
+    with pytest.raises(InvalidJwe, match=r"Invalid JWE IV: .*$"):
         JweCompact(
             "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ."
             "OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGe"
@@ -181,7 +184,7 @@ def test_invalid_jwe() -> None:
             "6UklfCpIMfIjf7iGdXKHzg."
             "foo!.foo!.foo!"
         )
-    with pytest.raises(InvalidJwe, match="Invalid JWE ciphertext: .*$"):
+    with pytest.raises(InvalidJwe, match=r"Invalid JWE ciphertext: .*$"):
         JweCompact(
             "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ."
             "OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGe"
@@ -194,7 +197,7 @@ def test_invalid_jwe() -> None:
             "foo!."
             "foo!"
         )
-    with pytest.raises(InvalidJwe, match="Invalid JWE authentication tag: .*$"):
+    with pytest.raises(InvalidJwe, match=r"Invalid JWE authentication tag: .*$"):
         JweCompact(
             "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ."
             "OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGe"
@@ -636,9 +639,6 @@ def test_decrypt_by_jwcrypto(
         encryption_alg: the encryption alg
 
     """
-    import jwcrypto.jwe  # type: ignore[import-untyped]
-    import jwcrypto.jwk  # type: ignore[import-untyped]
-
     if key_management_alg in JWCRYPTO_UNSUPPORTED_ALGS:
         pytest.skip(f"jwcrypto doesn't support key management alg {key_management_alg}")
 
@@ -675,10 +675,6 @@ def jwcrypto_encrypted_jwe(
         a JWE token
 
     """
-    import jwcrypto.jwe
-    import jwcrypto.jwk
-    from jwcrypto.common import json_encode  # type: ignore[import-untyped]
-
     if key_management_alg in JWCRYPTO_UNSUPPORTED_ALGS:
         pytest.skip(f"jwcrypto doesn't support key management alg {key_management_alg}")
 
@@ -734,7 +730,7 @@ def test_decrypt_from_jwcrypto(
 
 
 def test_invalid_enc_header() -> None:
-    with pytest.raises(InvalidJwe, match="Invalid JWE header: .*enc.*$"):
+    with pytest.raises(InvalidJwe, match=r"Invalid JWE header: .*enc.*$"):
         JweCompact(
             """eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6eyJmb28iOiJiYXIifX0.OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGeipsEdY3mx_etLbbWSrFr05kLzcSr4qKAq7YN7e9jwQRb23nfa6c9d-StnImGyFDbSv04uVuxIp5Zms1gNxKKK2Da14B8S4rzVRltdYwam_lDp5XnZAYpQdb76FdIKLaVmqgfwX7XWRxv2322i-vDxRfqNzo_tETKzpVLzfiwQyeyPGLBIO56YJ7eObdv0je81860ppamavo35UgoRdbYaBcoh9QcfylQr66oc6vFWXRcZ_ZT2LawVCWTIy3brGPi6UklfCpIMfIjf7iGdXKHzg.48V1_ALb6US04U3b.5eym8TW_c8SuK0ltJ3rpYIzOeDQz7TALvtu6UG9oMo4vpzs9tX_EFShS8iB7j6jiSdiwkIr3ajwQzaBtQD_A.XFBoMYUZodetZdvTiFvSkQ"""
         )

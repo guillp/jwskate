@@ -10,7 +10,6 @@ from jwskate import *
 
 ## Generating new keys
 
-
 | Usage                    | Method                      |
 | ------------------------ | --------------------------- |
 | For a specific algorithm | `Jwk.generate(alg='ES256')` |
@@ -18,9 +17,8 @@ from jwskate import *
 
 ## Loading keys
 
-
 | From                                    | Method                                                                                                                                                                                                                          |
-|-----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A JWK in Python dict                    | `jwk = Jwk({'kty': 'RSA', 'n': '...', ...})`                                                                                                                                                                                    |
 | A JWK in JSON formatted string          | `jwk = Jwk('{"kty": "RSA", "n": "...", ...}')`                                                                                                                                                                                  |
 | A`cryptography` key                     | `jwk = Jwk(cryptography_key)`                                                                                                                                                                                                   |
@@ -28,11 +26,9 @@ from jwskate import *
 | A private key in a PEM formatted string | `jwk = Jwk.from_pem(`<br/>`'''-----BEGIN PRIVATE KEY----- MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp0VYc2zc/6yNzQUSFprv`<br/>`... 3QIDAQAB`<br/>`-----END PRIVATE KEY----- ''',`<br/> `password=b'password_if_any'`<br/> `)` |
 | A private key in a DER binary           | `jwk = Jwk.from_der(b'der_formatted_binary')`                                                                                                                                                                                   |
 
-
 ## Saving keys
 
 From an instance of a `Jwk` named `jwk`:
-
 
 | To                             | Method                              | Note                            |
 | ------------------------------ | ----------------------------------- | ------------------------------- |
@@ -44,7 +40,6 @@ From an instance of a `Jwk` named `jwk`:
 | A JWKS                         | `jwk.as_jwks()`                     | will contain`jwk` as single key |
 
 ## Inspecting keys
-
 
 | Usage                    | Method                                                                                                                         | Returns                                                                                             |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
@@ -167,18 +162,9 @@ jwk = Jwk(
         "d": "EnGZlkoa4VUsnl72LcRRychNJ2FFknm_ph855tNuPZ8",
     }
 )
-assert (
-    jwk.x_coordinate
-    == 41091394722340406951651919287101979028566994134304719828008599584440827098914
-)
-assert (
-    jwk.y_coordinate
-    == 5099336126642036233987555101153084413345413137896124327269101893088581300336
-)
-assert (
-    jwk.ecc_private_key
-    == 8342345011805978907621665437908035545366143771247820774310445528411160853919
-)
+assert jwk.x_coordinate == 41091394722340406951651919287101979028566994134304719828008599584440827098914
+assert jwk.y_coordinate == 5099336126642036233987555101153084413345413137896124327269101893088581300336
+assert jwk.ecc_private_key == 8342345011805978907621665437908035545366143771247820774310445528411160853919
 ```
 
 The available special attributes vary depending on the key type.
@@ -187,9 +173,10 @@ The available special attributes vary depending on the key type.
 
 `jwskate` can generate private keys from any of it supported key types. To generate a key, use `Jwk.generate()`. It just
 needs some hints to know what kind of key to generate, either an identifier for the algorithm that will be used with
-that key (`alg`), or a key type (`kty`). An `alg` is preferred, since it gives more hints to generate a key that is suitable
-for its purpose. Those hints include the Elliptic Curve to use, or the key size to generate. The specified `alg` will be part of the generated key, and will avoid having to
-specify the alg for every cryptographic operation you will perform with that key.
+that key (`alg`), or a key type (`kty`). An `alg` is preferred, since it gives more hints to generate a key that is
+suitable for its purpose. Those hints include the Elliptic Curve to use, or the key size to generate. The specified
+`alg` will be part of the generated key, and will avoid having to specify the alg for every cryptographic operation you
+will perform with that key.
 
 ```python
 from jwskate import Jwk
@@ -338,10 +325,7 @@ jwk = Jwk(
     }
 )
 cryptography_key = jwk.cryptography_key
-assert (
-    str(cryptography_key.__class__)
-    == "<class 'cryptography.hazmat.backends.openssl.ec._EllipticCurvePrivateKey'>"
-)
+assert str(cryptography_key.__class__) == "<class 'cryptography.hazmat.backends.openssl.ec._EllipticCurvePrivateKey'>"
 ```
 
 ## Signing and verifying data
@@ -497,9 +481,7 @@ iv = b'K"H\xf3@\tt\\\xc78\xc2D'
 tag = b"\xc4\xee\xcf`\xfa\\\x8e\x9dn\xc4>D\xd8\x1d\x8c\x1a"
 
 # obtain the same CEK as the sender, based on our private key, and public data provided by sender
-cek = recipient_private_jwk.recipient_key(
-    encrypted_cek, enc="A256GCM", alg="ECDH-ES", **extra_headers
-)
+cek = recipient_private_jwk.recipient_key(encrypted_cek, enc="A256GCM", alg="ECDH-ES", **extra_headers)
 # and decrypt the message with that CEK (and the IV, Auth Tag and encryption alg identifier provided by sender)
 plaintext_message = cek.decrypt(encrypted_message, iv=iv, tag=tag, enc=enc_alg)
 
